@@ -79,6 +79,27 @@
   background-clip: text;
 }
 
+/* Custom animation for THUNDERBOLT text */
+.thunderbolt-text {
+  fill: transparent;
+  font-weight: 600;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawOutline 4s ease-in-out forwards, fillColor 1.5s ease-in-out 1.2s forwards;
+}
+
+@keyframes drawOutline {
+  from { stroke-dashoffset: 2000; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fillColor {
+  from { fill: transparent; }
+  to { fill: #ffffff; }
+}
+
 /* Ghost outline text */
 .ghost-stroke {
   color: transparent;
