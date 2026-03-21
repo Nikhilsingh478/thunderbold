@@ -1,26 +1,30 @@
 import CustomCursor from '@/components/CustomCursor';
 import ScrollProgress from '@/components/ScrollProgress';
 import Navbar from '@/components/Navbar';
-import Hero from '@/components/Hero';
+import HeroSection from '@/components/HeroSection';
 import Ticker from '@/components/Ticker';
-import Manifesto from '@/components/Manifesto';
+import ManifestoSection from '@/components/ManifestoSection';
+import BrassButtonSection from '@/components/BrassButtonSection';
 import Pillars from '@/components/Pillars';
-import Craft from '@/components/Craft';
+import HangTagSection from '@/components/HangTagSection';
+import TraitsSection from '@/components/TraitsSection';
 import Statement from '@/components/Statement';
 import Numbers from '@/components/Numbers';
 import Legacy from '@/components/Legacy';
 import Footer from '@/components/Footer';
 
 const Index = () => (
-  <div className="noise">
+  <div className="noise-overlay">
     <CustomCursor />
     <ScrollProgress />
     <Navbar />
-    <Hero />
+    <HeroSection />
     <Ticker />
-    <Manifesto />
+    <ManifestoSection />
+    <BrassButtonSection />
     <Pillars />
-    <Craft />
+    <HangTagSection />
+    <TraitsSection />
     <Statement />
     <Numbers />
     <Legacy />
