@@ -22,10 +22,10 @@ const CustomCursor = () => {
     window.addEventListener('mousemove', onMouseMove, { passive: true });
 
     const animate = () => {
-      ring.current.x += (mouse.current.x - ring.current.x) * 0.13;
-      ring.current.y += (mouse.current.y - ring.current.y) * 0.13;
+      ring.current.x += (mouse.current.x - ring.current.x) * 0.12;
+      ring.current.y += (mouse.current.y - ring.current.y) * 0.12;
       if (ringRef.current) {
-        ringRef.current.style.transform = `translate(${ring.current.x - 17}px, ${ring.current.y - 17}px)`;
+        ringRef.current.style.transform = `translate(${ring.current.x - 18}px, ${ring.current.y - 18}px)`;
       }
       raf.current = requestAnimationFrame(animate);
     };
@@ -48,7 +48,7 @@ const CustomCursor = () => {
         style={{
           width: 8,
           height: 8,
-          backgroundColor: '#d8d8d8',
+          backgroundColor: '#d4aa30',
           borderRadius: '50%',
           mixBlendMode: 'difference',
           zIndex: 9999,
@@ -58,9 +58,9 @@ const CustomCursor = () => {
         ref={ringRef}
         className="fixed top-0 left-0 pointer-events-none"
         style={{
-          width: 34,
-          height: 34,
-          border: '1px solid rgba(200,200,200,0.28)',
+          width: 36,
+          height: 36,
+          border: '1px solid rgba(184,148,26,0.35)',
           borderRadius: '50%',
           zIndex: 9998,
         }}

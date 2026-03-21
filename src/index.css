@@ -38,7 +38,9 @@
 }
 
 @layer base {
-  * {
+  *,
+  *::before,
+  *::after {
     @apply border-border;
     box-sizing: border-box;
     margin: 0;
@@ -47,16 +49,21 @@
 
   html {
     scroll-behavior: smooth;
+    font-size: 16px;
   }
 
   body {
     @apply bg-background text-foreground font-body;
-    background: #0b0b0b;
+    background: #0c0c0c;
+    color: #c4c2be;
+    font-weight: 300;
     overflow-x: hidden;
+    cursor: none;
     -webkit-font-smoothing: antialiased;
   }
 }
 
+/* Metal text effect — matches packaging emboss */
 .metal-text {
   background: linear-gradient(140deg, #888 0%, #ddd 32%, #aaa 52%, #ccc 100%);
   -webkit-background-clip: text;
@@ -64,6 +71,15 @@
   background-clip: text;
 }
 
+/* Brass text effect — matches button hardware */
+.brass-text {
+  background: linear-gradient(135deg, #7a6210 0%, #d4aa30 40%, #b8941a 60%, #e8c040 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Ghost outline text */
 .ghost-stroke {
   color: transparent;
   -webkit-text-stroke: 1.5px #383838;
@@ -71,25 +87,48 @@
 
 .ghost-stroke-thin {
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255,255,255,0.022);
+  -webkit-text-stroke: 1px rgba(255,255,255,0.025);
 }
 
+.ghost-stroke-brass {
+  color: transparent;
+  -webkit-text-stroke: 1.5px #7a6210;
+}
+
+/* Denim crosshatch texture overlay */
 .denim-texture {
   background-image:
-    repeating-linear-gradient(-52deg, transparent, transparent 28px, rgba(255,255,255,0.011) 28px, rgba(255,255,255,0.011) 29px),
-    repeating-linear-gradient(38deg, transparent, transparent 28px, rgba(255,255,255,0.007) 28px, rgba(255,255,255,0.007) 29px);
+    repeating-linear-gradient(-52deg, transparent, transparent 28px, rgba(255,255,255,0.012) 28px, rgba(255,255,255,0.012) 29px),
+    repeating-linear-gradient(38deg, transparent, transparent 28px, rgba(255,255,255,0.008) 28px, rgba(255,255,255,0.008) 29px);
 }
 
-.noise::after {
+/* Film grain noise overlay */
+.noise-overlay::after {
   content: '';
   position: fixed;
   inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.028;
+  opacity: 0.032;
   pointer-events: none;
   z-index: 9000;
 }
 
+/* Image cinematic overlay */
+.img-vignette {
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(7,7,7,0.85) 100%);
+}
+
+/* Parallelogram clip for CTA buttons */
+.clip-bolt {
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-track { background: #070707; }
+::-webkit-scrollbar-thumb { background: #383838; }
+
+/* Touch/mobile: restore default cursor */
 @media (hover: none) {
   body {
     cursor: auto !important;

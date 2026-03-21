@@ -6,8 +6,12 @@ const ScrollProgress = () => {
 
   return (
     <motion.div
-      className="fixed top-0 left-0 h-px bg-sv"
-      style={{ width, zIndex: 9997 }}
+      className="fixed top-0 left-0 h-px"
+      style={{
+        width,
+        zIndex: 9997,
+        background: 'linear-gradient(90deg, #7a6210, #d4aa30, #b8941a)',
+      }}
     />
   );
 };
