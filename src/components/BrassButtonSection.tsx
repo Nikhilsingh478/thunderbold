@@ -19,68 +19,69 @@ const BrassButtonSection = () => {
   const imgOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0]);
 
   return (
-    <section ref={ref} className="min-h-[100svh] relative overflow-hidden flex items-center justify-center" style={{ background: '#0d1520' }}>
+    <section ref={ref} className="min-h-[100svh] md:min-h-[100vh] relative overflow-hidden flex items-center justify-center" style={{ background: '#0d1520' }}>
       {/* Image — fills entire section */}
       <motion.div className="absolute inset-0" style={{ scale, opacity: imgOpacity }}>
         <img
           src={brassButton}
           alt="Thunderbolt brass button — Original Denim Supply"
-          className="w-full h-full object-cover"
-          style={{ filter: 'brightness(0.65) saturate(1.2) contrast(1.1)' }}
+          className="w-full h-full object-cover object-center"
+          style={{ filter: 'brightness(0.58) saturate(1.3) contrast(1.15)' }}
           loading="lazy"
         />
       </motion.div>
 
-      {/* Vignette */}
-      <div className="absolute inset-0 img-vignette pointer-events-none" />
+      {/* Radial vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 50%, transparent 20%, rgba(13,21,32,0.94) 100%)' }}
+      />
       {/* Top/bottom fades */}
-      <div className="absolute inset-x-0 top-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(180deg, #0d1520, transparent)' }} />
-      <div className="absolute inset-x-0 bottom-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(0deg, #0d1520, transparent)' }} />
+      <div className="absolute inset-x-0 top-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(180deg, #0c0c0c, transparent)' }} />
+      <div className="absolute inset-x-0 bottom-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(0deg, #0c0c0c, transparent)' }} />
 
       {/* Content */}
-      <div className="relative z-10 text-center px-6">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[100svh] md:min-h-[100vh] text-center px-6 md:px-8">
         {/* Label */}
         <motion.div
           {...reveal}
-          className="font-condensed font-semibold text-[0.64rem] tracking-[0.36em] uppercase text-brass/70 flex items-center justify-center gap-3 mb-8"
+          className="font-condensed font-semibold text-[0.62rem] md:text-[0.66rem] tracking-[0.36em] md:tracking-[0.42em] uppercase text-brass flex items-center justify-center gap-4 md:gap-5 mb-8 md:mb-10"
         >
-          <span className="w-5 h-px bg-brass-dim inline-block" />
+          <span className="w-8 md:w-10 h-px bg-brass/40" />
           Hardware · Original Denim Supply
-          <span className="w-5 h-px bg-brass-dim inline-block" />
+          <span className="w-8 md:w-10 h-px bg-brass/40" />
         </motion.div>
 
         {/* Giant headline */}
         <motion.h2
           {...reveal}
-          className="font-display text-tb-white"
-          style={{ fontSize: 'clamp(3.5rem, 16vw, 12rem)', lineHeight: 0.88 }}
+          className="font-display mb-6 md:mb-7"
+          style={{ fontSize: 'clamp(4.5rem, 16vw, 11rem)', lineHeight: 0.88 }}
           transition={{ ...reveal.transition, delay: 0.12 }}
         >
-          <span className="block">EVERY</span>
-          <span className="block">
-            <span className="brass-text">DETAIL</span>
-          </span>
-          <span className="block">MATTERS</span>
+          <span className="block brass-text">EVERY</span>
+          <span className="block" style={{ color: 'transparent', WebkitTextStroke: '1.5px rgba(184,148,26,0.38)' }}>DETAIL</span>
+          <span className="block brass-text">MATTERS</span>
         </motion.h2>
 
         {/* Sub-copy */}
         <motion.p
           {...reveal}
-          className="font-serif italic font-light text-tb-off/70 mt-6 max-w-[400px] mx-auto"
-          style={{ fontSize: 'clamp(0.95rem, 2vw, 1.2rem)', lineHeight: 1.72 }}
+          className="font-serif italic font-light text-sv max-w-[320px] md:max-w-[380px] mx-auto"
+          style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.7 }}
           transition={{ ...reveal.transition, delay: 0.24 }}
         >
           Precision hardware. Forged for those who notice the difference.
         </motion.p>
 
-        {/* Bottom arc text */}
-        <motion.div
+        {/* Bottom text */}
+        <motion.p
           {...reveal}
-          className="font-condensed font-semibold text-[0.6rem] tracking-[0.32em] uppercase text-brass-dim/60 mt-10"
+          className="font-condensed text-[0.56rem] md:text-[0.62rem] tracking-[0.42em] md:tracking-[0.5em] uppercase text-brass/45 mt-12 md:mt-14"
           transition={{ ...reveal.transition, delay: 0.36 }}
         >
           THUNDERBOLT · ORIGINAL DENIM SUPPLY · EST. 2024
-        </motion.div>
+        </motion.p>
       </div>
     </section>
   );

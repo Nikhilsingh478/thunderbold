@@ -25,7 +25,7 @@ const HeroSection = () => {
         <motion.img
           src={packagingBox}
           alt="Thunderbolt premium drawer-box packaging"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center md:brightness-[0.6] md:contrast-[1.12]"
           style={{ minHeight: '115%' }}
           initial={{ scale: 1.08 }}
           animate={{ scale: 1 }}
@@ -46,7 +46,7 @@ const HeroSection = () => {
 
       {/* Content */}
       <motion.div
-        className="relative z-10 pb-12 px-6 md:pb-20 md:px-14 w-full"
+        className="relative z-10 pb-12 px-6 w-full md:absolute md:bottom-0 md:left-0 md:pb-20 md:pl-16 md:pr-8 md:max-w-[700px]"
         style={{ y: contentY, willChange: 'transform' }}
         variants={container}
         initial="hidden"
@@ -55,7 +55,7 @@ const HeroSection = () => {
         {/* Series badge */}
         <motion.div
           variants={item}
-          className="font-condensed font-semibold text-[0.64rem] tracking-[0.36em] uppercase text-brass mb-6 flex items-center gap-3"
+          className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center gap-3 md:gap-4 md:justify-start"
         >
           <span className="w-5 h-px bg-brass-dim inline-block" />
           Drawer Series No. 1
@@ -65,26 +65,26 @@ const HeroSection = () => {
         <motion.h1
           variants={item}
           className="font-display text-tb-white"
-          style={{ fontSize: 'clamp(5.5rem, 22vw, 16rem)', lineHeight: 0.88 }}
+          style={{ fontSize: 'clamp(5.5rem, 22vw, 16rem)', lineHeight: 0.88, letterSpacing: '0.02em' }}
         >
-          <span className="block">THUNDER</span>
-          <span className="brass-text block" style={{ fontSize: '0.28em', lineHeight: 2.4, letterSpacing: '0.22em' }}>
+          <span className="block metal-text">THUNDER</span>
+          <span className="brass-text block whitespace-nowrap" style={{ fontSize: '0.28em', lineHeight: 2.4, letterSpacing: '0.14em' }}>
             ⚡ ORIGINAL DENIM SUPPLY ⚡
           </span>
-          <span className="block">BOLT</span>
+          <span className="block ghost-stroke">BOLT</span>
         </motion.h1>
 
         {/* Tagline */}
         <motion.p
           variants={item}
-          className="font-serif italic font-light text-sv-mid mt-6 max-w-[420px]"
-          style={{ fontSize: 'clamp(1rem, 2.2vw, 1.28rem)', lineHeight: 1.72 }}
+          className="font-serif italic font-light text-sv-mid mt-6 max-w-[420px] md:max-w-[400px] md:text-left"
+          style={{ fontSize: 'clamp(1rem, 2.2vw, 1.18rem)', lineHeight: 1.72 }}
         >
           Crafted with the spirit of ancient masters.
         </motion.p>
 
         {/* CTA Row */}
-        <motion.div variants={item} className="flex items-center gap-6 mt-8 flex-wrap">
+        <motion.div variants={item} className="flex items-center gap-6 mt-8 flex-wrap md:justify-start">
           <motion.a
             href="#manifesto"
             className="clip-bolt font-condensed font-bold text-xs tracking-[0.18em] uppercase text-void bg-tb-white px-8 py-4 inline-block"
@@ -104,7 +104,7 @@ const HeroSection = () => {
 
       {/* Scroll hint */}
       <motion.div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
         animate={{ opacity: [0.4, 0.9, 0.4] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
       >

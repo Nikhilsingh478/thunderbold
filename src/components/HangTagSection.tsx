@@ -18,63 +18,75 @@ const advantages = [
 ];
 
 const HangTagSection = () => (
-  <section id="details" className="bg-bg py-24 px-6 md:py-36 md:px-16 relative overflow-hidden">
+  <section id="details" className="bg-bg py-24 px-6 md:py-28 md:px-16 relative overflow-hidden">
     <div className="max-w-[1340px] mx-auto">
-      {/* Hanging tag visual */}
-      <motion.div {...reveal} className="flex flex-col items-center mb-16">
-        {/* Cord */}
-        <div className="w-px h-16 bg-sv-dim" />
-        {/* Sway tag */}
-        <motion.div
-          className="w-[200px] lg:w-[260px]"
-          animate={{ rotate: [-1.5, 1.5, -1.5] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: 'top center' }}
-        >
-          <img
-            src={hangTag}
-            alt="Thunderbolt Advantage hang tag"
-            className="w-full drop-shadow-2xl"
-            style={{ filter: 'brightness(1.05) contrast(1.08)' }}
-            loading="lazy"
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Header */}
-      <motion.div {...reveal} className="text-center mb-12">
-        <div className="font-condensed font-semibold uppercase text-sv-mid flex items-center justify-center gap-3 mb-6" style={{ fontSize: '0.66rem', letterSpacing: '0.38em' }}>
-          <span className="w-4 h-px bg-brass-dim inline-block" />
-          The Thunderbolt Advantage
-          <span className="w-4 h-px bg-brass-dim inline-block" />
-        </div>
-        <h2 className="font-display text-tb-white" style={{ fontSize: 'clamp(2.8rem, 10vw, 5rem)', lineHeight: 0.92 }}>
-          <span className="brass-text">BUILT</span><br />DIFFERENT
-        </h2>
-      </motion.div>
-
-      {/* Advantage grid — 2x3 */}
-      <div className="grid grid-cols-2 gap-px max-w-[600px] mx-auto" style={{ background: 'rgba(255,255,255,0.04)' }}>
-        {advantages.map((a, i) => (
+      {/* Mobile: stacked layout / Desktop: 2-column grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 md:gap-20 md:items-center">
+        {/* LEFT — Hanging tag + tagline */}
+        <motion.div {...reveal} className="flex flex-col items-center mb-16 md:mb-0 md:justify-center">
+          {/* Cord */}
+          <div className="w-px h-16 md:h-12 bg-sv-dim" style={{ background: 'linear-gradient(180deg, rgba(56,56,56,0.5), transparent)' }} />
+          {/* Sway tag */}
           <motion.div
-            key={a.title}
-            className="bg-bg p-5 hover:bg-surface transition-colors duration-300"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.08 }}
+            className="w-[200px] md:w-[280px]"
+            animate={{ rotate: [-1.5, 1.5, -1.5] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: 'top center' }}
           >
-            <span className="font-display text-2xl text-brass block mb-2">{a.icon}</span>
-            <span className="font-condensed font-bold text-[0.9rem] tracking-[0.07em] uppercase text-tb-white block mb-1">{a.title}</span>
-            <span className="font-body font-light text-[0.8rem] text-sv-mid block">{a.desc}</span>
+            <img
+              src={hangTag}
+              alt="Thunderbolt Advantage hang tag"
+              className="w-full drop-shadow-2xl"
+              style={{ filter: 'brightness(1.08) contrast(1.1)' }}
+              loading="lazy"
+            />
           </motion.div>
-        ))}
+          {/* Tagline below tag */}
+          <div className="mt-8 text-center font-condensed font-semibold text-[0.66rem] tracking-[0.35em] uppercase">
+            <span className="text-brass">FEEL THE POWER.</span>{' '}
+            <span className="text-sv-mid">EMBRACE COMFORT.</span>{' '}
+            <span className="text-tb-white">BE BOLD.</span>
+          </div>
+        </motion.div>
+
+        {/* RIGHT — Header + Advantage Grid */}
+        <div>
+          {/* Header */}
+          <motion.div {...reveal} className="text-center md:text-left mb-12 md:mb-8">
+            <div className="font-condensed font-semibold uppercase text-sv-mid flex items-center justify-center md:justify-start gap-3 mb-6" style={{ fontSize: '0.66rem', letterSpacing: '0.38em' }}>
+              <span className="w-4 h-px bg-brass-dim inline-block" />
+              The Thunderbolt Advantage
+              <span className="w-4 h-px bg-brass-dim inline-block md:hidden" />
+            </div>
+            <h2 className="font-display text-tb-white" style={{ fontSize: 'clamp(2.8rem, 10vw, 5.2rem)', lineHeight: 0.92 }}>
+              <span className="brass-text">BUILT</span><br />DIFFERENT
+            </h2>
+          </motion.div>
+
+          {/* Advantage grid — 2x3 */}
+          <div className="grid grid-cols-2 gap-px max-w-[600px] md:max-w-none" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            {advantages.map((a, i) => (
+              <motion.div
+                key={a.title}
+                className="bg-bg p-5 hover:bg-surface transition-colors duration-300"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.08 }}
+              >
+                <span className="font-display text-2xl md:text-xl text-brass block mb-2">{a.icon}</span>
+                <span className="font-condensed font-bold text-[0.9rem] md:text-[0.88rem] tracking-[0.07em] uppercase text-tb-white block mb-1">{a.title}</span>
+                <span className="font-body font-light text-[0.8rem] md:text-[0.78rem] text-sv-mid block">{a.desc}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Bottom tagline */}
+      {/* Bottom tagline — mobile only (desktop tagline is under tag) */}
       <motion.p
         {...reveal}
-        className="font-condensed font-bold text-[0.76rem] tracking-[0.22em] uppercase text-brass/60 text-center mt-12"
+        className="font-condensed font-bold text-[0.76rem] tracking-[0.22em] uppercase text-brass/60 text-center mt-12 md:hidden"
         transition={{ ...reveal.transition, delay: 0.3 }}
       >
         FEEL THE POWER. <span className="text-brass/40">·</span> EMBRACE COMFORT. <span className="text-brass/40">·</span> BE BOLD.
