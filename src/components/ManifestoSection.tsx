@@ -19,50 +19,55 @@ const ManifestoSection = () => {
 
   return (
     <section id="manifesto" ref={sectionRef} className="max-w-[1340px] mx-auto px-6 py-24 md:px-16 md:py-36">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-24 items-center">
-        {/* Image — on top on mobile */}
-        <motion.div {...reveal} className="relative overflow-hidden w-full h-[55vw] min-h-[260px] md:order-2 md:h-[600px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-center md:items-stretch">
+        {/* Image — on top on mobile, right on desktop */}
+        <motion.div {...reveal} className="relative overflow-hidden w-full h-[55vw] min-h-[260px] md:order-2 md:h-auto md:min-h-[580px]">
           <motion.img
             src={jeansProduct}
             alt="Thunderbolt deep navy indigo jeans"
-            className="w-full h-[115%] object-cover"
+            className="w-full h-[115%] object-cover md:absolute md:inset-0 md:w-full md:h-full md:object-[center_top]"
             style={{
               y: imgY,
               willChange: 'transform',
-              filter: 'brightness(0.85) contrast(1.1)',
+              filter: 'brightness(0.82) contrast(1.1)',
             }}
             loading="lazy"
           />
+          {/* Left-edge gradient for desktop blending */}
+          <div
+            className="hidden md:block absolute left-0 top-0 bottom-0 w-36 pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, #0c0c0c 0%, transparent 100%)' }}
+          />
           {/* Bottom gradient fade */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+            className="absolute bottom-0 left-0 right-0 h-24 md:h-28 pointer-events-none"
             style={{ background: 'linear-gradient(0deg, #0c0c0c, transparent)' }}
           />
           {/* Floating badge */}
-          <div className="absolute top-5 right-5 font-condensed font-semibold text-[0.58rem] tracking-[0.20em] uppercase text-brass px-3 py-2 border border-brass/30" style={{ background: 'rgba(10,10,10,0.8)' }}>
+          <div className="absolute top-5 right-5 md:top-6 md:right-6 font-condensed font-semibold text-[0.58rem] tracking-[0.25em] uppercase text-brass px-3 py-1.5 md:py-1.5 border border-brass/30" style={{ background: 'rgba(7,7,7,0.8)' }}>
             Premium Denim
           </div>
         </motion.div>
 
         {/* Text — overlaps image on mobile */}
-        <motion.div {...reveal} className="-mt-16 md:mt-0 relative z-10 md:order-1" transition={{ ...reveal.transition, delay: 0.18 }}>
+        <motion.div {...reveal} className="-mt-16 md:mt-0 relative z-10 md:order-1 md:pr-14 md:py-6" transition={{ ...reveal.transition, delay: 0.18 }}>
           <div className="font-condensed font-semibold uppercase text-sv-mid flex items-center gap-3 mb-6" style={{ fontSize: '0.66rem', letterSpacing: '0.38em' }}>
             <span className="w-4 h-px bg-brass-dim inline-block" />
             Our Manifesto
           </div>
-          <h2 className="font-display text-tb-white" style={{ fontSize: 'clamp(2.8rem, 10vw, 5rem)', lineHeight: 0.92 }}>
+          <h2 className="font-display text-tb-white uppercase" style={{ fontSize: 'clamp(2.8rem, 10vw, 5.2rem)', lineHeight: 0.92, letterSpacing: '0.02em' }}>
             FORGED<br />FOR THE<br /><span className="brass-text">BOLD ONES</span>
           </h2>
-          <p className="font-body font-light text-sv-mid max-w-[440px] mt-7" style={{ fontSize: '1.04rem', lineHeight: 1.82 }}>
+          <p className="font-body font-light text-sv-mid max-w-[440px] md:max-w-[420px] mt-7 md:mt-6" style={{ fontSize: '1.04rem', lineHeight: 1.82 }}>
             Thunderbolt was born from a singular conviction — that what you wear should be as unbreakable as your will. Every pair is a testament to mastery: the kind forged by time, discipline, and an obsession with the exceptional. We don't make jeans. We make armor.
           </p>
 
           {/* Quote card */}
-          <div className="bg-surface border-l-2 border-brass/40 pl-5 py-4 mt-8">
-            <blockquote className="font-serif italic font-light text-tb-off mb-3" style={{ fontSize: '1.1rem', lineHeight: 1.62 }}>
+          <div className="bg-surface border-l-2 border-brass/40 pl-5 md:pl-6 py-4 md:py-5 mt-8">
+            <blockquote className="font-serif italic font-light text-tb-off mb-3" style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.62 }}>
               &ldquo;This isn't just jeans; it's your armor for life's every challenge.&rdquo;
             </blockquote>
-            <cite className="font-condensed not-italic font-semibold text-[0.64rem] tracking-[0.22em] uppercase text-brass block">
+            <cite className="font-condensed not-italic font-semibold text-[0.64rem] md:text-[0.66rem] tracking-[0.22em] uppercase text-brass block">
               — Thunderbolt · Built for the Bold
             </cite>
           </div>
