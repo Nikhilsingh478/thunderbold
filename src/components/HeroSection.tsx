@@ -1,5 +1,6 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import packagingBox from '@/assets/packaging-box.png';
+import mobileHero from '@/assets/mobile_hero.webp';
 
 const container = {
   hidden: {},
@@ -24,8 +25,18 @@ const HeroSection = () => {
       >
         <motion.img
           src={packagingBox}
-          alt="Thunderbolt premium drawer-box packaging"
-          className="w-full h-full object-cover object-center md:brightness-[0.6] md:contrast-[1.12]"
+          alt="Thunderbolt premium drawer-box packaging (Desktop)"
+          className="hidden md:block w-full h-full object-cover object-center md:brightness-[0.6] md:contrast-[1.12]"
+          style={{ minHeight: '115%' }}
+          initial={{ scale: 1.08 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+          loading="eager"
+        />
+        <motion.img
+          src={mobileHero}
+          alt="Thunderbolt premium drawer-box packaging (Mobile)"
+          className="block md:hidden w-full h-full object-cover object-center"
           style={{ minHeight: '115%' }}
           initial={{ scale: 1.08 }}
           animate={{ scale: 1 }}
