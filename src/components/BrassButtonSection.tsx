@@ -1,12 +1,12 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import brassButton from '@/assets/brass-button.png';
+import brassButton from '@/assets/brass_button.webp';
 
 const reveal = {
   initial: { opacity: 0, y: 36 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-80px' } as const,
-  transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] as const },
+  transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] as const, delay: 0.8 },
 };
 
 const BrassButtonSection = () => {
@@ -57,10 +57,10 @@ const BrassButtonSection = () => {
           {...reveal}
           className="font-display mb-6 md:mb-7"
           style={{ fontSize: 'clamp(4.5rem, 16vw, 11rem)', lineHeight: 0.88 }}
-          transition={{ ...reveal.transition, delay: 0.12 }}
+          transition={{ ...reveal.transition, delay: 0.92 }}
         >
           <span className="block brass-text">EVERY</span>
-          <span className="block" style={{ color: 'transparent', WebkitTextStroke: '1.5px rgba(184,148,26,0.38)' }}>DETAIL</span>
+          <span className="block text-tb-white drop-shadow-lg">DETAIL</span>
           <span className="block brass-text">MATTERS</span>
         </motion.h2>
 
@@ -69,7 +69,7 @@ const BrassButtonSection = () => {
           {...reveal}
           className="font-serif italic font-light text-sv max-w-[320px] md:max-w-[380px] mx-auto"
           style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.7 }}
-          transition={{ ...reveal.transition, delay: 0.24 }}
+          transition={{ ...reveal.transition, delay: 1.04 }}
         >
           Precision hardware. Forged for those who notice the difference.
         </motion.p>
@@ -78,7 +78,7 @@ const BrassButtonSection = () => {
         <motion.p
           {...reveal}
           className="font-condensed text-[0.56rem] md:text-[0.62rem] tracking-[0.42em] md:tracking-[0.5em] uppercase text-brass/45 mt-12 md:mt-14"
-          transition={{ ...reveal.transition, delay: 0.36 }}
+          transition={{ ...reveal.transition, delay: 1.16 }}
         >
           THUNDERBOLT · ORIGINAL DENIM SUPPLY · EST. 2024
         </motion.p>

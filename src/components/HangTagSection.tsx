@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import hangTag from '@/assets/hang-tag.png';
+import hangTag from '@/assets/hangtag.webp';
 
 const reveal = {
   initial: { opacity: 0, y: 36 },
@@ -18,20 +18,19 @@ const advantages = [
 ];
 
 const HangTagSection = () => (
-  <section id="details" className="bg-bg py-24 px-6 md:py-28 md:px-16 relative overflow-hidden">
+  <section id="details" className="bg-bg pt-8 pb-24 px-6 md:pt-16 md:pb-28 md:px-16 relative overflow-hidden">
     <div className="max-w-[1340px] mx-auto">
       {/* Mobile: stacked layout / Desktop: 2-column grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:gap-20 md:items-center">
         {/* LEFT — Hanging tag + tagline */}
-        <motion.div {...reveal} className="flex flex-col items-center mb-16 md:mb-0 md:justify-center">
-          {/* Cord */}
-          <div className="w-px h-16 md:h-12 bg-sv-dim" style={{ background: 'linear-gradient(180deg, rgba(56,56,56,0.5), transparent)' }} />
-          {/* Sway tag */}
+        <motion.div className="flex flex-col items-center mb-16 md:mb-0 md:justify-center">
+          {/* Floating tag wrapper - Full viewport width on mobile */}
           <motion.div
-            className="w-[200px] md:w-[280px]"
-            animate={{ rotate: [-1.5, 1.5, -1.5] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ transformOrigin: 'top center' }}
+            className="w-[100vw] -mx-6 md:mx-0 md:w-[280px] md:max-w-[280px] flex justify-center"
+            initial={{ opacity: 0, scale: 0.9, y: 50, filter: 'blur(4px)' }}
+            whileInView={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           >
             <img
               src={hangTag}
@@ -42,11 +41,15 @@ const HangTagSection = () => (
             />
           </motion.div>
           {/* Tagline below tag */}
-          <div className="mt-8 text-center font-condensed font-semibold text-[0.66rem] tracking-[0.35em] uppercase">
+          <motion.div 
+            {...reveal} 
+            transition={{ ...reveal.transition, delay: 0.3 }}
+            className="mt-8 text-center font-condensed font-semibold text-[0.66rem] tracking-[0.35em] uppercase"
+          >
             <span className="text-brass">FEEL THE POWER.</span>{' '}
             <span className="text-sv-mid">EMBRACE COMFORT.</span>{' '}
             <span className="text-tb-white">BE BOLD.</span>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* RIGHT — Header + Advantage Grid */}

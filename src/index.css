@@ -87,7 +87,8 @@
   stroke-width: 2;
   stroke-dasharray: 2000;
   stroke-dashoffset: 2000;
-  animation: drawOutline 4s ease-in-out forwards, fillColor 1.5s ease-in-out 1.2s forwards;
+  will-change: stroke-dashoffset, fill;
+  animation: drawOutline 1.5s ease-out forwards, fillColor 0.8s ease-in 1.2s forwards;
 }
 
 @keyframes drawOutline {
