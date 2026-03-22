@@ -61,8 +61,8 @@ const HeroSection = () => {
             height="1080"
             className="hidden md:block w-full h-full object-cover object-center md:brightness-[0.8] md:contrast-[1.12]"
             style={{ minHeight: '115%' }}
-            initial={{ scale: 1.08, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 1.05 }}
+            animate={{ scale: 1 }}
             transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             loading="eager"
           />
@@ -73,8 +73,8 @@ const HeroSection = () => {
             height="842"
             className="block md:hidden w-full h-full object-cover object-center"
             style={{ minHeight: '115%' }}
-            initial={{ scale: 1.08, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 1.05 }}
+            animate={{ scale: 1 }}
             transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             loading="eager"
           />
@@ -111,7 +111,6 @@ const HeroSection = () => {
 
           {/* H1 SVG Animation */}
           <motion.div
-            variants={item}
             className="mb-6 pointer-events-none w-full max-w-[1200px]"
           >
             <svg viewBox="0 0 850 160" className="w-[140%] -ml-[5%] md:w-full md:ml-0 h-auto drop-shadow-2xl">
