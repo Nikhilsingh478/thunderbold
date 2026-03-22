@@ -25,6 +25,8 @@ const BrassButtonSection = () => {
         <img
           src={brassButton}
           alt="Thunderbolt brass button — Original Denim Supply"
+          width="1920"
+          height="1080"
           className="w-full h-full object-cover object-center"
           style={{ filter: 'brightness(0.58) saturate(1.3) contrast(1.15)' }}
           loading="lazy"

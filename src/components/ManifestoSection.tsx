@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import jeansProduct from '@/assets/jeans-product.png';
+import jeansProduct from '@/assets/jeans.webp';
 
 const reveal = {
   initial: { opacity: 0, y: 36 },
@@ -25,6 +25,8 @@ const ManifestoSection = () => {
           <motion.img
             src={jeansProduct}
             alt="Thunderbolt deep navy indigo jeans"
+            width="1024"
+            height="842"
             className="w-full h-[115%] object-cover md:absolute md:inset-0 md:w-full md:h-full md:object-[center_top]"
             style={{
               y: imgY,

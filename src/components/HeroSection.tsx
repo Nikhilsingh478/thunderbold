@@ -57,6 +57,8 @@ const HeroSection = () => {
           <motion.img
             src={packagingBox}
             alt="Thunderbolt premium drawer-box packaging (Desktop)"
+            width="1920"
+            height="1080"
             className="hidden md:block w-full h-full object-cover object-center md:brightness-[0.8] md:contrast-[1.12]"
             style={{ minHeight: '115%' }}
             initial={{ scale: 1.08, opacity: 0 }}
@@ -67,6 +69,8 @@ const HeroSection = () => {
           <motion.img
             src={mobileHero}
             alt="Thunderbolt premium drawer-box packaging (Mobile)"
+            width="1024"
+            height="842"
             className="block md:hidden w-full h-full object-cover object-center"
             style={{ minHeight: '115%' }}
             initial={{ scale: 1.08, opacity: 0 }}

@@ -35,6 +35,8 @@ const HangTagSection = () => (
             <img
               src={hangTag}
               alt="Thunderbolt Advantage hang tag"
+              width="668"
+              height="1536"
               className="w-full drop-shadow-2xl"
               style={{ filter: 'brightness(1.08) contrast(1.1)' }}
               loading="lazy"
