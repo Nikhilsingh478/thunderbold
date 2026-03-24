@@ -4,12 +4,7 @@ const items = [
   'Built for the Bold',
   'Original Denim Supply',
   '4-Way Stretch',
-  'Strength in Every Stitch',
-  'Your Armor for Every Challenge',
-  'Feel the Power',
-  'Embrace Comfort',
-  'Be Bold',
-  'Drawer Series No. 1',
+  'Premium Construction',
 ];
 
 const Ticker = () => (

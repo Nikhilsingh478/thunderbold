@@ -31,7 +31,7 @@ const Statement = () => (
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
     >
-      <span className="md:metal-text">CRAFTED WITH</span><br />THE SPIRIT OF<br /><span className="md:brass-text">ANCIENT MASTERS</span>
+      <span className="md:metal-text">BRAND</span><br /><span className="md:brass-text">STATEMENT</span>
     </motion.h2>
 
     <motion.p
@@ -42,7 +42,7 @@ const Statement = () => (
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
     >
-      Thunderbolt denim embodies strength, resilience, and ultimate comfort.
+      We build reliable, high-performance denim for everyday wear. Thoughtful design meets true durability.
     </motion.p>
   </section>
 );

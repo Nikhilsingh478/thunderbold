@@ -21,41 +21,70 @@ const Legacy = () => (
       <span className="w-12 md:max-w-[160px] md:w-full h-px" style={{ background: 'linear-gradient(90deg, rgba(184,148,26,0.4), transparent)' }} />
     </motion.div>
 
+    {/* Final Product Details Grid */}
+    <motion.div
+      className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-28 text-left"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div>
+        <span className="font-display brass-text text-2xl block mb-2">01</span>
+        <span className="font-condensed font-bold uppercase text-tb-white tracking-widest block mb-1">Contoured Waistband</span>
+        <span className="font-body text-sm text-sv-mid">Sits securely on the waist without folding or sagging.</span>
+      </div>
+      <div>
+        <span className="font-display brass-text text-2xl block mb-2">02</span>
+        <span className="font-condensed font-bold uppercase text-tb-white tracking-widest block mb-1">Reinforced Belt Loops</span>
+        <span className="font-body text-sm text-sv-mid">Double-stitched loops that handle constant pulling and daily wear.</span>
+      </div>
+      <div>
+        <span className="font-display brass-text text-2xl block mb-2">03</span>
+        <span className="font-condensed font-bold uppercase text-tb-white tracking-widest block mb-1">Heavy-Duty Hardware</span>
+        <span className="font-body text-sm text-sv-mid">Solid metal buttons and smooth, scratch-resistant rivets built for the long haul.</span>
+      </div>
+    </motion.div>
+
     {/* Ghost outline H2 */}
     <motion.h2
-      className="font-display"
-      style={{ fontSize: 'clamp(4rem, 16vw, 10.5rem)', lineHeight: 0.88, color: 'transparent', WebkitTextStroke: '1px rgba(184,148,26,0.28)' }}
+      className="font-display uppercase"
+      style={{ fontSize: 'clamp(3rem, 11vw, 8.5rem)', lineHeight: 0.88, color: 'transparent', WebkitTextStroke: '1px rgba(184,148,26,0.28)' }}
       initial={{ opacity: 0, y: 36 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
     >
-      LEAVE<br />A MARK
+      EXPERIENCE<br />THE BUILD
     </motion.h2>
 
     {/* Body */}
-    <motion.p
-      className="font-serif italic font-light text-sv-mid max-w-[620px] md:max-w-[580px] mx-auto mb-14"
-      style={{ fontSize: 'clamp(1.1rem, 2.2vw, 1.42rem)', lineHeight: 1.72, marginTop: '44px' }}
+    <motion.div
+      className="font-body font-light text-sv-mid max-w-[620px] md:max-w-[580px] mx-auto mb-14 space-y-4"
+      style={{ fontSize: 'clamp(1.1rem, 2.2vw, 1.2rem)', lineHeight: 1.72, marginTop: '44px' }}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
     >
-      Thunderbolt is more than a brand — it's a declaration. For those who push harder, reach further, and refuse to fade into the ordinary. This is your denim. This is your armor.
-    </motion.p>
+      <p>Interested in exploring the collection or becoming a retail partner?</p>
+      <p>Get in touch with our team directly.</p>
+    </motion.div>
 
-    {/* Badge CTA */}
+    {/* CTA Buttons */}
     <motion.div
-      className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] md:tracking-[0.28em] uppercase text-sv px-8 md:px-12 py-4 md:py-5"
-      style={{ border: '1px solid rgba(184,148,26,0.25)' }}
+      className="flex flex-col md:flex-row items-center justify-center gap-4"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.24 }}
-      whileHover={{ borderColor: 'rgba(184,148,26,0.6)', color: '#d4aa30' }}
     >
-      <span className="brass-text">⚡</span> Built for the Bold
+      <button className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-void bg-brass px-8 md:px-12 py-4 md:py-5 hover:bg-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center">
+        Connect on WhatsApp
+      </button>
+      <button className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-tb-white px-8 md:px-12 py-4 md:py-5 hover:border-brass/60 hover:text-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center" style={{ border: '1px solid rgba(184,148,26,0.25)' }}>
+        Partner With Us
+      </button>
     </motion.div>
 
     {/* Below badge */}

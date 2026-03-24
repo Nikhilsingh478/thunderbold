@@ -114,8 +114,8 @@ const HeroSection = () => {
             className="mb-6 pointer-events-none w-full max-w-[1200px]"
           >
             <svg viewBox="0 0 850 160" className="w-[140%] -ml-[5%] md:w-full md:ml-0 h-auto drop-shadow-2xl">
-              <text x="0" y="130" fontSize="140" className="font-display thunderbolt-text" textAnchor="start">
-                THUNDERBOLT
+              <text x="0" y="130" fontSize="85" className="font-display thunderbolt-text" textAnchor="start">
+                BUILT FOR THE BOLD
               </text>
             </svg>
           </motion.div>
@@ -126,7 +126,7 @@ const HeroSection = () => {
             className="font-serif italic font-light text-sv-mid mt-4 md:mt-6 max-w-[420px] md:max-w-[400px] md:text-left"
             style={{ fontSize: 'clamp(1rem, 2.2vw, 1.18rem)', lineHeight: 1.72 }}
           >
-            Crafted with the spirit of ancient masters.
+            Premium stretch denim engineered for movement and durability.
           </motion.p>
 
           {/* CTA Row */}

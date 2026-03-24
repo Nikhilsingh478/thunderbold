@@ -8,11 +8,9 @@ const reveal = {
 };
 
 const traits = [
-  { n: '01', name: '4-Way Stretch Fabric', desc: 'Move in every direction without resistance. Built for the full range of your life.' },
-  { n: '02', name: 'Reinforced Waistband', desc: 'Structured support that holds its shape through anything you put it through.' },
-  { n: '03', name: 'Tucked Belt Loops', desc: 'Durability built into the architecture — reinforced where it matters most.' },
-  { n: '04', name: 'Precision Hardware', desc: 'Gunmetal finish. Brass construction. Every piece chosen for permanence.' },
-  { n: '05', name: 'Artisan Leather Patch', desc: 'High-quality suede branding — the quiet mark of those who know the difference.' },
+  { n: '01', name: 'All-Day Fit', desc: 'Made from breathable, flexible denim that prevents stiffness. Stays easily wearable from morning to night.' },
+  { n: '02', name: 'High-Retention Fabric', desc: 'Advanced material that refuses to stretch out. Keeps its true fit after months of wear.' },
+  { n: '03', name: 'Stress-Tested Seams', desc: 'Major seams are tightly locked in. Built to handle daily wear without weak points.' },
 ];
 
 const TraitsSection = () => (

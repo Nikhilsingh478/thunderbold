@@ -9,12 +9,11 @@ const reveal = {
 };
 
 const advantages = [
-  { icon: '⟺', title: '4-Way Stretch', desc: 'Freedom in every direction' },
-  { icon: '◎', title: 'Hidden Rivets', desc: 'Clean lines, hidden strength' },
-  { icon: '◈', title: 'Premium Hardware', desc: 'Brass & gunmetal precision' },
-  { icon: '⊟', title: 'Chain Stitched', desc: 'Waistband built to last' },
-  { icon: '⊞', title: 'Selvedge Detail', desc: 'Artisan edge finishing' },
-  { icon: '⌇', title: 'Reinforced Build', desc: 'Engineered for endurance' },
+  { icon: '⟺', title: '4-Way Stretch', desc: 'Fabric that stretches and recovers easily. Moves freely throughout the day.' },
+  { icon: '⌇', title: 'Reinforced Build', desc: 'Extra strength applied to joints and stress points. Prevents tearing at the seams.' },
+  { icon: '⊟', title: 'Heavy-Duty Stitching', desc: 'Precision-stitched using high-strength threads. Holds the jeans together securely.' },
+  { icon: '⊞', title: 'Structured Waistband', desc: 'Designed to sit comfortably without stretching out. Keeps a consistent fit over time.' },
+  { icon: '◈', title: 'Durable Hardware', desc: "Industrial-grade metal buttons and smooth zippers. Reliable hardware that lasts." },
 ];
 
 const HangTagSection = () => (
@@ -48,9 +47,8 @@ const HangTagSection = () => (
             transition={{ ...reveal.transition, delay: 0.3 }}
             className="mt-8 text-center font-condensed font-semibold text-[0.66rem] tracking-[0.35em] uppercase"
           >
-            <span className="text-brass">FEEL THE POWER.</span>{' '}
-            <span className="text-sv-mid">EMBRACE COMFORT.</span>{' '}
-            <span className="text-tb-white">BE BOLD.</span>
+            <span className="text-brass">PREMIUM STRETCH.</span>{' '}
+            <span className="text-sv-mid">EVERYDAY RELIABILITY.</span>
           </motion.div>
         </motion.div>
 
@@ -94,7 +92,7 @@ const HangTagSection = () => (
         className="font-condensed font-bold text-[0.76rem] tracking-[0.22em] uppercase text-brass/60 text-center mt-12 md:hidden"
         transition={{ ...reveal.transition, delay: 0.3 }}
       >
-        FEEL THE POWER. <span className="text-brass/40">·</span> EMBRACE COMFORT. <span className="text-brass/40">·</span> BE BOLD.
+        PREMIUM STRETCH. <span className="text-brass/40">·</span> EVERYDAY RELIABILITY.
       </motion.p>
     </div>
   </section>

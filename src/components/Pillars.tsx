@@ -3,18 +3,18 @@ import { motion } from 'framer-motion';
 const pillars = [
   {
     n: '01',
-    title: 'Freedom of Movement',
-    body: 'Engineered with 4-way stretch technology, Thunderbolt moves with you from the first hour to the last. No restriction. No compromise. All day, every direction.',
+    title: 'Comfort & Movement',
+    body: 'Stretch denim that naturally adapts to your body. Moves freely throughout the day.',
   },
   {
     n: '02',
-    title: 'Unmatched Durability',
-    body: 'Every seam, every loop, every decision is built to outlast the ordinary. Reinforced construction made for the relentless demands of a life without limits.',
+    title: 'Engineered Durability',
+    body: 'Built to withstand daily wear with reinforced seams. Made to last, wash after wash.',
   },
   {
     n: '03',
-    title: 'Refined Finish',
-    body: 'Gunmetal hardware. Brass accents. Artisan-grade suede branding. The difference between good and exceptional lives in the details most will never see — but you will feel.',
+    title: 'Precision Finish',
+    body: 'Careful attention to stitching and hardware. Quality you notice from day one.',
   },
 ];
 

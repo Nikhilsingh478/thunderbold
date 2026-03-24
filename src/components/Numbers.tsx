@@ -1,10 +1,9 @@
 import { motion } from 'framer-motion';
 
 const metrics = [
-  { val: '4', label: 'Way Stretch', sub: 'Move freely in every direction, all day' },
-  { val: '360°', label: 'Comfort', sub: 'From morning to midnight without compromise' },
-  { val: '∞', label: 'Durability', sub: 'Outlasts every challenge you face' },
-  { val: '01', label: 'Standard', sub: 'One benchmark — uncompromised premium denim' },
+  { val: '4', label: 'Way Stretch', sub: 'Freedom of movement' },
+  { val: '24/7', label: 'Comfort', sub: 'Easy everyday wear' },
+  { val: '365', label: 'Durability', sub: 'Designed for long-term use' },
 ];
 
 const Numbers = () => (
@@ -26,7 +25,7 @@ const Numbers = () => (
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px mt-14" style={{ background: 'rgba(255,255,255,0.065)' }}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-px mt-14" style={{ background: 'rgba(255,255,255,0.065)' }}>
         {metrics.map((m, i) => (
           <motion.div
             key={m.label}

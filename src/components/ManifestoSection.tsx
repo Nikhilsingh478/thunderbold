@@ -58,19 +58,21 @@ const ManifestoSection = () => {
             Our Manifesto
           </div>
           <h2 className="font-display text-tb-white uppercase" style={{ fontSize: 'clamp(2.8rem, 10vw, 5.2rem)', lineHeight: 0.92, letterSpacing: '0.02em' }}>
-            FORGED<br />FOR THE<br /><span className="brass-text">BOLD ONES</span>
+            FORGED<br />FOR THE<br /><span className="brass-text">BOLD</span>
           </h2>
-          <p className="font-body font-light text-sv-mid max-w-[440px] md:max-w-[420px] mt-7 md:mt-6" style={{ fontSize: '1.04rem', lineHeight: 1.82 }}>
-            Thunderbolt was born from a singular conviction — that what you wear should be as unbreakable as your will. Every pair is a testament to mastery: the kind forged by time, discipline, and an obsession with the exceptional. We don't make jeans. We make armor.
-          </p>
+          <div className="font-body font-light text-sv-mid max-w-[440px] md:max-w-[420px] mt-7 md:mt-6 space-y-4" style={{ fontSize: '1.04rem', lineHeight: 1.82 }}>
+            <p>We build premium denim for those who expect more from their everyday wear. Thunderbolt jeans are engineered to handle daily use while maintaining a clean, modern look.</p>
+            <p>Constructed with advanced stretch fabric, they move with you and retain their shape over time. The right balance of immediate fit and long-term durability.</p>
+            <p>No shortcuts. No compromises. Just reliable, well-built jeans designed for work, travel, and everyday wear.</p>
+          </div>
 
           {/* Quote card */}
           <div className="bg-surface border-l-2 border-brass/40 pl-5 md:pl-6 py-4 md:py-5 mt-8">
             <blockquote className="font-serif italic font-light text-tb-off mb-3" style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.62 }}>
-              &ldquo;This isn't just jeans; it's your armor for life's every challenge.&rdquo;
+              &ldquo;Engineered to handle daily wear while keeping a sharp, modern look.&rdquo;
             </blockquote>
             <cite className="font-condensed not-italic font-semibold text-[0.64rem] md:text-[0.66rem] tracking-[0.22em] uppercase text-brass block">
-              — Thunderbolt · Built for the Bold
+              — Premium Stretch Denim
             </cite>
           </div>
         </motion.div>

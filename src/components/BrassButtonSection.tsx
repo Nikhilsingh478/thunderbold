@@ -69,12 +69,35 @@ const BrassButtonSection = () => {
         {/* Sub-copy */}
         <motion.p
           {...reveal}
-          className="font-serif italic font-light text-sv max-w-[320px] md:max-w-[380px] mx-auto"
+          className="font-serif font-light text-sv max-w-[500px] md:max-w-[600px] mx-auto mb-10"
           style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.7 }}
           transition={{ ...reveal.transition, delay: 1.04 }}
         >
-          Precision hardware. Forged for those who notice the difference.
+          A great pair of jeans comes down to how it is built. We combine strong materials with precise construction to ensure your denim lasts longer.
         </motion.p>
+        
+        <motion.div
+           {...reveal}
+           className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-left max-w-[800px] mx-auto px-4"
+           transition={{ ...reveal.transition, delay: 1.1 }}
+        >
+          <div>
+            <span className="block font-condensed font-bold text-tb-white tracking-widest uppercase mb-1">Reinforced Construction</span>
+            <span className="block font-body text-sm text-sv-mid">Heavy-duty stitching on high-stress seams.</span>
+          </div>
+          <div>
+            <span className="block font-condensed font-bold text-tb-white tracking-widest uppercase mb-1">Durable Hardware</span>
+            <span className="block font-body text-sm text-sv-mid">Custom metal rivets and strong zippers.</span>
+          </div>
+          <div>
+            <span className="block font-condensed font-bold text-tb-white tracking-widest uppercase mb-1">Premium Materials</span>
+            <span className="block font-body text-sm text-sv-mid">Stretch denim that retains its shape over time.</span>
+          </div>
+          <div>
+            <span className="block font-condensed font-bold text-tb-white tracking-widest uppercase mb-1">Clean Finishing</span>
+            <span className="block font-body text-sm text-sv-mid">Smooth interior seams for a comfortable feel.</span>
+          </div>
+        </motion.div>
 
         {/* Bottom text */}
         <motion.p

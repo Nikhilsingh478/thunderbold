@@ -13,7 +13,7 @@ const Footer = () => (
     {/* Center — desktop only */}
     <div className="hidden md:block">
       <span className="font-condensed font-semibold uppercase text-sv-dim" style={{ fontSize: '0.6rem', letterSpacing: '0.30em' }}>
-        Feel the Power · Embrace Comfort · Be Bold
+        Premium Build · Everyday Wear
       </span>
     </div>
 
