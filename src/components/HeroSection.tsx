@@ -33,7 +33,7 @@ const HeroSection = () => {
     const handleMouseMove = (e: MouseEvent) => {
       const { innerWidth, innerHeight } = window;
       if (innerWidth < 768) return; // Disable on mobile devices
-      
+
       const x = (e.clientX / innerWidth) * 2 - 1;
       const y = (e.clientY / innerHeight) * 2 - 1;
       mouseX.set(x);
@@ -132,12 +132,14 @@ const HeroSection = () => {
           {/* CTA Row */}
           <motion.div variants={item} className="flex items-center gap-6 mt-8 flex-wrap md:justify-start">
             <motion.a
-              href="#manifesto"
+              href="https://wa.me/919561172681"
+              target="_blank"
+              rel="noopener noreferrer"
               className="font-condensed font-bold text-xs tracking-[0.18em] uppercase text-void bg-tb-white px-8 py-4 inline-block"
               whileHover={{ y: -2, backgroundColor: '#ffffff' }}
               transition={{ duration: 0.18 }}
             >
-              Discover the Brand
+              Contact Us
             </motion.a>
             <a
               href="#craft"

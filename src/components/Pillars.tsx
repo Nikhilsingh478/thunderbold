@@ -20,12 +20,7 @@ const pillars = [
 
 const Pillars = () => (
   <section className="bg-surface border-t border-b border-sb py-24 px-6 md:py-28 md:px-0 relative overflow-hidden">
-    {/* Watermark */}
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-      <span className="font-display whitespace-nowrap" style={{ fontSize: '15vw', color: 'rgba(255,255,255,0.016)', letterSpacing: '0.05em' }}>
-        THUNDERBOLT
-      </span>
-    </div>
+    {/* Watermark removed as requested */}
 
     <div className="max-w-[1340px] mx-auto relative z-10 md:px-16">
       <div className="font-condensed font-semibold uppercase text-sv-mid flex items-center gap-3 mb-6 md:mb-14" style={{ fontSize: '0.66rem', letterSpacing: '0.38em' }}>
@@ -52,7 +47,7 @@ const Pillars = () => (
               style={{ background: 'linear-gradient(90deg, transparent, #b8941a, transparent)' }}
             />
 
-            <span className="font-display text-[5rem] md:text-[5.5rem] leading-none text-sv-dim opacity-20 group-hover:opacity-40 transition-opacity duration-300 block mb-6 md:mb-8">
+            <span className="font-display text-[5rem] md:text-[5.5rem] leading-none text-brass opacity-60 group-hover:opacity-100 transition-opacity duration-300 block mb-6 md:mb-8">
               {p.n}
             </span>
 

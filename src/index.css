@@ -60,6 +60,11 @@
     cursor: none;
     -webkit-font-smoothing: antialiased;
   }
+
+  ::selection {
+    background-color: #d4aa30;
+    color: #0c0c0c;
+  }
 }
 
 /* Metal text effect — matches packaging emboss */

@@ -2,7 +2,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 const Navbar = () => {
-  const links = ['Manifesto', 'Craft', 'Details', 'Legacy'];
+  const links = [
+    { name: 'Contact', href: '#footer' },
+    { name: 'Craft', href: '#craft' },
+    { name: 'Details', href: '#details' },
+    { name: 'Legacy', href: '#legacy' }
+  ];
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -78,11 +83,11 @@ const Navbar = () => {
           {links.map((link) => (
             <motion.a
               variants={itemVariants}
-              key={link}
-              href={`#${link.toLowerCase()}`}
+              key={link.name}
+              href={link.href}
               className="group font-condensed font-semibold text-[0.72rem] tracking-[0.20em] uppercase text-sv-mid hover:text-white transition-colors duration-300 relative"
             >
-              {link}
+              {link.name}
               <span className="absolute -bottom-2 left-0 w-0 h-px bg-brass-bright group-hover:w-full transition-all duration-300 ease-in-out" />
             </motion.a>
           ))}
@@ -113,8 +118,8 @@ const Navbar = () => {
             <div className="flex flex-col items-center gap-6">
               {links.map((link, i) => (
                 <motion.a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
+                  key={link.name}
+                  href={link.href}
                   onClick={() => setIsOpen(false)}
                   className="font-display text-4xl tracking-[0.16em] uppercase text-white hover:text-brass-bright transition-colors duration-300 relative block"
                   initial="closed"
@@ -123,7 +128,7 @@ const Navbar = () => {
                   variants={linkVariants}
                   transition={{ delay: i * 0.08 + 0.2 }}
                 >
-                  <span className="metal-text block py-2">{link}</span>
+                  <span className="metal-text block py-2">{link.name}</span>
                 </motion.a>
               ))}
             </div>

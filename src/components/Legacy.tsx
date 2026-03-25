@@ -46,16 +46,17 @@ const Legacy = () => (
       </div>
     </motion.div>
 
-    {/* Ghost outline H2 */}
+    {/* Solid readable H2 with unique blur-scale animation */}
     <motion.h2
       className="font-display uppercase"
-      style={{ fontSize: 'clamp(3rem, 11vw, 8.5rem)', lineHeight: 0.88, color: 'transparent', WebkitTextStroke: '1px rgba(184,148,26,0.28)' }}
-      initial={{ opacity: 0, y: 36 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      style={{ fontSize: 'clamp(3rem, 11vw, 8.5rem)', lineHeight: 0.88 }}
+      initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+      whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      EXPERIENCE<br />THE BUILD
+      <span className="text-tb-white">EXPERIENCE</span><br />
+      <span className="brass-text">THE BUILD</span>
     </motion.h2>
 
     {/* Body */}
@@ -79,25 +80,25 @@ const Legacy = () => (
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.24 }}
     >
-      <button className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-void bg-brass px-8 md:px-12 py-4 md:py-5 hover:bg-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center">
+      <a 
+        href="https://wa.me/919561172681" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-void bg-brass px-8 md:px-12 py-4 md:py-5 hover:bg-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center"
+      >
         Connect on WhatsApp
-      </button>
-      <button className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-tb-white px-8 md:px-12 py-4 md:py-5 hover:border-brass/60 hover:text-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center" style={{ border: '1px solid rgba(184,148,26,0.25)' }}>
+      </a>
+      <a 
+        href="https://wa.me/919561172681?text=Hi%2C%20I%E2%80%99m%20interested%20in%20partnering%20with%20Thunderbolt.%20Can%20you%20share%20details%20about%20retail%20collaboration%3F" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-tb-white px-8 md:px-12 py-4 md:py-5 hover:border-brass/60 hover:text-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center" 
+        style={{ border: '1px solid rgba(184,148,26,0.25)' }}
+      >
         Partner With Us
-      </button>
+      </a>
     </motion.div>
 
-    {/* Below badge */}
-    <motion.p
-      className="hidden md:block font-condensed text-[0.6rem] tracking-[0.42em] uppercase mt-14"
-      style={{ color: 'rgba(56,56,56,0.45)' }}
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 1, delay: 0.4 }}
-    >
-      DRAWER SERIES NO. 1 · ORIGINAL DENIM SUPPLY
-    </motion.p>
   </section>
 );
 
