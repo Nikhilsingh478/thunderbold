@@ -158,7 +158,7 @@ const HeroSection = () => {
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
       >
         <div className="w-px h-8" style={{ background: 'linear-gradient(to bottom, #7a6210, transparent)' }} />
-        <span className="font-condensed text-brass-dim uppercase text-[0.58rem] tracking-[0.30em]">Scroll</span>
+        {/* <span className="font-condensed text-brass-dim uppercase text-[0.58rem] tracking-[0.30em]">Scroll</span> */}
       </motion.div>
     </section>
   );
