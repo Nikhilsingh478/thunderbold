@@ -46,11 +46,19 @@ export default function ProductView() {
 
   const handleOrder = () => {
     if (!selectedSize) return;
-    const message = `Hello, I want to order:
-Product: ${product?.name}
-Size: ${selectedSize}
-Quantity: ${quantity}
-Link: ${window.location.href}`;
+    const message = `⚡ *THUNDERBOLT ORDER REQUEST* ⚡
+
+Hello! I would like to place an order for the following item:
+
+*Product:* ${product?.name}
+*Price:* ${product?.price}
+*Size Selected:* ${selectedSize}
+*Quantity:* ${quantity}
+
+🔗 *Product Link:* 
+${window.location.href}
+
+Please let me know the next steps for payment and delivery!`;
     const encodedMessage = encodeURIComponent(message);
     const phoneNumber = '919561172681';
     window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
