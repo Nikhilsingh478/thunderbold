@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Centralized override to reduce Bebas Neue tracking globally */
+  .font-display {
+    letter-spacing: 0.04em !important;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 4.3%;
@@ -57,7 +64,7 @@
     color: #c4c2be;
     font-weight: 300;
     overflow-x: hidden;
-    cursor: none;
+    /* cursor: none; */
     -webkit-font-smoothing: antialiased;
   }
 

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 const CustomCursor = () => {
+  // Temporarily disabled as requested
+  return null;
+  
+  // existing code follows (unreachable but kept as requested)
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const mouse = useRef({ x: 0, y: 0 });
@@ -41,7 +45,7 @@ const CustomCursor = () => {
   if (typeof window !== 'undefined' && 'ontouchstart' in window) return null;
 
   return (
-    <div className="hidden md:block">
+    <div className="hidden md:block pointer-events-none z-[10000] relative">
       <div
         ref={dotRef}
         className="fixed top-0 left-0 pointer-events-none"
@@ -50,7 +54,6 @@ const CustomCursor = () => {
           height: 8,
           backgroundColor: '#d4aa30',
           borderRadius: '50%',
-          mixBlendMode: 'difference',
           zIndex: 9999,
         }}
       />
