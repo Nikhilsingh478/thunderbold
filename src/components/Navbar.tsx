@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Search } from 'lucide-react';
+import SearchOverlay from './SearchOverlay';
 
 const Navbar = () => {
   const links = [
@@ -9,6 +11,7 @@ const Navbar = () => {
   ];
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -80,7 +83,7 @@ const Navbar = () => {
           </motion.span>
         </Link>
 
-        {/* Desktop Links */}
+        {/* Desktop Links & Search */}
         <div className="hidden md:flex items-center gap-10">
           {links.map((link) => (
             <motion.div variants={itemVariants} key={link.name}>
@@ -93,18 +96,38 @@ const Navbar = () => {
               </Link>
             </motion.div>
           ))}
+          <motion.button 
+            variants={itemVariants} 
+            onClick={() => setIsSearchOpen(true)}
+            className="text-sv-mid hover:text-tb-white transition-colors focus:outline-none"
+            aria-label="Search"
+          >
+            <Search size={20} strokeWidth={1.5} />
+          </motion.button>
         </div>
 
-        {/* Mobile Toggle Button */}
-        <motion.button
-          variants={itemVariants}
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden flex flex-col justify-center items-center w-8 h-8 z-[110] relative focus:outline-none group"
-          aria-label="Toggle menu"
-        >
-          <span className={`w-7 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? 'rotate-45 translate-y-[1px]' : '-translate-y-1 group-hover:bg-brass-bright'}`} />
-          <span className={`w-7 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? '-rotate-45 -translate-y-[1px]' : 'translate-y-1 group-hover:bg-brass-bright'}`} />
-        </motion.button>
+        {/* Mobile Buttons Area */}
+        <div className="md:hidden flex items-center gap-6 z-[110]">
+          <motion.button 
+            variants={itemVariants} 
+            onClick={() => setIsSearchOpen(true)}
+            className="text-white hover:text-brass-bright transition-colors focus:outline-none"
+            aria-label="Search"
+          >
+            <Search size={22} strokeWidth={1.5} />
+          </motion.button>
+
+          {/* Mobile Toggle Button */}
+          <motion.button
+            variants={itemVariants}
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex flex-col justify-center items-center w-8 h-8 relative focus:outline-none group"
+            aria-label="Toggle menu"
+          >
+            <span className={`w-7 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? 'rotate-45 translate-y-[1px]' : '-translate-y-1 group-hover:bg-brass-bright'}`} />
+            <span className={`w-7 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? '-rotate-45 -translate-y-[1px]' : 'translate-y-1 group-hover:bg-brass-bright'}`} />
+          </motion.button>
+        </div>
       </motion.nav>
 
       {/* Mobile Fullscreen Menu */}
@@ -153,6 +176,7 @@ const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };
