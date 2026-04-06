@@ -161,7 +161,7 @@ Please let me know the next steps for payment and delivery!`;
                 {product?.price || '₹ 2,499'}
               </div>
               
-              <p className="font-serif italic font-light text-sv-mid text-xl mb-10 leading-relaxed max-w-[90%]">
+              <p className="font-serif italic font-light text-white/90 text-xl mb-10 leading-snug max-w-[90%]">
                 {product?.description}
               </p>
 
@@ -179,7 +179,7 @@ Please let me know the next steps for payment and delivery!`;
                       className={`h-12 w-full md:w-14 md:h-14 flex items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 ${
                         selectedSize === size
                           ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
-                          : 'border-white/10 text-sv-mid hover:border-white/50 hover:text-white hover:scale-[1.02]'
+                          : 'border-white text-tb-white hover:bg-white/5 hover:scale-[1.02]'
                       }`}
                     >
                       {size}
