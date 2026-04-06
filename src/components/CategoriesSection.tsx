@@ -5,9 +5,9 @@ import { CATEGORY_IMAGES } from '@/data/products';
 const categories = [
   { id: 'bootcut', name: 'Bootcut' },
   { id: 'straight', name: 'Straight Fit' },
-  { id: 'monk', name: 'Monk Fit' },
+  { id: 'momfit', name: 'Mom Fit' },
   { id: 'baggy', name: 'Baggy' },
-  { id: 'stretch', name: 'Stretch' },
+  { id: 'trousers', name: 'Trousers' },
   { id: 'distressed', name: 'Distressed' },
 ];
 
