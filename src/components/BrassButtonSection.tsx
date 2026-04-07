@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import brassButton from '@/assets/brass_button.webp';
+import brassButton from '../assets/brass_button.webp';
 
 const reveal = {
   initial: { opacity: 0, y: 36 },

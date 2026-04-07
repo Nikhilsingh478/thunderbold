@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import jeansProduct from '@/assets/jeans.webp';
+import jeansProduct from '../assets/jeans.webp';
 
 const reveal = {
   initial: { opacity: 0, y: 36 },

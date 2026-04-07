@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import CustomCursor from '@/components/CustomCursor';
-import ScrollProgress from '@/components/ScrollProgress';
-import { CATEGORIES, PRODUCTS } from '@/data/products';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import CustomCursor from '../components/CustomCursor';
+import ScrollProgress from '../components/ScrollProgress';
+import { CATEGORIES, PRODUCTS } from '../data/products';
 
 export default function CategoryView() {
   const { categoryId } = useParams();

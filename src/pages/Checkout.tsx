@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import ScrollProgress from '@/components/ScrollProgress';
-import CustomCursor from '@/components/CustomCursor';
-import AddressForm, { type AddressData } from '@/components/checkout/AddressForm';
-import ProductSummary from '@/components/checkout/ProductSummary';
-import OrderConfirmation from '@/components/checkout/OrderConfirmation';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import ScrollProgress from '../components/ScrollProgress';
+import CustomCursor from '../components/CustomCursor';
+import AddressForm, { type AddressData } from '../components/checkout/AddressForm';
+import ProductSummary from '../components/checkout/ProductSummary';
+import OrderConfirmation from '../components/checkout/OrderConfirmation';
 
 export interface CheckoutState {
   productName: string;
@@ -108,44 +108,49 @@ export default function Checkout() {
       toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
     }
 
-    // Continue with WhatsApp flow
-    const addressLine2 = address.addressLine2 ? `, ${address.addressLine2}` : '';
-    const landmark = address.landmark ? `\nLandmark: ${address.landmark}` : '';
+    // Continue with WhatsApp flow (TEMPORARILY PAUSED)
+    // const addressLine2 = address.addressLine2 ? `, ${address.addressLine2}` : '';
+    // const landmark = address.landmark ? `\nLandmark: ${address.landmark}` : '';
 
-    const message = `⚡ *THUNDERBOLT ORDER REQUEST* ⚡
+    // const message = `⚡ *THUNDERBOLT ORDER REQUEST* ⚡
 
-Hello, I want to order:
+    // Hello, I want to order:
 
-*Product:* ${product.productName}
-*Category:* ${product.categoryName}
-*Size:* ${product.size}
-*Quantity:* ${product.quantity}
-*Price:* ${product.price}
+    // *Product:* ${product.productName}
+    // *Category:* ${product.categoryName}
+    // *Size:* ${product.size}
+    // *Quantity:* ${product.quantity}
+    // *Price:* ${product.price}
 
-*Delivery Address:*
-${address.fullName}
-${address.phone}
-${address.addressLine1}${addressLine2}
-${address.city}, ${address.state} - ${address.pincode}${landmark}
+    // *Delivery Address:*
+    // ${address.fullName}
+    // ${address.phone}
+    // ${address.addressLine1}${addressLine2}
+    // ${address.city}, ${address.state} - ${address.pincode}${landmark}
 
-🔗 *Product Link:*
-${product.productUrl}
+    // 🔗 *Product Link:*
+    // ${product.productUrl}
 
-Please confirm availability and next steps!`;
+    // Please confirm availability and next steps!`;
 
-    toast.success('Order details ready. Redirecting to WhatsApp…');
+    // toast.success('Order details ready. Redirecting to WhatsApp…');
 
-    setTimeout(() => {
-      const encoded = encodeURIComponent(message);
-      const phoneNumber = '919561172681';
-      window.open(`https://wa.me/${phoneNumber}?text=${encoded}`, '_blank');
-      setSubmitting(false);
+    // setTimeout(() => {
+    //   const encoded = encodeURIComponent(message);
+    //   const phoneNumber = '919561172681';
+    //   window.open(`https://wa.me/${phoneNumber}?text=${encoded}`, '_blank');
+    //   setSubmitting(false);
       
-      // Show confirmation modal after WhatsApp opens
-      setTimeout(() => {
-        setShowConfirmation(true);
-      }, 500);
-    }, 1200);
+    //   // Show confirmation modal after WhatsApp opens
+    //   setTimeout(() => {
+    //     setShowConfirmation(true);
+    //   }, 500);
+    // }, 1200);
+
+    // TEMPORARY: Show success message and confirmation modal immediately after DB save
+    toast.success('Order saved successfully!');
+    setSubmitting(false);
+    setShowConfirmation(true);
   };
 
   return (

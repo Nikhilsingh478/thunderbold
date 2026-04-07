@@ -1,22 +1,22 @@
-import jeansPlaceholder from '@/assets/jeans.webp';
-import jeansSide from '@/assets/jeans-side.png';
-import jeansDetail from '@/assets/jeans-detail.png';
+import jeansPlaceholder from '../assets/jeans.webp';
+import jeansSide from '../assets/jeans-side.png';
+import jeansDetail from '../assets/jeans-detail.png';
 
 // Category specific imports (from new categories folder)
-import catBootcutImg from '@/assets/categories/bootcut.webp';
-import catStraightImg from '@/assets/categories/straightfit.webp';
-import catMomFitImg from '@/assets/categories/momfit.jpg';
-import catBaggyImg from '@/assets/categories/baggy.webp';
-import catTrousersImg from '@/assets/categories/trousers.webp';
-import catDistressedImg from '@/assets/categories/distressed.webp';
+import catBootcutImg from '../assets/categories/bootcut.webp';
+import catStraightImg from '../assets/categories/straightfit.webp';
+import catMomFitImg from '../assets/categories/momfit.jpg';
+import catBaggyImg from '../assets/categories/baggy.webp';
+import catTrousersImg from '../assets/categories/trousers.webp';
+import catDistressedImg from '../assets/categories/distressed.webp';
 
 // Product specific imports (from old categories, now in jeans folder)
-import prodBootcutImg from '@/assets/jeans/bootcut.webp';
-import prodStraightImg from '@/assets/jeans/straightfit.webp';
-import prodMonkImg from '@/assets/jeans/monkfit.webp';
-import prodBaggyImg from '@/assets/jeans/baggy.webp';
-import prodStretchImg from '@/assets/jeans/stretch.webp';
-import prodDistressedImg from '@/assets/jeans/distressed.webp';
+import prodBootcutImg from '../assets/jeans/bootcut.webp';
+import prodStraightImg from '../assets/jeans/straightfit.webp';
+import prodMonkImg from '../assets/jeans/monkfit.webp';
+import prodBaggyImg from '../assets/jeans/baggy.webp';
+import prodStretchImg from '../assets/jeans/stretch.webp';
+import prodDistressedImg from '../assets/jeans/distressed.webp';
 
 export const CATEGORY_IMAGES: Record<string, string> = {
   bootcut: catBootcutImg,

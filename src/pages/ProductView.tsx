@@ -2,11 +2,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import CustomCursor from '@/components/CustomCursor';
-import ScrollProgress from '@/components/ScrollProgress';
-import { SIZES, PRODUCTS } from '@/data/products';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import CustomCursor from '../components/CustomCursor';
+import ScrollProgress from '../components/ScrollProgress';
+import { SIZES, PRODUCTS } from '../data/products';
 
 export default function ProductView() {
   const { productId } = useParams();

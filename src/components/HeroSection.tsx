@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { useEffect } from 'react';
-import packagingBox from '@/assets/packaging-box.png';
-import mobileHero from '@/assets/mobile_hero.webp';
+import packagingBox from '../assets/packaging-box.png';
+import mobileHero from '../assets/mobile_hero.webp';
 
 const container = {
   hidden: {},

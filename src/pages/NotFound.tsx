@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import CustomCursor from "@/components/CustomCursor";
+import CustomCursor from "../components/CustomCursor";
 
 const NotFound = () => {
   const location = useLocation();

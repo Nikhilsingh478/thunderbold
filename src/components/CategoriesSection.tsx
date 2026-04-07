@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { CATEGORY_IMAGES } from '@/data/products';
+import { CATEGORY_IMAGES } from '../data/products';
 
 const categories = [
   { id: 'bootcut', name: 'Bootcut' },

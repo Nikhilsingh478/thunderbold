@@ -1,8 +1,8 @@
-import CustomCursor from '@/components/CustomCursor';
-import ScrollProgress from '@/components/ScrollProgress';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import CategoriesSection from '@/components/CategoriesSection';
+import CustomCursor from '../components/CustomCursor';
+import ScrollProgress from '../components/ScrollProgress';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import CategoriesSection from '../components/CategoriesSection';
 
 const Index = () => (
   <div className="noise-overlay min-h-screen flex flex-col">

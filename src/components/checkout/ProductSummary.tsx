@@ -1,4 +1,4 @@
-import type { CheckoutState } from '@/pages/Checkout';
+import type { CheckoutState } from '../pages/Checkout';
 
 interface Props {
   product: CheckoutState;

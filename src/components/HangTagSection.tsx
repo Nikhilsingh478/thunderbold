@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import hangTag from '@/assets/hangtag.webp';
+import hangTag from '../assets/hangtag.webp';
 
 const reveal = {
   initial: { opacity: 0, y: 36 },
