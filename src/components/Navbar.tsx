@@ -1,10 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 import SearchOverlay from './SearchOverlay';
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
   const links = [
     { name: 'Categories', href: '/' },
     { name: 'About Us', href: '/about' }
@@ -13,6 +16,16 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,6 +109,24 @@ const Navbar = () => {
               </Link>
             </motion.div>
           ))}
+          
+          {/* User Section */}
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-sv-mid">
+                Welcome, {user.displayName || user.email?.split('@')[0]}
+              </span>
+              <motion.button
+                variants={itemVariants}
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-sv-mid hover:text-white transition-colors duration-300"
+                title="Logout"
+              >
+                <LogOut size={16} strokeWidth={2} />
+                Logout
+              </motion.button>
+            </div>
+          ) : null}
           <motion.button 
             variants={itemVariants} 
             onClick={() => setIsSearchOpen(true)}

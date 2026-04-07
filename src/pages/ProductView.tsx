@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -7,10 +7,13 @@ import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { SIZES, PRODUCTS } from '../data/products';
+import { requireAuth } from '../lib/requireAuth';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProductView() {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   
@@ -44,7 +47,7 @@ export default function ProductView() {
     window.scrollTo(0, 0);
   }, [productId]);
 
-  const handleOrder = () => {
+  const handleOrder = requireAuth(() => {
     if (!selectedSize || !product) return;
     navigate('/checkout', {
       state: {
@@ -57,7 +60,7 @@ export default function ProductView() {
         productUrl: window.location.href,
       },
     });
-  };
+  }, user);
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
