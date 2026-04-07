@@ -77,7 +77,7 @@ export default function CategoriesSection() {
               </div>
 
               {/* Text Context */}
-              <div className="mt-6 flex flex-col items-center justify-center">
+              <div className="mt-3 md:mt-6 flex flex-col items-center justify-center">
                 <h3 className="font-condensed text-xl md:text-2xl tracking-[0.2em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300">
                   {cat.name}
                 </h3>

@@ -66,7 +66,7 @@ export default function CategoryView() {
                     decoding="async"
                   />
                 </div>
-                <div className="mt-3 sm:mt-5 flex flex-col">
+                <div className="mt-5 flex flex-col">
                   <h3 className="font-condensed text-lg tracking-[0.15em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300">
                     {prod.name}
                   </h3>
