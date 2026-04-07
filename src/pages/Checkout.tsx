@@ -64,6 +64,8 @@ export default function Checkout() {
 
     // Save order to database first
     try {
+      console.log("FRONTEND: Starting order submission...");
+      
       const orderData = {
         product: {
           name: product.productName,
@@ -83,6 +85,9 @@ export default function Checkout() {
         }
       };
 
+      console.log("FRONTEND: Order data prepared:", JSON.stringify(orderData, null, 2));
+      console.log("FRONTEND: Sending request to /api/orders/create");
+
       const response = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
@@ -91,21 +96,43 @@ export default function Checkout() {
         body: JSON.stringify(orderData)
       });
 
+      console.log("FRONTEND: Response received");
+      console.log("FRONTEND: Response status:", response.status);
+      console.log("FRONTEND: Response headers:", response.headers);
+
       if (!response.ok) {
-        console.error('Failed to save order to database');
-        toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
-      } else {
-        const result = await response.json();
-        if (result.success) {
-          console.log('Order saved to database:', result.data);
-        } else {
-          console.error('Error saving order:', result.error);
-          toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
-        }
+        const errorText = await response.text();
+        console.error("FRONTEND: HTTP error - status:", response.status);
+        console.error("FRONTEND: Response text:", errorText);
+        toast.error(`Order failed with status ${response.status}. Please try again.`);
+        setSubmitting(false);
+        return;
       }
+
+      const result = await response.json();
+      console.log("FRONTEND: Response body:", JSON.stringify(result, null, 2));
+
+      if (!result.success) {
+        console.error("FRONTEND: API returned error:", result.error);
+        console.error("FRONTEND: API errors:", result.errors);
+        toast.error(`Order failed: ${result.error || 'Unknown error'}. Please try again.`);
+        setSubmitting(false);
+        return;
+      }
+
+      console.log("FRONTEND: Order saved successfully:", result.data);
+      toast.success('Order saved successfully!');
+      
     } catch (error) {
-      console.error('Error saving order to database:', error);
-      toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
+      console.error("FRONTEND: Network error during order submission:", error);
+      console.error("FRONTEND: Error details:", {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      toast.error('Network error. Please check your connection and try again.');
+      setSubmitting(false);
+      return;
     }
 
     // Continue with WhatsApp flow (TEMPORARILY PAUSED)
