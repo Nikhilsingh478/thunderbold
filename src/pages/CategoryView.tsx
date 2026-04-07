@@ -47,7 +47,7 @@ export default function CategoryView() {
           </motion.div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-10">
             {categoryProducts.map((prod, i) => (
               <motion.div
                 key={prod.id}
@@ -66,7 +66,7 @@ export default function CategoryView() {
                     decoding="async"
                   />
                 </div>
-                <div className="mt-5 flex flex-col">
+                <div className="mt-3 sm:mt-5 flex flex-col">
                   <h3 className="font-condensed text-lg tracking-[0.15em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300">
                     {prod.name}
                   </h3>
