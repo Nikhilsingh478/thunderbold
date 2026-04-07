@@ -45,23 +45,18 @@ export default function ProductView() {
   }, [productId]);
 
   const handleOrder = () => {
-    if (!selectedSize) return;
-    const message = `⚡ *THUNDERBOLT ORDER REQUEST* ⚡
-
-Hello! I would like to place an order for the following item:
-
-*Product:* ${product?.name}
-*Price:* ${product?.price}
-*Size Selected:* ${selectedSize}
-*Quantity:* ${quantity}
-
-🔗 *Product Link:* 
-${window.location.href}
-
-Please let me know the next steps for payment and delivery!`;
-    const encodedMessage = encodeURIComponent(message);
-    const phoneNumber = '919561172681';
-    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+    if (!selectedSize || !product) return;
+    navigate('/checkout', {
+      state: {
+        productName: product.name,
+        productImage: product.images[0],
+        price: product.price,
+        size: selectedSize,
+        quantity,
+        categoryName: product.categoryId,
+        productUrl: window.location.href,
+      },
+    });
   };
 
   return (

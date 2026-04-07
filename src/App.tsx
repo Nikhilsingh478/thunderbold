@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.tsx";
 import About from "./pages/About";
 import CategoryView from "./pages/CategoryView";
 import ProductView from "./pages/ProductView";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/category/:categoryId" element={<CategoryView />} />
           <Route path="/product/:productId" element={<ProductView />} />
+          <Route path="/checkout" element={<Checkout />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
