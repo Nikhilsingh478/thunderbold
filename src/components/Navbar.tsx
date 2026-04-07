@@ -1,13 +1,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Heart, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { toast } from 'sonner';
 import SearchOverlay from './SearchOverlay';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { getTotalItems } = useCart();
+  const { getWishlistCount } = useWishlist();
   const links = [
     { name: 'Categories', href: '/' },
     { name: 'About Us', href: '/about' }
@@ -16,6 +20,9 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const cartItemsCount = getTotalItems();
+  const wishlistItemsCount = getWishlistCount();
 
   const handleLogout = async () => {
     try {
@@ -114,6 +121,33 @@ const Navbar = () => {
             </motion.div>
           ))}
           
+          {/* Cart & Wishlist Icons */}
+          <motion.div variants={itemVariants} className="flex items-center gap-3">
+            <Link
+              to="/wishlist"
+              className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+            >
+              <Heart size={20} className="group-hover:scale-110 transition-transform duration-200" />
+              {wishlistItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
+                  {wishlistItemsCount}
+                </span>
+              )}
+            </Link>
+            
+            <Link
+              to="/cart"
+              className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+            >
+              <ShoppingCart size={20} className="group-hover:scale-110 transition-transform duration-200" />
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
+                  {cartItemsCount}
+                </span>
+              )}
+            </Link>
+          </motion.div>
+          
           {/* Desktop Auth Button */}
           <motion.div variants={itemVariants}>
             {user ? (
@@ -145,6 +179,33 @@ const Navbar = () => {
 
         {/* Mobile Toggle Button */}
         <div className="md:hidden flex items-center gap-4 z-[110]">
+          {/* Mobile Cart & Wishlist Icons */}
+          <div className="flex items-center gap-2">
+            <Link
+              to="/wishlist"
+              className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200"
+            >
+              <Heart size={18} />
+              {wishlistItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
+                  {wishlistItemsCount}
+                </span>
+              )}
+            </Link>
+            
+            <Link
+              to="/cart"
+              className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200"
+            >
+              <ShoppingCart size={18} />
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
+                  {cartItemsCount}
+                </span>
+              )}
+            </Link>
+          </div>
+
           {/* Mobile Auth Button */}
           <button
             onClick={user ? handleLogout : handleLogin}

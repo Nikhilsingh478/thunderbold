@@ -1,21 +1,35 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Heart } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { CATEGORIES, PRODUCTS } from '../data/products';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function CategoryView() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const categoryName = CATEGORIES[categoryId as string] || 'Unknown Category';
   const categoryProducts = PRODUCTS.filter(p => p.categoryId === categoryId);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [categoryId]);
+
+  const handleWishlistClick = (e: React.MouseEvent, product: any) => {
+    e.stopPropagation(); // Prevent navigation to product page
+    
+    toggleWishlist({
+      productId: product.id,
+      name: product.name,
+      price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
+      image: product.images[0],
+    });
+  };
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -58,6 +72,17 @@ export default function CategoryView() {
                 onClick={() => navigate(`/product/${prod.id}`)}
               >
                 <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
+                  {/* Wishlist Icon */}
+                  <button
+                    onClick={(e) => handleWishlistClick(e, prod)}
+                    className="absolute top-3 right-3 z-10 p-2 bg-black/60 backdrop-blur-sm rounded-full text-white/60 hover:text-red-400 hover:bg-red-900/20 transition-all duration-200"
+                  >
+                    <Heart 
+                      size={16} 
+                      className={isInWishlist(prod.id) ? 'fill-current text-red-400' : ''}
+                    />
+                  </button>
+                  
                   <motion.img
                     src={prod.images[0]}
                     alt={prod.name}

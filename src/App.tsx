@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "./components/ui/sonner";
 import { Toaster } from "./components/ui/toaster";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -18,11 +20,15 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AppContent />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <AppContent />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </WishlistProvider>
+      </CartProvider>
     </AuthProvider>
   );
 };

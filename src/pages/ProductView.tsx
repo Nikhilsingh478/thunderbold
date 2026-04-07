@@ -2,6 +2,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -9,11 +10,15 @@ import ScrollProgress from '../components/ScrollProgress';
 import { SIZES, PRODUCTS } from '../data/products';
 import { requireAuth } from '../lib/requireAuth';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function ProductView() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToCart, isInCart, getItemQuantity } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   
@@ -61,6 +66,40 @@ export default function ProductView() {
       },
     });
   }, user);
+
+  const handleAddToCart = async () => {
+    if (!selectedSize || !product) return;
+    
+    try {
+      await addToCart({
+        productId: product.id,
+        name: product.name,
+        price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
+        image: product.images[0],
+        size: selectedSize,
+      }, quantity);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!product) return;
+    
+    try {
+      await toggleWishlist({
+        productId: product.id,
+        name: product.name,
+        price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
+        image: product.images[0],
+      });
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+    }
+  };
+
+  const isInCartWithSize = selectedSize ? isInCart(product.id, selectedSize) : false;
+  const itemQuantity = selectedSize ? getItemQuantity(product.id, selectedSize) : 0;
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -210,18 +249,49 @@ export default function ProductView() {
                 </div>
               </div>
 
-              {/* Order CTA */}
-              <button
-                onClick={handleOrder}
-                disabled={!selectedSize}
-                className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
-                  selectedSize
-                    ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                    : 'bg-white/5 text-white/20 cursor-not-allowed'
-                }`}
-              >
-                {selectedSize ? 'Order Now via WhatsApp' : 'Select a Size'}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-4 mb-10 lg:mb-12">
+                {/* Cart and Wishlist Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={!selectedSize}
+                    className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
+                      selectedSize
+                        ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                        : 'bg-white/5 text-white/20 cursor-not-allowed'
+                    }`}
+                  >
+                    <ShoppingCart size={20} />
+                    {isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
+                  </button>
+                  
+                  <button
+                    onClick={handleAddToWishlist}
+                    disabled={!product}
+                    className={`p-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center ${
+                      isInWishlist(product.id)
+                        ? 'bg-brass text-void hover:bg-yellow-400'
+                        : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Heart size={20} className={isInWishlist(product.id) ? 'fill-current' : ''} />
+                  </button>
+                </div>
+
+                {/* Order CTA */}
+                <button
+                  onClick={handleOrder}
+                  disabled={!selectedSize}
+                  className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
+                    selectedSize
+                      ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                      : 'bg-white/5 text-white/20 cursor-not-allowed'
+                  }`}
+                >
+                  {selectedSize ? 'Order Now via WhatsApp' : 'Select a Size'}
+                </button>
+              </div>
               
               {/* Extra product details */}
               <div className="mt-16 flex flex-col gap-5 border-t border-white/10 pt-10">
