@@ -1,3 +1,5 @@
+import { modalController } from './modalController';
+
 interface StoredAction {
   action: () => void;
   context?: any;
@@ -18,8 +20,8 @@ export function requireAuth<T extends (...args: any[]) => any>(
         context: context || args[0]
       };
       
-      // Dispatch custom event to show login modal
-      window.dispatchEvent(new CustomEvent('showLoginModal'));
+      // Use modal controller to show login modal
+      modalController.openModal('requireAuth', context);
       return;
     }
     

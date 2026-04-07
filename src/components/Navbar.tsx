@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, LogOut } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import SearchOverlay from './SearchOverlay';
@@ -25,6 +25,10 @@ const Navbar = () => {
       console.error('Logout error:', error);
       toast.error('Failed to logout. Please try again.');
     }
+  };
+
+  const handleLogin = () => {
+    window.dispatchEvent(new Event('open-login-modal'));
   };
 
   useEffect(() => {
@@ -61,8 +65,8 @@ const Navbar = () => {
   };
 
   const linkVariants = {
-    closed: { y: 40, opacity: 0, filter: 'blur(4px)' },
-    open: { y: 0, opacity: 1, filter: 'blur(0px)', transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } }
+    closed: { opacity: 0, x: 100 },
+    open: { opacity: 1, x: 0, transition: { delay: 0.3, duration: 0.6, ease: 'easeOut' as const } }
   };
 
   useEffect(() => {
@@ -92,11 +96,11 @@ const Navbar = () => {
       >
         <Link to="/" className="font-display text-xl md:text-2xl tracking-[0.28em] text-tb-white z-[110] relative decoration-none hover:opacity-90">
           <motion.span variants={itemVariants}>
-            THUNDER<span className="brass-text">⚡</span>BOLT
+            THUNDER<span className="brass-text">BOLT</span>
           </motion.span>
         </Link>
 
-        {/* Desktop Links & Search */}
+        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-10">
           {links.map((link) => (
             <motion.div variants={itemVariants} key={link.name}>
@@ -110,23 +114,25 @@ const Navbar = () => {
             </motion.div>
           ))}
           
-          {/* User Section */}
-          {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-sv-mid">
-                Welcome, {user.displayName || user.email?.split('@')[0]}
-              </span>
-              <motion.button
-                variants={itemVariants}
+          {/* Desktop Auth Button */}
+          <motion.div variants={itemVariants}>
+            {user ? (
+              <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-sv-mid hover:text-white transition-colors duration-300"
-                title="Logout"
+                className="text-sm px-4 py-2 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
               >
-                <LogOut size={16} strokeWidth={2} />
                 Logout
-              </motion.button>
-            </div>
-          ) : null}
+              </button>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="text-sm px-4 py-2 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
+              >
+                Login
+              </button>
+            )}
+          </motion.div>
+
           <motion.button 
             variants={itemVariants} 
             onClick={() => setIsSearchOpen(true)}
@@ -137,18 +143,16 @@ const Navbar = () => {
           </motion.button>
         </div>
 
-        {/* Mobile Buttons Area */}
-        <div className="md:hidden flex items-center gap-6 z-[110]">
-          <motion.button 
-            variants={itemVariants} 
-            onClick={() => setIsSearchOpen(true)}
-            className="text-white hover:text-brass-bright transition-colors focus:outline-none"
-            aria-label="Search"
+        {/* Mobile Toggle Button */}
+        <div className="md:hidden flex items-center gap-4 z-[110]">
+          {/* Mobile Auth Button */}
+          <button
+            onClick={user ? handleLogout : handleLogin}
+            className="text-sm px-3 py-1.5 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
           >
-            <Search size={22} strokeWidth={1.5} />
-          </motion.button>
+            {user ? 'Logout' : 'Login'}
+          </button>
 
-          {/* Mobile Toggle Button */}
           <motion.button
             variants={itemVariants}
             onClick={() => setIsOpen(!isOpen)}
@@ -179,14 +183,14 @@ const Navbar = () => {
                   animate="open"
                   exit="closed"
                   variants={linkVariants}
-                  transition={{ delay: i * 0.08 + 0.2 }}
+                  custom={i}
                 >
                   <Link
                     to={link.href}
                     onClick={() => setIsOpen(false)}
-                    className="font-display text-4xl tracking-[0.16em] uppercase text-white hover:text-brass-bright transition-colors duration-300 relative block"
+                    className="font-display text-4xl md:text-5xl tracking-[0.28em] text-tb-white decoration-none hover:opacity-90 transition-opacity"
                   >
-                    <span className="metal-text block py-2">{link.name}</span>
+                    {link.name}
                   </Link>
                 </motion.div>
               ))}

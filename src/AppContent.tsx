@@ -4,6 +4,7 @@ import { Toaster } from "./components/ui/toaster";
 import { useAuth } from "./context/AuthContext";
 import LoginModal from "./components/auth/LoginModal";
 import { executeStoredAction } from "./lib/requireAuth";
+import { modalController, ModalControlEvent } from "./lib/modalController";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -14,22 +15,58 @@ import Checkout from "./pages/Checkout";
 
 const AppContent = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [modalSource, setModalSource] = useState<'requireAuth' | 'delayedPrompt' | 'manual'>('manual');
+  const { user } = useAuth();
 
   useEffect(() => {
-    const handleShowLoginModal = () => setShowLoginModal(true);
+    // Subscribe to modal controller events
+    const unsubscribe = modalController.subscribe((event: ModalControlEvent) => {
+      if (event.type === 'open-login-modal') {
+        setShowLoginModal(true);
+        setModalSource(event.source);
+      } else if (event.type === 'close-login-modal') {
+        setShowLoginModal(false);
+      }
+    });
+
+    // Also handle legacy DOM events for backward compatibility
+    const handleShowLoginModal = (e: CustomEvent) => {
+      setShowLoginModal(true);
+      setModalSource(e.detail?.source || 'manual');
+    };
     const handleCloseLoginModal = () => setShowLoginModal(false);
 
-    window.addEventListener('showLoginModal', handleShowLoginModal);
-    window.addEventListener('closeLoginModal', handleCloseLoginModal);
+    window.addEventListener('open-login-modal', handleShowLoginModal as EventListener);
+    window.addEventListener('close-login-modal', handleCloseLoginModal);
 
     return () => {
-      window.removeEventListener('showLoginModal', handleShowLoginModal);
-      window.removeEventListener('closeLoginModal', handleCloseLoginModal);
+      unsubscribe();
+      window.removeEventListener('open-login-modal', handleShowLoginModal as EventListener);
+      window.removeEventListener('close-login-modal', handleCloseLoginModal);
     };
   }, []);
 
+  // Delayed login prompt
+  useEffect(() => {
+    // Only show delayed prompt if user is not logged in
+    if (user) return;
+
+    // Check if prompt was already shown this session
+    const promptShown = sessionStorage.getItem('login_prompt_shown');
+    if (promptShown) return;
+
+    // Show prompt after 10 seconds
+    const timer = setTimeout(() => {
+      modalController.openModal('delayedPrompt');
+      sessionStorage.setItem('login_prompt_shown', 'true');
+    }, 10000); // 10 seconds
+
+    return () => clearTimeout(timer);
+  }, [user]);
+
   const handleLoginModalClose = () => {
     setShowLoginModal(false);
+    modalController.closeModal();
     executeStoredAction(); // Execute stored action after successful login
   };
 
@@ -50,7 +87,8 @@ const AppContent = () => {
       <Sonner />
       <LoginModal 
         isOpen={showLoginModal} 
-        onClose={handleLoginModalClose} 
+        onClose={handleLoginModalClose}
+        isDelayedPrompt={modalSource === 'delayedPrompt'}
       />
     </>
   );
