@@ -8,6 +8,7 @@ import ScrollProgress from '@/components/ScrollProgress';
 import CustomCursor from '@/components/CustomCursor';
 import AddressForm, { type AddressData } from '@/components/checkout/AddressForm';
 import ProductSummary from '@/components/checkout/ProductSummary';
+import OrderConfirmation from '@/components/checkout/OrderConfirmation';
 
 export interface CheckoutState {
   productName: string;
@@ -35,8 +36,19 @@ export default function Checkout() {
   const product = location.state as CheckoutState | null;
   const [submitting, setSubmitting] = useState(false);
   const [savedAddress] = useState<AddressData | null>(loadSavedAddress);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [submittedAddress, setSubmittedAddress] = useState<AddressData | null>(null);
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  useEffect(() => { 
+    // Scroll to top first, then to address form after a short delay
+    window.scrollTo(0, 0);
+    setTimeout(() => {
+      const addressForm = document.getElementById('address-form');
+      if (addressForm) {
+        addressForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 800);
+  }, []);
 
   // If no product state, redirect back
   useEffect(() => {
@@ -47,6 +59,7 @@ export default function Checkout() {
 
   const handleSubmit = (address: AddressData) => {
     setSubmitting(true);
+    setSubmittedAddress(address);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
 
     const addressLine2 = address.addressLine2 ? `, ${address.addressLine2}` : '';
@@ -80,6 +93,11 @@ Please confirm availability and next steps!`;
       const phoneNumber = '919561172681';
       window.open(`https://wa.me/${phoneNumber}?text=${encoded}`, '_blank');
       setSubmitting(false);
+      
+      // Show confirmation modal after WhatsApp opens
+      setTimeout(() => {
+        setShowConfirmation(true);
+      }, 500);
     }, 1200);
   };
 
@@ -134,6 +152,7 @@ Please confirm availability and next steps!`;
 
             {/* Right — Address Form */}
             <motion.div
+              id="address-form"
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -150,6 +169,15 @@ Please confirm availability and next steps!`;
       </main>
 
       <Footer />
+
+      {/* Order Confirmation Modal */}
+      {showConfirmation && submittedAddress && (
+        <OrderConfirmation
+          orderDetails={product}
+          address={submittedAddress}
+          onClose={() => setShowConfirmation(false)}
+        />
+      )}
     </div>
   );
 }
