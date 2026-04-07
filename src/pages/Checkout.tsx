@@ -57,11 +57,58 @@ export default function Checkout() {
 
   if (!product) return null;
 
-  const handleSubmit = (address: AddressData) => {
+  const handleSubmit = async (address: AddressData) => {
     setSubmitting(true);
     setSubmittedAddress(address);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
 
+    // Save order to database first
+    try {
+      const orderData = {
+        product: {
+          name: product.productName,
+          price: product.price,
+          size: product.size,
+          quantity: product.quantity
+        },
+        address: {
+          fullName: address.fullName,
+          phone: address.phone,
+          addressLine1: address.addressLine1,
+          addressLine2: address.addressLine2,
+          city: address.city,
+          state: address.state,
+          pincode: address.pincode,
+          landmark: address.landmark
+        }
+      };
+
+      const response = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) {
+        console.error('Failed to save order to database');
+        toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
+      } else {
+        const result = await response.json();
+        if (result.success) {
+          console.log('Order saved to database:', result.data);
+        } else {
+          console.error('Error saving order:', result.error);
+          toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving order to database:', error);
+      toast.error('Failed to save order. Redirecting to WhatsApp anyway...');
+    }
+
+    // Continue with WhatsApp flow
     const addressLine2 = address.addressLine2 ? `, ${address.addressLine2}` : '';
     const landmark = address.landmark ? `\nLandmark: ${address.landmark}` : '';
 
