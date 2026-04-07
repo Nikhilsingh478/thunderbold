@@ -51,7 +51,7 @@ export default function CategoriesSection() {
           variants={containerVariants}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto"
+          className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto"
         >
           {categories.map((cat, index) => (
             <motion.div
