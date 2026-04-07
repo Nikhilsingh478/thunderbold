@@ -1,7 +1,11 @@
-import { getDb } from '../_lib/mongodb';
-import { successResponse, errorResponse, methodNotAllowedResponse } from '../_lib/response';
+import { getDb } from '../_lib/mongodb.js';
+import { successResponse, errorResponse, methodNotAllowedResponse } from '../_lib/response.js';
 
-export async function GET(request: Request) {
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json(methodNotAllowedResponse(['GET']));
+  }
+
   try {
     const db = await getDb();
     const productsCollection = db.collection('products');
@@ -10,20 +14,20 @@ export async function GET(request: Request) {
     
     if (products.length === 0) {
       const fallbackProducts = await getFallbackProducts();
-      return successResponse(fallbackProducts);
+      return res.status(200).json(successResponse(fallbackProducts));
     }
     
-    return successResponse(products);
+    return res.status(200).json(successResponse(products));
   } catch (error) {
     console.error('Error fetching products:', error);
     const fallbackProducts = await getFallbackProducts();
-    return successResponse(fallbackProducts);
+    return res.status(200).json(successResponse(fallbackProducts));
   }
 }
 
 async function getFallbackProducts() {
   try {
-    const { PRODUCTS } = await import('../../src/data/products');
+    const { PRODUCTS } = await import('../../src/data/products.js');
     return PRODUCTS.map(product => ({
       _id: product.id,
       name: product.name,
@@ -37,8 +41,4 @@ async function getFallbackProducts() {
     console.error('Error loading fallback products:', error);
     return [];
   }
-}
-
-export async function POST(request: Request) {
-  return methodNotAllowedResponse(['GET']);
 }

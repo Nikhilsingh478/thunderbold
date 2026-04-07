@@ -1,19 +1,10 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient } from 'mongodb';
 
 if (!process.env.MONGO_URI) {
   throw new Error('Please define the MONGO_URI environment variable inside .env.local');
 }
 
-interface CachedConnection {
-  client: MongoClient;
-  db: Db;
-}
-
-declare global {
-  var mongo: CachedConnection | undefined;
-}
-
-export async function getDb(): Promise<Db> {
+export async function getDb() {
   if (global.mongo) {
     return global.mongo.db;
   }
@@ -41,7 +32,7 @@ export async function getDb(): Promise<Db> {
   }
 }
 
-export async function closeConnection(): Promise<void> {
+export async function closeConnection() {
   if (global.mongo) {
     await global.mongo.client.close();
     global.mongo = undefined;

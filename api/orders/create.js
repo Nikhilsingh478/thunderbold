@@ -1,23 +1,27 @@
-import { getDb } from '../_lib/mongodb';
-import { validateOrder, validateAddress } from '../_lib/validator';
-import { successResponse, errorResponse, validationErrorResponse, methodNotAllowedResponse } from '../_lib/response';
+import { getDb } from '../_lib/mongodb.js';
+import { validateOrder, validateAddress } from '../_lib/validator.js';
+import { successResponse, errorResponse, validationErrorResponse, methodNotAllowedResponse } from '../_lib/response.js';
 
-export async function POST(request: Request) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json(methodNotAllowedResponse(['POST']));
+  }
+
   try {
-    const body = await request.json();
+    const body = req.body;
     
     if (!body.product || !body.address) {
-      return errorResponse('Product and address are required');
+      return res.status(400).json(errorResponse('Product and address are required'));
     }
     
     const orderValidation = validateOrder(body);
     if (!orderValidation.isValid) {
-      return validationErrorResponse(orderValidation.errors);
+      return res.status(400).json(validationErrorResponse(orderValidation.errors));
     }
     
     const addressValidation = validateAddress(body.address);
     if (!addressValidation.isValid) {
-      return validationErrorResponse(addressValidation.errors);
+      return res.status(400).json(validationErrorResponse(addressValidation.errors));
     }
     
     const db = await getDb();
@@ -48,16 +52,12 @@ export async function POST(request: Request) {
     
     const result = await ordersCollection.insertOne(order);
     
-    return successResponse({
+    return res.status(201).json(successResponse({
       id: result.insertedId,
       message: 'Order created successfully'
-    });
+    }));
   } catch (error) {
     console.error('Error creating order:', error);
-    return errorResponse('Failed to create order');
+    return res.status(500).json(errorResponse('Failed to create order'));
   }
-}
-
-export async function GET(request: Request) {
-  return methodNotAllowedResponse(['POST']);
 }

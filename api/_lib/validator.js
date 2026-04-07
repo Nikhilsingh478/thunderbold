@@ -1,10 +1,5 @@
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
-export function validatePhone(phone: string): ValidationResult {
-  const errors: string[] = [];
+export function validatePhone(phone) {
+  const errors = [];
   
   if (!phone) {
     errors.push('Phone number is required');
@@ -21,8 +16,8 @@ export function validatePhone(phone: string): ValidationResult {
   };
 }
 
-export function validatePincode(pincode: string): ValidationResult {
-  const errors: string[] = [];
+export function validatePincode(pincode) {
+  const errors = [];
   
   if (!pincode) {
     errors.push('Pincode is required');
@@ -39,8 +34,8 @@ export function validatePincode(pincode: string): ValidationResult {
   };
 }
 
-export function validateRequired(value: string, fieldName: string): ValidationResult {
-  const errors: string[] = [];
+export function validateRequired(value, fieldName) {
+  const errors = [];
   
   if (!value || value.trim() === '') {
     errors.push(`${fieldName} is required`);
@@ -52,15 +47,8 @@ export function validateRequired(value: string, fieldName: string): ValidationRe
   };
 }
 
-export function validateAddress(address: {
-  fullName: string;
-  phone: string;
-  addressLine1: string;
-  city: string;
-  state: string;
-  pincode: string;
-}): ValidationResult {
-  const allErrors: string[] = [];
+export function validateAddress(address) {
+  const allErrors = [];
   
   const nameValidation = validateRequired(address.fullName, 'Full name');
   const phoneValidation = validatePhone(address.phone);
@@ -84,15 +72,8 @@ export function validateAddress(address: {
   };
 }
 
-export function validateOrder(order: {
-  product: {
-    name: string;
-    price: string;
-    size: string;
-    quantity: number;
-  };
-}): ValidationResult {
-  const allErrors: string[] = [];
+export function validateOrder(order) {
+  const allErrors = [];
   
   if (!order.product) {
     allErrors.push('Product information is required');
