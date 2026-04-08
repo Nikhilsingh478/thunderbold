@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -43,13 +43,13 @@ const defaultCategoryFormData: CategoryFormData = { name: '', image: '' };
 
 function ModalShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm px-0 sm:px-4">
+    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm px-0 sm:px-4">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
         transition={{ duration: 0.22, ease: 'easeOut' }}
-        className="w-full sm:max-w-md bg-[#141414] border border-white/10 rounded-t-2xl sm:rounded-2xl relative max-h-[92vh] flex flex-col"
+        className="w-full sm:max-w-lg bg-[#141414] border border-white/10 rounded-t-2xl sm:rounded-2xl relative max-h-[92vh] flex flex-col"
       >
         <button
           onClick={onClose}
@@ -126,12 +126,74 @@ interface ProductFormData {
   name: string;
   categoryId: string;
   price: string;
-  image: string;
+  images: string[];
   description: string;
   stock: string;
 }
 
-const defaultFormData: ProductFormData = { name: '', categoryId: '', price: '', image: '', description: '', stock: '' };
+const defaultFormData: ProductFormData = { name: '', categoryId: '', price: '', images: [''], description: '', stock: '' };
+
+function ImageInput({
+  images,
+  onChange,
+}: {
+  images: string[];
+  onChange: (imgs: string[]) => void;
+}) {
+  const updateAt = (i: number, val: string) => {
+    const next = [...images];
+    next[i] = val;
+    onChange(next);
+  };
+  const removeAt = (i: number) => onChange(images.filter((_, idx) => idx !== i));
+  const addRow = () => onChange([...images, '']);
+
+  return (
+    <div className="space-y-2">
+      {images.map((url, i) => (
+        <div key={i} className="flex gap-2 items-start">
+          {/* Thumbnail preview */}
+          <div className="shrink-0 w-10 h-10 rounded-md overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+            {url.trim() ? (
+              <img
+                src={url}
+                alt=""
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            ) : (
+              <ImagePlus className="w-4 h-4 text-sv-mid/40" />
+            )}
+          </div>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => updateAt(i, e.target.value)}
+            placeholder={i === 0 ? 'Main image URL (required)' : `Image ${i + 1} URL`}
+            className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+          />
+          {images.length > 1 && (
+            <button
+              type="button"
+              onClick={() => removeAt(i)}
+              className="shrink-0 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addRow}
+        className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-white/15 rounded-lg text-sv-mid text-xs font-condensed uppercase tracking-wider hover:border-white/30 hover:text-tb-white transition-colors"
+      >
+        <Plus className="w-3.5 h-3.5" />
+        Add Another Image
+      </button>
+    </div>
+  );
+}
 
 function ProductModal({
   title,
@@ -157,25 +219,25 @@ function ProductModal({
   }, []);
 
   const handleSubmit = async () => {
-    if (!form.name || !form.price || !form.categoryId) { setError('Name, price, and category are required.'); return; }
+    const validImages = form.images.map(s => s.trim()).filter(Boolean);
+    if (!form.name || !form.price || !form.categoryId || validImages.length === 0) {
+      setError('Name, price, category, and at least one image are required.');
+      return;
+    }
     setSubmitting(true);
-    const ok = await onSubmit(form);
+    const ok = await onSubmit({ ...form, images: validImages });
     setSubmitting(false);
     if (!ok) setError('Something went wrong. Please try again.');
   };
 
-  const fields: { key: keyof ProductFormData; label: string; placeholder: string; type?: string }[] = [
-    { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
-    { key: 'image', label: 'Image URL', placeholder: 'https://' },
-    { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
-  ];
-
   return (
     <ModalShell onClose={onClose}>
-      <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+      <div className="px-6 pt-6 pb-3 border-b border-white/10 shrink-0">
         <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">{title}</h3>
       </div>
-      <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+      <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+
+        {/* Name */}
         <div>
           <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Name</label>
           <input
@@ -186,6 +248,8 @@ function ProductModal({
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
+
+        {/* Category */}
         <div>
           <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Category</label>
           <div className="relative">
@@ -202,18 +266,40 @@ function ProductModal({
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
           </div>
         </div>
-        {fields.map(({ key, label, placeholder, type }) => (
-          <div key={key}>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">{label}</label>
+
+        {/* Price + Stock row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Price (¥)</label>
             <input
-              type={type ?? 'text'}
-              value={form[key]}
-              onChange={(e) => setForm(p => ({ ...p, [key]: e.target.value }))}
-              placeholder={placeholder}
+              type="number"
+              value={form.price}
+              onChange={(e) => setForm(p => ({ ...p, price: e.target.value }))}
+              placeholder="0"
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
-        ))}
+          <div>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Stock</label>
+            <input
+              type="number"
+              value={form.stock}
+              onChange={(e) => setForm(p => ({ ...p, stock: e.target.value }))}
+              placeholder="0"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Images */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+            Images <span className="text-sv-mid/50 normal-case tracking-normal">(first is the main)</span>
+          </label>
+          <ImageInput images={form.images} onChange={(imgs) => setForm(p => ({ ...p, images: imgs }))} />
+        </div>
+
+        {/* Description */}
         <div>
           <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Description</label>
           <textarea
@@ -224,6 +310,7 @@ function ProductModal({
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors resize-none"
           />
         </div>
+
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
@@ -235,7 +322,7 @@ function ProductModal({
           Cancel
         </button>
         <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.15em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50">
-          {submitting ? 'Saving...' : 'Save'}
+          {submitting ? 'Saving...' : 'Save Product'}
         </button>
       </div>
     </ModalShell>
@@ -316,14 +403,17 @@ export default function Admin() {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
+      const price = parseFloat(formData.price);
+      const stock = parseInt(formData.stock, 10) || 0;
+      const images = formData.images.map(s => s.trim()).filter(Boolean);
       const r = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 }),
+        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, stock, images, description: formData.description }),
       });
       const d = await r.json();
       if (r.ok) {
-        setProducts(prev => [{ _id: d.product._id, ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 }, ...prev]);
+        setProducts(prev => [{ _id: d.product._id, name: formData.name, categoryId: formData.categoryId, price, stock, images, image: images[0], description: formData.description }, ...prev]);
         setShowAddProductModal(false);
         return true;
       }
@@ -335,14 +425,20 @@ export default function Admin() {
     if (!user || !editingProduct) return false;
     try {
       const token = await user.getIdToken();
+      const price = parseFloat(formData.price);
+      const stock = parseInt(formData.stock, 10) || 0;
+      const images = formData.images.map(s => s.trim()).filter(Boolean);
       const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 }),
+        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, stock, images, description: formData.description }),
       });
       const d = await r.json();
       if (r.ok) {
-        setProducts(prev => prev.map(p => p._id === editingProduct._id ? { _id: editingProduct._id, ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 } : p));
+        setProducts(prev => prev.map(p => p._id === editingProduct._id
+          ? { _id: editingProduct._id, name: formData.name, categoryId: formData.categoryId, price, stock, images, image: images[0], description: formData.description }
+          : p
+        ));
         setEditingProduct(null);
         return true;
       }
@@ -595,7 +691,7 @@ export default function Admin() {
                         <div key={product._id} className="group bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all duration-200">
                           <div className="aspect-square bg-[#0c0c0c] overflow-hidden">
                             <img
-                              src={product.image || '/placeholder.png'}
+                              src={(product as any).images?.[0] || product.image || '/placeholder.png'}
                               alt={product.name}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
@@ -696,7 +792,11 @@ export default function Admin() {
               name: editingProduct.name,
               categoryId: editingProduct.categoryId,
               price: String(editingProduct.price),
-              image: editingProduct.image ?? '',
+              images: (editingProduct as any).images?.length
+                ? (editingProduct as any).images
+                : editingProduct.image
+                  ? [editingProduct.image]
+                  : [''],
               description: editingProduct.description ?? '',
               stock: String(editingProduct.stock ?? 0),
             }}

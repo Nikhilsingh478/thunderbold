@@ -26,7 +26,11 @@ export default function ProductView() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
-  const IMAGES = product?.image ? [product.image] : [];
+  const IMAGES: string[] = product?.images?.length
+    ? product.images
+    : product?.image
+      ? [product.image]
+      : [];
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -76,7 +80,7 @@ export default function ProductView() {
     navigate('/checkout', {
       state: {
         productName: product.name,
-        productImage: product.image || '/placeholder.png',
+        productImage: product.images?.[0] || product.image || '/placeholder.png',
         price: product.price,
         size: selectedSize,
         quantity,
@@ -93,7 +97,7 @@ export default function ProductView() {
         productId: product._id,
         name: product.name,
         price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
-        image: product.image || '/placeholder.png',
+        image: product.images?.[0] || product.image || '/placeholder.png',
         size: selectedSize,
       }, quantity);
     } catch (error) {
@@ -109,7 +113,7 @@ export default function ProductView() {
         productId: product._id,
         name: product.name,
         price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
-        image: product.image || '/placeholder.png',
+        image: product.images?.[0] || product.image || '/placeholder.png',
       });
     } catch (error) {
       console.error('Error toggling wishlist:', error);

@@ -132,7 +132,7 @@ export default function CategoryView() {
                   </button>
                   
                   <motion.img
-                    src={prod.image}
+                    src={prod.images?.[0] || prod.image}
                     alt={prod.name}
                     className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] grayscale-[0.1]"
                     loading={i < 4 ? "eager" : "lazy"}

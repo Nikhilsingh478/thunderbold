@@ -4,173 +4,155 @@ import jwt from 'jsonwebtoken';
 
 const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
 
-// Helper function to check admin authentication
 function checkAdminAuth(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { authorized: false, error: 'Unauthorized' };
   }
-  
   const token = authHeader.split(' ')[1];
   let decodedToken;
   try {
     decodedToken = jwt.decode(token);
-  } catch (decodeError) {
+  } catch {
     return { authorized: false, error: 'Invalid token' };
   }
-  
   const userEmail = decodedToken?.email;
   if (userEmail !== ADMIN_EMAIL) {
     return { authorized: false, error: 'Admin access required' };
   }
-  
   return { authorized: true, userEmail };
 }
 
+// Normalise the images field so we always store both `images` (array) and
+// `image` (first item, for backward-compat with cart/wishlist/categoryView)
+function normaliseImages(body) {
+  let images = [];
+  if (Array.isArray(body.images) && body.images.length > 0) {
+    images = body.images.map(s => s.trim()).filter(Boolean);
+  } else if (typeof body.image === 'string' && body.image.trim()) {
+    images = [body.image.trim()];
+  }
+  return images;
+}
+
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    console.log('PRODUCTS API: Starting request...');
-    
-    // Get database connection
     const database = await getDb();
-    const productsCollection = database.collection('products');
-    
-    console.log('PRODUCTS API: Connected to database');
+    const col = database.collection('products');
 
     switch (req.method) {
-      case 'GET':
-        console.log('PRODUCTS API: Fetching all products');
-        
-        // GET is public - no auth required
-        const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
-        console.log('PRODUCTS API: Found products in DB:', products.length);
-        
-        return res.status(200).json({ 
-          products,
-          count: products.length,
-          source: 'database'
-        });
 
-      case 'POST':
-        console.log('PRODUCTS API: Creating new product');
-        
-        // Check if user is admin
-        const postAuthResult = checkAdminAuth(req);
-        if (!postAuthResult.authorized) {
-          console.log('PRODUCTS API: Auth failed for POST:', postAuthResult.error);
-          return res.status(postAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: postAuthResult.error });
+      // ── GET ────────────────────────────────────────────────────────────────
+      case 'GET': {
+        const products = await col.find({}).sort({ createdAt: -1 }).toArray();
+        return res.status(200).json({ products, count: products.length, source: 'database' });
+      }
+
+      // ── POST ───────────────────────────────────────────────────────────────
+      case 'POST': {
+        const auth = checkAdminAuth(req);
+        if (!auth.authorized) {
+          return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-        
-        const { name: productName, price: productPrice, image: productImage, description: productDescription, categoryId: productCategoryId, stock: productStock } = req.body;
-        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImage, productDescription, productCategoryId, productStock });
-        
-        // Validate required fields
-        if (!productName || !productPrice || !productImage || !productCategoryId) {
-          return res.status(400).json({ error: 'Name, price, image, and categoryId are required' });
+
+        const { name, price, description, categoryId, stock } = req.body;
+        const images = normaliseImages(req.body);
+
+        if (!name || !price || images.length === 0 || !categoryId) {
+          return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
         }
-        
-        // Validate price
-        if (typeof productPrice !== 'number' || productPrice <= 0) {
+        if (typeof price !== 'number' || price <= 0) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
-        
-        // Validate image URL
-        if (typeof productImage !== 'string' || !productImage.trim()) {
-          return res.status(400).json({ error: 'Image URL is required' });
-        }
 
-        // Create product object
         const product = {
-          name: productName,
-          price: productPrice,
-          image: productImage,
-          description: productDescription || '',
-          categoryId: productCategoryId,
-          stock: productStock || 0,
-          createdAt: new Date()
+          name,
+          price,
+          image: images[0],   // backward-compat
+          images,
+          description: description || '',
+          categoryId,
+          stock: stock || 0,
+          createdAt: new Date(),
         };
 
-        // Save product to database
-        const createResult = await productsCollection.insertOne(product);
-        console.log('PRODUCTS API: Product created successfully:', createResult.insertedId);
+        const result = await col.insertOne(product);
+        return res.status(201).json({ message: 'Product created successfully', product: { _id: result.insertedId, ...product } });
+      }
 
-        return res.status(201).json({ 
-          message: 'Product created successfully', 
-          product: {
-            _id: createResult.insertedId,
-            ...product
-          }
-        });
+      // ── PUT ────────────────────────────────────────────────────────────────
+      case 'PUT': {
+        const auth = checkAdminAuth(req);
+        if (!auth.authorized) {
+          return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
+        }
 
-      case 'DELETE':
-        console.log('DELETE HIT INDEX.JS');
+        const { id } = req.query;
+        if (!id) return res.status(400).json({ error: 'Missing product ID' });
 
+        const { name, price, description, categoryId, stock } = req.body;
+        const images = normaliseImages(req.body);
+
+        if (!name || !price || images.length === 0 || !categoryId) {
+          return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
+        }
+
+        const updates = {
+          name,
+          price: typeof price === 'number' ? price : parseFloat(price),
+          image: images[0],
+          images,
+          description: description || '',
+          categoryId,
+          stock: stock || 0,
+          updatedAt: new Date(),
+        };
+
+        const result = await col.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updates }
+        ).catch(async () =>
+          col.updateOne({ _id: id }, { $set: updates })
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
+
+        return res.status(200).json({ message: 'Product updated successfully', product: { _id: id, ...updates } });
+      }
+
+      // ── DELETE ─────────────────────────────────────────────────────────────
+      case 'DELETE': {
         const auth = checkAdminAuth(req);
         if (!auth.authorized) {
           return res.status(401).json({ error: 'Unauthorized' });
         }
 
         const { id } = req.query;
+        if (!id) return res.status(400).json({ error: 'Missing ID' });
 
-        if (!id) {
-          return res.status(400).json({ error: 'Missing ID' });
-        }
-
-        console.log('DELETE ID RECEIVED:', id);
-
-        // Log database state before delete
-        const before = await productsCollection.countDocuments();
-        console.log('COUNT BEFORE DELETE:', before);
-
-        let result = await productsCollection.deleteOne({
-          _id: new ObjectId(id)
-        }).catch(async () => {
-          console.log('Falling back to string ID delete');
-          return await productsCollection.deleteOne({ _id: id });
-        });
-
-        console.log('FINAL DELETE RESULT:', result);
-
-        // Log database state after delete
-        const after = await productsCollection.countDocuments();
-        console.log('COUNT AFTER DELETE:', after);
+        const result = await col.deleteOne({ _id: new ObjectId(id) })
+          .catch(async () => col.deleteOne({ _id: id }));
 
         if (!result || result.deletedCount === 0) {
-          return res.status(404).json({
-            success: false,
-            deletedCount: 0,
-            message: 'Product not found'
-          });
+          return res.status(404).json({ success: false, deletedCount: 0, message: 'Product not found' });
         }
 
-        return res.status(200).json({
-          success: true,
-          deletedCount: 1
-        });
+        return res.status(200).json({ success: true, deletedCount: 1 });
+      }
 
       default:
-        console.log('PRODUCTS API: Method not allowed:', req.method);
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        return res.status(405).json({ 
-          error: `Method ${req.method} not allowed` 
-        });
+        return res.status(405).json({ error: `Method ${req.method} not allowed` });
     }
   } catch (error) {
-    console.error('PRODUCTS API ERROR:', error);
-    console.error('PRODUCTS API ERROR DETAILS:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack
-    });
+    console.error('PRODUCTS API ERROR:', error.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
