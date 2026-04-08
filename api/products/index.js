@@ -185,29 +185,42 @@ export default async function handler(req, res) {
         }
         
         try {
-          // Convert string ID to ObjectId
-          const objectId = new ObjectId(productId);
-          console.log('PRODUCTS API: Converting to ObjectId:', productId, '->', objectId);
-          console.log('PRODUCTS API: ID TYPE:', typeof productId);
+          const id = req.query.id;
+          console.log('DELETE REQUEST ID:', id);
           
-          // Delete product - works for both legacy and new schema products
-          const deleteResult = await productsCollection.deleteOne({ 
-            $or: [
-              { _id: objectId }, // For ObjectId format
-              { _id: productId }   // For string format (legacy)
-            ]
-          });
+          let result;
           
-          if (deleteResult.deletedCount === 0) {
-            console.log('PRODUCTS API: No product found with ID:', productId);
-            return res.status(404).json({ error: 'Product not found' });
+          try {
+            // Try ObjectId deletion first
+            result = await productsCollection.deleteOne({
+              _id: new ObjectId(id)
+            });
+            console.log('ObjectId delete result:', result);
+          } catch (e) {
+            console.log('ObjectId conversion failed, trying string match:', e.message);
+            
+            // Fallback to string ID deletion
+            result = await productsCollection.deleteOne({
+              _id: id
+            });
+            console.log('String ID delete result:', result);
           }
           
-          console.log('PRODUCTS API: Product deleted successfully:', productId, 'deletedCount:', deleteResult.deletedCount);
-          return res.status(200).json({ 
+          console.log('DELETE RESULT:', result);
+          
+          if (result.deletedCount === 0) {
+            console.log('DELETE FAILED - product not found in DB');
+            // Debug: Show all DB IDs for comparison
+            const allProducts = await productsCollection.find().toArray();
+            console.log('DB IDs:', allProducts.map(p => ({ _id: p._id, name: p.name })));
+            return res.status(404).json({ error: 'Product not found in database' });
+          }
+          
+          console.log('DELETE SUCCESS - product removed from DB');
+          return res.status(200).json({
             success: true,
-            message: 'Product deleted successfully',
-            deletedId: productId
+            deletedCount: result.deletedCount,
+            message: 'Product deleted successfully'
           });
         } catch (objectIdError) {
           console.log('PRODUCTS API: Invalid ObjectId format:', productId, objectIdError);

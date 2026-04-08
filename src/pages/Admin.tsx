@@ -510,7 +510,7 @@ export default function Admin() {
     if (!user) return;
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
-      console.log('DELETE ID:', productId);
+      console.log('Deleting ID:', productId);
       const token = await user.getIdToken();
       const response = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
@@ -530,18 +530,24 @@ export default function Admin() {
       console.log('DELETE PRODUCT RESPONSE:', response.status, response.statusText);
       console.log('DELETE PRODUCT DATA:', data);
       
-      // Always update UI regardless of response body
-      console.log('REMOVING PRODUCT FROM STATE:', productId);
-      setProducts(prev => {
-        console.log('PREVIOUS PRODUCTS:', prev);
-        const updated = prev.filter(p => p._id !== productId);
-        console.log('UPDATED PRODUCTS:', updated);
-        return updated;
-      });
-      
-      return true;
+      // Only remove from UI if DB delete succeeded (deletedCount: 1)
+      if (data?.deletedCount === 1) {
+        console.log('DB DELETE SUCCESS - removing from UI');
+        setProducts(prev => {
+          console.log('PREVIOUS PRODUCTS:', prev);
+          const updated = prev.filter(p => p._id !== productId);
+          console.log('UPDATED PRODUCTS:', updated);
+          return updated;
+        });
+        return true;
+      } else {
+        console.error('DELETE FAILED - DB deletion count:', data?.deletedCount);
+        alert('Delete failed in database - product was not removed');
+        return false;
+      }
     } catch (err) {
       console.error('DELETE PRODUCT CATCH ERROR:', err);
+      alert('Delete failed - network error');
       return false;
     }
   };
@@ -651,18 +657,18 @@ export default function Admin() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-28 pb-24 px-5 md:px-16">
+      <main className="flex-1 pt-20 sm:pt-24 md:pt-28 pb-16 px-3 sm:px-5 md:px-16">
         <div className="max-w-[1400px] mx-auto">
 
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="font-display text-4xl md:text-5xl tracking-[0.1em] text-tb-white uppercase">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-[0.1em] text-tb-white uppercase">
               Admin Panel
             </h1>
           </div>
 
           {/* Tabs */}
-          <div className="flex flex-wrap gap-1 border-b border-white/20 mb-8 overflow-x-auto max-w-full">
+          <div className="flex flex-wrap gap-1 border-b border-white/20 mb-6 sm:mb-8 overflow-x-auto max-w-full">
             {(
               [
                 { key: 'orders', label: 'Orders', Icon: Users },
@@ -673,15 +679,15 @@ export default function Admin() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`inline-flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 font-condensed font-semibold text-xs md:text-sm tracking-[0.2em] uppercase transition-colors duration-200 border-b-2 -mb-px whitespace-nowrap ${
+                className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-6 py-2 sm:py-3 font-condensed font-semibold text-xs sm:text-sm tracking-[0.2em] uppercase transition-colors duration-200 border-b-2 -mb-px whitespace-nowrap ${
                   activeTab === key
                     ? 'text-tb-white border-tb-white'
                     : 'text-sv-mid hover:text-tb-white border-transparent'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{label}</span>
-                <span className="sm:hidden">{label.slice(0, 1)}</span>
+                <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline sm:inline">{label}</span>
+                <span className="inline xs:hidden sm:hidden">{label.slice(0, 1)}</span>
               </button>
             ))}
           </div>
@@ -802,13 +808,13 @@ export default function Admin() {
                 {products.length === 0 ? (
                   <p className="text-sv-mid font-condensed text-sm tracking-wider">No products yet.</p>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                     {products.map((product) => (
                       <div
                         key={product._id}
-                        className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 hover:shadow-lg transition-all duration-200 hover:border-zinc-600"
+                        className="bg-zinc-800 border border-zinc-700 rounded-lg p-2 sm:p-3 hover:shadow-lg transition-all duration-200 hover:border-zinc-600"
                       >
-                        <div className="aspect-square bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-32 md:h-40">
+                        <div className="aspect-square bg-[#0c0c0c] rounded-lg overflow-hidden mb-2 sm:mb-3 h-24 sm:h-32 md:h-40">
                           <img
                             src={product.image || '/placeholder.png'}
                             alt={product.name}
@@ -818,23 +824,25 @@ export default function Admin() {
                             }}
                           />
                         </div>
-                        <h3 className="font-condensed font-medium text-tb-white text-sm mb-1 line-clamp-2">
+                        <h3 className="font-condensed font-medium text-tb-white text-xs sm:text-sm mb-1 line-clamp-2">
                           {product.name}
                         </h3>
                         <p className="text-gray-400 text-xs mb-2">{categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}</p>
-                        <p className="font-condensed text-tb-white text-base font-semibold mb-3">¥{product.price}</p>
-                        <div className="flex gap-2">
+                        <p className="font-condensed text-tb-white text-sm sm:text-base font-semibold mb-2 sm:mb-3">¥{product.price}</p>
+                        <div className="flex gap-1 sm:gap-2">
                           <button
                             onClick={() => setEditingProduct(product)}
-                            className="flex-1 px-2 py-2 bg-zinc-700 border border-zinc-600 rounded text-tb-white text-xs hover:bg-zinc-600 transition-colors duration-200"
+                            className="flex-1 px-1 sm:px-2 py-1 sm:py-2 bg-zinc-700 border border-zinc-600 rounded text-tb-white text-xs hover:bg-zinc-600 transition-colors duration-200"
                           >
-                            Edit
+                            <span className="hidden sm:inline">Edit</span>
+                            <span className="sm:hidden">E</span>
                           </button>
                           <button
                             onClick={() => deleteProduct(product._id)}
-                            className="flex-1 px-2 py-2 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-colors duration-200"
+                            className="flex-1 px-1 sm:px-2 py-1 sm:py-2 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-colors duration-200"
                           >
-                            Delete
+                            <span className="hidden sm:inline">Delete</span>
+                            <span className="sm:hidden">D</span>
                           </button>
                         </div>
                       </div>

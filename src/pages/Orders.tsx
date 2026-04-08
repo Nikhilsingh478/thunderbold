@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft } from 'lucide-react';
+import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -56,6 +56,44 @@ const Orders = () => {
 
     fetchOrders();
   }, [user]);
+
+  const cancelOrder = async (orderId: string) => {
+    if (!user) return;
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/orders/cancel', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ orderId }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Order cancelled successfully:', data);
+        // Update local state to reflect the cancellation
+        setOrders(prev => 
+          prev.map(order => 
+            order._id === orderId 
+              ? { ...order, status: 'cancelled' }
+              : order
+          )
+        );
+        alert('Order cancelled successfully');
+      } else {
+        console.error('Cancel order failed:', data);
+        alert('Failed to cancel order: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Cancel order error:', err);
+      alert('Failed to cancel order - network error');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -206,6 +244,14 @@ const Orders = () => {
                       <div className="text-right">
                         <p className="font-condensed text-tb-white">¥{order.totalAmount}</p>
                       </div>
+                      {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                        <button
+                          onClick={() => cancelOrder(order._id)}
+                          className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs font-condensed uppercase tracking-wider hover:bg-red-500/30 transition-colors duration-200"
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </div>
                   </div>
 
