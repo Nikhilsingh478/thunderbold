@@ -1,39 +1,5 @@
 const { getDb } = require('../_lib/mongodb');
 
-async function getAuthUser(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  
-  const token = authHeader.split(' ')[1];
-  
-  try {
-    // Firebase tokens are JWTs with 3 parts separated by dots
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.log('Invalid token format - not a proper JWT');
-      return null;
-    }
-    
-    // Decode the payload (second part)
-    const payload = Buffer.from(parts[1], 'base64').toString();
-    const decoded = JSON.parse(payload);
-    
-    // Check if this looks like a Firebase token
-    if (!decoded.uid && !decoded.sub) {
-      console.log('Token missing uid/sub field');
-      return null;
-    }
-    
-    console.log('Successfully decoded user:', decoded.uid || decoded.sub);
-    return decoded;
-  } catch (error) {
-    console.error('Token parsing error:', error.message);
-    return null;
-  }
-}
-
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -45,20 +11,32 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const database = await getDb();
-    const cartCollection = database.collection('cart');
-
-    const user = await getAuthUser(req);
-    if (!user) {
+    console.log('CART API: Starting request...');
+    
+    // Get user ID from token (simplified approach)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('CART API: No auth header found');
       return res.status(401).json({ error: 'Unauthorized' });
     }
-
-    const userId = user.uid || user.sub;
+    
+    const token = authHeader.split(' ')[1];
+    const userId = token; // TEMP: Use token as userId for now
+    
+    console.log('CART API: User ID:', userId);
+    
+    // Get database connection
+    const database = await getDb();
+    const cartCollection = database.collection('cart');
+    
+    console.log('CART API: Connected to database');
 
     switch (req.method) {
       case 'GET':
-        // Get user's cart
+        console.log('CART API: Getting cart for user:', userId);
         const cart = await cartCollection.findOne({ userId });
+        console.log('CART API: Found cart:', cart ? 'Yes' : 'No');
+        
         if (cart) {
           return res.status(200).json({ items: cart.items || [] });
         } else {
@@ -66,8 +44,10 @@ module.exports = async (req, res) => {
         }
 
       case 'POST':
-        // Save/update user's cart
+        console.log('CART API: Saving cart for user:', userId);
         const { items } = req.body;
+        console.log('CART API: Items to save:', items);
+        
         if (!Array.isArray(items)) {
           return res.status(400).json({ error: 'Items must be an array' });
         }
@@ -84,6 +64,7 @@ module.exports = async (req, res) => {
         );
 
         if (!validItems) {
+          console.log('CART API: Invalid item structure');
           return res.status(400).json({ error: 'Invalid item structure' });
         }
 
@@ -98,10 +79,11 @@ module.exports = async (req, res) => {
           { upsert: true }
         );
 
+        console.log('CART API: Cart saved successfully');
         return res.status(200).json({ message: 'Cart saved successfully', items });
 
       case 'DELETE':
-        // Clear user's cart
+        console.log('CART API: Clearing cart for user:', userId);
         await cartCollection.deleteOne({ userId });
         return res.status(200).json({ message: 'Cart cleared successfully' });
 
@@ -110,7 +92,12 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
-    console.error('Cart API error:', error);
+    console.error('CART API ERROR:', error);
+    console.error('CART API ERROR DETAILS:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

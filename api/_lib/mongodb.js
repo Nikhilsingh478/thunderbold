@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+if (!process.env.MONGO_URI) {
+  throw new Error('Please define the MONGO_URI environment variable inside .env.local');
 }
 
 export async function getDb() {
@@ -12,13 +12,13 @@ export async function getDb() {
     return global.mongo.db;
   }
 
-  const mongoUri = process.env.MONGODB_URI;
+  const mongoUri = process.env.MONGO_URI;
   console.log("MONGO: Checking environment variables...");
-  console.log("MONGO: MONGODB_URI exists:", !!mongoUri);
+  console.log("MONGO: MONGO_URI exists:", !!mongoUri);
   
   if (!mongoUri) {
-    console.error("MONGO: MONGODB_URI environment variable is not defined");
-    throw new Error('MONGODB_URI environment variable is not defined');
+    console.error("MONGO: MONGO_URI environment variable is not defined");
+    throw new Error('MONGO_URI environment variable is not defined');
   }
 
   console.log("MONGO: Creating new MongoDB client...");

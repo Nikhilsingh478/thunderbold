@@ -1,39 +1,5 @@
 const { getDb } = require('../_lib/mongodb');
 
-async function getAuthUser(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  
-  const token = authHeader.split(' ')[1];
-  
-  try {
-    // Firebase tokens are JWTs with 3 parts separated by dots
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.log('Invalid token format - not a proper JWT');
-      return null;
-    }
-    
-    // Decode the payload (second part)
-    const payload = Buffer.from(parts[1], 'base64').toString();
-    const decoded = JSON.parse(payload);
-    
-    // Check if this looks like a Firebase token
-    if (!decoded.uid && !decoded.sub) {
-      console.log('Token missing uid/sub field');
-      return null;
-    }
-    
-    console.log('Successfully decoded user:', decoded.uid || decoded.sub);
-    return decoded;
-  } catch (error) {
-    console.error('Token parsing error:', error.message);
-    return null;
-  }
-}
-
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -45,20 +11,32 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const database = await getDb();
-    const wishlistCollection = database.collection('wishlist');
-
-    const user = await getAuthUser(req);
-    if (!user) {
+    console.log('WISHLIST API: Starting request...');
+    
+    // Get user ID from token (simplified approach)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('WISHLIST API: No auth header found');
       return res.status(401).json({ error: 'Unauthorized' });
     }
-
-    const userId = user.uid || user.sub;
+    
+    const token = authHeader.split(' ')[1];
+    const userId = token; // TEMP: Use token as userId for now
+    
+    console.log('WISHLIST API: User ID:', userId);
+    
+    // Get database connection
+    const database = await getDb();
+    const wishlistCollection = database.collection('wishlist');
+    
+    console.log('WISHLIST API: Connected to database');
 
     switch (req.method) {
       case 'GET':
-        // Get user's wishlist
+        console.log('WISHLIST API: Getting wishlist for user:', userId);
         const wishlist = await wishlistCollection.findOne({ userId });
+        console.log('WISHLIST API: Found wishlist:', wishlist ? 'Yes' : 'No');
+        
         if (wishlist) {
           return res.status(200).json({ items: wishlist.items || [] });
         } else {
@@ -66,8 +44,10 @@ module.exports = async (req, res) => {
         }
 
       case 'POST':
-        // Save/update user's wishlist
+        console.log('WISHLIST API: Saving wishlist for user:', userId);
         const { items } = req.body;
+        console.log('WISHLIST API: Items to save:', items);
+        
         if (!Array.isArray(items)) {
           return res.status(400).json({ error: 'Items must be an array' });
         }
@@ -81,6 +61,7 @@ module.exports = async (req, res) => {
         );
 
         if (!validItems) {
+          console.log('WISHLIST API: Invalid item structure');
           return res.status(400).json({ error: 'Invalid item structure' });
         }
 
@@ -95,10 +76,11 @@ module.exports = async (req, res) => {
           { upsert: true }
         );
 
+        console.log('WISHLIST API: Wishlist saved successfully');
         return res.status(200).json({ message: 'Wishlist saved successfully', items });
 
       case 'DELETE':
-        // Clear user's wishlist
+        console.log('WISHLIST API: Clearing wishlist for user:', userId);
         await wishlistCollection.deleteOne({ userId });
         return res.status(200).json({ message: 'Wishlist cleared successfully' });
 
@@ -107,7 +89,12 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
-    console.error('Wishlist API error:', error);
+    console.error('WISHLIST API ERROR:', error);
+    console.error('WISHLIST API ERROR DETAILS:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
