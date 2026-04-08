@@ -40,24 +40,17 @@ export default async function handler(req, res) {
   try {
     console.log('PRODUCTS API: Starting request...');
     
+    // Hard block for DELETE - should not hit index.js
+    if (req.method === 'DELETE') {
+      console.log('DELETE SHOULD NOT HIT INDEX.JS');
+      return res.status(405).json({ error: 'Wrong route' });
+    }
+    
     // Get database connection
     const database = await getDb();
     const productsCollection = database.collection('products');
     
     console.log('PRODUCTS API: Connected to database');
-
-    // Extract product ID from URL for PUT/DELETE operations
-    // Handle both /api/products and /api/products/[id] patterns
-    const urlParts = req.url.split('/').filter(part => part); // Remove empty parts
-    let productId = null;
-    
-    if (urlParts.length > 0) {
-      productId = urlParts[urlParts.length - 1];
-    }
-    
-    console.log('PRODUCTS API: URL:', req.url);
-    console.log('PRODUCTS API: URL parts:', urlParts);
-    console.log('PRODUCTS API: Extracted productId:', productId);
 
     switch (req.method) {
       case 'GET':
@@ -124,62 +117,9 @@ export default async function handler(req, res) {
           }
         });
 
-      case 'PUT':
-        console.log('PRODUCTS API: Updating product:', productId);
-        
-        // Check if user is admin
-        const putAuthResult = checkAdminAuth(req);
-        if (!putAuthResult.authorized) {
-          console.log('PRODUCTS API: Auth failed for PUT:', putAuthResult.error);
-          return res.status(putAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: putAuthResult.error });
-        }
-        
-        const { name: updateName, price: updatePrice, image: updateImage, description: updateDescription, categoryId: updateCategoryId, stock: updateStock } = req.body;
-        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImage, updateDescription, updateCategoryId, updateStock });
-        
-        // Validate required fields
-        if (!updateName || !updatePrice || !updateImage || !updateCategoryId) {
-          return res.status(400).json({ error: 'Name, price, image, and categoryId are required' });
-        }
-        
-        // Validate price
-        if (typeof updatePrice !== 'number' || updatePrice <= 0) {
-          return res.status(400).json({ error: 'Price must be a positive number' });
-        }
-        
-        // Validate image URL
-        if (typeof updateImage !== 'string' || !updateImage.trim()) {
-          return res.status(400).json({ error: 'Image URL is required' });
-        }
-
-        // Update product
-        const updateResult = await productsCollection.updateOne(
-          { _id: productId },
-          { 
-            $set: {
-              name: updateName,
-              price: updatePrice,
-              image: updateImage,
-              description: updateDescription || '',
-              categoryId: updateCategoryId,
-              stock: updateStock || 0,
-              updatedAt: new Date()
-            }
-          }
-        );
-
-        console.log('PRODUCTS API: Product updated successfully');
-        return res.status(200).json({ 
-          message: 'Product updated successfully', 
-          product: {
-            _id: productId,
-            ...updatedProduct
-          }
-        });
-
       default:
         console.log('PRODUCTS API: Method not allowed:', req.method);
-        res.setHeader('Allow', ['GET', 'POST', 'PUT']);
+        res.setHeader('Allow', ['GET', 'POST']);
         return res.status(405).json({ 
           error: `Method ${req.method} not allowed` 
         });
