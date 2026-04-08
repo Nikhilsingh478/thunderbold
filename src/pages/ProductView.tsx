@@ -7,12 +7,13 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
-import { SIZES } from '../data/products';
 import { fetchProductById } from '../lib/products';
 import { requireAuth } from '../lib/requireAuth';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+
+const SIZES = ['28', '30', '32', '34', '36'];
 
 export default function ProductView() {
   const { productId } = useParams();
@@ -25,7 +26,7 @@ export default function ProductView() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
-  const IMAGES = product?.images || [];
+  const IMAGES = product?.image ? [product.image] : [];
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
   const [selectedIndex, setSelectedIndex] = useState(0);

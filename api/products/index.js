@@ -1,33 +1,6 @@
 import { getDb } from "../_lib/mongodb.js";
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
-
-// Load local products as fallback
-let localProducts = null;
-const loadLocalProducts = () => {
-  if (!localProducts) {
-    try {
-      const productsPath = join(process.cwd(), 'src', 'data', 'products.ts');
-      const productsContent = readFileSync(productsPath, 'utf8');
-      // Extract PRODUCTS array from the TypeScript file
-      const productsMatch = productsContent.match(/export const PRODUCTS = (\[[\s\S]*?\]);/);
-      if (productsMatch) {
-        // Simple eval for now - in production, use proper parsing
-        const productsString = productsMatch[1].replace(
-          /(\w+):/g, 
-          '"$1":'
-        ).replace(/'/g, '"');
-        localProducts = JSON.parse(productsString);
-      }
-    } catch (error) {
-      console.error('Failed to load local products:', error);
-      localProducts = [];
-    }
-  }
-  return localProducts;
-};
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -68,36 +41,15 @@ export default async function handler(req, res) {
       case 'GET':
         console.log('PRODUCTS API: Fetching all products');
         
-        try {
-          // Try to fetch from MongoDB first
-          const products = await productsCollection.find({}).toArray();
-          console.log('PRODUCTS API: Found products in DB:', products.length);
-          
-          // If DB is empty, fallback to local products
-          if (products.length === 0) {
-            console.log('PRODUCTS API: DB empty, using local fallback');
-            const fallbackProducts = loadLocalProducts();
-            return res.status(200).json({ 
-              products: fallbackProducts,
-              count: fallbackProducts.length,
-              source: 'local'
-            });
-          }
-          
-          return res.status(200).json({ 
-            products,
-            count: products.length,
-            source: 'database'
-          });
-        } catch (dbError) {
-          console.error('PRODUCTS API: Database error, using local fallback:', dbError);
-          const fallbackProducts = loadLocalProducts();
-          return res.status(200).json({ 
-            products: fallbackProducts,
-            count: fallbackProducts.length,
-            source: 'local'
-          });
-        }
+        // Fetch from MongoDB only
+        const products = await productsCollection.find({}).toArray();
+        console.log('PRODUCTS API: Found products in DB:', products.length);
+        
+        return res.status(200).json({ 
+          products,
+          count: products.length,
+          source: 'database'
+        });
 
       case 'POST':
         console.log('PRODUCTS API: Creating new product');
@@ -107,12 +59,12 @@ export default async function handler(req, res) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         
-        const { name: productName, price: productPrice, images: productImages, description: productDescription, category: productCategory, stock: productStock } = req.body;
-        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImages, productDescription, productCategory, productStock });
+        const { name: productName, price: productPrice, image: productImage, description: productDescription, category: productCategory, stock: productStock } = req.body;
+        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImage, productDescription, productCategory, productStock });
         
         // Validate required fields
-        if (!productName || !productPrice || !productImages || !productCategory) {
-          return res.status(400).json({ error: 'Name, price, images, and category are required' });
+        if (!productName || !productPrice || !productImage || !productCategory) {
+          return res.status(400).json({ error: 'Name, price, image, and category are required' });
         }
         
         // Validate price
@@ -120,16 +72,16 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
         
-        // Validate images array
-        if (!Array.isArray(productImages) || productImages.length === 0) {
-          return res.status(400).json({ error: 'Images must be a non-empty array' });
+        // Validate image URL
+        if (typeof productImage !== 'string' || !productImage.trim()) {
+          return res.status(400).json({ error: 'Image URL is required' });
         }
 
         // Create product object
         const product = {
           name: productName,
           price: productPrice,
-          images: productImages,
+          image: productImage,
           description: productDescription || '',
           category: productCategory,
           stock: productStock || 0,
@@ -154,12 +106,12 @@ export default async function handler(req, res) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         
-        const { name: updateName, price: updatePrice, images: updateImages, description: updateDescription, category: updateCategory, stock: updateStock } = req.body;
-        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImages, updateDescription, updateCategory, updateStock });
+        const { name: updateName, price: updatePrice, image: updateImage, description: updateDescription, category: updateCategory, stock: updateStock } = req.body;
+        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImage, updateDescription, updateCategory, updateStock });
         
         // Validate required fields
-        if (!updateName || !updatePrice || !updateImages || !updateCategory) {
-          return res.status(400).json({ error: 'Name, price, images, and category are required' });
+        if (!updateName || !updatePrice || !updateImage || !updateCategory) {
+          return res.status(400).json({ error: 'Name, price, image, and category are required' });
         }
         
         // Validate price
@@ -167,9 +119,9 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
         
-        // Validate images array
-        if (!Array.isArray(updateImages) || updateImages.length === 0) {
-          return res.status(400).json({ error: 'Images must be a non-empty array' });
+        // Validate image URL
+        if (typeof updateImage !== 'string' || !updateImage.trim()) {
+          return res.status(400).json({ error: 'Image URL is required' });
         }
 
         // Update product
@@ -179,7 +131,7 @@ export default async function handler(req, res) {
             $set: {
               name: updateName,
               price: updatePrice,
-              images: updateImages,
+              image: updateImage,
               description: updateDescription || '',
               category: updateCategory,
               stock: updateStock || 0,

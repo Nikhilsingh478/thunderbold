@@ -29,7 +29,7 @@ interface Product {
   name: string;
   category: string;
   price: number;
-  images?: string[];
+  image?: string;
   description?: string;
   stock?: number;
 }
@@ -38,7 +38,7 @@ interface ProductFormData {
   name: string;
   category: string;
   price: string;
-  images: string[];
+  image: string;
   description: string;
   stock: string;
 }
@@ -47,7 +47,7 @@ const defaultFormData: ProductFormData = {
   name: '',
   category: '',
   price: '',
-  images: [''],
+  image: '',
   description: '',
   stock: '',
 };
@@ -103,6 +103,7 @@ function ProductModal({
               { key: 'name', label: 'Name', placeholder: 'Product name' },
               { key: 'category', label: 'Category', placeholder: 'e.g. Tops, Bottoms' },
               { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
+              { key: 'image', label: 'Image URL', placeholder: 'https://...' },
               { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
             ] as { key: keyof ProductFormData; label: string; placeholder: string; type?: string }[]
           ).map(({ key, label, placeholder, type }) => (
@@ -119,49 +120,6 @@ function ProductModal({
               />
             </div>
           ))}
-
-          {/* Multi-Image Input */}
-          <div>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
-              Product Images
-            </label>
-            <div className="space-y-2">
-              {form.images.map((image, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="url"
-                    value={image}
-                    onChange={(e) => {
-                      const newImages = [...form.images];
-                      newImages[index] = e.target.value;
-                      setForm((prev) => ({ ...prev, images: newImages }));
-                    }}
-                    placeholder={`https://... (Image ${index + 1})`}
-                    className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30"
-                  />
-                  {form.images.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newImages = form.images.filter((_, i) => i !== index);
-                        setForm((prev) => ({ ...prev, images: newImages }));
-                      }}
-                      className="px-3 py-2 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-sm hover:bg-red-500/30 transition-all duration-200"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setForm((prev) => ({ ...prev, images: [...prev.images, ''] }))}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm hover:bg-white/10 transition-all duration-200"
-              >
-                + Add Image
-              </button>
-            </div>
-          </div>
 
           <div>
             <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
@@ -282,13 +240,6 @@ export default function Admin() {
   const addProduct = async (formData: ProductFormData): Promise<boolean> => {
     if (!user) return false;
     try {
-      // Filter out empty images
-      const validImages = formData.images.filter(img => img.trim() !== '');
-      if (validImages.length === 0) {
-        console.error('At least one image is required');
-        return false;
-      }
-
       const token = await user.getIdToken();
       const response = await fetch('/api/products', {
         method: 'POST',
@@ -298,7 +249,6 @@ export default function Admin() {
         },
         body: JSON.stringify({
           ...formData,
-          images: validImages,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock, 10) || 0,
         }),
@@ -318,13 +268,6 @@ export default function Admin() {
   const updateProduct = async (formData: ProductFormData): Promise<boolean> => {
     if (!user || !editingProduct) return false;
     try {
-      // Filter out empty images
-      const validImages = formData.images.filter(img => img.trim() !== '');
-      if (validImages.length === 0) {
-        console.error('At least one image is required');
-        return false;
-      }
-
       const token = await user.getIdToken();
       const response = await fetch(`/api/products/${editingProduct._id}`, {
         method: 'PUT',
@@ -334,7 +277,6 @@ export default function Admin() {
         },
         body: JSON.stringify({
           ...formData,
-          images: validImages,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock, 10) || 0,
         }),
@@ -543,7 +485,7 @@ export default function Admin() {
                       >
                         <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-4">
                           <img
-                            src={product.images?.[0] || '/placeholder.png'}
+                            src={product.image || '/placeholder.png'}
                             alt={product.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -598,7 +540,7 @@ export default function Admin() {
               name: editingProduct.name,
               category: editingProduct.category,
               price: String(editingProduct.price),
-              images: editingProduct.images ?? [''],
+              image: editingProduct.image ?? '',
               description: editingProduct.description ?? '',
               stock: String(editingProduct.stock ?? 0),
             }}

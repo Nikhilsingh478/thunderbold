@@ -6,17 +6,36 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
-import { CATEGORIES } from '../data/products';
-import { fetchProductsByCategory } from '../lib/products';
+import { fetchProductsByCategory, getCategories } from '../lib/products';
 import { useWishlist } from '../context/WishlistContext';
 
 export default function CategoryView() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const categoryName = CATEGORIES[categoryId as string] || 'Unknown Category';
   const [categoryProducts, setCategoryProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState({});
+  
+  // Get category name from URL parameter
+  const categoryName = categoryId || 'Unknown Category';
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await getCategories();
+        const catMap = {};
+        cats.forEach(cat => {
+          catMap[cat] = cat.charAt(0).toUpperCase() + cat.slice(1);
+        });
+        setCategories(catMap);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    };
+    
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -42,10 +61,10 @@ export default function CategoryView() {
     e.stopPropagation(); // Prevent navigation to product page
     
     toggleWishlist({
-      productId: product.id,
+      productId: product._id,
       name: product.name,
-      price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
-      image: product.images[0],
+      price: product.price,
+      image: product.image,
     });
   };
 
@@ -71,7 +90,7 @@ export default function CategoryView() {
               ← Back to Categories
             </button>
             <h1 className="font-display text-5xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-              {categoryName}
+              {categories[categoryId] || categoryName}
             </h1>
             <p className="font-serif italic font-light text-sv-mid mt-4 text-lg">
               Explore our premium {categoryName.toLowerCase()} collection.
@@ -82,12 +101,12 @@ export default function CategoryView() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
             {categoryProducts.map((prod, i) => (
               <motion.div
-                key={prod.id}
+                key={prod._id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: i * 0.05 }}
                 className="group cursor-pointer flex flex-col"
-                onClick={() => navigate(`/product/${prod.id}`)}
+                onClick={() => navigate(`/product/${prod._id}`)}
               >
                 <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
                   {/* Wishlist Icon */}
@@ -97,12 +116,12 @@ export default function CategoryView() {
                   >
                     <Heart 
                       size={16} 
-                      className={isInWishlist(prod.id) ? 'fill-current text-red-400' : ''}
+                      className={isInWishlist(prod._id) ? 'fill-current text-red-400' : ''}
                     />
                   </button>
                   
                   <motion.img
-                    src={prod.images[0]}
+                    src={prod.image}
                     alt={prod.name}
                     className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] grayscale-[0.1]"
                     loading={i < 4 ? "eager" : "lazy"}
@@ -115,10 +134,10 @@ export default function CategoryView() {
                   </h3>
                   <div className="flex justify-between items-center mt-1">
                     <span className="font-condensed text-sm tracking-widest text-sv-mid uppercase">
-                      {categoryName}
+                      {categories[categoryId] || categoryName}
                     </span>
                     <span className="font-condensed text-sm tracking-wider text-tb-white">
-                      {prod.price}
+                      ¥{prod.price}
                     </span>
                   </div>
                 </div>

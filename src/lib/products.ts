@@ -1,43 +1,40 @@
-import { PRODUCTS } from '../data/products';
-
 export interface Product {
-  id: string;
+  _id: string;
   name: string;
-  price: string;
-  description: string;
-  images: string[];
-  categoryId: string;
+  price: number;
+  description?: string;
+  image: string;
+  category: string;
+  stock?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductResponse {
   products: Product[];
   count: number;
-  source: 'database' | 'local';
+  source: 'database';
 }
 
 /**
- * Hybrid product fetching system
- * Tries MongoDB API first, falls back to local products
+ * Fetch all products from API
  */
 export async function fetchProducts(): Promise<ProductResponse> {
+  console.log('PRODUCT FETCH: Fetching from API...');
+  
   try {
-    console.log('PRODUCT FETCH: Trying API...');
     const response = await fetch('/api/products');
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('PRODUCT FETCH: API success, source:', data.source);
-      return data;
-    } else {
+    if (!response.ok) {
       throw new Error(`API returned ${response.status}`);
     }
+    
+    const data = await response.json();
+    console.log('PRODUCT FETCH: API success, products:', data.products.length);
+    return data;
   } catch (error) {
-    console.error('PRODUCT FETCH: API failed, using local fallback:', error);
-    return {
-      products: PRODUCTS,
-      count: PRODUCTS.length,
-      source: 'local'
-    };
+    console.error('PRODUCT FETCH: API failed:', error);
+    throw error;
   }
 }
 
@@ -47,32 +44,41 @@ export async function fetchProducts(): Promise<ProductResponse> {
 export async function fetchProductById(id: string): Promise<Product | null> {
   try {
     const response = await fetch('/api/products');
-    if (response.ok) {
-      const data = await response.json();
-      return data.products.find((product: Product) => product.id === id) || null;
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
     }
+    
+    const data = await response.json();
+    return data.products.find((product: Product) => product._id === id) || null;
   } catch (error) {
-    console.error('PRODUCT FETCH: Failed to fetch product, using local fallback:', error);
+    console.error('PRODUCT FETCH: Failed to fetch product:', error);
+    return null;
   }
-  
-  // Fallback to local products
-  return PRODUCTS.find(product => product.id === id) || null;
 }
 
 /**
  * Fetch products by category
  */
-export async function fetchProductsByCategory(categoryId: string): Promise<Product[]> {
+export async function fetchProductsByCategory(category: string): Promise<Product[]> {
   try {
     const response = await fetch('/api/products');
-    if (response.ok) {
-      const data = await response.json();
-      return data.products.filter((product: Product) => product.categoryId === categoryId);
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
     }
+    
+    const data = await response.json();
+    return data.products.filter((product: Product) => product.category === category);
   } catch (error) {
-    console.error('PRODUCT FETCH: Failed to fetch category products, using local fallback:', error);
+    console.error('PRODUCT FETCH: Failed to fetch category products:', error);
+    return [];
   }
-  
-  // Fallback to local products
-  return PRODUCTS.filter(product => product.categoryId === categoryId);
+}
+
+/**
+ * Get unique categories from products
+ */
+export async function getCategories(): Promise<string[]> {
+  const response = await fetchProducts();
+  const categories = [...new Set(response.products.map(product => product.category))];
+  return categories;
 }
