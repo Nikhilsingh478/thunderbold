@@ -460,7 +460,7 @@ export default function Admin() {
     if (!user || !editingProduct) return false;
     try {
       const token = await user.getIdToken();
-      const response = await fetch(`/api/products/${editingProduct._id}`, {
+      const response = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -513,36 +513,32 @@ export default function Admin() {
       console.log('DELETE REQUEST ID:', productId);
       
       const token = await user.getIdToken();
-      const res = await fetch(`/api/products/${productId}`, {
+      const res = await fetch(`/api/products?id=${productId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       
-      console.log('STATUS:', res.status);
-
       let data = null;
       try {
         data = await res.json();
-      } catch (e) {
-        console.log('EMPTY RESPONSE');
+      } catch {
+        console.warn('Empty DELETE response');
       }
 
-      console.log('RESPONSE DATA:', data);
+      console.log('DELETE STATUS:', res.status);
+      console.log('DELETE DATA:', data);
 
-      // Hard fail if not deleted
-      if (res.status !== 200 || data?.deletedCount !== 1) {
-        alert('DELETE FAILED - NOT REMOVED FROM DB');
-        return;
+      if (res.status === 200 && data?.deletedCount === 1) {
+        setProducts(prev => prev.filter(p => p._id !== productId));
+      } else {
+        console.error('DELETE FAILED HARD:', data);
+        alert('Delete failed — DB not updated');
       }
-
-      console.log('DELETE SUCCESS - removing from UI');
-      setProducts(prev => prev.filter(p => p._id !== productId));
-      
     } catch (err) {
       console.error('DELETE ERROR:', err);
-      alert('DELETE FAILED - NETWORK ERROR');
+      alert('Delete failed — network error');
     }
   };
 

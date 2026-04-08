@@ -118,9 +118,55 @@ export default async function handler(req, res) {
           }
         });
 
+      case 'DELETE':
+        console.log('DELETE HIT INDEX.JS');
+
+        const auth = checkAdminAuth(req);
+        if (!auth.authorized) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const { id } = req.query;
+
+        if (!id) {
+          return res.status(400).json({ error: 'Missing ID' });
+        }
+
+        console.log('DELETE ID RECEIVED:', id);
+
+        // Log database state before delete
+        const before = await productsCollection.countDocuments();
+        console.log('COUNT BEFORE DELETE:', before);
+
+        let result = await productsCollection.deleteOne({
+          _id: new ObjectId(id)
+        }).catch(async () => {
+          console.log('Falling back to string ID delete');
+          return await productsCollection.deleteOne({ _id: id });
+        });
+
+        console.log('FINAL DELETE RESULT:', result);
+
+        // Log database state after delete
+        const after = await productsCollection.countDocuments();
+        console.log('COUNT AFTER DELETE:', after);
+
+        if (!result || result.deletedCount === 0) {
+          return res.status(404).json({
+            success: false,
+            deletedCount: 0,
+            message: 'Product not found'
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          deletedCount: 1
+        });
+
       default:
         console.log('PRODUCTS API: Method not allowed:', req.method);
-        res.setHeader('Allow', ['GET', 'POST']);
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         return res.status(405).json({ 
           error: `Method ${req.method} not allowed` 
         });
