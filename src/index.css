@@ -68,6 +68,13 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Navbar overflow fix */
+  .navbar {
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
   ::selection {
     background-color: #d4aa30;
     color: #0c0c0c;

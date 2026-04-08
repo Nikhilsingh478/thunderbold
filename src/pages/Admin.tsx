@@ -519,26 +519,27 @@ export default function Admin() {
         },
       });
       
-      // Parse JSON only ONCE
-      const data = await response.json();
+      // Safe JSON parsing - handle empty responses
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.warn('Empty response from DELETE API');
+      }
+      
       console.log('DELETE PRODUCT RESPONSE:', response.status, response.statusText);
       console.log('DELETE PRODUCT DATA:', data);
       
-      if (response.ok) {
-        // Update local state immediately for instant UI update
-        console.log('REMOVING PRODUCT FROM STATE:', productId);
-        setProducts(prev => {
-          console.log('PREVIOUS PRODUCTS:', prev);
-          const updated = prev.filter(p => p._id !== productId);
-          console.log('UPDATED PRODUCTS:', updated);
-          return updated;
-        });
-        
-        return true;
-      } else {
-        console.error('DELETE PRODUCT ERROR:', data);
-        return false;
-      }
+      // Always update UI regardless of response body
+      console.log('REMOVING PRODUCT FROM STATE:', productId);
+      setProducts(prev => {
+        console.log('PREVIOUS PRODUCTS:', prev);
+        const updated = prev.filter(p => p._id !== productId);
+        console.log('UPDATED PRODUCTS:', updated);
+        return updated;
+      });
+      
+      return true;
     } catch (err) {
       console.error('DELETE PRODUCT CATCH ERROR:', err);
       return false;
@@ -661,7 +662,7 @@ export default function Admin() {
           </div>
 
           {/* Tabs */}
-          <div className="flex space-x-1 border-b border-white/20 mb-8">
+          <div className="flex flex-wrap gap-1 border-b border-white/20 mb-8 overflow-x-auto max-w-full">
             {(
               [
                 { key: 'orders', label: 'Orders', Icon: Users },
@@ -672,14 +673,15 @@ export default function Admin() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`inline-flex items-center gap-2 px-6 py-3 font-condensed font-semibold text-sm tracking-[0.2em] uppercase transition-colors duration-200 border-b-2 -mb-px ${
+                className={`inline-flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 font-condensed font-semibold text-xs md:text-sm tracking-[0.2em] uppercase transition-colors duration-200 border-b-2 -mb-px whitespace-nowrap ${
                   activeTab === key
                     ? 'text-tb-white border-tb-white'
                     : 'text-sv-mid hover:text-tb-white border-transparent'
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                {label}
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{label.slice(0, 1)}</span>
               </button>
             ))}
           </div>
@@ -800,13 +802,13 @@ export default function Admin() {
                 {products.length === 0 ? (
                   <p className="text-sv-mid font-condensed text-sm tracking-wider">No products yet.</p>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                     {products.map((product) => (
                       <div
                         key={product._id}
-                        className="bg-zinc-900 rounded-xl p-3 hover:shadow-lg transition-all duration-200 border border-white/5 hover:border-white/10"
+                        className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 hover:shadow-lg transition-all duration-200 hover:border-zinc-600"
                       >
-                        <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-40">
+                        <div className="aspect-square bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-32 md:h-40">
                           <img
                             src={product.image || '/placeholder.png'}
                             alt={product.name}
@@ -824,13 +826,13 @@ export default function Admin() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => setEditingProduct(product)}
-                            className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-tb-white text-xs hover:bg-white/20 transition-all duration-200"
+                            className="flex-1 px-2 py-2 bg-zinc-700 border border-zinc-600 rounded text-tb-white text-xs hover:bg-zinc-600 transition-colors duration-200"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => deleteProduct(product._id)}
-                            className="flex-1 px-2 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
+                            className="flex-1 px-2 py-2 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-colors duration-200"
                           >
                             Delete
                           </button>

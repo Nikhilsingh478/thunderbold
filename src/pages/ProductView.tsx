@@ -80,7 +80,6 @@ export default function ProductView() {
         price: product.price,
         size: selectedSize,
         quantity,
-        categoryName: product.categoryId,
         productUrl: window.location.href,
       },
     });
