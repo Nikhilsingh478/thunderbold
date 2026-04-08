@@ -47,8 +47,17 @@ export default async function handler(req, res) {
     console.log('PRODUCTS API: Connected to database');
 
     // Extract product ID from URL for PUT/DELETE operations
-    const urlParts = req.url.split('/');
-    const productId = urlParts[urlParts.length - 1];
+    // Handle both /api/products and /api/products/[id] patterns
+    const urlParts = req.url.split('/').filter(part => part); // Remove empty parts
+    let productId = null;
+    
+    if (urlParts.length > 0) {
+      productId = urlParts[urlParts.length - 1];
+    }
+    
+    console.log('PRODUCTS API: URL:', req.url);
+    console.log('PRODUCTS API: URL parts:', urlParts);
+    console.log('PRODUCTS API: Extracted productId:', productId);
 
     switch (req.method) {
       case 'GET':
@@ -228,8 +237,11 @@ export default async function handler(req, res) {
         }
 
       default:
+        console.log('PRODUCTS API: Method not allowed:', req.method);
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-        return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ 
+          error: `Method ${req.method} not allowed` 
+        });
     }
   } catch (error) {
     console.error('PRODUCTS API ERROR:', error);
