@@ -165,27 +165,44 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       // Get local cart
       const localCart = getCart();
+      console.log('Syncing local cart to DB:', localCart);
       if (localCart.length === 0) return;
 
-      // Get DB cart
-      const response = await fetch('/api/cart');
+      // Get auth token
+      const token = await user.getIdToken();
+      
+      // Get DB cart with auth headers
+      const response = await fetch('/api/cart', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const dbCart = response.ok ? (await response.json()).items || [] : [];
 
       // Merge carts
       const mergedCart = mergeCartItems(localCart, dbCart);
+      console.log('Merged cart:', mergedCart);
 
       // Save merged cart to DB
-      await fetch('/api/cart', {
+      const saveResponse = await fetch('/api/cart', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ items: mergedCart }),
       });
 
-      // Clear local storage
-      clearCart();
-
-      // Reload cart from DB
-      loadCart();
+      if (saveResponse.ok) {
+        console.log('Successfully saved merged cart to DB');
+        // Clear local storage only after successful save
+        clearCart();
+        // Reload cart from DB to get latest state
+        loadCart();
+      } else {
+        console.error('Failed to save merged cart to DB');
+        throw new Error('Failed to save merged cart to database');
+      }
     } catch (error) {
       console.error('Error syncing cart to DB:', error);
     }

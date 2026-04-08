@@ -84,17 +84,29 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     try {
       if (user) {
-        // Load from DB
-        const response = await fetch('/api/wishlist');
+        // Load from DB with auth headers
+        const token = await user.getIdToken();
+        const response = await fetch('/api/wishlist', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        console.log('Load wishlist response:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('Loaded wishlist from DB:', data.items);
           dispatch({ type: 'SET_WISHLIST', payload: data.items || [] });
         } else {
+          const errorData = await response.text();
+          console.error('Load wishlist error:', errorData);
           throw new Error('Failed to load wishlist from database');
         }
       } else {
         // Load from localStorage
         const localWishlist = getWishlist();
+        console.log('Loading wishlist from localStorage:', localWishlist);
         dispatch({ type: 'SET_WISHLIST', payload: localWishlist });
       }
     } catch (error) {
@@ -111,27 +123,44 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       // Get local wishlist
       const localWishlist = getWishlist();
+      console.log('Syncing local wishlist to DB:', localWishlist);
       if (localWishlist.length === 0) return;
 
-      // Get DB wishlist
-      const response = await fetch('/api/wishlist');
+      // Get auth token
+      const token = await user.getIdToken();
+      
+      // Get DB wishlist with auth headers
+      const response = await fetch('/api/wishlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const dbWishlist = response.ok ? (await response.json()).items || [] : [];
 
       // Merge wishlists
       const mergedWishlist = mergeWishlistItems(localWishlist, dbWishlist);
+      console.log('Merged wishlist:', mergedWishlist);
 
       // Save merged wishlist to DB
-      await fetch('/api/wishlist', {
+      const saveResponse = await fetch('/api/wishlist', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ items: mergedWishlist }),
       });
 
-      // Clear local storage
-      clearWishlist();
-
-      // Reload wishlist from DB
-      loadWishlist();
+      if (saveResponse.ok) {
+        console.log('Successfully saved merged wishlist to DB');
+        // Clear local storage only after successful save
+        clearWishlist();
+        // Reload wishlist from DB to get latest state
+        loadWishlist();
+      } else {
+        console.error('Failed to save merged wishlist to DB');
+        throw new Error('Failed to save merged wishlist to database');
+      }
     } catch (error) {
       console.error('Error syncing wishlist to DB:', error);
     }
@@ -140,32 +169,55 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   const saveWishlist = async (items: WishlistItem[]) => {
     try {
       if (user) {
+        // Get auth token
+        const token = await user.getIdToken();
+        
         // Save to DB
-        await fetch('/api/wishlist', {
+        const response = await fetch('/api/wishlist', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ items }),
         });
+        
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error('Wishlist API error:', errorData);
+          throw new Error('Failed to save wishlist to database');
+        }
       } else {
         // Save to localStorage
+        console.log('Saving wishlist to localStorage for logged-out user');
         setWishlist(items);
+        console.log('Wishlist saved to localStorage');
       }
     } catch (error) {
       console.error('Error saving wishlist:', error);
-      throw error;
+      // Don't throw error for localStorage issues, just log them
+      if (user) {
+        throw error; // Only throw for logged-in users (API errors)
+      }
     }
   };
 
   const addToWishlist = async (item: WishlistItem) => {
     try {
+      console.log('=== ADD TO WISHLIST START ===');
+      console.log('Item:', item);
+      console.log('Current state items:', state.items);
+      
       dispatch({ type: 'ADD_ITEM', payload: item });
+      console.log('Dispatched ADD_ITEM action');
       
       // Save to storage
       await saveWishlist(state.items);
+      console.log('=== ADD TO WISHLIST SUCCESS ===');
       
       toast.success(`${item.name} added to wishlist`);
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      console.error('=== ADD TO WISHLIST ERROR ===', error);
       toast.error('Failed to add item to wishlist');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add item to wishlist' });
     }
@@ -173,14 +225,20 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const removeFromWishlist = async (productId: string) => {
     try {
+      console.log('=== REMOVE FROM WISHLIST START ===');
+      console.log('Product ID:', productId);
+      console.log('Current state items:', state.items);
+      
       dispatch({ type: 'REMOVE_ITEM', payload: productId });
+      console.log('Dispatched REMOVE_ITEM action');
       
       // Save to storage
       await saveWishlist(state.items);
+      console.log('=== REMOVE FROM WISHLIST SUCCESS ===');
       
       toast.success('Item removed from wishlist');
     } catch (error) {
-      console.error('Error removing from wishlist:', error);
+      console.error('=== REMOVE FROM WISHLIST ERROR ===', error);
       toast.error('Failed to remove item from wishlist');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to remove item from wishlist' });
     }
