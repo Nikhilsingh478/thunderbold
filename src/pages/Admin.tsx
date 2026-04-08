@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -39,10 +39,29 @@ interface CategoryFormData {
   image: string;
 }
 
-const defaultCategoryFormData: CategoryFormData = {
-  name: '',
-  image: '',
-};
+const defaultCategoryFormData: CategoryFormData = { name: '', image: '' };
+
+function ModalShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm px-0 sm:px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+        className="w-full sm:max-w-md bg-[#141414] border border-white/10 rounded-t-2xl sm:rounded-2xl relative max-h-[92vh] flex flex-col"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-sv-mid hover:text-tb-white transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        {children}
+      </motion.div>
+    </div>
+  );
+}
 
 function CategoryModal({
   title,
@@ -58,10 +77,7 @@ function CategoryModal({
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!form.name || !form.image) {
-      setError('Name and image are required.');
-      return;
-    }
+    if (!form.name || !form.image) { setError('Name and image are required.'); return; }
     setSubmitting(true);
     const ok = await onSubmit(form);
     setSubmitting(false);
@@ -69,69 +85,40 @@ function CategoryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md bg-surface border border-white/10 rounded-xl p-6 relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-sv-mid hover:text-tb-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <h3 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-6">
-          {title}
-        </h3>
-
-        <div className="space-y-4">
-          {(
-            [
-              { key: 'name', label: 'Name', placeholder: 'Category name' },
-              { key: 'image', label: 'Image URL', placeholder: 'https://...' },
-            ] as { key: keyof CategoryFormData; label: string; placeholder: string }[]
-          ).map(({ key, label, placeholder }) => (
-            <div key={key}>
-              <label className="block text-tb-white text-sm font-condensed mb-2">
-                {label}
-              </label>
-              <input
-                type={key === 'image' ? 'url' : 'text'}
-                value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                placeholder={placeholder}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white placeholder-sv-mid focus:outline-none focus:border-white/30 transition-colors"
-              />
-            </div>
-          ))}
-        </div>
-
+    <ModalShell onClose={onClose}>
+      <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+        <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">{title}</h3>
+      </div>
+      <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+        {(['name', 'image'] as const).map((key) => (
+          <div key={key}>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+              {key === 'name' ? 'Name' : 'Image URL'}
+            </label>
+            <input
+              type={key === 'image' ? 'url' : 'text'}
+              value={form[key]}
+              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+              placeholder={key === 'name' ? 'Category name' : 'https://...'}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+            />
+          </div>
+        ))}
         {error && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
-
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-tb-white hover:bg-white/20 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex-1 px-4 py-3 bg-tb-white text-void font-condensed font-bold tracking-[0.2em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50"
-          >
-            {submitting ? 'Creating...' : 'Create Category'}
-          </button>
-        </div>
-      </motion.div>
-    </div>
+      </div>
+      <div className="px-6 pb-6 pt-3 flex gap-3 shrink-0 border-t border-white/10">
+        <button onClick={onClose} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors">
+          Cancel
+        </button>
+        <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.15em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50">
+          {submitting ? 'Creating...' : 'Create'}
+        </button>
+      </div>
+    </ModalShell>
   );
 }
 
@@ -144,14 +131,7 @@ interface ProductFormData {
   stock: string;
 }
 
-const defaultFormData: ProductFormData = {
-  name: '',
-  categoryId: '',
-  price: '',
-  image: '',
-  description: '',
-  stock: '',
-};
+const defaultFormData: ProductFormData = { name: '', categoryId: '', price: '', image: '', description: '', stock: '' };
 
 function ProductModal({
   title,
@@ -169,140 +149,105 @@ function ProductModal({
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
 
-  // Fetch categories on mount
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/categories');
-        const data = await response.json();
-        setCategories(data.categories || []);
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-      }
-    };
-    fetchCategories();
+    fetch('/api/categories')
+      .then(r => r.json())
+      .then(d => setCategories(d.categories || []))
+      .catch(() => {});
   }, []);
 
-  const formFields = [
-    { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
-    { key: 'image', label: 'Image URL', placeholder: 'https://...' },
-    { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
-  ];
-
   const handleSubmit = async () => {
-    if (!form.name || !form.price || !form.categoryId) {
-      setError('Name, price, and category are required.');
-      return;
-    }
+    if (!form.name || !form.price || !form.categoryId) { setError('Name, price, and category are required.'); return; }
     setSubmitting(true);
     const ok = await onSubmit(form);
     setSubmitting(false);
     if (!ok) setError('Something went wrong. Please try again.');
   };
 
+  const fields: { key: keyof ProductFormData; label: string; placeholder: string; type?: string }[] = [
+    { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
+    { key: 'image', label: 'Image URL', placeholder: 'https://' },
+    { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md bg-surface border border-white/10 rounded-xl p-6 relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-sv-mid hover:text-tb-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <h3 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-6">
-          {title}
-        </h3>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="Product name"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30"
-            />
-          </div>
-
-          <div>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
-              Category
-            </label>
+    <ModalShell onClose={onClose}>
+      <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+        <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">{title}</h3>
+      </div>
+      <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Name</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
+            placeholder="Product name"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+          />
+        </div>
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Category</label>
+          <div className="relative">
             <select
               value={form.categoryId}
-              onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-tb-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-zinc-600 hover:border-zinc-600 transition-colors duration-200"
+              onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
             >
-              <option value="" className="bg-zinc-800 text-zinc-500">Select a category</option>
+              <option value="" className="bg-zinc-900 text-sv-mid">Select a category</option>
               {categories.map((cat) => (
-                <option key={cat._id} value={cat._id} className="bg-zinc-800 text-tb-white">
-                  {cat.name}
-                </option>
+                <option key={cat._id} value={cat._id} className="bg-zinc-900 text-tb-white">{cat.name}</option>
               ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
           </div>
-
-          {formFields.map(({ key, label, placeholder, type }) => (
-            <div key={key}>
-              <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
-                {label}
-              </label>
-              <input
-                type={type ?? 'text'}
-                value={form[key]}
-                onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                placeholder={placeholder}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30"
-              />
-            </div>
-          ))}
-
-          <div>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
-              Description
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-              placeholder="Product description"
-              rows={3}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 resize-none"
+        </div>
+        {fields.map(({ key, label, placeholder, type }) => (
+          <div key={key}>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">{label}</label>
+            <input
+              type={type ?? 'text'}
+              value={form[key]}
+              onChange={(e) => setForm(p => ({ ...p, [key]: e.target.value }))}
+              placeholder={placeholder}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
+        ))}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Description</label>
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}
+            placeholder="Product description"
+            rows={3}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors resize-none"
+          />
         </div>
-
         {error && (
-          <p className="mt-3 text-red-400 text-xs font-condensed">{error}</p>
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
         )}
-
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-all duration-200"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex-1 px-4 py-2 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase rounded hover:bg-white transition-all duration-200 disabled:opacity-50"
-          >
-            {submitting ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </motion.div>
-    </div>
+      </div>
+      <div className="px-6 pb-6 pt-3 flex gap-3 shrink-0 border-t border-white/10">
+        <button onClick={onClose} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors">
+          Cancel
+        </button>
+        <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.15em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50">
+          {submitting ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </ModalShell>
   );
 }
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  confirmed: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  shipped: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  delivered: 'bg-green-500/20 text-green-400 border-green-500/30',
+};
 
 export default function Admin() {
   const { user } = useAuth();
@@ -317,229 +262,112 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user && user.email !== ADMIN_EMAIL) {
-      navigate('/');
-    }
+    if (user && user.email !== ADMIN_EMAIL) navigate('/');
   }, [user, navigate]);
 
-  useEffect(() => {
-    if (user && activeTab === 'orders') fetchOrders();
-  }, [activeTab, user]);
-
-  useEffect(() => {
-    if (user && activeTab === 'products') fetchProducts();
-  }, [activeTab, user]);
-
-  useEffect(() => {
-    if (user && activeTab === 'categories') fetchCategories();
-  }, [activeTab, user]);
+  useEffect(() => { if (user && activeTab === 'orders') fetchOrders(); }, [activeTab, user]);
+  useEffect(() => { if (user && activeTab === 'products') fetchProducts(); }, [activeTab, user]);
+  useEffect(() => { if (user && activeTab === 'categories') fetchCategories(); }, [activeTab, user]);
 
   const fetchOrders = async () => {
     if (!user) return;
+    setLoading(true);
     try {
-      setLoading(true);
       const token = await user.getIdToken();
-      const response = await fetch('/api/orders', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data.orders ?? []);
-      }
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setOrders(d.orders ?? []); }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const fetchProducts = async () => {
     if (!user) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch('/api/products');
-      const data = await response.json();
-      console.log('ADMIN FETCH PRODUCTS RESPONSE:', data);
-      console.log('ADMIN PRODUCTS STATE:', data.products);
-      setProducts(data.products ?? []);
-    } catch (err) {
-      console.error('ADMIN FETCH ERROR:', err);
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch('/api/products');
+      const d = await r.json();
+      setProducts(d.products ?? []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const fetchCategories = async () => {
     if (!user) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch('/api/categories');
-      const data = await response.json();
-      console.log('ADMIN FETCH CATEGORIES RESPONSE:', data);
-      setCategories(data.categories ?? []);
-    } catch (err) {
-      console.error('ADMIN FETCH CATEGORIES ERROR:', err);
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch('/api/categories');
+      const d = await r.json();
+      setCategories(d.categories ?? []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const response = await fetch(`/api/orders/${orderId}`, {
+      const r = await fetch(`/api/orders/${orderId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (response.ok) {
-        setOrders((prev) =>
-          prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
-        );
-      }
-    } catch (err) {
-      console.error('Error updating order:', err);
-    }
+      if (r.ok) setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+    } catch (e) { console.error(e); }
   };
 
   const addProduct = async (formData: ProductFormData): Promise<boolean> => {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
-      const response = await fetch('/api/products', {
+      const r = await fetch('/api/products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock, 10) || 0,
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 }),
       });
-      
-      // Parse JSON only ONCE
-      const data = await response.json();
-      console.log('PRODUCT API RESPONSE:', response.status, response.statusText);
-      console.log('PRODUCT API DATA:', data);
-      
-      if (response.ok) {
-        // Update local state immediately for instant UI update
-        const newProduct = {
-          _id: data.product._id,
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock, 10) || 0,
-        };
-        console.log('ADDING NEW PRODUCT TO STATE:', newProduct);
-        setProducts(prev => {
-          console.log('PREVIOUS PRODUCTS:', prev);
-          const updated = [newProduct, ...prev];
-          console.log('UPDATED PRODUCTS:', updated);
-          return updated;
-        });
-        
+      const d = await r.json();
+      if (r.ok) {
+        setProducts(prev => [{ _id: d.product._id, ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 }, ...prev]);
         setShowAddProductModal(false);
         return true;
-      } else {
-        console.error('PRODUCT API ERROR:', data);
-        return false;
       }
-    } catch (err) {
-      console.error('Failed to add product:', err);
       return false;
-    }
+    } catch { return false; }
   };
 
   const updateProduct = async (formData: ProductFormData): Promise<boolean> => {
     if (!user || !editingProduct) return false;
     try {
       const token = await user.getIdToken();
-      const response = await fetch(`/api/products?id=${editingProduct._id}`, {
+      const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock, 10) || 0,
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 }),
       });
-      
-      // Parse JSON only ONCE
-      const data = await response.json();
-      console.log('UPDATE PRODUCT RESPONSE:', response.status, response.statusText);
-      console.log('UPDATE PRODUCT DATA:', data);
-      
-      if (response.ok) {
-        // Update local state immediately for instant UI update
-        const updatedProduct = {
-          _id: editingProduct._id,
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock, 10) || 0,
-        };
-        console.log('UPDATING PRODUCT IN STATE:', updatedProduct);
-        setProducts(prev => {
-          console.log('PREVIOUS PRODUCTS:', prev);
-          const updated = prev.map(p => p._id === editingProduct._id ? updatedProduct : p);
-          console.log('UPDATED PRODUCTS:', updated);
-          return updated;
-        });
-        
+      const d = await r.json();
+      if (r.ok) {
+        setProducts(prev => prev.map(p => p._id === editingProduct._id ? { _id: editingProduct._id, ...formData, price: parseFloat(formData.price), stock: parseInt(formData.stock, 10) || 0 } : p));
         setEditingProduct(null);
         return true;
-      } else {
-        console.error('UPDATE PRODUCT ERROR:', data);
-        return false;
       }
-    } catch (err) {
-      console.error('Failed to update product:', err);
+      console.error(d);
       return false;
-    }
+    } catch { return false; }
   };
 
   const deleteProduct = async (productId: string) => {
     if (!user) return;
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
-      console.log('DELETE REQUEST ID:', productId);
-      
       const token = await user.getIdToken();
       const res = await fetch(`/api/products?id=${productId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
       let data = null;
-      try {
-        data = await res.json();
-      } catch {
-        console.warn('Empty DELETE response');
-      }
-
-      console.log('DELETE STATUS:', res.status);
-      console.log('DELETE DATA:', data);
-
+      try { data = await res.json(); } catch {}
       if (res.status === 200 && data?.deletedCount === 1) {
         setProducts(prev => prev.filter(p => p._id !== productId));
       } else {
-        console.error('DELETE FAILED HARD:', data);
-        alert('Delete failed — DB not updated');
+        alert('Delete failed — please try again');
       }
-    } catch (err) {
-      console.error('DELETE ERROR:', err);
-      alert('Delete failed — network error');
-    }
+    } catch { alert('Delete failed — network error'); }
   };
 
   const deleteCategory = async (categoryId: string) => {
@@ -547,99 +375,48 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this category?')) return;
     try {
       const token = await user.getIdToken();
-      const response = await fetch(`/api/categories/${categoryId}`, {
+      const r = await fetch(`/api/categories/${categoryId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Parse JSON only ONCE
-      const data = await response.json();
-      console.log('DELETE CATEGORY RESPONSE:', response.status, response.statusText);
-      console.log('DELETE CATEGORY DATA:', data);
-      
-      if (response.ok) {
-        // Update local state immediately for instant UI update
-        console.log('REMOVING CATEGORY FROM STATE:', categoryId);
-        setCategories(prev => {
-          console.log('PREVIOUS CATEGORIES:', prev);
-          const updated = prev.filter(c => c._id !== categoryId);
-          console.log('UPDATED CATEGORIES:', updated);
-          return updated;
-        });
-        
-        return true;
-      } else {
-        console.error('DELETE CATEGORY ERROR:', data);
-        return false;
-      }
-    } catch (err) {
-      console.error('Failed to delete category:', err);
-      return false;
-    }
+      if (r.ok) setCategories(prev => prev.filter(c => c._id !== categoryId));
+    } catch { console.error('Failed to delete category'); }
   };
 
   const addCategory = async (formData: CategoryFormData): Promise<boolean> => {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
-      const response = await fetch('/api/categories', {
+      const r = await fetch('/api/categories', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
       });
-      
-      // Parse JSON only ONCE
-      const data = await response.json();
-      console.log('CATEGORY API RESPONSE:', response.status, response.statusText);
-      console.log('CATEGORY API DATA:', data);
-      
-      if (response.ok) {
-        // Update local state immediately for instant UI update
-        const newCategory = {
-          _id: data.category._id,
-          ...formData,
-        };
-        console.log('ADDING NEW CATEGORY TO STATE:', newCategory);
-        setCategories(prev => {
-          console.log('PREVIOUS CATEGORIES:', prev);
-          const updated = [newCategory, ...prev];
-          console.log('UPDATED CATEGORIES:', updated);
-          return updated;
-        });
-        
+      const d = await r.json();
+      if (r.ok) {
+        setCategories(prev => [{ _id: d.category._id, ...formData }, ...prev]);
         setShowAddCategoryModal(false);
         return true;
-      } else {
-        console.error('CATEGORY API ERROR:', data);
-        return false;
       }
-    } catch (err) {
-      console.error('Failed to add category:', err);
       return false;
-    }
+    } catch { return false; }
   };
 
   if (!user) {
     return (
       <div className="noise-overlay min-h-screen flex items-center justify-center bg-void">
-        <div className="text-white text-xl">Loading admin panel...</div>
+        <div className="text-sv-mid font-condensed text-sm tracking-widest uppercase">Loading...</div>
       </div>
     );
   }
 
   if (user.email !== ADMIN_EMAIL) return null;
 
-  const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-500',
-    confirmed: 'bg-blue-500',
-    shipped: 'bg-purple-500',
-    delivered: 'bg-green-500',
-  };
+  const tabs = [
+    { key: 'orders' as const, label: 'Orders', Icon: Users },
+    { key: 'products' as const, label: 'Products', Icon: Package },
+    { key: 'categories' as const, label: 'Categories', Icon: Folder },
+  ];
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -647,274 +424,270 @@ export default function Admin() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-20 sm:pt-24 md:pt-28 pb-16 px-3 sm:px-5 md:px-16">
-        <div className="max-w-[1400px] mx-auto">
+      <main className="flex-1 pt-20 sm:pt-24 md:pt-28 pb-16">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 lg:px-16">
 
           {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-[0.1em] text-tb-white uppercase">
+          <div className="mb-6 sm:mb-8 pt-2">
+            <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest mb-1">Dashboard</p>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl tracking-[0.06em] text-tb-white uppercase">
               Admin Panel
             </h1>
           </div>
 
           {/* Tabs */}
-          <div className="flex flex-wrap gap-1 border-b border-white/20 mb-6 sm:mb-8 overflow-x-auto max-w-full">
-            {(
-              [
-                { key: 'orders', label: 'Orders', Icon: Users },
-                { key: 'products', label: 'Products', Icon: Package },
-                { key: 'categories', label: 'Categories', Icon: Folder },
-              ] as const
-            ).map(({ key, label, Icon }) => (
+          <div className="flex border-b border-white/10 mb-6 sm:mb-8 overflow-x-auto scrollbar-none">
+            {tabs.map(({ key, label, Icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-6 py-2 sm:py-3 font-condensed font-semibold text-xs sm:text-sm tracking-[0.2em] uppercase transition-colors duration-200 border-b-2 -mb-px whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-3 font-condensed font-semibold text-xs sm:text-sm tracking-[0.15em] uppercase transition-all duration-200 border-b-2 -mb-px whitespace-nowrap shrink-0 ${
                   activeTab === key
                     ? 'text-tb-white border-tb-white'
                     : 'text-sv-mid hover:text-tb-white border-transparent'
                 }`}
               >
-                <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline sm:inline">{label}</span>
-                <span className="inline xs:hidden sm:hidden">{label.slice(0, 1)}</span>
+                <Icon className="w-3.5 h-3.5" />
+                {label}
               </button>
             ))}
           </div>
 
-          {/* Content */}
-          <div className="min-h-[600px]">
-            {loading ? (
-                  <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brass"></div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-sv-mid font-condensed text-sm tracking-wider">Loading...</p>
-                  </div>
-                )}
-            {!loading && activeTab === 'orders' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase mb-6">
-                  Orders Management
-                </h2>
+          {/* Loading */}
+          {loading && (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-7 w-7 border-2 border-white/10 border-t-white/60" />
+            </div>
+          )}
 
-                {orders.length === 0 ? (
-                  <p className="text-sv-mid font-condensed text-sm tracking-wider">No orders yet.</p>
-                ) : (
-                  <div className="overflow-x-auto rounded-lg border border-white/10">
-                    <table className="w-full bg-surface">
-                      <thead>
-                        <tr className="border-b border-white/10">
-                          {['User', 'Products', 'Total', 'Status', 'Date', 'Update Status'].map((h) => (
-                            <th
-                              key={h}
-                              className="px-6 py-3 text-left font-condensed text-xs text-sv-mid uppercase tracking-wider"
-                            >
-                              {h}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
+          {/* Content */}
+          {!loading && (
+            <AnimatePresence mode="wait">
+              {/* ── ORDERS ── */}
+              {activeTab === 'orders' && (
+                <motion.div key="orders" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Orders</h2>
+                    <span className="font-condensed text-xs text-sv-mid bg-white/5 border border-white/10 rounded px-2 py-1">{orders.length} total</span>
+                  </div>
+
+                  {orders.length === 0 ? (
+                    <EmptyState message="No orders yet." />
+                  ) : (
+                    <>
+                      {/* Mobile: cards */}
+                      <div className="block md:hidden space-y-3">
                         {orders.map((order) => (
-                          <tr key={order._id} className="border-b border-white/10 last:border-0">
-                            <td className="px-6 py-4 text-sm text-sv-mid">
-                              {order.userId.includes('@') ? order.userId : 'Unknown User'}
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="space-y-1">
-                                {order.products.map((p, i) => (
-                                  <div key={i} className="text-sm text-tb-white">
-                                    {p.name} ({p.quantity}×)
-                                  </div>
-                                ))}
+                          <div key={order._id} className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                              <div className="min-w-0">
+                                <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Customer</p>
+                                <p className="text-tb-white text-sm truncate">{order.userId.includes('@') ? order.userId : 'Unknown User'}</p>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-tb-white">
-                              ¥{order.totalAmount?.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-condensed uppercase tracking-wider text-white ${
-                                  statusColors[order.status] ?? 'bg-gray-500'
-                                }`}
-                              >
+                              <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
                                 {order.status}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-sv-mid">
-                              {order.createdAt
-                                ? new Date(order.createdAt).toLocaleDateString('en-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })
-                                : '—'}
-                            </td>
-                            <td className="px-6 py-4">
-                              <select
-                                value={order.status}
-                                onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                                className="px-3 py-1 bg-white/10 border border-white/20 rounded text-tb-white text-sm focus:outline-none focus:border-white/40"
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="shipped">Shipped</option>
-                                <option value="delivered">Delivered</option>
-                              </select>
-                            </td>
-                          </tr>
+                            </div>
+                            <div className="mb-3">
+                              <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">Items</p>
+                              <div className="space-y-0.5">
+                                {order.products.map((p, i) => (
+                                  <p key={i} className="text-tb-white text-sm">{p.name} <span className="text-sv-mid">×{p.quantity}</span></p>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
+                              <div>
+                                <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Total</p>
+                                <p className="text-tb-white font-condensed font-semibold">¥{order.totalAmount?.toFixed(2)}</p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <p className="text-sv-mid text-xs">
+                                  {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                </p>
+                                <div className="relative">
+                                  <select
+                                    value={order.status}
+                                    onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                                    className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
+                                  >
+                                    {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                                  </select>
+                                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {!loading && activeTab === 'products' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase">
-                    Product Management
-                  </h2>
-                  <button
-                    onClick={() => setShowAddProductModal(true)}
-                    className="px-4 py-2 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white transition-all duration-200 rounded-lg"
-                  >
-                    + Add Product
-                  </button>
-                </div>
-
-                {products.length === 0 ? (
-                  <p className="text-sv-mid font-condensed text-sm tracking-wider">No products yet.</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-                    {products.map((product) => (
-                      <div
-                        key={product._id}
-                        className="bg-zinc-800 border border-zinc-700 rounded-lg p-2 sm:p-3 hover:shadow-lg transition-all duration-200 hover:border-zinc-600"
-                      >
-                        <div className="aspect-square bg-[#0c0c0c] rounded-lg overflow-hidden mb-2 sm:mb-3 h-24 sm:h-32 md:h-40">
-                          <img
-                            src={product.image || '/placeholder.png'}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = '/placeholder.png';
-                            }}
-                          />
-                        </div>
-                        <h3 className="font-condensed font-medium text-tb-white text-xs sm:text-sm mb-1 line-clamp-2">
-                          {product.name}
-                        </h3>
-                        <p className="text-gray-400 text-xs mb-2">{categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}</p>
-                        <p className="font-condensed text-tb-white text-sm sm:text-base font-semibold mb-2 sm:mb-3">¥{product.price}</p>
-                        <div className="flex gap-1 sm:gap-2">
-                          <button
-                            onClick={() => setEditingProduct(product)}
-                            className="flex-1 px-1 sm:px-2 py-1 sm:py-2 bg-zinc-700 border border-zinc-600 rounded text-tb-white text-xs hover:bg-zinc-600 transition-colors duration-200"
-                          >
-                            <span className="hidden sm:inline">Edit</span>
-                            <span className="sm:hidden">E</span>
-                          </button>
-                          <button
-                            onClick={() => deleteProduct(product._id)}
-                            className="flex-1 px-1 sm:px-2 py-1 sm:py-2 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-colors duration-200"
-                          >
-                            <span className="hidden sm:inline">Delete</span>
-                            <span className="sm:hidden">D</span>
-                          </button>
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
 
-            {!loading && activeTab === 'categories' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase">
-                    Category Management
-                  </h2>
-                  <button
-                    onClick={() => setShowAddCategoryModal(true)}
-                    className="px-4 py-2 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white transition-all duration-200 rounded-lg"
-                  >
-                    + Add Category
-                  </button>
-                </div>
-
-                {categories.length === 0 ? (
-                  <p className="text-sv-mid font-condensed text-sm tracking-wider">No categories yet.</p>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {categories.map((category) => (
-                      <div
-                        key={category._id}
-                        className="bg-surface border border-white/10 rounded-lg p-3"
-                      >
-                        <div className="aspect-square bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-32">
-                          <img
-                            src={category.image || '/placeholder.png'}
-                            alt={category.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = '/placeholder.png';
-                            }}
-                          />
-                        </div>
-                        <h3 className="font-condensed font-semibold text-tb-white text-xs mb-2">
-                          {category.name}
-                        </h3>
-                        <button
-                          onClick={() => deleteCategory(category._id)}
-                          className="w-full px-2 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
-                        >
-                          Delete
-                        </button>
+                      {/* Desktop: table */}
+                      <div className="hidden md:block overflow-x-auto rounded-xl border border-white/10">
+                        <table className="w-full bg-white/[0.02]">
+                          <thead>
+                            <tr className="border-b border-white/10">
+                              {['Customer', 'Items', 'Total', 'Status', 'Date', 'Update'].map((h) => (
+                                <th key={h} className="px-5 py-3 text-left font-condensed text-xs text-sv-mid uppercase tracking-wider">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orders.map((order) => (
+                              <tr key={order._id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors">
+                                <td className="px-5 py-4 text-sm text-sv-mid">{order.userId.includes('@') ? order.userId : 'Unknown'}</td>
+                                <td className="px-5 py-4">
+                                  <div className="space-y-0.5">
+                                    {order.products.map((p, i) => (
+                                      <div key={i} className="text-sm text-tb-white">{p.name} <span className="text-sv-mid">×{p.quantity}</span></div>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="px-5 py-4 text-sm text-tb-white font-condensed font-semibold">¥{order.totalAmount?.toFixed(2)}</td>
+                                <td className="px-5 py-4">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+                                    {order.status}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-4 text-sm text-sv-mid">
+                                  {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                </td>
+                                <td className="px-5 py-4">
+                                  <div className="relative inline-block">
+                                    <select
+                                      value={order.status}
+                                      onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                                      className="pl-3 pr-8 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
+                                    >
+                                      {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                                    </select>
+                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    ))}
+                    </>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── PRODUCTS ── */}
+              {activeTab === 'products' && (
+                <motion.div key="products" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Products</h2>
+                    <button
+                      onClick={() => setShowAddProductModal(true)}
+                      className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-tb-white text-void font-condensed font-bold text-xs sm:text-sm tracking-[0.15em] uppercase hover:bg-white transition-colors rounded-lg"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Product</span>
+                    </button>
                   </div>
-                )}
-              </motion.div>
-            )}
-          </div>
+
+                  {products.length === 0 ? (
+                    <EmptyState message="No products yet." />
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                      {products.map((product) => (
+                        <div key={product._id} className="group bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all duration-200">
+                          <div className="aspect-square bg-[#0c0c0c] overflow-hidden">
+                            <img
+                              src={product.image || '/placeholder.png'}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+                            />
+                          </div>
+                          <div className="p-3">
+                            <p className="font-condensed text-xs text-sv-mid mb-0.5 truncate">
+                              {categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}
+                            </p>
+                            <h3 className="font-condensed font-medium text-tb-white text-sm mb-1 line-clamp-2 leading-snug">{product.name}</h3>
+                            <p className="font-condensed font-semibold text-tb-white text-sm mb-3">¥{product.price}</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setEditingProduct(product)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white/5 border border-white/10 rounded-lg text-tb-white text-xs font-condensed hover:bg-white/10 transition-colors"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteProduct(product._id)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-condensed hover:bg-red-500/20 transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── CATEGORIES ── */}
+              {activeTab === 'categories' && (
+                <motion.div key="categories" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Categories</h2>
+                    <button
+                      onClick={() => setShowAddCategoryModal(true)}
+                      className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-tb-white text-void font-condensed font-bold text-xs sm:text-sm tracking-[0.15em] uppercase hover:bg-white transition-colors rounded-lg"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Category</span>
+                    </button>
+                  </div>
+
+                  {categories.length === 0 ? (
+                    <EmptyState message="No categories yet." />
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                      {categories.map((category) => (
+                        <div key={category._id} className="group bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all duration-200">
+                          <div className="aspect-square bg-[#0c0c0c] overflow-hidden">
+                            <img
+                              src={category.image || '/placeholder.png'}
+                              alt={category.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+                            />
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-condensed font-semibold text-tb-white text-sm mb-3 line-clamp-1">{category.name}</h3>
+                            <button
+                              onClick={() => deleteCategory(category._id)}
+                              className="w-full flex items-center justify-center gap-1.5 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-condensed hover:bg-red-500/20 transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </main>
 
       <Footer />
 
-      {/* Modals */}
       <AnimatePresence>
         {showAddProductModal && (
-          <ProductModal
-            title="Add New Product"
-            onSubmit={addProduct}
-            onClose={() => setShowAddProductModal(false)}
-          />
+          <ProductModal title="Add Product" onSubmit={addProduct} onClose={() => setShowAddProductModal(false)} />
         )}
         {showAddCategoryModal && (
-          <CategoryModal
-            title="Add New Category"
-            onSubmit={addCategory}
-            onClose={() => setShowAddCategoryModal(false)}
-          />
+          <CategoryModal title="Add Category" onSubmit={addCategory} onClose={() => setShowAddCategoryModal(false)} />
         )}
         {editingProduct && (
           <ProductModal
@@ -932,6 +705,14 @@ export default function Admin() {
           />
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-xl">
+      <p className="text-sv-mid font-condensed text-sm tracking-wider">{message}</p>
     </div>
   );
 }
