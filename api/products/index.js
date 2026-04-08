@@ -177,68 +177,9 @@ export default async function handler(req, res) {
           }
         });
 
-      case 'DELETE':
-        console.log('PRODUCTS API: Deleting product:', productId);
-        
-        // Check if user is admin
-        const deleteAuthResult = checkAdminAuth(req);
-        if (!deleteAuthResult.authorized) {
-          console.log('PRODUCTS API: Auth failed for DELETE:', deleteAuthResult.error);
-          return res.status(deleteAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: deleteAuthResult.error });
-        }
-        
-        // Validate productId
-        if (!productId) {
-          console.log('PRODUCTS API: No product ID provided for DELETE');
-          return res.status(400).json({ error: 'Product ID is required for deletion' });
-        }
-        
-        try {
-          const id = req.query.id;
-          console.log('DELETE REQUEST ID:', id);
-          
-          let result;
-          
-          try {
-            // Try ObjectId deletion first
-            result = await productsCollection.deleteOne({
-              _id: new ObjectId(id)
-            });
-            console.log('ObjectId delete result:', result);
-          } catch (e) {
-            console.log('ObjectId conversion failed, trying string match:', e.message);
-            
-            // Fallback to string ID deletion
-            result = await productsCollection.deleteOne({
-              _id: id
-            });
-            console.log('String ID delete result:', result);
-          }
-          
-          console.log('DELETE RESULT:', result);
-          
-          if (result.deletedCount === 0) {
-            console.log('DELETE FAILED - product not found in DB');
-            // Debug: Show all DB IDs for comparison
-            const allProducts = await productsCollection.find().toArray();
-            console.log('DB IDs:', allProducts.map(p => ({ _id: p._id, name: p.name })));
-            return res.status(404).json({ error: 'Product not found in database' });
-          }
-          
-          console.log('DELETE SUCCESS - product removed from DB');
-          return res.status(200).json({
-            success: true,
-            deletedCount: result.deletedCount,
-            message: 'Product deleted successfully'
-          });
-        } catch (objectIdError) {
-          console.log('PRODUCTS API: Invalid ObjectId format:', productId, objectIdError);
-          return res.status(400).json({ error: 'Invalid product ID format' });
-        }
-
       default:
         console.log('PRODUCTS API: Method not allowed:', req.method);
-        res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+        res.setHeader('Allow', ['GET', 'POST', 'PUT']);
         return res.status(405).json({ 
           error: `Method ${req.method} not allowed` 
         });

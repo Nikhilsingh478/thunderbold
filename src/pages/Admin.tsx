@@ -510,45 +510,39 @@ export default function Admin() {
     if (!user) return;
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
-      console.log('Deleting ID:', productId);
+      console.log('DELETE REQUEST ID:', productId);
+      
       const token = await user.getIdToken();
-      const response = await fetch(`/api/products/${productId}`, {
+      const res = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       
-      // Safe JSON parsing - handle empty responses
+      console.log('STATUS:', res.status);
+
       let data = null;
       try {
-        data = await response.json();
+        data = await res.json();
       } catch (e) {
-        console.warn('Empty response from DELETE API');
+        console.log('EMPTY RESPONSE');
       }
-      
-      console.log('DELETE PRODUCT RESPONSE:', response.status, response.statusText);
-      console.log('DELETE PRODUCT DATA:', data);
-      
-      // Only remove from UI if DB delete succeeded (deletedCount: 1)
-      if (data?.deletedCount === 1) {
-        console.log('DB DELETE SUCCESS - removing from UI');
-        setProducts(prev => {
-          console.log('PREVIOUS PRODUCTS:', prev);
-          const updated = prev.filter(p => p._id !== productId);
-          console.log('UPDATED PRODUCTS:', updated);
-          return updated;
-        });
-        return true;
-      } else {
-        console.error('DELETE FAILED - DB deletion count:', data?.deletedCount);
-        alert('Delete failed in database - product was not removed');
-        return false;
+
+      console.log('RESPONSE DATA:', data);
+
+      // Hard fail if not deleted
+      if (res.status !== 200 || data?.deletedCount !== 1) {
+        alert('DELETE FAILED - NOT REMOVED FROM DB');
+        return;
       }
+
+      console.log('DELETE SUCCESS - removing from UI');
+      setProducts(prev => prev.filter(p => p._id !== productId));
+      
     } catch (err) {
-      console.error('DELETE PRODUCT CATCH ERROR:', err);
-      alert('Delete failed - network error');
-      return false;
+      console.error('DELETE ERROR:', err);
+      alert('DELETE FAILED - NETWORK ERROR');
     }
   };
 
