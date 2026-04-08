@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Heart, ShoppingCart } from 'lucide-react';
+import { Search, Heart, ShoppingCart, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -12,10 +12,13 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { getTotalItems } = useCart();
   const { getWishlistCount } = useWishlist();
-  const links = [
+  
+  const baseLinks = [
     { name: 'Categories', href: '/' },
     { name: 'About Us', href: '/about' }
   ];
+  
+  const links = user ? [...baseLinks, { name: 'Orders', href: '/orders' }] : baseLinks;
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);

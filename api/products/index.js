@@ -107,12 +107,12 @@ export default async function handler(req, res) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         
-        const { name: productName, price: productPrice, image: productImage, description: productDescription, category: productCategory, sizes: productSizes, stock: productStock } = req.body;
-        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImage, productDescription, productCategory, productSizes, productStock });
+        const { name: productName, price: productPrice, images: productImages, description: productDescription, category: productCategory, stock: productStock } = req.body;
+        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImages, productDescription, productCategory, productStock });
         
         // Validate required fields
-        if (!productName || !productPrice || !productImage || !productCategory || !productSizes) {
-          return res.status(400).json({ error: 'Name, price, image, category, and sizes are required' });
+        if (!productName || !productPrice || !productImages || !productCategory) {
+          return res.status(400).json({ error: 'Name, price, images, and category are required' });
         }
         
         // Validate price
@@ -120,19 +120,18 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
         
-        // Validate sizes array
-        if (!Array.isArray(productSizes) || productSizes.length === 0) {
-          return res.status(400).json({ error: 'Sizes must be a non-empty array' });
+        // Validate images array
+        if (!Array.isArray(productImages) || productImages.length === 0) {
+          return res.status(400).json({ error: 'Images must be a non-empty array' });
         }
 
         // Create product object
         const product = {
           name: productName,
           price: productPrice,
-          image: productImage,
+          images: productImages,
           description: productDescription || '',
           category: productCategory,
-          sizes: productSizes,
           stock: productStock || 0,
           createdAt: new Date()
         };
@@ -155,12 +154,12 @@ export default async function handler(req, res) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         
-        const { name: updateName, price: updatePrice, image: updateImage, description: updateDescription, category: updateCategory, sizes: updateSizes, stock: updateStock } = req.body;
-        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImage, updateDescription, updateCategory, updateSizes, updateStock });
+        const { name: updateName, price: updatePrice, images: updateImages, description: updateDescription, category: updateCategory, stock: updateStock } = req.body;
+        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImages, updateDescription, updateCategory, updateStock });
         
         // Validate required fields
-        if (!updateName || !updatePrice || !updateImage || !updateCategory || !updateSizes) {
-          return res.status(400).json({ error: 'Name, price, image, category, and sizes are required' });
+        if (!updateName || !updatePrice || !updateImages || !updateCategory) {
+          return res.status(400).json({ error: 'Name, price, images, and category are required' });
         }
         
         // Validate price
@@ -168,9 +167,9 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
         
-        // Validate sizes array
-        if (!Array.isArray(updateSizes) || updateSizes.length === 0) {
-          return res.status(400).json({ error: 'Sizes must be a non-empty array' });
+        // Validate images array
+        if (!Array.isArray(updateImages) || updateImages.length === 0) {
+          return res.status(400).json({ error: 'Images must be a non-empty array' });
         }
 
         // Update product
@@ -180,10 +179,9 @@ export default async function handler(req, res) {
             $set: {
               name: updateName,
               price: updatePrice,
-              image: updateImage,
+              images: updateImages,
               description: updateDescription || '',
               category: updateCategory,
-              sizes: updateSizes,
               stock: updateStock || 0,
               updatedAt: new Date()
             }

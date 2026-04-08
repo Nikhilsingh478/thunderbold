@@ -1,0 +1,232 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Package, Calendar, CheckCircle, Clock, Truck, Home } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+
+interface Order {
+  _id: string;
+  userId: string;
+  products: Array<{
+    name: string;
+    quantity: number;
+    size: string;
+    price: number;
+  }>;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
+const Orders = () => {
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch('/api/orders', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setOrders(data.orders || []);
+        } else {
+          setError('Failed to fetch orders');
+        }
+      } catch (err) {
+        setError('Error fetching orders');
+        console.error('Error fetching orders:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [user]);
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
+      case 'confirmed':
+        return 'text-blue-400 bg-blue-400/10 border-blue-400/30';
+      case 'shipped':
+        return 'text-orange-400 bg-orange-400/10 border-orange-400/30';
+      case 'delivered':
+        return 'text-green-400 bg-green-400/10 border-green-400/30';
+      default:
+        return 'text-sv-mid bg-white/5 border-white/10';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'confirmed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'shipped':
+        return <Truck className="w-4 h-4" />;
+      case 'delivered':
+        return <CheckCircle className="w-4 h-4" />;
+      default:
+        return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-4">
+            Sign In Required
+          </h1>
+          <p className="text-sv-mid mb-8">Please sign in to view your orders</p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200"
+          >
+            <Home className="w-4 h-4" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-void">
+      <div className="container mx-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className="mb-8">
+            <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-2">
+              Your Orders
+            </h1>
+            <p className="text-sv-mid">Track and manage your orders</p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brass"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-400 mb-4">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-brass text-void rounded hover:bg-yellow-400 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : orders.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <Package className="w-16 h-16 text-sv-mid mx-auto mb-4" />
+              <h2 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-2">
+                No Orders Yet
+              </h2>
+              <p className="text-sv-mid mb-8">Your orders will appear here</p>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200"
+              >
+                Start Shopping
+              </Link>
+            </motion.div>
+          ) : (
+            <div className="space-y-6">
+              {orders.map((order) => (
+                <motion.div
+                  key={order._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-surface border border-white/10 rounded-lg p-6"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                    <div className="flex items-center gap-4 mb-4 md:mb-0">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-sv-mid" />
+                        <span className="font-condensed text-sm text-sv-mid">
+                          Order #{order._id.slice(-8)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sv-mid">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">{formatDate(order.createdAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-condensed uppercase tracking-wider ${getStatusColor(
+                          order.status
+                        )}`}
+                      >
+                        {getStatusIcon(order.status)}
+                        {order.status}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-condensed text-tb-white">¥{order.totalAmount}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-4">
+                    <h3 className="font-condensed text-sm text-sv-mid uppercase tracking-wider mb-3">
+                      Items
+                    </h3>
+                    <div className="space-y-3">
+                      {order.products.map((product, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="text-tb-white font-medium">{product.name}</p>
+                            <p className="text-sv-mid text-sm">
+                              Size: {product.size} × {product.quantity}
+                            </p>
+                          </div>
+                          <p className="text-tb-white">¥{product.price}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default Orders;

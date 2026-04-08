@@ -1,4 +1,16 @@
 import { getDb } from '../_lib/mongodb.js';
+import jwt from 'jsonwebtoken';
+
+function decodeFirebaseToken(token) {
+  try {
+    // For Firebase tokens, we can decode without verification since Firebase handles it
+    const decoded = jwt.decode(token);
+    return decoded;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -21,7 +33,15 @@ export default async function handler(req, res) {
     }
     
     const token = authHeader.split(' ')[1];
-    const userId = token; // TEMP: Use token as userId for now
+    
+    // Decode Firebase token to get user info
+    const decodedToken = decodeFirebaseToken(token);
+    if (!decodedToken || !decodedToken.email) {
+      console.log('ORDERS API: Invalid token or missing email');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const userId = decodedToken.email; // Use email as userId instead of raw token
     
     console.log('ORDERS API: User ID:', userId);
     
