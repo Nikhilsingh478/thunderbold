@@ -208,11 +208,22 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.log('Item:', item);
       console.log('Current state items:', state.items);
       
+      // Check if item already exists
+      const exists = state.items.some(existingItem => existingItem.productId === item.productId);
+      if (exists) {
+        console.log('Item already exists in wishlist');
+        return;
+      }
+      
+      // Create new items array with the new item
+      const newItems = [...state.items, item];
+      console.log('New items array:', newItems);
+      
       dispatch({ type: 'ADD_ITEM', payload: item });
       console.log('Dispatched ADD_ITEM action');
       
-      // Save to storage
-      await saveWishlist(state.items);
+      // Save the NEW items array, not the old state
+      await saveWishlist(newItems);
       console.log('=== ADD TO WISHLIST SUCCESS ===');
       
       toast.success(`${item.name} added to wishlist`);
@@ -229,11 +240,15 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.log('Product ID:', productId);
       console.log('Current state items:', state.items);
       
+      // Create new items array without the removed item
+      const newItems = state.items.filter(item => item.productId !== productId);
+      console.log('New items array after removal:', newItems);
+      
       dispatch({ type: 'REMOVE_ITEM', payload: productId });
       console.log('Dispatched REMOVE_ITEM action');
       
-      // Save to storage
-      await saveWishlist(state.items);
+      // Save to storage with NEW items array, not old state
+      await saveWishlist(newItems);
       console.log('=== REMOVE FROM WISHLIST SUCCESS ===');
       
       toast.success('Item removed from wishlist');

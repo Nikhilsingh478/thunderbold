@@ -138,7 +138,7 @@ export default function Wishlist() {
                     {/* Remove Button */}
                     <button
                       onClick={() => handleRemoveItem(item.productId)}
-                      className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-sm rounded-full text-white/60 hover:text-red-400 hover:bg-red-900/20 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-sm rounded-full text-white/60 hover:text-red-400 hover:bg-red-900/20 transition-all duration-200"
                     >
                       <X size={16} />
                     </button>
