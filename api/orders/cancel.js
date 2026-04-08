@@ -2,91 +2,84 @@ import { getDb } from "../_lib/mongodb.js";
 import { ObjectId } from "mongodb";
 import jwt from 'jsonwebtoken';
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Helper function to verify JWT token
-function verifyToken(token) {
+function decodeFirebaseToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+    return jwt.decode(token);
+  } catch {
     return null;
   }
 }
 
-// Helper function to check if user is admin
-function checkAdminAuth(req) {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { authorized: false, error: 'Unauthorized' };
-  }
-  
-  const token = authHeader.substring(7);
-  const decoded = verifyToken(token);
-  
-  if (!decoded) {
-    return { authorized: false, error: 'Unauthorized' };
-  }
-  
-  // Check if user is admin
-  if (decoded.email !== 'nikhilwebworks@gmail.com') {
-    return { authorized: false, error: 'Forbidden' };
-  }
-  
-  return { authorized: true, user: decoded };
-}
-
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('ORDER CANCEL API: Starting cancellation');
-    
-    // Check if user is admin
-    const authResult = checkAdminAuth(req);
-    if (!authResult.authorized) {
-      console.log('ORDER CANCEL API: Auth failed:', authResult.error);
-      return res.status(authResult.error === 'Unauthorized' ? 401 : 403).json({ error: authResult.error });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = decodeFirebaseToken(token);
+
+    if (!decoded || !decoded.email) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userEmail = decoded.email;
 
     const { orderId } = req.body;
-    
     if (!orderId) {
-      console.log('ORDER CANCEL API: No order ID provided');
       return res.status(400).json({ error: 'Order ID is required' });
     }
-
-    console.log('ORDER CANCEL API: Cancelling order:', orderId);
 
     const database = await getDb();
     const ordersCollection = database.collection('orders');
 
-    // Update order status to cancelled
+    // Fetch the order first to verify it belongs to this user
+    const order = await ordersCollection.findOne({ _id: new ObjectId(orderId) });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Allow the order owner OR admin to cancel
+    const ADMIN_EMAIL = 'nikhilwebworks@gmail.com';
+    if (order.userId !== userEmail && userEmail !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'You can only cancel your own orders' });
+    }
+
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ error: 'Order is already cancelled' });
+    }
+
+    if (order.status === 'delivered') {
+      return res.status(400).json({ error: 'Delivered orders cannot be cancelled' });
+    }
+
     const result = await ordersCollection.updateOne(
       { _id: new ObjectId(orderId) },
       { $set: { status: 'cancelled', updatedAt: new Date() } }
     );
 
-    console.log('ORDER CANCEL API: Update result:', result);
-
-    if (result.matchedCount === 0) {
-      console.log('ORDER CANCEL API: Order not found:', orderId);
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
     if (result.modifiedCount === 0) {
-      console.log('ORDER CANCEL API: Order already cancelled or status unchanged');
-      return res.status(400).json({ error: 'Order status unchanged' });
+      return res.status(400).json({ error: 'Order could not be cancelled' });
     }
 
-    console.log('ORDER CANCEL API: Order cancelled successfully:', orderId);
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
       message: 'Order cancelled successfully',
-      orderId: orderId
+      orderId,
     });
 
   } catch (error) {

@@ -14,11 +14,20 @@ app.use(express.json());
 // API routes
 app.use('/api/orders/create', async (req, res) => {
   try {
-    // Import the handler dynamically
     const { default: handler } = await import('../api/orders/create.js');
     await handler(req, res);
   } catch (error) {
     console.error('Error in orders/create:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.use('/api/orders/cancel', async (req, res) => {
+  try {
+    const { default: handler } = await import('../api/orders/cancel.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in orders/cancel:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
