@@ -2,16 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { fetchProducts } from '../lib/products';
-
-interface Product {
-  id: string;
-  name: string;
-  price: string;
-  description: string;
-  images: string[];
-  categoryId: string;
-}
+import { fetchProducts, Product } from '../lib/products';
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -59,8 +50,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
     const filtered = allProducts.filter((product) =>
       product.name.toLowerCase().includes(query.toLowerCase()) ||
-      product.description.toLowerCase().includes(query.toLowerCase()) ||
-      product.categoryId.toLowerCase().includes(query.toLowerCase())
+      product.category.toLowerCase().includes(query.toLowerCase())
     );
     setResults(filtered);
   }, [query, allProducts]);
@@ -116,16 +106,16 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               {results.length > 0 ? (
                 results.map((prod, i) => (
                   <motion.div
-                    key={prod.id}
+                    key={prod._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    onClick={() => handleSelect(prod.id)}
+                    onClick={() => handleSelect(prod._id)}
                     className="group cursor-pointer flex flex-col"
                   >
                     <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/20 transition-colors duration-500 rounded-sm">
                        <img
-                         src={prod.images[0]}
+                         src={prod.image || '/placeholder.png'}
                          alt={prod.name}
                          className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-[1.05] transition-transform duration-700 ease-[0.16,1,0.3,1]"
                        />

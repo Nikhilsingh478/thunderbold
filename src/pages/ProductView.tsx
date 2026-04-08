@@ -76,7 +76,7 @@ export default function ProductView() {
     navigate('/checkout', {
       state: {
         productName: product.name,
-        productImage: product.images[0],
+        productImage: product.image || '/placeholder.png',
         price: product.price,
         size: selectedSize,
         quantity,
@@ -91,10 +91,10 @@ export default function ProductView() {
     
     try {
       await addToCart({
-        productId: product.id,
+        productId: product._id,
         name: product.name,
         price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
-        image: product.images[0],
+        image: product.image || '/placeholder.png',
         size: selectedSize,
       }, quantity);
     } catch (error) {
@@ -107,18 +107,18 @@ export default function ProductView() {
     
     try {
       await toggleWishlist({
-        productId: product.id,
+        productId: product._id,
         name: product.name,
         price: typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price,
-        image: product.images[0],
+        image: product.image || '/placeholder.png',
       });
     } catch (error) {
       console.error('Error toggling wishlist:', error);
     }
   };
 
-  const isInCartWithSize = selectedSize && product ? isInCart(product.id, selectedSize) : false;
-  const itemQuantity = selectedSize && product ? getItemQuantity(product.id, selectedSize) : 0;
+  const isInCartWithSize = selectedSize && product ? isInCart(product._id, selectedSize) : false;
+  const itemQuantity = selectedSize && product ? getItemQuantity(product._id, selectedSize) : 0;
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -289,12 +289,12 @@ export default function ProductView() {
                     onClick={handleAddToWishlist}
                     disabled={!product}
                     className={`p-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center ${
-                      product && isInWishlist(product.id)
+                      product && isInWishlist(product._id)
                         ? 'bg-brass text-void hover:bg-yellow-400'
                         : 'bg-white/5 text-white hover:bg-white/10'
                     }`}
                   >
-                    <Heart size={20} className={product && isInWishlist(product.id) ? 'fill-current' : ''} />
+                    <Heart size={20} className={product && isInWishlist(product._id) ? 'fill-current' : ''} />
                   </button>
                 </div>
 

@@ -257,17 +257,12 @@ export default function Admin() {
         }),
       });
       
-      // Log response for debugging
-      console.log('PRODUCT API RESPONSE:', response.status, response.statusText);
+      // Parse JSON only ONCE
       const data = await response.json();
+      console.log('PRODUCT API RESPONSE:', response.status, response.statusText);
       console.log('PRODUCT API DATA:', data);
       
       if (response.ok) {
-        // Log response for debugging
-        console.log('PRODUCT API RESPONSE:', response.status, response.statusText);
-        const data = await response.json();
-        console.log('PRODUCT API DATA:', data);
-        
         // Update local state immediately for instant UI update
         const newProduct = {
           _id: data.product._id,
@@ -283,7 +278,6 @@ export default function Admin() {
           return updated;
         });
         
-        await fetchProducts(); // Refresh to ensure consistency
         setShowAddProductModal(false);
         return true;
       } else {
@@ -312,12 +306,34 @@ export default function Admin() {
           stock: parseInt(formData.stock, 10) || 0,
         }),
       });
+      
+      // Parse JSON only ONCE
+      const data = await response.json();
+      console.log('UPDATE PRODUCT RESPONSE:', response.status, response.statusText);
+      console.log('UPDATE PRODUCT DATA:', data);
+      
       if (response.ok) {
-        await fetchProducts();
+        // Update local state immediately for instant UI update
+        const updatedProduct = {
+          _id: editingProduct._id,
+          ...formData,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock, 10) || 0,
+        };
+        console.log('UPDATING PRODUCT IN STATE:', updatedProduct);
+        setProducts(prev => {
+          console.log('PREVIOUS PRODUCTS:', prev);
+          const updated = prev.map(p => p._id === editingProduct._id ? updatedProduct : p);
+          console.log('UPDATED PRODUCTS:', updated);
+          return updated;
+        });
+        
         setEditingProduct(null);
         return true;
+      } else {
+        console.error('UPDATE PRODUCT ERROR:', data);
+        return false;
       }
-      return false;
     } catch (err) {
       console.error('Failed to update product:', err);
       return false;
@@ -331,11 +347,34 @@ export default function Admin() {
       const token = await user.getIdToken();
       const response = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      if (response.ok) await fetchProducts();
+      
+      // Parse JSON only ONCE
+      const data = await response.json();
+      console.log('DELETE PRODUCT RESPONSE:', response.status, response.statusText);
+      console.log('DELETE PRODUCT DATA:', data);
+      
+      if (response.ok) {
+        // Update local state immediately for instant UI update
+        console.log('REMOVING PRODUCT FROM STATE:', productId);
+        setProducts(prev => {
+          console.log('PREVIOUS PRODUCTS:', prev);
+          const updated = prev.filter(p => p._id !== productId);
+          console.log('UPDATED PRODUCTS:', updated);
+          return updated;
+        });
+        
+        return true;
+      } else {
+        console.error('DELETE PRODUCT ERROR:', data);
+        return false;
+      }
     } catch (err) {
       console.error('Failed to delete product:', err);
+      return false;
     }
   };
 
