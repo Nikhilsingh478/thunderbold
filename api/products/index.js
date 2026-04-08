@@ -42,8 +42,9 @@ export default async function handler(req, res) {
     
     // Hard block for DELETE - should not hit index.js
     if (req.method === 'DELETE') {
-      console.log('DELETE SHOULD NOT HIT INDEX.JS');
-      return res.status(405).json({ error: 'Wrong route' });
+      return res.status(405).json({
+        error: 'DELETE must use /api/products/[id]'
+      });
     }
     
     // Get database connection

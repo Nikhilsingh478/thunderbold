@@ -38,7 +38,7 @@ function checkAdminAuth(req) {
 }
 
 export default async function handler(req, res) {
-  console.log('DELETE ROUTE HIT');
+  console.log('DELETE ROUTE HIT SUCCESSFULLY');
   console.log('METHOD:', req.method);
   console.log('QUERY:', req.query);
 
