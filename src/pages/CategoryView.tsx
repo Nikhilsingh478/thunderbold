@@ -17,18 +17,18 @@ export default function CategoryView() {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState({});
   
-  // Get category name from URL parameter
-  const categoryName = categoryId || 'Unknown Category';
-
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const cats = await getCategories();
-        const catMap = {};
-        cats.forEach(cat => {
-          catMap[cat] = cat.charAt(0).toUpperCase() + cat.slice(1);
-        });
-        setCategories(catMap);
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          const categoryMap = {};
+          data.categories.forEach(cat => {
+            categoryMap[cat._id] = cat.name;
+          });
+          setCategories(categoryMap);
+        }
       } catch (error) {
         console.error('Failed to load categories:', error);
       }
@@ -36,6 +36,9 @@ export default function CategoryView() {
     
     loadCategories();
   }, []);
+
+  // Get category name from categories map or fallback
+  const categoryName = categories[categoryId] || 'Unknown Category';
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -98,7 +101,7 @@ export default function CategoryView() {
               ← Back to Categories
             </button>
             <h1 className="font-display text-5xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-              {categories[categoryId] || categoryName}
+              {categoryName}
             </h1>
             <p className="font-serif italic font-light text-sv-mid mt-4 text-lg">
               Explore our premium {categoryName.toLowerCase()} collection.
@@ -141,9 +144,6 @@ export default function CategoryView() {
                     {prod.name}
                   </h3>
                   <div className="flex justify-between items-center mt-1">
-                    <span className="font-condensed text-sm tracking-widest text-sv-mid uppercase">
-                      {categories[categoryId] || categoryName}
-                    </span>
                     <span className="font-condensed text-sm tracking-wider text-tb-white">
                       ¥{prod.price}
                     </span>

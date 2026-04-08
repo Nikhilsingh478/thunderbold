@@ -240,11 +240,11 @@ function ProductModal({
             <select
               value={form.categoryId}
               onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30"
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-tb-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-zinc-600 hover:border-zinc-600 transition-colors duration-200"
             >
-              <option value="">Select a category</option>
+              <option value="" className="bg-zinc-800 text-zinc-500">Select a category</option>
               {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
+                <option key={cat._id} value={cat._id} className="bg-zinc-800 text-tb-white">
                   {cat.name}
                 </option>
               ))}
@@ -510,6 +510,7 @@ export default function Admin() {
     if (!user) return;
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
+      console.log('DELETE ID:', productId);
       const token = await user.getIdToken();
       const response = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
@@ -539,7 +540,7 @@ export default function Admin() {
         return false;
       }
     } catch (err) {
-      console.error('Failed to delete product:', err);
+      console.error('DELETE PRODUCT CATCH ERROR:', err);
       return false;
     }
   };
@@ -803,7 +804,7 @@ export default function Admin() {
                     {products.map((product) => (
                       <div
                         key={product._id}
-                        className="bg-surface border border-white/10 rounded-lg p-3"
+                        className="bg-zinc-900 rounded-xl p-3 hover:shadow-lg transition-all duration-200 border border-white/5 hover:border-white/10"
                       >
                         <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-40">
                           <img
@@ -815,11 +816,11 @@ export default function Admin() {
                             }}
                           />
                         </div>
-                        <h3 className="font-condensed font-semibold text-tb-white text-xs mb-1">
+                        <h3 className="font-condensed font-medium text-tb-white text-sm mb-1 line-clamp-2">
                           {product.name}
                         </h3>
-                        <p className="text-sv-mid text-xs mb-1">{categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}</p>
-                        <p className="font-condensed text-tb-white text-sm mb-2">¥{product.price}</p>
+                        <p className="text-gray-400 text-xs mb-2">{categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}</p>
+                        <p className="font-condensed text-tb-white text-base font-semibold mb-3">¥{product.price}</p>
                         <div className="flex gap-2">
                           <button
                             onClick={() => setEditingProduct(product)}

@@ -1,4 +1,5 @@
 import { getDb } from "../_lib/mongodb.js";
+import { ObjectId } from "mongodb";
 import jwt from 'jsonwebtoken';
 
 const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
@@ -177,14 +178,34 @@ export default async function handler(req, res) {
           return res.status(deleteAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: deleteAuthResult.error });
         }
         
-        // Delete product
-        const deleteResult = await productsCollection.deleteOne({ _id: productId });
+        // Validate productId
+        if (!productId) {
+          console.log('PRODUCTS API: No product ID provided for DELETE');
+          return res.status(400).json({ error: 'Product ID is required for deletion' });
+        }
         
-        console.log('PRODUCTS API: Product deleted successfully');
-        return res.status(200).json({ 
-          success: true,
-          message: 'Product deleted successfully'
-        });
+        try {
+          // Convert string ID to ObjectId
+          const objectId = new ObjectId(productId);
+          console.log('PRODUCTS API: Converting to ObjectId:', productId, '->', objectId);
+          
+          // Delete product - works for both legacy and new schema products
+          const deleteResult = await productsCollection.deleteOne({ _id: objectId });
+          
+          if (deleteResult.deletedCount === 0) {
+            console.log('PRODUCTS API: No product found with ID:', productId);
+            return res.status(404).json({ error: 'Product not found' });
+          }
+          
+          console.log('PRODUCTS API: Product deleted successfully:', productId);
+          return res.status(200).json({ 
+            success: true,
+            message: 'Product deleted successfully'
+          });
+        } catch (objectIdError) {
+          console.log('PRODUCTS API: Invalid ObjectId format:', productId, objectIdError);
+          return res.status(400).json({ error: 'Invalid product ID format' });
+        }
 
       default:
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);

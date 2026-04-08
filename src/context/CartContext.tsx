@@ -109,13 +109,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadCart();
   }, [user]);
 
-  // Sync local to DB on login
-  useEffect(() => {
-    if (user) {
-      syncLocalToDB();
-    }
-  }, [user]);
-
   // Listen for wishlist to cart events
   useEffect(() => {
     const handleWishlistToCart = (event: CustomEvent) => {
@@ -134,30 +127,23 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      if (user) {
-        // Load from DB with auth headers
-        const token = await user.getIdToken();
-        const response = await fetch('/api/cart', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+      // ONLY load from localStorage - single source of truth
+      const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      console.log('Loading cart from localStorage ONLY:', localCart);
+      dispatch({ type: 'SET_CART', payload: localCart });
+      
+      // Optional DB sync - NO UI IMPACT
+      if (user && localCart.length > 0) {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify({ items: localCart }),
+        }).catch(() => {
+          // Silently fail - localStorage is source of truth
         });
-        
-        console.log('Load cart response:', response.status);
-        
-        if (response.ok) {
-          const data = await response.json();
-          dispatch({ type: 'SET_CART', payload: data.items || [] });
-        } else {
-          const errorData = await response.text();
-          console.error('Load cart error:', errorData);
-          throw new Error('Failed to load cart from database');
-        }
-      } else {
-        // Load from localStorage
-        const localCart = getCart();
-        console.log('Loading from localStorage:', localCart);
-        dispatch({ type: 'SET_CART', payload: localCart });
       }
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -167,91 +153,29 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const syncLocalToDB = async () => {
-    if (!user) return;
-
-    try {
-      // Get local cart
-      const localCart = getCart();
-      console.log('Syncing local cart to DB:', localCart);
-      if (localCart.length === 0) return;
-
-      // Get auth token
-      const token = await user.getIdToken();
-      
-      // Get DB cart with auth headers
-      const response = await fetch('/api/cart', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const dbCart = response.ok ? (await response.json()).items || [] : [];
-
-      // Merge carts
-      const mergedCart = mergeCartItems(localCart, dbCart);
-      console.log('Merged cart:', mergedCart);
-
-      // Save merged cart to DB
-      const saveResponse = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ items: mergedCart }),
-      });
-
-      if (saveResponse.ok) {
-        console.log('Successfully saved merged cart to DB');
-        // Clear local storage only after successful save
-        clearCart();
-        // Reload cart from DB to get latest state
-        loadCart();
-      } else {
-        console.error('Failed to save merged cart to DB');
-        throw new Error('Failed to save merged cart to database');
-      }
-    } catch (error) {
-      console.error('Error syncing cart to DB:', error);
-    }
-  };
-
   const saveCart = async (items: CartItem[]) => {
     try {
       console.log('Saving cart items:', items);
-      console.log('User logged in:', !!user);
       
-      // ALWAYS update localStorage first for immediate persistence
-      setCart(items);
-      console.log('Cart saved to localStorage');
+      // ONLY update localStorage - single source of truth
+      localStorage.setItem("cart", JSON.stringify(items));
+      console.log('Cart saved to localStorage ONLY');
       
+      // Optional DB sync - NO UI IMPACT
       if (user) {
-        // Get user token for API call
-        const token = await user.getIdToken();
-        
-        // Save to DB
-        const response = await fetch('/api/cart', {
+        fetch('/api/cart', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${await user.getIdToken()}`
           },
           body: JSON.stringify({ items }),
+        }).catch(() => {
+          // Silently fail
         });
-        
-        console.log('Cart API response:', response.status);
-        
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Cart API error:', errorData);
-          // Don't throw error for localStorage issues, just log them
-          // localStorage already has the data, so user experience is preserved
-        }
       }
     } catch (error) {
       console.error('Error saving cart:', error);
-      // Don't throw error for localStorage issues, just log them
-      // localStorage already has the data, so user experience is preserved
     }
   };
 
@@ -261,7 +185,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('Item:', item);
       console.log('Quantity:', quantity);
       console.log('Current state items:', state.items);
-      console.log('User logged in:', !!user);
       
       // Create cart item with proper validation
       const cartItem: CartItem = { 
@@ -275,6 +198,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         existing => existing.productId === cartItem.productId && existing.size === cartItem.size
       );
       
+      let updatedItems;
       if (existingItemIndex >= 0) {
         // Update existing item quantity
         const updatedQuantity = currentItems[existingItemIndex].quantity + cartItem.quantity;
@@ -282,19 +206,35 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ...currentItems[existingItemIndex],
           quantity: updatedQuantity
         };
+        updatedItems = currentItems;
         console.log('Updated existing item quantity:', updatedQuantity);
-        dispatch({ type: 'SET_CART', payload: currentItems });
       } else {
         // Add new item
         currentItems.push(cartItem);
+        updatedItems = currentItems;
         console.log('Added new item:', cartItem);
-        dispatch({ type: 'SET_CART', payload: currentItems });
       }
       
-      // Save to storage
-      await saveCart(currentItems);
-      console.log('=== ADD TO CART SUCCESS ===');
+      // SINGLE dispatch and localStorage update
+      localStorage.setItem("cart", JSON.stringify(updatedItems));
+      dispatch({ type: 'SET_CART', payload: updatedItems });
+      console.log('Cart saved to localStorage and state updated');
       
+      // Optional DB sync - NO UI IMPACT
+      if (user) {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify({ items: updatedItems }),
+        }).catch(() => {
+          // Silently fail
+        });
+      }
+      
+      console.log('=== ADD TO CART SUCCESS ===');
       toast.success(`${cartItem.name} added to cart`);
     } catch (error) {
       console.error('=== ADD TO CART ERROR ===', error);
@@ -306,10 +246,26 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const removeFromCart = async (productId: string, size: string) => {
     try {
       const key = `${productId}-${size}`;
-      dispatch({ type: 'REMOVE_ITEM', payload: key });
+      const updatedItems = state.items.filter(item => `${item.productId}-${item.size}` !== key);
       
-      // Save to storage
-      await saveCart(state.items);
+      // SINGLE localStorage update and dispatch
+      localStorage.setItem("cart", JSON.stringify(updatedItems));
+      dispatch({ type: 'SET_CART', payload: updatedItems });
+      console.log('Item removed from cart and localStorage updated');
+      
+      // Optional DB sync - NO UI IMPACT
+      if (user) {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify({ items: updatedItems }),
+        }).catch(() => {
+          // Silently fail
+        });
+      }
       
       toast.success('Item removed from cart');
     } catch (error) {
@@ -324,10 +280,30 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     try {
       const key = `${productId}-${size}`;
-      dispatch({ type: 'UPDATE_QUANTITY', payload: { key, quantity } });
+      const updatedItems = state.items.map(item =>
+        `${item.productId}-${item.size}` === key
+          ? { ...item, quantity }
+          : item
+      ).filter(item => item.quantity > 0);
       
-      // Save to storage
-      await saveCart(state.items);
+      // SINGLE localStorage update and dispatch
+      localStorage.setItem("cart", JSON.stringify(updatedItems));
+      dispatch({ type: 'SET_CART', payload: updatedItems });
+      console.log('Quantity updated and localStorage updated');
+      
+      // Optional DB sync - NO UI IMPACT
+      if (user) {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify({ items: updatedItems }),
+        }).catch(() => {
+          // Silently fail
+        });
+      }
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error('Failed to update quantity');
@@ -337,12 +313,25 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const clearCartData = async () => {
     try {
-      dispatch({ type: 'CLEAR_CART' });
+      const updatedItems = [];
       
+      // SINGLE localStorage update and dispatch
+      localStorage.setItem("cart", JSON.stringify(updatedItems));
+      dispatch({ type: 'SET_CART', payload: updatedItems });
+      console.log('Cart cleared and localStorage updated');
+      
+      // Optional DB sync - NO UI IMPACT
       if (user) {
-        await fetch('/api/cart', { method: 'DELETE' });
-      } else {
-        clearCart();
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify({ items: updatedItems }),
+        }).catch(() => {
+          // Silently fail
+        });
       }
       
       toast.success('Cart cleared');
