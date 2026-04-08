@@ -203,13 +203,16 @@ export default function Admin() {
   };
 
   const fetchProducts = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       const response = await fetch('/api/products');
       const data = await response.json();
+      console.log('ADMIN FETCH PRODUCTS RESPONSE:', data);
+      console.log('ADMIN PRODUCTS STATE:', data.products);
       setProducts(data.products ?? []);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.error('ADMIN FETCH ERROR:', err);
     } finally {
       setLoading(false);
     }
@@ -260,7 +263,27 @@ export default function Admin() {
       console.log('PRODUCT API DATA:', data);
       
       if (response.ok) {
-        await fetchProducts();
+        // Log response for debugging
+        console.log('PRODUCT API RESPONSE:', response.status, response.statusText);
+        const data = await response.json();
+        console.log('PRODUCT API DATA:', data);
+        
+        // Update local state immediately for instant UI update
+        const newProduct = {
+          _id: data.product._id,
+          ...formData,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock, 10) || 0,
+        };
+        console.log('ADDING NEW PRODUCT TO STATE:', newProduct);
+        setProducts(prev => {
+          console.log('PREVIOUS PRODUCTS:', prev);
+          const updated = [newProduct, ...prev];
+          console.log('UPDATED PRODUCTS:', updated);
+          return updated;
+        });
+        
+        await fetchProducts(); // Refresh to ensure consistency
         setShowAddProductModal(false);
         return true;
       } else {
@@ -374,12 +397,54 @@ export default function Admin() {
 
           {/* Content */}
           <div className="min-h-[600px]">
-            {loading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-tb-white" />
-              </div>
-            )}
-
+            {loading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brass"></div>
+                  </div>
+                ) : products.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-sv-mid font-condensed text-sm tracking-wider">No products found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {products.map((product) => (
+                      <div
+                        key={product._id}
+                        className="bg-surface border border-white/10 rounded-lg p-4"
+                      >
+                        <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-4">
+                          <img
+                            src={product.image || '/placeholder.png'}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder.png';
+                            }}
+                          />
+                        </div>
+                        <h3 className="font-condensed font-semibold text-tb-white text-sm mb-1">
+                          {product.name}
+                        </h3>
+                        <p className="text-sv-mid text-xs mb-1">{product.category}</p>
+                        <p className="font-condensed text-tb-white mb-3">¥{product.price}</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingProduct(product)}
+                            className="flex-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded text-tb-white text-xs hover:bg-white/20 transition-all duration-200"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deleteProduct(product._id)}
+                            className="flex-1 px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
             {!loading && activeTab === 'orders' && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

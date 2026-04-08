@@ -3,6 +3,29 @@ import jwt from 'jsonwebtoken';
 
 const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
 
+// Helper function to check admin authentication
+function checkAdminAuth(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { authorized: false, error: 'Unauthorized' };
+  }
+  
+  const token = authHeader.split(' ')[1];
+  let decodedToken;
+  try {
+    decodedToken = jwt.decode(token);
+  } catch (decodeError) {
+    return { authorized: false, error: 'Invalid token' };
+  }
+  
+  const userEmail = decodedToken?.email;
+  if (userEmail !== ADMIN_EMAIL) {
+    return { authorized: false, error: 'Admin access required' };
+  }
+  
+  return { authorized: true, userEmail };
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,28 +38,6 @@ export default async function handler(req, res) {
 
   try {
     console.log('PRODUCTS API: Starting request...');
-    
-    // Get user ID from token
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('PRODUCTS API: No auth header found');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    
-    // Decode JWT token to extract user email
-    let decodedToken;
-    try {
-      decodedToken = jwt.decode(token);
-      console.log('PRODUCTS API: Decoded token:', decodedToken);
-    } catch (decodeError) {
-      console.error('PRODUCTS API: Failed to decode token:', decodeError);
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    
-    const userEmail = decodedToken?.email;
-    console.log('PRODUCTS API: User email:', userEmail);
     
     // Get database connection
     const database = await getDb();
@@ -52,8 +53,8 @@ export default async function handler(req, res) {
       case 'GET':
         console.log('PRODUCTS API: Fetching all products');
         
-        // Fetch from MongoDB only
-        const products = await productsCollection.find({}).toArray();
+        // GET is public - no auth required
+        const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
         console.log('PRODUCTS API: Found products in DB:', products.length);
         
         return res.status(200).json({ 
@@ -66,8 +67,10 @@ export default async function handler(req, res) {
         console.log('PRODUCTS API: Creating new product');
         
         // Check if user is admin
-        if (userEmail !== ADMIN_EMAIL) {
-          return res.status(403).json({ error: 'Admin access required' });
+        const postAuthResult = checkAdminAuth(req);
+        if (!postAuthResult.authorized) {
+          console.log('PRODUCTS API: Auth failed for POST:', postAuthResult.error);
+          return res.status(postAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: postAuthResult.error });
         }
         
         const { name: productName, price: productPrice, image: productImage, description: productDescription, category: productCategory, stock: productStock } = req.body;
@@ -105,16 +108,20 @@ export default async function handler(req, res) {
 
         return res.status(201).json({ 
           message: 'Product created successfully', 
-          productId: createResult.insertedId,
-          product 
+          product: {
+            _id: createResult.insertedId,
+            ...product
+          }
         });
 
       case 'PUT':
         console.log('PRODUCTS API: Updating product:', productId);
         
         // Check if user is admin
-        if (userEmail !== ADMIN_EMAIL) {
-          return res.status(403).json({ error: 'Admin access required' });
+        const putAuthResult = checkAdminAuth(req);
+        if (!putAuthResult.authorized) {
+          console.log('PRODUCTS API: Auth failed for PUT:', putAuthResult.error);
+          return res.status(putAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: putAuthResult.error });
         }
         
         const { name: updateName, price: updatePrice, image: updateImage, description: updateDescription, category: updateCategory, stock: updateStock } = req.body;
@@ -154,15 +161,20 @@ export default async function handler(req, res) {
         console.log('PRODUCTS API: Product updated successfully');
         return res.status(200).json({ 
           message: 'Product updated successfully', 
-          product 
+          product: {
+            _id: productId,
+            ...updatedProduct
+          }
         });
 
       case 'DELETE':
         console.log('PRODUCTS API: Deleting product:', productId);
         
         // Check if user is admin
-        if (userEmail !== ADMIN_EMAIL) {
-          return res.status(403).json({ error: 'Admin access required' });
+        const deleteAuthResult = checkAdminAuth(req);
+        if (!deleteAuthResult.authorized) {
+          console.log('PRODUCTS API: Auth failed for DELETE:', deleteAuthResult.error);
+          return res.status(deleteAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: deleteAuthResult.error });
         }
         
         // Delete product
