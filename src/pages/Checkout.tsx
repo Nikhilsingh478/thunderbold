@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ScrollProgress from '../components/ScrollProgress';
@@ -9,16 +11,6 @@ import CustomCursor from '../components/CustomCursor';
 import AddressForm, { type AddressData } from '../components/checkout/AddressForm';
 import ProductSummary from '../components/checkout/ProductSummary';
 import OrderConfirmation from '../components/checkout/OrderConfirmation';
-
-export interface CheckoutState {
-  productName: string;
-  productImage: string;
-  price: string;
-  size: string;
-  quantity: number;
-  categoryName: string;
-  productUrl: string;
-}
 
 const STORAGE_KEY = 'user_address';
 
@@ -33,7 +25,33 @@ function loadSavedAddress(): AddressData | null {
 export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const product = location.state as CheckoutState | null;
+  const { user } = useAuth();
+  const { items, clearCartData } = useCart();
+  
+  // Get cart items from location state or use current cart
+  // Handle both single product and cart checkout
+  const singleProductData = location.state?.productName ? [location.state] : null;
+  const cartItems = location.state?.cartItems || singleProductData || items;
+  
+  // Debug: Log the data to identify NaN source
+  console.log("CHECKOUT DEBUG: cartItems:", cartItems);
+  console.log("CHECKOUT DEBUG: location.state:", location.state);
+  
+  // Calculate total amount with proper price parsing
+  const totalAmount = (cartItems?.reduce((total, item) => {
+    let price: number;
+    if (typeof item.price === 'string') {
+      price = parseFloat(item.price.replace(/[^\d.]/g, ''));
+    } else if (typeof item.price === 'number') {
+      price = item.price;
+    } else {
+      price = 0;
+    }
+    return total + (price * (item.quantity || 0));
+  }, 0) || 0);
+  
+  console.log("CHECKOUT DEBUG: totalAmount:", totalAmount);
+  
   const [submitting, setSubmitting] = useState(false);
   const [savedAddress] = useState<AddressData | null>(loadSavedAddress);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -50,135 +68,111 @@ export default function Checkout() {
     }, 800);
   }, []);
 
-  // If no product state, redirect back
+  // If no cart items, redirect back
   useEffect(() => {
-    if (!product) navigate('/', { replace: true });
-  }, [product, navigate]);
-
-  if (!product) return null;
+    if (!cartItems || cartItems.length === 0) navigate('/cart', { replace: true });
+  }, [cartItems, navigate]);
 
   const handleSubmit = async (address: AddressData) => {
+    if (!user) {
+      toast.error('Please login to place an order');
+      navigate('/login');
+      return;
+    }
+
     setSubmitting(true);
     setSubmittedAddress(address);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
 
-    // Save order to database first
     try {
-      console.log("FRONTEND: Starting order submission...");
+      console.log("CHECKOUT: Starting order submission...");
       
+      // Prepare products array for order API
+      const orderProducts = cartItems.map(item => ({
+        productId: item.productId || item.productUrl?.split('/').pop() || 'unknown',
+        name: item.name || item.productName || 'Unknown Product',
+        price: typeof item.price === 'string' ? parseFloat(item.price.replace(/[^\d.]/g, '')) : (item.price || 0),
+        size: item.size || 'N/A',
+        quantity: item.quantity || 1,
+        image: item.image || item.productImage || '/placeholder.png'
+      }));
+
       const orderData = {
-        product: {
-          name: product.productName,
-          price: product.price,
-          size: product.size,
-          quantity: product.quantity
-        },
+        products: orderProducts,
         address: {
           fullName: address.fullName,
           phone: address.phone,
           addressLine1: address.addressLine1,
-          addressLine2: address.addressLine2,
+          addressLine2: address.addressLine2 || '',
           city: address.city,
           state: address.state,
           pincode: address.pincode,
-          landmark: address.landmark
-        }
+          landmark: address.landmark || ''
+        },
+        paymentMethod: 'COD'
       };
 
-      console.log("FRONTEND: Order data prepared:", JSON.stringify(orderData, null, 2));
-      console.log("FRONTEND: Sending request to /api/orders/create");
+      console.log("CHECKOUT: Order data prepared:", JSON.stringify(orderData, null, 2));
+      console.log("CHECKOUT: Sending request to /api/orders/create");
 
+      // Get auth token
+      const token = await user.getIdToken();
+      
       const response = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(orderData)
       });
 
-      console.log("FRONTEND: Response received");
-      console.log("FRONTEND: Response status:", response.status);
-      console.log("FRONTEND: Response headers:", response.headers);
+      console.log("CHECKOUT: Response received");
+      console.log("CHECKOUT: Response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("FRONTEND: HTTP error - status:", response.status);
-        console.error("FRONTEND: Response text:", errorText);
+        console.error("CHECKOUT: HTTP error - status:", response.status);
+        console.error("CHECKOUT: Response text:", errorText);
         toast.error(`Order failed with status ${response.status}. Please try again.`);
         setSubmitting(false);
         return;
       }
 
       const result = await response.json();
-      console.log("FRONTEND: Response body:", JSON.stringify(result, null, 2));
+      console.log("CHECKOUT: Response body:", JSON.stringify(result, null, 2));
 
-      if (!result.success) {
-        console.error("FRONTEND: API returned error:", result.error);
-        console.error("FRONTEND: API errors:", result.errors);
-        toast.error(`Order failed: ${result.error || 'Unknown error'}. Please try again.`);
+      if (result.error) {
+        console.error("CHECKOUT: API returned error:", result.error);
+        toast.error(`Order failed: ${result.error}. Please try again.`);
         setSubmitting(false);
         return;
       }
 
-      console.log("FRONTEND: Order saved successfully:", result.data);
-      toast.success('Order saved successfully!');
+      console.log("CHECKOUT: Order created successfully:", result.orderId);
+      
+      // Clear cart after successful order only if it was a cart checkout
+      if (location.state?.cartItems) {
+        await clearCartData();
+      }
+      
+      toast.success('Order placed successfully!');
+      setShowConfirmation(true);
+      setSubmitting(false);
       
     } catch (error) {
-      console.error("FRONTEND: Network error during order submission:", error);
-      console.error("FRONTEND: Error details:", {
+      console.error("CHECKOUT: Network error during order submission:", error);
+      console.error("CHECKOUT: Error details:", {
         message: error.message,
         name: error.name,
         stack: error.stack
       });
       toast.error('Network error. Please check your connection and try again.');
       setSubmitting(false);
-      return;
     }
-
-    // Continue with WhatsApp flow (TEMPORARILY PAUSED)
-    // const addressLine2 = address.addressLine2 ? `, ${address.addressLine2}` : '';
-    // const landmark = address.landmark ? `\nLandmark: ${address.landmark}` : '';
-
-    // const message = `⚡ *THUNDERBOLT ORDER REQUEST* ⚡
-
-    // Hello, I want to order:
-
-    // *Product:* ${product.productName}
-    // *Category:* ${product.categoryName}
-    // *Size:* ${product.size}
-    // *Quantity:* ${product.quantity}
-    // *Price:* ${product.price}
-
-    // *Delivery Address:*
-    // ${address.fullName}
-    // ${address.phone}
-    // ${address.addressLine1}${addressLine2}
-    // ${address.city}, ${address.state} - ${address.pincode}${landmark}
-
-    // 🔗 *Product Link:*
-    // ${product.productUrl}
-
-    // Please confirm availability and next steps!`;
-
-    // toast.success('Order details ready. Redirecting to WhatsApp…');
-
-    // setTimeout(() => {
-    //   const encoded = encodeURIComponent(message);
-    //   const phoneNumber = '919561172681';
-    //   window.open(`https://wa.me/${phoneNumber}?text=${encoded}`, '_blank');
-    //   setSubmitting(false);
-      
-    //   // Show confirmation modal after WhatsApp opens
-    //   setTimeout(() => {
-    //     setShowConfirmation(true);
-    //   }, 500);
-    // }, 1200);
-
-    // TEMPORARY: Show success message and confirmation modal immediately after DB save
-    toast.success('Order saved successfully!');
-    setSubmitting(false);
-    setShowConfirmation(true);
   };
+
+  if (!cartItems || cartItems.length === 0) return null;
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -196,65 +190,42 @@ export default function Checkout() {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-brass-bright transition-colors duration-200 mb-10 flex items-center gap-2 group"
           >
-            <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span> Back to Product
+            <span className="transition-transform duration-300 group-hover:-translate-x-1">Back to Cart</span>
           </motion.button>
 
-          {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-10 md:mb-14"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-px bg-brass/50" />
-              <span className="font-condensed font-semibold text-[0.62rem] tracking-[0.38em] uppercase text-brass">
-                Checkout
-              </span>
-            </div>
-            <h1 className="font-display text-4xl md:text-5xl tracking-[0.06em] metal-text uppercase leading-none">
-              Complete Your Order
-            </h1>
-          </motion.div>
-
-          {/* Two column layout */}
-          <div className="flex flex-col md:flex-row gap-8 md:gap-14 items-start">
-            {/* Left — Product Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full md:w-[340px] md:flex-shrink-0"
-            >
-              <ProductSummary product={product} />
-            </motion.div>
-
-            {/* Right — Address Form */}
-            <motion.div
-              id="address-form"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full flex-1"
-            >
-              <AddressForm
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Address Form */}
+            <div>
+              <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase mb-6">
+                Delivery Address
+              </h2>
+              <AddressForm 
                 onSubmit={handleSubmit}
                 submitting={submitting}
                 savedAddress={savedAddress}
               />
-            </motion.div>
+            </div>
+
+            {/* Order Summary */}
+            <div>
+              <ProductSummary 
+                items={cartItems}
+                totalAmount={totalAmount}
+              />
+            </div>
           </div>
         </div>
       </main>
-
+      
       <Footer />
 
       {/* Order Confirmation Modal */}
       {showConfirmation && submittedAddress && (
         <OrderConfirmation
-          orderDetails={product}
           address={submittedAddress}
-          onClose={() => setShowConfirmation(false)}
+          items={cartItems}
+          totalAmount={totalAmount}
+          onClose={() => navigate('/orders')}
         />
       )}
     </div>

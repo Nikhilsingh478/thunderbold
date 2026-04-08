@@ -44,19 +44,27 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return { ...state, items: action.payload, loading: false, error: null };
     case 'ADD_ITEM':
       console.log('Adding item to cart:', action.payload);
+      // Check for existing item and update quantity or add new
       const existingItemIndex = state.items.findIndex(
         item => item.productId === action.payload.productId && item.size === action.payload.size
       );
       
+      let updatedItems;
       if (existingItemIndex >= 0) {
-        const updatedItems = [...state.items];
-        updatedItems[existingItemIndex].quantity += action.payload.quantity;
-        console.log('Updated existing item:', updatedItems[existingItemIndex]);
-        return { ...state, items: updatedItems };
+        // Update existing item quantity
+        updatedItems = state.items.map(item =>
+          `${item.productId}-${item.size}` === `${action.payload.productId}-${action.payload.size}`
+            ? { ...item, quantity: item.quantity + action.payload.quantity }
+            : item
+        );
+        console.log('Updated existing item quantity:', updatedItems[existingItemIndex].quantity);
       } else {
-        console.log('Added new item to cart');
-        return { ...state, items: [...state.items, action.payload] };
+        // Add new item
+        updatedItems = [...state.items, action.payload];
+        console.log('Added new item:', action.payload);
       }
+      
+      return { ...state, items: updatedItems, loading: false, error: null };
     case 'REMOVE_ITEM':
       return { ...state, items: state.items.filter(item => `${item.productId}-${item.size}` !== action.payload) };
     case 'UPDATE_QUANTITY':
@@ -257,31 +265,39 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('Current state items:', state.items);
       console.log('User logged in:', !!user);
       
-      const cartItem: CartItem = { ...item, quantity };
+      // Create cart item with proper validation
+      const cartItem: CartItem = { 
+        ...item, 
+        quantity: Math.max(1, quantity) // Ensure minimum quantity of 1
+      };
       
-      // Get current items and add the new item
+      // Get current items and check for existing item
       const currentItems = [...state.items];
       const existingItemIndex = currentItems.findIndex(
-        existing => existing.productId === item.productId && existing.size === item.size
+        existing => existing.productId === cartItem.productId && existing.size === cartItem.size
       );
       
       if (existingItemIndex >= 0) {
-        currentItems[existingItemIndex].quantity += quantity;
-        console.log('Updated existing item quantity:', currentItems[existingItemIndex].quantity);
+        // Update existing item quantity
+        const updatedQuantity = currentItems[existingItemIndex].quantity + cartItem.quantity;
+        currentItems[existingItemIndex] = {
+          ...currentItems[existingItemIndex],
+          quantity: updatedQuantity
+        };
+        console.log('Updated existing item quantity:', updatedQuantity);
+        dispatch({ type: 'SET_CART', payload: currentItems });
       } else {
+        // Add new item
         currentItems.push(cartItem);
         console.log('Added new item:', cartItem);
+        dispatch({ type: 'SET_CART', payload: currentItems });
       }
       
-      // Update state first
-      dispatch({ type: 'ADD_ITEM', payload: cartItem });
-      console.log('Dispatched ADD_ITEM action');
-      
-      // Then save to storage
+      // Save to storage
       await saveCart(currentItems);
       console.log('=== ADD TO CART SUCCESS ===');
       
-      toast.success(`${item.name} added to cart`);
+      toast.success(`${cartItem.name} added to cart`);
     } catch (error) {
       console.error('=== ADD TO CART ERROR ===', error);
       toast.error('Failed to add item to cart');

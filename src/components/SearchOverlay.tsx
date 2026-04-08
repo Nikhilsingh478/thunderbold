@@ -2,7 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PRODUCTS, Product } from '../data/products';
+import { fetchProducts } from '../lib/products';
+
+interface Product {
+  id: string;
+  name: string;
+  price: string;
+  description: string;
+  images: string[];
+  categoryId: string;
+}
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -12,6 +21,8 @@ interface SearchOverlayProps {
 export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -19,26 +30,40 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setTimeout(() => inputRef.current?.focus(), 100);
+      // Load products when overlay opens
+      loadProducts();
     } else {
       document.body.style.overflow = '';
       setTimeout(() => setQuery(''), 300); // clear after animation
     }
-    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (query.trim().length > 0) {
-      const lowerQuery = query.toLowerCase();
-      const filtered = PRODUCTS.filter(p => 
-        p.name.toLowerCase().includes(lowerQuery) || 
-        p.description.toLowerCase().includes(lowerQuery) ||
-        p.categoryId.toLowerCase().includes(lowerQuery)
-      );
-      setResults(filtered);
-    } else {
-      setResults([]);
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const productsData = await fetchProducts();
+      setAllProducts(productsData.products);
+    } catch (error) {
+      console.error('Failed to load products for search:', error);
+      setAllProducts([]);
+    } finally {
+      setLoading(false);
     }
-  }, [query]);
+  };
+
+  useEffect(() => {
+    if (query.trim() === '') {
+      setResults([]);
+      return;
+    }
+
+    const filtered = allProducts.filter((product) =>
+      product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.description.toLowerCase().includes(query.toLowerCase()) ||
+      product.categoryId.toLowerCase().includes(query.toLowerCase())
+    );
+    setResults(filtered);
+  }, [query, allProducts]);
 
   const handleSelect = (id: string) => {
     onClose();

@@ -6,7 +6,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
-import { CATEGORIES, PRODUCTS } from '../data/products';
+import { CATEGORIES } from '../data/products';
+import { fetchProductsByCategory } from '../lib/products';
 import { useWishlist } from '../context/WishlistContext';
 
 export default function CategoryView() {
@@ -14,9 +15,26 @@ export default function CategoryView() {
   const navigate = useNavigate();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const categoryName = CATEGORIES[categoryId as string] || 'Unknown Category';
-  const categoryProducts = PRODUCTS.filter(p => p.categoryId === categoryId);
+  const [categoryProducts, setCategoryProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const products = await fetchProductsByCategory(categoryId || '');
+        setCategoryProducts(products);
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setCategoryProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (categoryId) {
+      loadProducts();
+    }
     window.scrollTo(0, 0);
   }, [categoryId]);
 

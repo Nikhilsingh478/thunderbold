@@ -7,7 +7,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
-import { SIZES, PRODUCTS } from '../data/products';
+import { SIZES } from '../data/products';
+import { fetchProductById } from '../lib/products';
 import { requireAuth } from '../lib/requireAuth';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -21,8 +22,9 @@ export default function ProductView() {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
-  const product = PRODUCTS.find(p => p.id === productId);
   const IMAGES = product?.images || [];
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
@@ -49,6 +51,22 @@ export default function ProductView() {
   }, [emblaApi, onSelect]);
 
   useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        if (productId) {
+          const productData = await fetchProductById(productId);
+          setProduct(productData);
+        }
+      } catch (error) {
+        console.error('Failed to load product:', error);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
     window.scrollTo(0, 0);
   }, [productId]);
 
@@ -289,7 +307,7 @@ export default function ProductView() {
                       : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                 >
-                  {selectedSize ? 'Order Now via WhatsApp' : 'Select a Size'}
+                  {selectedSize ? 'Order Now' : 'Select a Size'}
                 </button>
               </div>
               
