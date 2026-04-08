@@ -183,6 +183,12 @@ function ProductModal({
     fetchCategories();
   }, []);
 
+  const formFields = [
+    { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
+    { key: 'image', label: 'Image URL', placeholder: 'https://...' },
+    { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
+  ];
+
   const handleSubmit = async () => {
     if (!form.name || !form.price || !form.categoryId) {
       setError('Name, price, and category are required.');
@@ -245,13 +251,7 @@ function ProductModal({
             </select>
           </div>
 
-          const formFields = [
-            { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
-            { key: 'image', label: 'Image URL', placeholder: 'https://...' },
-            { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
-          ];
-          
-          formFields.map(({ key, label, placeholder, type }) => (
+          {formFields.map(({ key, label, placeholder, type }) => (
             <div key={key}>
               <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
                 {label}
