@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Calendar, CheckCircle, Clock, Truck, Home } from 'lucide-react';
+import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Order {
   _id: string;
@@ -23,6 +23,7 @@ const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -125,6 +126,13 @@ const Orders = () => {
           className="max-w-4xl mx-auto"
         >
           <div className="mb-8">
+            <button
+              onClick={() => navigate(-1)}
+              className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-brass transition-colors duration-200 mb-8 flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
             <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-2">
               Your Orders
             </h1>

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { getCategories, fetchProducts } from '../lib/products';
+import { getCategories } from '../lib/products';
 
 const containerVariants = {
   hidden: {},
@@ -26,12 +26,16 @@ export default function CategoriesSection() {
     const loadCategories = async () => {
       try {
         setLoading(true);
-        const cats = await getCategories();
-        const categoryData = cats.map(cat => ({
-          id: cat.toLowerCase(),
-          name: cat.charAt(0).toUpperCase() + cat.slice(1)
-        }));
-        setCategories(categoryData);
+        console.log('=== LOADING CATEGORIES FROM API ===');
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('CATEGORIES API RESPONSE:', data);
+          setCategories(data.categories || []);
+        } else {
+          console.error('Failed to load categories');
+          setCategories([]);
+        }
       } catch (error) {
         console.error('Failed to load categories:', error);
         setCategories([]);
@@ -80,9 +84,9 @@ export default function CategoriesSection() {
         >
           {categories.map((cat, index) => (
             <motion.div
-              key={cat.id}
+              key={cat._id}
               variants={itemVariants}
-              onClick={() => navigate(`/category/${cat.id}`)}
+              onClick={() => navigate(`/category/${cat._id}`)}
               className="group cursor-pointer flex flex-col relative"
             >
               {/* Image Container */}
@@ -93,9 +97,14 @@ export default function CategoriesSection() {
                 <div className="absolute inset-0 bg-brass-bright/5 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 z-0 pointer-events-none" />
 
                 <div className="w-full h-full bg-gradient-to-br from-brass/20 to-brass/10 flex items-center justify-center">
-                  <span className="font-display text-2xl text-brass uppercase tracking-wider">
-                    {cat.name.charAt(0)}
-                  </span>
+                  <img
+                    src={cat.image || '/placeholder.png'}
+                    alt={cat.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.png';
+                    }}
+                  />
                 </div>
               </div>
 

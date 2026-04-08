@@ -221,6 +221,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('Saving cart items:', items);
       console.log('User logged in:', !!user);
       
+      // ALWAYS update localStorage first for immediate persistence
+      setCart(items);
+      console.log('Cart saved to localStorage');
+      
       if (user) {
         // Get user token for API call
         const token = await user.getIdToken();
@@ -240,20 +244,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!response.ok) {
           const errorData = await response.text();
           console.error('Cart API error:', errorData);
-          throw new Error('Failed to save cart to database');
+          // Don't throw error for localStorage issues, just log them
+          // localStorage already has the data, so user experience is preserved
         }
-      } else {
-        // Save to localStorage
-        console.log('Saving to localStorage for logged-out user');
-        setCart(items);
-        console.log('Cart saved to localStorage');
       }
     } catch (error) {
       console.error('Error saving cart:', error);
       // Don't throw error for localStorage issues, just log them
-      if (user) {
-        throw error; // Only throw for logged-in users (API errors)
-      }
+      // localStorage already has the data, so user experience is preserved
     }
   };
 

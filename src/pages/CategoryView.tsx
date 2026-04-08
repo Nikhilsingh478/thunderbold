@@ -41,7 +41,15 @@ export default function CategoryView() {
     const loadProducts = async () => {
       try {
         setLoading(true);
+        console.log('=== CATEGORY FILTER DEBUG ===');
+        console.log('CATEGORY ID FROM URL:', categoryId);
         const products = await fetchProductsByCategory(categoryId || '');
+        console.log('FILTERED PRODUCTS COUNT:', products.length);
+        console.log('FILTERED PRODUCTS:', products.map(p => ({
+          name: p.name,
+          categoryId: p.categoryId,
+          match: String(p.categoryId) === String(categoryId)
+        })));
         setCategoryProducts(products);
       } catch (error) {
         console.error('Failed to load products:', error);

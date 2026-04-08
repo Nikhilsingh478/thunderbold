@@ -27,7 +27,7 @@ interface Order {
 interface Product {
   _id: string;
   name: string;
-  category: string;
+  categoryId: string;
   price: number;
   image?: string;
   description?: string;
@@ -137,7 +137,7 @@ function CategoryModal({
 
 interface ProductFormData {
   name: string;
-  category: string;
+  categoryId: string;
   price: string;
   image: string;
   description: string;
@@ -146,7 +146,7 @@ interface ProductFormData {
 
 const defaultFormData: ProductFormData = {
   name: '',
-  category: '',
+  categoryId: '',
   price: '',
   image: '',
   description: '',
@@ -167,10 +167,25 @@ function ProductModal({
   const [form, setForm] = useState<ProductFormData>(initialData ?? defaultFormData);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        setCategories(data.categories || []);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async () => {
-    if (!form.name || !form.price) {
-      setError('Name and price are required.');
+    if (!form.name || !form.price || !form.categoryId) {
+      setError('Name, price, and category are required.');
       return;
     }
     setSubmitting(true);
@@ -199,15 +214,44 @@ function ProductModal({
         </h3>
 
         <div className="space-y-4">
-          {(
-            [
-              { key: 'name', label: 'Name', placeholder: 'Product name' },
-              { key: 'category', label: 'Category', placeholder: 'e.g. Tops, Bottoms' },
-              { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
-              { key: 'image', label: 'Image URL', placeholder: 'https://...' },
-              { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
-            ] as { key: keyof ProductFormData; label: string; placeholder: string; type?: string }[]
-          ).map(({ key, label, placeholder, type }) => (
+          <div>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
+              Name
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="Product name"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30"
+            />
+          </div>
+
+          <div>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
+              Category
+            </label>
+            <select
+              value={form.categoryId}
+              onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30"
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          const formFields = [
+            { key: 'price', label: 'Price (¥)', placeholder: '0', type: 'number' },
+            { key: 'image', label: 'Image URL', placeholder: 'https://...' },
+            { key: 'stock', label: 'Stock', placeholder: '0', type: 'number' },
+          ];
+          
+          formFields.map(({ key, label, placeholder, type }) => (
             <div key={key}>
               <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">
                 {label}
@@ -774,7 +818,7 @@ export default function Admin() {
                         <h3 className="font-condensed font-semibold text-tb-white text-xs mb-1">
                           {product.name}
                         </h3>
-                        <p className="text-sv-mid text-xs mb-1">{product.category}</p>
+                        <p className="text-sv-mid text-xs mb-1">{categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}</p>
                         <p className="font-condensed text-tb-white text-sm mb-2">¥{product.price}</p>
                         <div className="flex gap-2">
                           <button
@@ -876,7 +920,7 @@ export default function Admin() {
             title="Edit Product"
             initialData={{
               name: editingProduct.name,
-              category: editingProduct.category,
+              categoryId: editingProduct.categoryId,
               price: String(editingProduct.price),
               image: editingProduct.image ?? '',
               description: editingProduct.description ?? '',

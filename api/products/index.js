@@ -73,12 +73,12 @@ export default async function handler(req, res) {
           return res.status(postAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: postAuthResult.error });
         }
         
-        const { name: productName, price: productPrice, image: productImage, description: productDescription, category: productCategory, stock: productStock } = req.body;
-        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImage, productDescription, productCategory, productStock });
+        const { name: productName, price: productPrice, image: productImage, description: productDescription, categoryId: productCategoryId, stock: productStock } = req.body;
+        console.log('PRODUCTS API: Product data:', { productName, productPrice, productImage, productDescription, productCategoryId, productStock });
         
         // Validate required fields
-        if (!productName || !productPrice || !productImage || !productCategory) {
-          return res.status(400).json({ error: 'Name, price, image, and category are required' });
+        if (!productName || !productPrice || !productImage || !productCategoryId) {
+          return res.status(400).json({ error: 'Name, price, image, and categoryId are required' });
         }
         
         // Validate price
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
           price: productPrice,
           image: productImage,
           description: productDescription || '',
-          category: productCategory,
+          categoryId: productCategoryId,
           stock: productStock || 0,
           createdAt: new Date()
         };
@@ -124,12 +124,12 @@ export default async function handler(req, res) {
           return res.status(putAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: putAuthResult.error });
         }
         
-        const { name: updateName, price: updatePrice, image: updateImage, description: updateDescription, category: updateCategory, stock: updateStock } = req.body;
-        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImage, updateDescription, updateCategory, updateStock });
+        const { name: updateName, price: updatePrice, image: updateImage, description: updateDescription, categoryId: updateCategoryId, stock: updateStock } = req.body;
+        console.log('PRODUCTS API: Update data:', { updateName, updatePrice, updateImage, updateDescription, updateCategoryId, updateStock });
         
         // Validate required fields
-        if (!updateName || !updatePrice || !updateImage || !updateCategory) {
-          return res.status(400).json({ error: 'Name, price, image, and category are required' });
+        if (!updateName || !updatePrice || !updateImage || !updateCategoryId) {
+          return res.status(400).json({ error: 'Name, price, image, and categoryId are required' });
         }
         
         // Validate price
@@ -151,7 +151,7 @@ export default async function handler(req, res) {
               price: updatePrice,
               image: updateImage,
               description: updateDescription || '',
-              category: updateCategory,
+              categoryId: updateCategoryId,
               stock: updateStock || 0,
               updatedAt: new Date()
             }

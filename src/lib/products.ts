@@ -4,7 +4,7 @@ export interface Product {
   price: number;
   description?: string;
   image: string;
-  category: string;
+  categoryId: string;
   stock?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -67,7 +67,7 @@ export async function fetchProductsByCategory(category: string): Promise<Product
     }
     
     const data = await response.json();
-    return data.products.filter((product: Product) => product.category === category);
+    return data.products.filter((product: Product) => product.categoryId === category);
   } catch (error) {
     console.error('PRODUCT FETCH: Failed to fetch category products:', error);
     return [];
@@ -79,6 +79,6 @@ export async function fetchProductsByCategory(category: string): Promise<Product
  */
 export async function getCategories(): Promise<string[]> {
   const response = await fetchProducts();
-  const categories = [...new Set(response.products.map(product => product.category))];
+  const categories = [...new Set(response.products.map(product => product.categoryId))];
   return categories;
 }
