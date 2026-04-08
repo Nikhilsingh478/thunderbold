@@ -1,4 +1,5 @@
 import { getDb } from "../_lib/mongodb.js";
+import jwt from 'jsonwebtoken';
 
 const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
 
@@ -23,9 +24,19 @@ export default async function handler(req, res) {
     }
     
     const token = authHeader.split(' ')[1];
-    const userId = token; // TEMP: Use token as userId for now
     
-    console.log('PRODUCTS API: User ID:', userId);
+    // Decode JWT token to extract user email
+    let decodedToken;
+    try {
+      decodedToken = jwt.decode(token);
+      console.log('PRODUCTS API: Decoded token:', decodedToken);
+    } catch (decodeError) {
+      console.error('PRODUCTS API: Failed to decode token:', decodeError);
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    const userEmail = decodedToken?.email;
+    console.log('PRODUCTS API: User email:', userEmail);
     
     // Get database connection
     const database = await getDb();
@@ -55,7 +66,7 @@ export default async function handler(req, res) {
         console.log('PRODUCTS API: Creating new product');
         
         // Check if user is admin
-        if (userId !== ADMIN_EMAIL) {
+        if (userEmail !== ADMIN_EMAIL) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         
@@ -102,7 +113,7 @@ export default async function handler(req, res) {
         console.log('PRODUCTS API: Updating product:', productId);
         
         // Check if user is admin
-        if (userId !== ADMIN_EMAIL) {
+        if (userEmail !== ADMIN_EMAIL) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         
@@ -150,7 +161,7 @@ export default async function handler(req, res) {
         console.log('PRODUCTS API: Deleting product:', productId);
         
         // Check if user is admin
-        if (userId !== ADMIN_EMAIL) {
+        if (userEmail !== ADMIN_EMAIL) {
           return res.status(403).json({ error: 'Admin access required' });
         }
         

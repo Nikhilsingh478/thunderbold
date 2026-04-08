@@ -253,12 +253,20 @@ export default function Admin() {
           stock: parseInt(formData.stock, 10) || 0,
         }),
       });
+      
+      // Log response for debugging
+      console.log('PRODUCT API RESPONSE:', response.status, response.statusText);
+      const data = await response.json();
+      console.log('PRODUCT API DATA:', data);
+      
       if (response.ok) {
         await fetchProducts();
         setShowAddProductModal(false);
         return true;
+      } else {
+        console.error('PRODUCT API ERROR:', data);
+        return false;
       }
-      return false;
     } catch (err) {
       console.error('Failed to add product:', err);
       return false;
