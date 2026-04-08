@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Users, X } from 'lucide-react';
+import { Users, Package, Folder, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -32,6 +32,107 @@ interface Product {
   image?: string;
   description?: string;
   stock?: number;
+}
+
+interface CategoryFormData {
+  name: string;
+  image: string;
+}
+
+const defaultCategoryFormData: CategoryFormData = {
+  name: '',
+  image: '',
+};
+
+function CategoryModal({
+  title,
+  onSubmit,
+  onClose,
+}: {
+  title: string;
+  onSubmit: (data: CategoryFormData) => Promise<boolean>;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<CategoryFormData>(defaultCategoryFormData);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!form.name || !form.image) {
+      setError('Name and image are required.');
+      return;
+    }
+    setSubmitting(true);
+    const ok = await onSubmit(form);
+    setSubmitting(false);
+    if (!ok) setError('Something went wrong. Please try again.');
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-md bg-surface border border-white/10 rounded-xl p-6 relative"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-sv-mid hover:text-tb-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <h3 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-6">
+          {title}
+        </h3>
+
+        <div className="space-y-4">
+          {(
+            [
+              { key: 'name', label: 'Name', placeholder: 'Category name' },
+              { key: 'image', label: 'Image URL', placeholder: 'https://...' },
+            ] as { key: keyof CategoryFormData; label: string; placeholder: string }[]
+          ).map(({ key, label, placeholder }) => (
+            <div key={key}>
+              <label className="block text-tb-white text-sm font-condensed mb-2">
+                {label}
+              </label>
+              <input
+                type={key === 'image' ? 'url' : 'text'}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                placeholder={placeholder}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white placeholder-sv-mid focus:outline-none focus:border-white/30 transition-colors"
+              />
+            </div>
+          ))}
+        </div>
+
+        {error && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-tb-white hover:bg-white/20 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex-1 px-4 py-3 bg-tb-white text-void font-condensed font-bold tracking-[0.2em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50"
+          >
+            {submitting ? 'Creating...' : 'Create Category'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
 }
 
 interface ProductFormData {
@@ -162,11 +263,13 @@ function ProductModal({
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'orders' | 'products'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'categories'>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -181,6 +284,10 @@ export default function Admin() {
 
   useEffect(() => {
     if (user && activeTab === 'products') fetchProducts();
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (user && activeTab === 'categories') fetchCategories();
   }, [activeTab, user]);
 
   const fetchOrders = async () => {
@@ -213,6 +320,21 @@ export default function Admin() {
       setProducts(data.products ?? []);
     } catch (err) {
       console.error('ADMIN FETCH ERROR:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const response = await fetch('/api/categories');
+      const data = await response.json();
+      console.log('ADMIN FETCH CATEGORIES RESPONSE:', data);
+      setCategories(data.categories ?? []);
+    } catch (err) {
+      console.error('ADMIN FETCH CATEGORIES ERROR:', err);
     } finally {
       setLoading(false);
     }
@@ -378,6 +500,88 @@ export default function Admin() {
     }
   };
 
+  const deleteCategory = async (categoryId: string) => {
+    if (!user) return;
+    if (!confirm('Are you sure you want to delete this category?')) return;
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/categories/${categoryId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      // Parse JSON only ONCE
+      const data = await response.json();
+      console.log('DELETE CATEGORY RESPONSE:', response.status, response.statusText);
+      console.log('DELETE CATEGORY DATA:', data);
+      
+      if (response.ok) {
+        // Update local state immediately for instant UI update
+        console.log('REMOVING CATEGORY FROM STATE:', categoryId);
+        setCategories(prev => {
+          console.log('PREVIOUS CATEGORIES:', prev);
+          const updated = prev.filter(c => c._id !== categoryId);
+          console.log('UPDATED CATEGORIES:', updated);
+          return updated;
+        });
+        
+        return true;
+      } else {
+        console.error('DELETE CATEGORY ERROR:', data);
+        return false;
+      }
+    } catch (err) {
+      console.error('Failed to delete category:', err);
+      return false;
+    }
+  };
+
+  const addCategory = async (formData: CategoryFormData): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      // Parse JSON only ONCE
+      const data = await response.json();
+      console.log('CATEGORY API RESPONSE:', response.status, response.statusText);
+      console.log('CATEGORY API DATA:', data);
+      
+      if (response.ok) {
+        // Update local state immediately for instant UI update
+        const newCategory = {
+          _id: data.category._id,
+          ...formData,
+        };
+        console.log('ADDING NEW CATEGORY TO STATE:', newCategory);
+        setCategories(prev => {
+          console.log('PREVIOUS CATEGORIES:', prev);
+          const updated = [newCategory, ...prev];
+          console.log('UPDATED CATEGORIES:', updated);
+          return updated;
+        });
+        
+        setShowAddCategoryModal(false);
+        return true;
+      } else {
+        console.error('CATEGORY API ERROR:', data);
+        return false;
+      }
+    } catch (err) {
+      console.error('Failed to add category:', err);
+      return false;
+    }
+  };
+
   if (!user) {
     return (
       <div className="noise-overlay min-h-screen flex items-center justify-center bg-void">
@@ -417,6 +621,7 @@ export default function Admin() {
               [
                 { key: 'orders', label: 'Orders', Icon: Users },
                 { key: 'products', label: 'Products', Icon: Package },
+                { key: 'categories', label: 'Categories', Icon: Folder },
               ] as const
             ).map(({ key, label, Icon }) => (
               <button
@@ -440,48 +645,9 @@ export default function Admin() {
                   <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brass"></div>
                   </div>
-                ) : products.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-sv-mid font-condensed text-sm tracking-wider">No products found.</p>
-                  </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {products.map((product) => (
-                      <div
-                        key={product._id}
-                        className="bg-surface border border-white/10 rounded-lg p-4"
-                      >
-                        <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-4">
-                          <img
-                            src={product.image || '/placeholder.png'}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = '/placeholder.png';
-                            }}
-                          />
-                        </div>
-                        <h3 className="font-condensed font-semibold text-tb-white text-sm mb-1">
-                          {product.name}
-                        </h3>
-                        <p className="text-sv-mid text-xs mb-1">{product.category}</p>
-                        <p className="font-condensed text-tb-white mb-3">¥{product.price}</p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setEditingProduct(product)}
-                            className="flex-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded text-tb-white text-xs hover:bg-white/20 transition-all duration-200"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => deleteProduct(product._id)}
-                            className="flex-1 px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-12">
+                    <p className="text-sv-mid font-condensed text-sm tracking-wider">Loading...</p>
                   </div>
                 )}
             {!loading && activeTab === 'orders' && (
@@ -589,13 +755,13 @@ export default function Admin() {
                 {products.length === 0 ? (
                   <p className="text-sv-mid font-condensed text-sm tracking-wider">No products yet.</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {products.map((product) => (
                       <div
                         key={product._id}
-                        className="bg-surface border border-white/10 rounded-lg p-4"
+                        className="bg-surface border border-white/10 rounded-lg p-3"
                       >
-                        <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-4">
+                        <div className="aspect-[4/5] bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-40">
                           <img
                             src={product.image || '/placeholder.png'}
                             alt={product.name}
@@ -605,25 +771,78 @@ export default function Admin() {
                             }}
                           />
                         </div>
-                        <h3 className="font-condensed font-semibold text-tb-white text-sm mb-1">
+                        <h3 className="font-condensed font-semibold text-tb-white text-xs mb-1">
                           {product.name}
                         </h3>
                         <p className="text-sv-mid text-xs mb-1">{product.category}</p>
-                        <p className="font-condensed text-tb-white mb-3">¥{product.price}</p>
+                        <p className="font-condensed text-tb-white text-sm mb-2">¥{product.price}</p>
                         <div className="flex gap-2">
                           <button
                             onClick={() => setEditingProduct(product)}
-                            className="flex-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded text-tb-white text-xs hover:bg-white/20 transition-all duration-200"
+                            className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-tb-white text-xs hover:bg-white/20 transition-all duration-200"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => deleteProduct(product._id)}
-                            className="flex-1 px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
+                            className="flex-1 px-2 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
                           >
                             Delete
                           </button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {!loading && activeTab === 'categories' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase">
+                    Category Management
+                  </h2>
+                  <button
+                    onClick={() => setShowAddCategoryModal(true)}
+                    className="px-4 py-2 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white transition-all duration-200 rounded-lg"
+                  >
+                    + Add Category
+                  </button>
+                </div>
+
+                {categories.length === 0 ? (
+                  <p className="text-sv-mid font-condensed text-sm tracking-wider">No categories yet.</p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {categories.map((category) => (
+                      <div
+                        key={category._id}
+                        className="bg-surface border border-white/10 rounded-lg p-3"
+                      >
+                        <div className="aspect-square bg-[#0c0c0c] rounded-lg overflow-hidden mb-3 h-32">
+                          <img
+                            src={category.image || '/placeholder.png'}
+                            alt={category.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder.png';
+                            }}
+                          />
+                        </div>
+                        <h3 className="font-condensed font-semibold text-tb-white text-xs mb-2">
+                          {category.name}
+                        </h3>
+                        <button
+                          onClick={() => deleteCategory(category._id)}
+                          className="w-full px-2 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs hover:bg-red-500/30 transition-all duration-200"
+                        >
+                          Delete
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -643,6 +862,13 @@ export default function Admin() {
             title="Add New Product"
             onSubmit={addProduct}
             onClose={() => setShowAddProductModal(false)}
+          />
+        )}
+        {showAddCategoryModal && (
+          <CategoryModal
+            title="Add New Category"
+            onSubmit={addCategory}
+            onClose={() => setShowAddCategoryModal(false)}
           />
         )}
         {editingProduct && (
