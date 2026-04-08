@@ -1,5 +1,4 @@
-const { MongoClient } = require('mongodb');
-const client = new MongoClient(process.env.MONGODB_URI);
+const { getDb } = require('../_lib/mongodb');
 
 async function getAuthUser(req) {
   const authHeader = req.headers.authorization;
@@ -8,12 +7,29 @@ async function getAuthUser(req) {
   }
   
   const token = authHeader.split(' ')[1];
-  // In a real app, you'd verify the Firebase token
-  // For now, we'll use a simple approach (you should implement proper token verification)
+  
   try {
-    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    // Firebase tokens are JWTs with 3 parts separated by dots
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.log('Invalid token format - not a proper JWT');
+      return null;
+    }
+    
+    // Decode the payload (second part)
+    const payload = Buffer.from(parts[1], 'base64').toString();
+    const decoded = JSON.parse(payload);
+    
+    // Check if this looks like a Firebase token
+    if (!decoded.uid && !decoded.sub) {
+      console.log('Token missing uid/sub field');
+      return null;
+    }
+    
+    console.log('Successfully decoded user:', decoded.uid || decoded.sub);
     return decoded;
   } catch (error) {
+    console.error('Token parsing error:', error.message);
     return null;
   }
 }
@@ -29,8 +45,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    await client.connect();
-    const database = client.db('thunderbolt');
+    const database = await getDb();
     const wishlistCollection = database.collection('wishlist');
 
     const user = await getAuthUser(req);
@@ -94,7 +109,5 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Wishlist API error:', error);
     return res.status(500).json({ error: 'Internal server error' });
-  } finally {
-    await client.close();
   }
 };
