@@ -40,13 +40,6 @@ export default async function handler(req, res) {
   try {
     console.log('PRODUCTS API: Starting request...');
     
-    // Hard block for DELETE - should not hit index.js
-    if (req.method === 'DELETE') {
-      return res.status(405).json({
-        error: 'DELETE must use /api/products/[id]'
-      });
-    }
-    
     // Get database connection
     const database = await getDb();
     const productsCollection = database.collection('products');
