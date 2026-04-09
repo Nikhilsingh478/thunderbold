@@ -48,9 +48,11 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       return;
     }
 
+    const q = query.toLowerCase();
     const filtered = allProducts.filter((product) =>
-      product.name.toLowerCase().includes(query.toLowerCase()) ||
-      product.category.toLowerCase().includes(query.toLowerCase())
+      (product.name ?? '').toLowerCase().includes(q) ||
+      (product.description ?? '').toLowerCase().includes(q) ||
+      (product.category ?? '').toLowerCase().includes(q)
     );
     setResults(filtered);
   }, [query, allProducts]);
