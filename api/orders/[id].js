@@ -1,9 +1,20 @@
-import { getDb } from "../../_lib/mongodb.js";
+import { getDb } from "../_lib/mongodb.js";
+import { ObjectId } from "mongodb";
+import jwt from 'jsonwebtoken';
 
 const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
 
+function decodeFirebaseToken(token) {
+  try {
+    const decoded = jwt.decode(token);
+    return decoded;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -17,56 +28,67 @@ export default async function handler(req, res) {
     console.log('ORDER STATUS UPDATE API: Method:', req.method);
     console.log('ORDER STATUS UPDATE API: Order ID:', req.query.id);
     console.log('ORDER STATUS UPDATE API: Request body:', req.body);
-    
-    // Get user ID from token
+
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('ORDER STATUS UPDATE API: No auth header found');
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    
+
     const token = authHeader.split(' ')[1];
-    const userId = token; // TEMP: Use token as userId for now
-    
-    console.log('ORDER STATUS UPDATE API: User ID:', userId);
-    
-    // Get database connection
+
+    const decodedToken = decodeFirebaseToken(token);
+    if (!decodedToken || !decodedToken.email) {
+      console.log('ORDER STATUS UPDATE API: Invalid token or missing email');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = decodedToken.email;
+    console.log('ORDER STATUS UPDATE API: User email:', userId);
+
     const database = await getDb();
     const ordersCollection = database.collection('orders');
-    
+
     console.log('ORDER STATUS UPDATE API: Connected to database');
 
     if (req.method === 'PATCH') {
       const { status } = req.body;
       console.log('ORDER STATUS UPDATE API: Updating status to:', status);
-      
-      // Validate status
+
       const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered'];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status. Valid statuses: pending, confirmed, shipped, delivered' });
       }
-      
-      // Check if user is admin
+
       if (userId !== ADMIN_EMAIL) {
+        console.log('ORDER STATUS UPDATE API: Access denied for:', userId);
         return res.status(403).json({ error: 'Admin access required' });
       }
-      
-      // Update order status
+
+      const orderId = req.query.id;
+
+      let objectId;
+      try {
+        objectId = new ObjectId(orderId);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid order ID format' });
+      }
+
       const result = await ordersCollection.updateOne(
-        { _id: req.query.id },
+        { _id: objectId },
         { $set: { status, updatedAt: new Date() } }
       );
-      
+
       console.log('ORDER STATUS UPDATE API: Update result:', result);
-      
+
       if (result.matchedCount === 0) {
         return res.status(404).json({ error: 'Order not found' });
       }
-      
+
       console.log('ORDER STATUS UPDATE API: Status updated successfully');
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Order status updated successfully',
-        orderId: req.query.id,
+        orderId,
         newStatus: status
       });
 

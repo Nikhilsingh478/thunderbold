@@ -32,6 +32,7 @@ app.use('/api/orders/cancel', async (req, res) => {
 
 app.use('/api/orders/:id', async (req, res) => {
   try {
+    req.query = { ...req.query, id: req.params.id };
     const { default: handler } = await import('./api/orders/[id].js');
     await handler(req, res);
   } catch (error) {
