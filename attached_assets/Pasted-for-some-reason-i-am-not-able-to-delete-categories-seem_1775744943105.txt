@@ -1,0 +1,139 @@
+for some reason i am not able to delete categories seems like some big ug check and fix this was on console Loading wishlist from localStorage: []
+index-CnW3vr-Y.js:1527 Loading cart from localStorage ONLY: []
+index-CnW3vr-Y.js:1527 Cart reducer action: SET_LOADING
+index-CnW3vr-Y.js:1527 Action payload: true
+index-CnW3vr-Y.js:1527 Cart reducer action: SET_CART
+index-CnW3vr-Y.js:1527 Action payload: []
+index-CnW3vr-Y.js:1527 Setting cart items: []
+index-CnW3vr-Y.js:1527 Cart reducer action: SET_LOADING
+index-CnW3vr-Y.js:1527 Action payload: false
+index-CnW3vr-Y.js:1527 Syncing local wishlist to DB: []
+index-CnW3vr-Y.js:1527 Loading cart from localStorage ONLY: []
+index-CnW3vr-Y.js:1527 Cart reducer action: SET_LOADING
+index-CnW3vr-Y.js:1527 Action payload: true
+index-CnW3vr-Y.js:1527 Cart reducer action: SET_CART
+index-CnW3vr-Y.js:1527 Action payload: []
+index-CnW3vr-Y.js:1527 Setting cart items: []
+index-CnW3vr-Y.js:1527 Cart reducer action: SET_LOADING
+index-CnW3vr-Y.js:1527 Action payload: false
+index-CnW3vr-Y.js:1527 Load wishlist response: 200
+index-CnW3vr-Y.js:1527 Loaded wishlist from DB: []............and this was on logs of vercel check Skip to content
+
+Find…
+F
+
+Logs
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Warning
+2
+
+​
+Error
+0
+
+​
+Fatal
+0
+
+Resource
+
+Environment
+
+Route
+
+Request Path
+
+Status Code
+
+Request Type
+
+Host
+
+Request Method
+
+Cache
+
+Branch
+
+Deployment ID
+1
+
+Avatar for nikhilsingh478
+nikhilsingh478
+
+Logs
+deploymentId:dpl_EPKUzXcPrvjw1HGqkyaWe7kuDzJC
+
+19:28:00
+19:36:50
+19:45:20
+19:58:00
+Time
+Status
+Host
+Request
+Messages
+Apr 09 19:48:58.64
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 3
+Apr 09 19:48:56.71
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+Apr 09 19:48:56.70
+GET
+304
+thunderbold.vercel.app
+/api/orders
+Apr 09 19:48:30.84
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 3
+Apr 09 19:48:29.59
+GET
+304
+thunderbold.vercel.app
+/api/orders
+[firebaseAdmin] FIREBASE_SERVICE_ACCOUNT not configured — falling back to jwt.decode (less secure)
+Apr 09 19:48:29.59
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+Apr 09 19:48:17.94
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+[firebaseAdmin] FIREBASE_SERVICE_ACCOUNT not configured — falling back to jwt.decode (less secure)
+Apr 09 19:48:17.08
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 3
+No more logs to show within selected timeline
+
+thunderbold – Logs – Vercel
+19:45:20
+
+
+Show less

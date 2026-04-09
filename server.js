@@ -105,6 +105,17 @@ app.use('/api/wishlist', async (req, res) => {
   }
 });
 
+app.use('/api/categories/:id', async (req, res) => {
+  try {
+    req.query.id = req.params.id;
+    const { default: handler } = await import('./api/categories/[id].js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in categories/:id:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.use('/api/categories', async (req, res) => {
   try {
     const { default: handler } = await import('./api/categories/index.js');
