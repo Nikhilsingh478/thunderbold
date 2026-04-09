@@ -39,22 +39,9 @@ async function fetchWithRetry(url: string, options?: RequestInit, retries = 2): 
  * Fetch all products from API
  */
 export async function fetchProducts(): Promise<ProductResponse> {
-  console.log('PRODUCT FETCH: Fetching from API...');
-  
-  try {
-    const response = await fetchWithRetry('/api/products');
-    
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('PRODUCT FETCH: API success, products:', data.products.length);
-    return data;
-  } catch (error) {
-    console.error('PRODUCT FETCH: API failed:', error);
-    throw error;
-  }
+  const response = await fetchWithRetry('/api/products');
+  if (!response.ok) throw new Error(`API returned ${response.status}`);
+  return response.json();
 }
 
 /**
@@ -62,15 +49,9 @@ export async function fetchProducts(): Promise<ProductResponse> {
  */
 export async function fetchProductById(id: string): Promise<Product | null> {
   try {
-    const response = await fetchWithRetry('/api/products');
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.products.find((product: Product) => product._id === id) || null;
-  } catch (error) {
-    console.error('PRODUCT FETCH: Failed to fetch product:', error);
+    const data = await fetchProducts();
+    return data.products.find((p: Product) => p._id === id) || null;
+  } catch {
     return null;
   }
 }
@@ -80,15 +61,9 @@ export async function fetchProductById(id: string): Promise<Product | null> {
  */
 export async function fetchProductsByCategory(category: string): Promise<Product[]> {
   try {
-    const response = await fetchWithRetry('/api/products');
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.products.filter((product: Product) => product.categoryId === category);
-  } catch (error) {
-    console.error('PRODUCT FETCH: Failed to fetch category products:', error);
+    const data = await fetchProducts();
+    return data.products.filter((p: Product) => p.categoryId === category);
+  } catch {
     return [];
   }
 }

@@ -1,12 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
-import { fetchProductsByCategory, getCategories } from '../lib/products';
 import { useWishlist } from '../context/WishlistContext';
 
 export default function CategoryView() {
@@ -15,69 +14,50 @@ export default function CategoryView() {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [categoryProducts, setCategoryProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState({});
-  
+  const [categoryName, setCategoryName] = useState('');
+
   useEffect(() => {
-    const loadCategories = async () => {
+    if (!categoryId) return;
+    window.scrollTo(0, 0);
+
+    const load = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('/api/categories');
-        if (response.ok) {
-          const data = await response.json();
-          const categoryMap = {};
-          data.categories.forEach(cat => {
-            categoryMap[cat._id] = cat.name;
-          });
-          setCategories(categoryMap);
+        const [catRes, prodRes] = await Promise.all([
+          fetch('/api/categories'),
+          fetch('/api/products'),
+        ]);
+        if (catRes.ok) {
+          const catData = await catRes.json();
+          const cat = catData.categories?.find(c => c._id === categoryId);
+          if (cat) setCategoryName(cat.name);
         }
-      } catch (error) {
-        console.error('Failed to load categories:', error);
-      }
-    };
-    
-    loadCategories();
-  }, []);
-
-  // Get category name from categories map or fallback
-  const categoryName = categories[categoryId] || 'Unknown Category';
-
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        console.log('=== CATEGORY FILTER DEBUG ===');
-        console.log('CATEGORY ID FROM URL:', categoryId);
-        const products = await fetchProductsByCategory(categoryId || '');
-        console.log('FILTERED PRODUCTS COUNT:', products.length);
-        console.log('FILTERED PRODUCTS:', products.map(p => ({
-          name: p.name,
-          categoryId: p.categoryId,
-          match: String(p.categoryId) === String(categoryId)
-        })));
-        setCategoryProducts(products);
-      } catch (error) {
-        console.error('Failed to load products:', error);
+        if (prodRes.ok) {
+          const prodData = await prodRes.json();
+          const filtered = (prodData.products || []).filter(
+            (p: any) => String(p.categoryId) === String(categoryId)
+          );
+          setCategoryProducts(filtered);
+        }
+      } catch {
         setCategoryProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (categoryId) {
-      loadProducts();
-    }
-    window.scrollTo(0, 0);
+    load();
   }, [categoryId]);
 
-  const handleWishlistClick = (e: React.MouseEvent, product: any) => {
-    e.stopPropagation(); // Prevent navigation to product page
-    
+  const handleWishlistClick = useCallback((e: React.MouseEvent, product: any) => {
+    e.stopPropagation();
     toggleWishlist({
       productId: product._id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: product.images?.[0] || product.image,
     });
-  };
+  }, [toggleWishlist]);
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -110,7 +90,17 @@ export default function CategoryView() {
 
           {/* Product Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
-            {categoryProducts.map((prod, i) => (
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex flex-col">
+                    <div className="aspect-[3/4] bg-white/5 rounded-sm animate-pulse" />
+                    <div className="mt-5 space-y-2">
+                      <div className="h-4 bg-white/5 rounded animate-pulse w-3/4" />
+                      <div className="h-3 bg-white/5 rounded animate-pulse w-1/4" />
+                    </div>
+                  </div>
+                ))
+              : categoryProducts.map((prod, i) => (
               <motion.div
                 key={prod._id}
                 initial={{ opacity: 0, y: 30 }}

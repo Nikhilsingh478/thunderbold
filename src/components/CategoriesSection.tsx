@@ -26,18 +26,14 @@ export default function CategoriesSection() {
     const loadCategories = async () => {
       try {
         setLoading(true);
-        console.log('=== LOADING CATEGORIES FROM API ===');
         const response = await fetch('/api/categories');
         if (response.ok) {
           const data = await response.json();
-          console.log('CATEGORIES API RESPONSE:', data);
           setCategories(data.categories || []);
         } else {
-          console.error('Failed to load categories');
           setCategories([]);
         }
-      } catch (error) {
-        console.error('Failed to load categories:', error);
+      } catch {
         setCategories([]);
       } finally {
         setLoading(false);
@@ -101,6 +97,8 @@ export default function CategoriesSection() {
                     src={cat.image || '/placeholder.png'}
                     alt={cat.name}
                     className="w-full h-full object-cover"
+                    loading={index < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder.png';
                     }}
