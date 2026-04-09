@@ -94,7 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sync user with database
   const syncUserWithDatabase = async (user: User): Promise<void> => {
     try {
-      const response = await fetch('/api/users/create', {
+      const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

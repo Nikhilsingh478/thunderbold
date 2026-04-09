@@ -101,7 +101,7 @@ export default function Profile() {
   const fetchProfile = async () => {
     try {
       const token = await getToken();
-      const res = await fetch('/api/users/profile', {
+      const res = await fetch('/api/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -142,7 +142,7 @@ export default function Profile() {
     setSaving(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/users/profile', {
+      const res = await fetch('/api/users', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: trimmed }),
@@ -171,7 +171,7 @@ export default function Profile() {
     setSaving(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/users/profile', {
+      const res = await fetch('/api/users', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ phone: trimmed }),
@@ -215,7 +215,7 @@ export default function Profile() {
     setAddressSubmitting(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/users/addresses', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...addressForm, phone: addressForm.phone.replace(/\D/g, '') }),
@@ -240,7 +240,7 @@ export default function Profile() {
   const handleRemoveAddress = async (id: string) => {
     try {
       const token = await getToken();
-      const res = await fetch('/api/users/addresses', {
+      const res = await fetch('/api/users', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id }),
@@ -259,10 +259,10 @@ export default function Profile() {
   const handleSetDefault = async (id: string) => {
     try {
       const token = await getToken();
-      const res = await fetch('/api/users/addresses', {
+      const res = await fetch('/api/users', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ action: 'set_default_address', id }),
       });
       if (res.ok) {
         toast.success('Default address updated');

@@ -50,32 +50,12 @@ app.use('/api/orders', async (req, res) => {
   }
 });
 
-app.use('/api/users/profile', async (req, res) => {
+app.use('/api/users', async (req, res) => {
   try {
-    const { default: handler } = await import('./api/users/profile.js');
+    const { default: handler } = await import('./api/users/index.js');
     await handler(req, res);
   } catch (error) {
-    console.error('Error in users/profile:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.use('/api/users/addresses', async (req, res) => {
-  try {
-    const { default: handler } = await import('./api/users/addresses.js');
-    await handler(req, res);
-  } catch (error) {
-    console.error('Error in users/addresses:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.use('/api/users/create', async (req, res) => {
-  try {
-    const { default: handler } = await import('./api/users/create.js');
-    await handler(req, res);
-  } catch (error) {
-    console.error('Error in users/create:', error);
+    console.error('Error in users:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

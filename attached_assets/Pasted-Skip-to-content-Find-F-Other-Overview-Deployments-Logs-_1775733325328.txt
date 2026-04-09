@@ -1,0 +1,120 @@
+Skip to content
+
+Find…
+F
+Other
+Overview
+Deployments
+Logs
+Analytics
+Speed Insights
+Observability
+Firewall
+CDN
+Domains
+Integrations
+Storage
+Flags
+Agent
+AI Gateway
+Sandboxes
+Usage
+Support
+Settings
+
+Avatar for nikhilsingh478
+nikhilsingh478
+
+
+Deployments
+6oJXWAVVr
+Deployment
+Logs
+Resources
+Source
+Open Graph
+Deployment Details
+Build Failed
+No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan. Create a team (Pro plan) to deploy more.
+Created
+nikhilsingh478 Avatar
+nikhilsingh478
+Just now
+Status
+Error
+Latest
+Duration
+24s
+Just now
+Environment
+Production
+Domains
+thunderbold-git-main-nikhilsingh478s-projects.vercel.app
+thunderbold-q0mpljay8-nikhilsingh478s-projects.vercel.app
+Source
+main
+75d5fd8
+Add a user profile section with order history and address management
+
+Deployment Settings
+3 Recommendations
+Build Logs
+24s
+55 lines
+Find in logs
+CtrlF
+16:44:52.012 
+dist/index.html                             2.53 kB │ gzip:   0.87 kB
+16:44:52.013 
+dist/assets/mobile_hero-BKrtlAzB.webp      60.99 kB
+16:44:52.013 
+dist/assets/jeans-CK5ZoSNc.webp            87.86 kB
+16:44:52.013 
+dist/assets/brass_button-AMrm0oWi.webp    110.72 kB
+16:44:52.013 
+dist/assets/packaging-box-BiL6QpUS.png    297.30 kB
+16:44:52.013 
+dist/assets/hangtag-ClW03TLD.webp       3,515.25 kB
+16:44:52.013 
+dist/assets/index-CcKKAjG0.css             99.21 kB │ gzip:  16.84 kB
+16:44:52.014 
+dist/assets/index-DtvxbUwB.js             821.83 kB │ gzip: 228.88 kB
+16:44:52.014 
+16:44:52.014 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+16:44:52.017 
+- Using dynamic import() to code-split the application
+16:44:52.018 
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+16:44:52.018 
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+16:44:52.018 
+✓ built in 6.14s
+16:45:01.818 
+Build Completed in /vercel/output [18s]
+16:45:02.239 
+Deploying outputs...
+16:45:05.139 
+Error: No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan. Create a team (Pro plan) to deploy more. Learn More: https://vercel.link/function-count-limit
+Deployment Summary
+Deployment Checks
+Assigning Custom Domains
+Runtime Logs
+
+View and debug runtime logs & errors
+
+Observability
+
+Monitor app health & performance
+
+Speed Insights
+
+Not Enabled
+Performance metrics from real users
+
+Web Analytics
+
+Not Enabled
+Analyze visitors & traffic in real-time
+
+thunderbold – Deployment Overview – Vercel

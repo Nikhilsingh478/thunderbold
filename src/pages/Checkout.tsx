@@ -63,7 +63,7 @@ export default function Checkout() {
     const fetchDefaultAddress = async () => {
       try {
         const token = await user.getIdToken();
-        const res = await fetch('/api/users/profile', {
+        const res = await fetch('/api/users', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
