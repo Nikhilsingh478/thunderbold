@@ -1,1273 +1,798 @@
-# ⚡# Thunderbolt Brand World - Technical Architecture Documentation
+# Thunderbolt Brand World
 
-## 1. Project Overview
+A production-grade, cinematic e-commerce platform for premium denim. Built with a React + Vite frontend and an Express + MongoDB backend, Thunderbolt delivers a luxury shopping experience with full inventory management, user authentication, cart/wishlist persistence, and a powerful admin dashboard.
 
-Thunderbolt Brand World is a production-grade e-commerce platform engineered for premium denim retail. The system implements a modern JAMstack architecture with React + TypeScript frontend, Vercel serverless backend, and MongoDB Atlas database, designed for scalability, performance, and exceptional user experience.
+---
 
-### Business Intent
-- Premium denim e-commerce with cinematic user experience
-- High-performance, mobile-first responsive design
-- Advanced cart and wishlist management with hybrid storage
-- Admin panel for product and order management
-- Payment gateway ready architecture (Razorpay integration prepared)
+## Table of Contents
 
-### Architecture Philosophy
-- **Frontend-Heavy**: Rich client-side interactions with serverless backend
-- **Stateless Backend**: Vercel functions for API endpoints
-- **Hybrid Storage**: localStorage + MongoDB for optimal performance
-- **Progressive Enhancement**: Core functionality works without JavaScript
-- **Mobile-First**: Responsive design with touch-optimized interactions
+1. [Project Overview](#project-overview)
+2. [Technology Stack](#technology-stack)
+3. [Architecture](#architecture)
+4. [Folder Structure](#folder-structure)
+5. [Environment Variables & Secrets](#environment-variables--secrets)
+6. [Getting Started](#getting-started)
+7. [Frontend Deep Dive](#frontend-deep-dive)
+8. [Backend Deep Dive](#backend-deep-dive)
+9. [Inventory & Stock Management](#inventory--stock-management)
+10. [Order Lifecycle](#order-lifecycle)
+11. [Admin Panel Guide](#admin-panel-guide)
+12. [Authentication Flow](#authentication-flow)
+13. [Cart & Wishlist System](#cart--wishlist-system)
+14. [Database Schema](#database-schema)
+15. [Deployment](#deployment)
+16. [Known Behaviors & Decisions](#known-behaviors--decisions)
 
-## 2. System Architecture
+---
 
-### Frontend Architecture
-```
-src/
-|-- components/          # Reusable UI components
-|   |-- ui/             # shadcn/ui base components
-|   |-- auth/           # Authentication components
-|   |-- checkout/       # Checkout flow components
-|   |-- *.tsx           # Feature-specific components
-|-- context/            # React Context providers
-|   |-- AuthContext.tsx
-|   |-- CartContext.tsx
-|   |-- WishlistContext.tsx
-|-- hooks/              # Custom React hooks
-|-- lib/                # Utility libraries
-|   |-- firebase.ts     # Firebase configuration
-|   |-- products.ts     # Product data management
-|   |-- storage.ts      # Local storage utilities
-|   |-- utils.ts        # General utilities
-|-- pages/              # Route components
-|   |-- Admin.tsx       # Admin dashboard
-|   |-- ProductView.tsx # Product detail page
-|   |-- Checkout.tsx    # Checkout flow
-|   |-- *.tsx           # Other pages
-```
+## Project Overview
 
-### Backend Architecture (Vercel Serverless)
-```
-api/
-|-- _lib/               # Shared backend utilities
-|   |-- mongodb.js      # Database connection
-|   |-- response.js     # Response helpers
-|   |-- validator.js    # Input validation
-|-- products/           # Product CRUD operations
-|   |-- index.js        # GET/POST/PUT/DELETE
-|-- categories/         # Category management
-|   |-- index.js        # GET/POST/DELETE
-|-- orders/             # Order management
-|   |-- index.js        # GET user orders
-|   |-- create.js       # POST new order
-|   |-- [id].js         # PATCH/DELETE specific order
-|-- cart/               # Cart operations
-|   |-- index.js        # GET/POST/DELETE cart items
-|-- wishlist/           # Wishlist operations
-|   |-- index.js        # GET/POST/DELETE wishlist items
-|-- users/              # User operations
-|   |-- create.js       # POST new user
-|-- address/            # Address management
-|   |-- index.js        # GET/POST/PUT/DELETE addresses
-```
+**Thunderbolt Brand World** is an end-to-end e-commerce solution specializing in premium denim apparel. The platform is designed around a "cinematic" brand experience — with smooth Framer Motion animations, a striking dark aesthetic, custom cursors, and cinematic typography — while maintaining a robust backend that handles real-world commerce requirements:
 
-### Database Design (MongoDB Atlas)
+- Live product catalog backed by MongoDB
+- Firebase-powered user authentication
+- Hybrid cart/wishlist system (localStorage for instant UX + MongoDB for cross-device persistence)
+- Real-time inventory tracking with automatic stock decrements on purchase and stock restoration on cancellation
+- Full admin dashboard for product, category, and order management
+- Mobile-first responsive design
 
-#### Collections Schema
+---
 
-**products**
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  category: String,
-  price: Number,
-  image: String,           // Single image URL
-  description: String,
-  stock: Number,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+## Technology Stack
 
-**categories**
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  image: String,
-  createdAt: Date
-}
-```
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| React | 18.x | UI framework |
+| Vite | 5.x | Build tool & dev server |
+| TypeScript | 5.x | Type safety |
+| Tailwind CSS | 3.x | Utility-first styling |
+| Framer Motion | 12.x | Page & element animations |
+| React Router DOM | 6.x | Client-side routing |
+| TanStack Query | 5.x | Server state management |
+| Embla Carousel | 8.x | Product image slider |
+| shadcn/ui + Radix UI | — | Accessible UI primitives |
+| Lucide React | — | Icon library |
+| React Hook Form + Zod | — | Form validation |
+| Firebase SDK | 10.x | Authentication |
+| Sonner | — | Toast notifications |
 
-**users**
-```javascript
-{
-  _id: ObjectId,
-  email: String,
-  displayName: String,
-  photoURL: String,
-  createdAt: Date,
-  lastLogin: Date
-}
-```
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| Node.js | — | Runtime |
+| Express | 5.x | Local dev API server |
+| MongoDB Driver | 6.x | Database access |
+| JSON Web Token | 9.x | Token decoding for auth |
+| dotenv | — | Environment variable loading |
 
-**orders**
-```javascript
-{
-  _id: ObjectId,
-  userId: String,
-  products: [{
-    productId: String,
-    name: String,
-    price: Number,
-    image: String,
-    quantity: Number,
-    size: String
-  }],
-  totalAmount: Number,
-  status: String,          // pending, confirmed, shipped, delivered
-  shippingAddress: {
-    name: String,
-    phone: String,
-    address: String,
-    city: String,
-    state: String,
-    pincode: String
-  },
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+### Services
+| Service | Purpose |
+|---|---|
+| Firebase Authentication | User sign-up, sign-in, token issuance |
+| MongoDB Atlas | Cloud database for products, orders, cart, wishlist, users, categories, addresses |
 
-**cart**
-```javascript
-{
-  _id: ObjectId,
-  userId: String,
-  items: [{
-    productId: String,
-    quantity: Number,
-    size: String,
-    addedAt: Date
-  }],
-  updatedAt: Date
-}
-```
+---
 
-**wishlist**
-```javascript
-{
-  _id: ObjectId,
-  userId: String,
-  items: [{
-    productId: String,
-    name: String,
-    price: Number,
-    image: String,
-    addedAt: Date
-  }],
-  updatedAt: Date
-}
-```
-
-### Data Flow Architecture
+## Architecture
 
 ```
-User Interaction
-    |
-    v
-React Component
-    |
-    v
-Context Provider (Auth/Cart/Wishlist)
-    |
-    v
-API Service Layer
-    |
-    v
-Vercel Serverless Function
-    |
-    v
-MongoDB Atlas
+┌───────────────────────────────────────────────────────────────────┐
+│                        Browser (User)                             │
+│  React App (Vite, port 5000)                                      │
+│  ├─ Pages → Components → Context (Auth / Cart / Wishlist)        │
+│  └─ /api/* requests → proxied to Express                         │
+└──────────────────────────┬────────────────────────────────────────┘
+                           │ HTTP proxy (/api/*)
+                           ▼
+┌───────────────────────────────────────────────────────────────────┐
+│          Express API Server (server.js, port 3001)                │
+│  Dynamically imports serverless-style handlers from /api/**       │
+│  └─ Each handler connects to MongoDB Atlas via getDb()           │
+└──────────────────────────┬────────────────────────────────────────┘
+                           │ MongoDB Driver
+                           ▼
+┌───────────────────────────────────────────────────────────────────┐
+│                     MongoDB Atlas                                  │
+│  Collections: products, orders, cart, wishlist, users,            │
+│               categories, addresses                               │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-## 3. Feature Breakdown
+**Development dual-server setup:**
+- `npm run dev` runs both the Express API server (port 3001) and the Vite dev server (port 5000) concurrently.
+- Vite proxies all `/api/*` requests to `http://localhost:3001`, so the frontend never needs to know the API port.
+- **Deployment target:** Vercel (serverless functions per `vercel.json`). The local Express server is only used for development.
 
-### Authentication System
+---
 
-**Firebase Integration**
-- Google OAuth and Email/Password authentication
-- JWT token management with automatic refresh
-- Session persistence in localStorage
-- Protected route enforcement
+## Folder Structure
 
-**Token Handling**
-```typescript
-// AuthContext.tsx
-const getIdToken = async () => {
-  if (!user) return null;
-  return await user.getIdToken(true); // Force refresh
-};
-
-// API calls include Authorization header
-const response = await fetch('/api/protected', {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
 ```
-
-### Cart System
-
-**Hybrid Storage Architecture**
-- Primary: localStorage for instant UI updates
-- Secondary: MongoDB for persistence across devices
-- Sync mechanism: localStorage first, then async DB sync
-
-**Sync Logic**
-```typescript
-// CartContext.tsx - syncLocalToDB
-const syncLocalToDB = async () => {
-  if (!user) return;
-  
-  // Get local cart
-  const localCart = getCartFromStorage();
-  
-  // Sync to database
-  const response = await fetch('/api/cart', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ items: localCart })
-  });
-  
-  // Merge with DB cart if conflicts
-  const dbCart = await response.json();
-  const mergedCart = mergeCarts(localCart, dbCart.items);
-  saveCartToStorage(mergedCart);
-};
-```
-
-### Wishlist System
-
-**Toggle Logic**
-```typescript
-// WishlistContext.tsx
-const toggleWishlist = async (product: Product) => {
-  const isInWishlist = wishlistItems.some(item => item.productId === product._id);
-  
-  if (isInWishlist) {
-    await removeFromWishlist(product._id);
-  } else {
-    await addToWishlist({
-      productId: product._id,
-      name: product.name,
-      price: product.price,
-      image: product.image
-    });
-  }
-};
-```
-
-### Product System
-
-**Data Source**
-- Single source of truth: MongoDB products collection
-- No static product data in frontend
-- Dynamic category system
-
-**Category Filtering**
-```typescript
-// CategoryView.tsx
-const filteredProducts = products.filter(product => 
-  product.category.toLowerCase() === category.toLowerCase()
-);
-```
-
-### Order System
-
-**Order Creation Flow**
-```typescript
-// Checkout.tsx
-const createOrder = async (orderData: OrderData) => {
-  const response = await fetch('/api/orders/create', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(orderData)
-  });
-  
-  const order = await response.json();
-  return order;
-};
-```
-
-### Checkout System
-
-**Current Implementation**
-- Address collection and validation
-- Order summary with itemized pricing
-- WhatsApp checkout integration (legacy)
-
-**Payment Gateway Ready**
-```typescript
-// Prepared for Razorpay integration
-interface PaymentOrder {
-  id: string;
-  amount: number;
-  currency: string;
-  receipt: string;
-}
-
-// Future payment verification
-const verifyPayment = async (paymentData: PaymentData) => {
-  const response = await fetch('/api/verify-payment', {
-    method: 'POST',
-    body: JSON.stringify(paymentData)
-  });
-  return response.json();
-};
-```
-
-## 4. Payment System Design
-
-### Razorpay Integration Architecture
-
-**Order Creation Flow**
-```
-Frontend Request
-    |
-    v
-/api/create-order (Serverless)
-    |
-    v
-Razorpay API -> Create Order
-    |
-    v
-Return Order ID to Frontend
-    |
-    v
-Initialize Razorpay Checkout
-    |
-    v
-Payment Completion
-    |
-    v
-/api/verify-payment (Serverless)
-    |
-    v
-Signature Verification
-    |
-    v
-Update Order Status
-```
-
-### Serverless API Endpoints
-
-**POST /api/create-order**
-```javascript
-export default async function handler(req, res) {
-  const { amount, currency = 'INR', receipt } = req.body;
-  
-  const options = {
-    amount: amount * 100, // Convert to paise
-    currency,
-    receipt,
-    payment_capture: 1
-  };
-  
-  try {
-    const order = await razorpay.orders.create(options);
-    res.status(200).json(order);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create order' });
-  }
-}
-```
-
-**POST /api/verify-payment**
-```javascript
-export default async function handler(req, res) {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-  
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_SECRET)
-    .update(body.toString())
-    .digest('hex');
-  
-  const isAuthentic = expectedSignature === razorpay_signature;
-  
-  if (isAuthentic) {
-    // Update order status in database
-    await updateOrderStatus(razorpay_order_id, 'confirmed');
-    res.status(200).json({ success: true });
-  } else {
-    res.status(400).json({ success: false, error: 'Invalid signature' });
-  }
-}
-```
-
-**POST /api/webhook**
-```javascript
-export default async function handler(req, res) {
-  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  const signature = req.headers['x-razorpay-signature'];
-  
-  // Verify webhook signature
-  const body = JSON.stringify(req.body);
-  const expectedSignature = crypto
-    .createHmac('sha256', webhookSecret)
-    .update(body)
-    .digest('hex');
-  
-  if (signature === expectedSignature) {
-    // Process webhook event
-    const event = req.body.event;
-    
-    switch (event) {
-      case 'payment.captured':
-        await handlePaymentSuccess(req.body.payload.payment.entity);
-        break;
-      case 'payment.failed':
-        await handlePaymentFailure(req.body.payload.payment.entity);
-        break;
-    }
-    
-    res.status(200).json({ received: true });
-  } else {
-    res.status(400).json({ error: 'Invalid webhook signature' });
-  }
-}
-```
-
-### Security Considerations
-- HMAC-SHA256 signature verification
-- Webhook signature validation
-- Server-side order status updates
-- Payment amount validation
-- Rate limiting on payment endpoints
-
-## 5. Vercel Serverless Backend
-
-### Stateless Architecture
-- Each API call is independent
-- No in-memory state between requests
-- Database as single source of truth
-- JWT tokens for authentication
-
-### Execution Model
-```javascript
-// API Route Structure
-export default async function handler(req, res) {
-  // 1. CORS Headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  
-  // 2. Authentication Check
-  const token = req.headers.authorization?.split(' ')[1];
-  const user = await verifyToken(token);
-  
-  // 3. Database Connection
-  const db = await getDb();
-  
-  // 4. Business Logic
-  switch (req.method) {
-    case 'GET':
-      // Handle GET requests
-      break;
-    case 'POST':
-      // Handle POST requests
-      break;
-    // ... other methods
-  }
-}
-```
-
-### Limitations and Mitigations
-- **Cold Starts**: Keep functions warm with periodic calls
-- **Execution Timeout**: Optimize database queries, use indexes
-- **Memory Limits**: Stream large responses, paginate results
-- **No Shared Memory**: Use Redis for caching if needed
-
-### Best Practices
-- Input validation with Zod schemas
-- Error handling with consistent response format
-- Database connection pooling
-- Environment variable security
-- Request logging and monitoring
-
-## 6. Frontend Architecture
-
-### Component Structure
-```typescript
-// Base Component Pattern
-interface ComponentProps {
-  // Props interface
-}
-
-const Component: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
-  // Custom hooks
-  const { data, loading, error } = useCustomHook();
-  
-  // Event handlers
-  const handleClick = useCallback(() => {
-    // Handler logic
-  }, [dependencies]);
-  
-  // Render
-  return (
-    <div className="component-styles">
-      {/* Component JSX */}
-    </div>
-  );
-};
-```
-
-### Context System
-```typescript
-// AuthContext Pattern
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  getIdToken: () => Promise<string | null>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State and logic
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-```
-
-### Routing System
-```typescript
-// React Router v6 Configuration
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    children: [
-      { index: true, element: <Home /> },
-      { path: 'products/:id', element: <ProductView /> },
-      { path: 'category/:category', element: <CategoryView /> },
-      { path: 'cart', element: <Cart /> },
-      { path: 'checkout', element: <Checkout /> },
-      { path: 'orders', element: <Orders /> },
-      { path: 'admin', element: <Admin /> }
-    ]
-  }
-]);
-```
-
-### State Management Philosophy
-- **Context API**: For global state (auth, cart, wishlist)
-- **Local State**: For component-specific state
-- **Server State**: Fetched data with React Query (if needed)
-- **URL State**: For filters, pagination, search
-
-## 7. UI/UX System
-
-### Design System (Void & Brass Theme)
-```css
-/* Color Palette */
-:root {
-  --void: #0a0a0a;          /* Primary background */
-  --brass: #d4af37;         /* Primary accent */
-  --tb-white: #ffffff;      /* Text primary */
-  --sv-mid: #888888;        /* Text secondary */
-  --surface: #1a1a1a;      /* Card backgrounds */
-}
-
-/* Typography */
-.font-display { /* Display fonts for headings */ }
-.font-condensed { /* Condensed fonts for emphasis */ }
-```
-
-### Animation System (Framer Motion)
-```typescript
-// Page Transitions
-const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 }
-};
-
-// Component Animations
-const cardVariants = {
-  hover: { scale: 1.02, transition: { duration: 0.2 } },
-  tap: { scale: 0.98 }
-};
-```
-
-### Search Overlay System
-```typescript
-// SearchOverlay.tsx
-const SearchOverlay = () => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Product[]>([]);
-  
-  // Real-time search with debouncing
-  const debouncedSearch = useMemo(
-    () => debounce(async (searchQuery) => {
-      const results = await searchProducts(searchQuery);
-      setResults(results);
-    }, 300),
-    []
-  );
-  
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/80"
-        >
-          {/* Search UI */}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-```
-
-### Responsiveness Strategy
-```css
-/* Mobile-First Approach */
-.grid {
-  @apply grid grid-cols-2 gap-4;      /* Mobile: 2 cols */
-  @apply md:grid-cols-3;             /* Tablet: 3 cols */
-  @apply lg:grid-cols-4;             /* Desktop: 4 cols */
-}
-
-/* Touch-Optimized Interactions */
-.button {
-  @apply min-h-[44px] min-w-[44px];  /* Minimum touch target */
-}
-```
-
-## 8. Performance Optimizations
-
-### Lazy Loading
-```typescript
-// Component Lazy Loading
-const Admin = lazy(() => import('./pages/Admin'));
-const Checkout = lazy(() => import('./pages/Checkout'));
-
-// Image Lazy Loading
-<img
-  src={product.image}
-  alt={product.name}
-  loading="lazy"
-  className="w-full h-full object-cover"
-/>
-```
-
-### Code Splitting
-```typescript
-// Route-based code splitting
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    children: [
-      { index: true, element: <Home /> },
-      { 
-        path: 'admin', 
-        element: <Suspense fallback={<Loading />}><Admin /></Suspense> 
-      }
-    ]
-  }
-]);
-```
-
-### API Efficiency
-```typescript
-// Batching API calls
-const fetchMultiple = async () => {
-  const [products, categories, cart] = await Promise.all([
-    fetch('/api/products'),
-    fetch('/api/categories'),
-    fetch('/api/cart')
-  ]);
-};
-
-// Response caching
-const cachedFetch = (() => {
-  const cache = new Map();
-  
-  return async (url: string) => {
-    if (cache.has(url)) {
-      return cache.get(url);
-    }
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    cache.set(url, data);
-    
-    return data;
-  };
-})();
-```
-
-### Client vs Server Responsibilities
-- **Client**: UI rendering, state management, user interactions
-- **Server**: Data validation, database operations, authentication
-- **Shared**: Type definitions, validation schemas
-
-## 9. Security Considerations
-
-### Authentication Security
-```typescript
-// JWT Token Validation
-const verifyToken = async (token: string) => {
-  try {
-    const decodedToken = jwt.decode(token);
-    const user = await adminAuth.getUser(decodedToken.uid);
-    return user;
-  } catch (error) {
-    throw new Error('Invalid token');
-  }
-};
-
-// Admin Protection
-const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
-const isAdmin = (user: User) => user.email === ADMIN_EMAIL;
-```
-
-### API Protection
-```javascript
-// Middleware Pattern
-const withAuth = (handler) => {
-  return async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    try {
-      const user = await verifyToken(token);
-      req.user = user;
-      return handler(req, res);
-    } catch (error) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-  };
-};
-
-// Usage
-export default withAuth(async (req, res) => {
-  // Protected logic
-});
-```
-
-### Payment Security
-```typescript
-// Signature Verification
-const verifyRazorpaySignature = (
-  orderId: string,
-  paymentId: string,
-  signature: string
-) => {
-  const body = orderId + '|' + paymentId;
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_SECRET)
-    .update(body.toString())
-    .digest('hex');
-  
-  return expectedSignature === signature;
-};
-
-// Amount Validation
-const validatePaymentAmount = (orderAmount: number, paidAmount: number) => {
-  return orderAmount === paidAmount;
-};
-```
-
-### Data Validation
-```typescript
-// Zod Schemas
-const productSchema = z.object({
-  name: z.string().min(1).max(100),
-  price: z.number().positive(),
-  category: z.string(),
-  image: z.string().url(),
-  stock: z.number().min(0)
-});
-
-// API Validation
-export default async function handler(req, res) {
-  try {
-    const validatedData = productSchema.parse(req.body);
-    // Process validated data
-  } catch (error) {
-    return res.status(400).json({ error: 'Invalid data' });
-  }
-}
-```
-
-## 10. Environment Variables
-
-### Required Environment Variables
-
-```bash
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
-
-# MongoDB Atlas
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
-
-# Razorpay (Future Implementation)
-RAZORPAY_KEY_ID=rzp_live_abcdef
-RAZORPAY_KEY_SECRET=your_razorpay_secret
-RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
-
-# Admin Configuration
-ADMIN_EMAIL=nikhilwebworks@gmail.com
-
-# Application Configuration
-NODE_ENV=production
-VITE_API_BASE_URL=https://your-domain.vercel.app
-```
-
-### Environment Setup
-```typescript
-// firebase.ts
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-```
-
-## 11. Local Development Setup
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- MongoDB Atlas account
-- Firebase project
-
-### Installation Steps
-```bash
-# Clone repository
-git clone https://github.com/your-username/thunderbolt-brand-world.git
-cd thunderbolt-brand-world
-
-# Install dependencies
-npm install
-
-# Setup environment variables
-cp .env.example .env.local
-# Edit .env.local with your credentials
-
-# Start development server
-npm run dev
-```
-
-### Development Scripts
-```json
-{
-  "scripts": {
-    "dev": "npm run server & npm run dev:client",
-    "dev:client": "vite",
-    "server": "node server.js",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  }
-}
-```
-
-### Local API Development
-```bash
-# Start local server for API testing
-npm run server
-
-# API endpoints available at:
-# http://localhost:3000/api/products
-# http://localhost:3000/api/categories
-# http://localhost:3000/api/orders
-```
-
-### Testing Flows
-```typescript
-// Example test setup
-import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../context/AuthContext';
-
-const TestWrapper = ({ children }) => (
-  <BrowserRouter>
-    <AuthProvider>
-      {children}
-    </AuthProvider>
-  </BrowserRouter>
-);
-
-// Test example
-test('adds product to cart', async () => {
-  render(<ProductView productId="123" />, { wrapper: TestWrapper });
-  
-  const addToCartButton = screen.getByText('Add to Cart');
-  fireEvent.click(addToCartButton);
-  
-  expect(screen.getByText('Added to cart')).toBeInTheDocument();
-});
-```
-
-## 12. Deployment
-
-### Vercel Deployment Process
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Login to Vercel
-vercel login
-
-# Deploy to production
-vercel --prod
-
-# Deploy with custom domain
-vercel --prod your-domain.com
-```
-
-### Environment Setup on Vercel
-1. Go to Vercel dashboard
-2. Select project
-3. Go to Settings > Environment Variables
-4. Add all required environment variables
-5. Redeploy application
-
-### Production Considerations
-- **Database Indexes**: Ensure proper MongoDB indexes
-- **CORS Configuration**: Set allowed origins
-- **Rate Limiting**: Implement API rate limiting
-- **Monitoring**: Set up error tracking and analytics
-- **CDN**: Configure for static assets
-
-### Deployment Checklist
-```bash
-# Pre-deployment checks
-npm run lint                    # Code quality
-npm run test                    # Test suite
-npm run build                   # Build verification
-
-# Production deployment
-vercel --prod                   # Deploy to production
-
-# Post-deployment verification
-curl https://your-domain.com/api/products  # API health check
-```
-
-## 13. Edge Cases & Failure Handling
-
-### Payment Failures
-```typescript
-// Payment failure handling
-const handlePaymentFailure = async (paymentData: PaymentData) => {
-  // Update order status
-  await updateOrderStatus(paymentData.orderId, 'failed');
-  
-  // Notify user
-  toast.error('Payment failed. Please try again.');
-  
-  // Log error for monitoring
-  console.error('Payment failure:', paymentData);
-  
-  // Offer retry option
-  showRetryPayment(paymentData.orderId);
-};
-```
-
-### Cart Sync Conflicts
-```typescript
-// Conflict resolution strategy
-const resolveCartConflicts = (localCart: CartItem[], dbCart: CartItem[]) => {
-  const merged = new Map();
-  
-  // Add local items (take precedence)
-  localCart.forEach(item => {
-    merged.set(`${item.productId}-${item.size}`, item);
-  });
-  
-  // Add DB items only if not present locally
-  dbCart.forEach(item => {
-    const key = `${item.productId}-${item.size}`;
-    if (!merged.has(key)) {
-      merged.set(key, item);
-    }
-  });
-  
-  return Array.from(merged.values());
-};
-```
-
-### Auth Edge Cases
-```typescript
-// Token refresh handling
-const refreshToken = async () => {
-  try {
-    await user?.getIdToken(true); // Force refresh
-    return true;
-  } catch (error) {
-    // Clear invalid session
-    logout();
-    navigate('/login');
-    return false;
-  }
-};
-
-// Network error handling
-const apiCallWithRetry = async (url: string, retries = 3) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url);
-      return response.json();
-    } catch (error) {
-      if (i === retries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * i));
-    }
-  }
-};
-```
-
-### API Failures
-```typescript
-// Graceful degradation
-const fetchWithFallback = async (url: string, fallbackData: any) => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('API error');
-    return response.json();
-  } catch (error) {
-    console.warn('API failed, using fallback:', error);
-    return fallbackData;
-  }
-};
-
-// Error boundaries
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <h1>Something went wrong.</h1>;
-    }
-
-    return this.props.children;
-  }
-}
-```
-
-## 14. Future Roadmap
-
-### Payment Gateway Full Rollout
-- Razorpay integration completion
-- Multiple payment methods (UPI, Cards, NetBanking)
-- Payment analytics and reporting
-- Refund and cancellation handling
-
-### Admin Dashboard Expansion
-- Advanced order management
-- Customer analytics
-- Inventory management
-- Sales reporting dashboard
-- Bulk product operations
-
-### Analytics Implementation
-- Google Analytics integration
-- Custom event tracking
-- User behavior analysis
-- Conversion funnel optimization
-- A/B testing framework
-
-### Scalability Improvements
-- Redis caching layer
-- CDN optimization
-- Database sharding strategy
-- Microservices architecture
-- GraphQL API implementation
-
-### Feature Enhancements
-- Product recommendation engine
-- Customer reviews and ratings
-- Advanced search with filters
-- Multi-language support
-- Progressive Web App (PWA)
-
-## 15. Code Quality & Standards
-
-### TypeScript Usage
-```typescript
-// Strict type checking
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
-  }
-}
-
-// Interface definitions
-interface Product {
-  _id: string;
-  name: string;
-  category: string;
-  price: number;
-  image: string;
-  description?: string;
-  stock?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-// Generic types
-interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
-  error?: string;
-}
-```
-
-### Component Design Principles
-```typescript
-// Single Responsibility Principle
-const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
-  // Only handles product display and add to cart
-  return (
-    <div className="product-card">
-      {/* Product content */}
-    </div>
-  );
-};
-
-// Composition over Inheritance
-const ProductGrid = ({ products, loading }: ProductGridProps) => {
-  return (
-    <div className="product-grid">
-      {products.map(product => (
-        <ProductCard 
-          key={product._id} 
-          product={product} 
-          onAddToCart={handleAddToCart}
-        />
-      ))}
-    </div>
-  );
-};
-```
-
-### Folder Structure Explanation
-```
-src/
-|-- components/          # Reusable UI components
-|   |-- ui/             # Base UI components (buttons, inputs, etc.)
-|   |-- auth/           # Authentication-specific components
-|   |-- checkout/       # Checkout flow components
-|   |-- *.tsx           # Feature-specific components
-|-- context/            # Global state management
-|-- hooks/              # Custom React hooks
-|-- lib/                # Utility functions and configurations
-|-- pages/              # Route-level components
-|-- styles/             # Global styles and CSS
-|-- types/              # TypeScript type definitions
-|-- utils/              # Helper functions
-```
-
-### Code Standards
-- **ESLint**: Enforce code quality and consistency
-- **Prettier**: Automatic code formatting
-- **Husky**: Git hooks for pre-commit checks
-- **Conventional Commits**: Standardized commit messages
-- **TypeScript**: Strict type checking throughout
-
-### Testing Strategy
-```typescript
-// Unit tests with Vitest
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { ProductCard } from './ProductCard';
-
-describe('ProductCard', () => {
-  it('renders product information correctly', () => {
-    const product = {
-      _id: '1',
-      name: 'Test Product',
-      price: 99.99,
-      image: 'test.jpg',
-      category: 'test'
-    };
-    
-    render(<ProductCard product={product} />);
-    
-    expect(screen.getByText('Test Product')).toBeInTheDocument();
-    expect(screen.getByText('¥99.99')).toBeInTheDocument();
-  });
-});
-
-// Integration tests
-import { renderWithProviders } from '../test-utils';
-import { Cart } from './Cart';
-
-test('cart displays correct total', async () => {
-  renderWithProviders(<Cart />);
-  
-  // Add items to cart
-  // Verify total calculation
-  expect(screen.getByText('Total: ¥199.98')).toBeInTheDocument();
-});
+thunderbolt-brand-world/
+│
+├── api/                          # Backend serverless-style API handlers
+│   ├── _lib/                     # Shared backend utilities
+│   │   ├── mongodb.js            # DB connection singleton (getDb)
+│   │   ├── response.js           # Standardized response helpers
+│   │   └── validation.js        # Input validation helpers
+│   ├── address/
+│   │   └── index.js              # GET / POST user delivery addresses
+│   ├── cart/
+│   │   └── index.js              # GET / POST / DELETE cart items (per user)
+│   ├── categories/
+│   │   └── index.js              # GET all / POST / DELETE categories
+│   ├── orders/
+│   │   ├── create.js             # POST create order + validate & decrement stock
+│   │   ├── cancel.js             # PUT cancel order + restore stock
+│   │   ├── manage.js             # PATCH update status / DELETE order (admin)
+│   │   └── index.js              # GET orders (user or admin)
+│   ├── products/
+│   │   ├── index.js              # GET all / POST / PUT / DELETE products
+│   │   └── [id].js               # GET single product by ID
+│   ├── users/
+│   │   └── index.js              # POST create/sync user profile
+│   └── wishlist/
+│       └── index.js              # GET / POST / DELETE wishlist items
+│
+├── src/                          # Frontend React application
+│   ├── components/               # Reusable UI components
+│   │   ├── ui/                   # shadcn/ui generated components
+│   │   ├── authHeroSection.tsx   # Hero banner shown when logged in
+│   │   ├── CategoriesSection.tsx # Homepage categories grid
+│   │   ├── checkoutNavbar.tsx    # Minimal navbar for checkout flow
+│   │   ├── CustomCursor.tsx      # Branded cursor overlay
+│   │   ├── Footer.tsx
+│   │   ├── HangTagSection.tsx    # Product "hang tag" UI element
+│   │   ├── ManifestoSection.tsx  # Brand manifesto section
+│   │   ├── Navbar.tsx            # Main site navigation
+│   │   ├── Numbers.tsx           # Animated statistics section
+│   │   ├── Pillars.tsx           # Brand pillars section
+│   │   ├── ScrollProgress.tsx    # Scroll progress indicator bar
+│   │   ├── SearchOverlay.tsx     # Full-screen search overlay
+│   │   ├── Statement.tsx         # Bold brand statement section
+│   │   ├── Ticker.tsx            # Marquee text ticker
+│   │   ├── TraitsSection.tsx     # Brand traits display
+│   │   └── checkout/
+│   │       └── ProductSummary.tsx # Order summary in checkout
+│   │
+│   ├── context/                  # React Context providers (global state)
+│   │   ├── AuthContext.tsx       # Firebase auth state, user object
+│   │   ├── CartContext.tsx       # Cart state, add/remove/clear, API sync
+│   │   └── WishlistContext.tsx   # Wishlist state, toggle, API sync
+│   │
+│   ├── lib/                      # Utility modules
+│   │   ├── firebase.ts           # Firebase app & auth initialization
+│   │   ├── modalController.ts    # Imperative modal open/close helpers
+│   │   ├── products.ts           # Product fetch helpers, TypeScript interfaces
+│   │   ├── requireAuth.ts        # HOF: redirect to login if not authenticated
+│   │   ├── storage.ts            # localStorage helpers
+│   │   └── utils.ts              # General utilities (cn, etc.)
+│   │
+│   ├── pages/                    # Route-level page components
+│   │   ├── About.tsx             # Brand story / about page
+│   │   ├── Admin.tsx             # Admin dashboard (orders / products / categories)
+│   │   ├── Cart.tsx              # Shopping cart page
+│   │   ├── CategoryView.tsx      # Products filtered by category
+│   │   ├── Checkout.tsx          # Multi-step checkout flow
+│   │   ├── Index.tsx             # Homepage
+│   │   ├── NotFound.tsx          # 404 page
+│   │   ├── Orders.tsx            # User order history
+│   │   ├── ProductView.tsx       # Single product detail page
+│   │   ├── Profile.tsx           # User profile & address management
+│   │   └── Wishlist.tsx          # Saved wishlist items
+│   │
+│   ├── App.tsx                   # Root component, route definitions
+│   ├── main.tsx                  # React DOM entry point
+│   └── index.css                 # Global CSS, Tailwind directives, custom fonts
+│
+├── server.js                     # Local Express dev server (wraps API handlers)
+├── vite.config.ts                # Vite config: port 5000, /api proxy, path aliases
+├── tailwind.config.ts            # Tailwind theme: custom colors, fonts, animations
+├── tsconfig.json                 # TypeScript config
+├── vercel.json                   # Vercel deployment rewrites & function config
+└── package.json                  # Scripts and dependencies
 ```
 
 ---
 
-## Conclusion
+## Environment Variables & Secrets
 
-Thunderbolt Brand World represents a modern, production-ready e-commerce platform built with cutting-edge web technologies. The architecture emphasizes scalability, performance, and maintainability while providing an exceptional user experience.
+All secrets are stored as environment variables. **Never commit these to source control.**
 
-The system is designed for:
-- **High Performance**: Optimized for speed and efficiency
-- **Scalability**: Built to handle growth and traffic spikes
-- **Maintainability**: Clean code architecture and comprehensive documentation
-- **Security**: Enterprise-grade security measures
-- **User Experience**: Cinematic, responsive, and intuitive interface
+### Required Variables
 
+| Variable | Where Used | Description |
+|---|---|---|
+| `MONGO_URI` | Backend (`api/_lib/mongodb.js`) | MongoDB Atlas connection string |
+| `VITE_FIREBASE_API_KEY` | Frontend (`src/lib/firebase.ts`) | Firebase project API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Frontend | Firebase auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | Frontend | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Frontend | Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Frontend | Firebase messaging sender |
+| `VITE_FIREBASE_APP_ID` | Frontend | Firebase app ID |
+| `ADMIN_EMAIL` | Backend (`api/orders/cancel.js`, `api/orders/manage.js`) | Email address with admin privileges |
 
-This documentation serves as a comprehensive guide for developers, architects, and system administrators working with or extending the Thunderbolt Brand World platform.*
+> **Note:** Frontend variables must be prefixed with `VITE_` to be exposed to the browser by Vite.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
+- A MongoDB Atlas cluster with connection string
+- A Firebase project with Email/Password authentication enabled
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd thunderbolt-brand-world
+
+# 2. Install all dependencies
+npm install
+
+# 3. Set up environment variables
+#    Add all required variables listed above to your environment
+
+# 4. Start the development servers (runs both Express API + Vite frontend)
+npm run dev
+```
+
+The app will be available at `http://localhost:5000`.
+
+### Available Scripts
+
+| Script | Description |
+|---|---|
+| `npm run dev` | Start both API server and Vite frontend concurrently |
+| `npm run dev:client` | Start only the Vite frontend (port 5000) |
+| `npm run server` | Start only the Express API server (port 3001) |
+| `npm run build` | Production build |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run Vitest test suite once |
+| `npm run test:watch` | Run Vitest in watch mode |
+
+---
+
+## Frontend Deep Dive
+
+### Pages
+
+#### `Index.tsx` — Homepage
+The landing page assembles all cinematic sections: hero animation, brand manifesto, categories grid, traits, hang tag, numbers/stats, pillars, and a brass CTA button. It pulls live category data from the API to populate the categories grid.
+
+#### `ProductView.tsx` — Product Detail
+The most feature-rich page. Includes:
+- **Embla Carousel** image slider with touch support, desktop navigation arrows, and dot indicators
+- **Size selector** (28, 30, 32, 34, 36)
+- **Quantity selector** with min/max clamping
+- **Real-time stock status display:**
+  - No badge shown when stock is not set or above 3 (product is freely available)
+  - Pulsing **amber badge: "Only X left"** when stock is 1, 2, or 3
+  - **Red badge: "Out of Stock"** when stock is 0; Add to Cart and Order Now buttons are fully disabled
+- **Add to Cart / Wishlist** buttons — disabled when out of stock
+- **Order Now** CTA — disabled when out of stock or no size selected
+- Product specs section (Fit, Material, Shipping info)
+
+#### `CategoryView.tsx` — Category Product Grid
+Displays all products belonging to a given category, fetched from the API and filtered client-side by `categoryId`.
+
+#### `Cart.tsx` — Shopping Cart
+Shows all items currently in the cart (synced from CartContext, persisted in MongoDB). Allows quantity changes, item removal, and navigates to checkout.
+
+#### `Checkout.tsx` — Checkout Flow
+Multi-step checkout: address selection/entry → payment method → order confirmation. On submission, calls `POST /api/orders/create` which validates stock, creates the order, and decrements inventory atomically.
+
+#### `Orders.tsx` — Order History
+Lists all orders for the current user. Each order shows status, items, total, and a cancel button (if cancellable — not already cancelled or delivered). Cancellation calls `PUT /api/orders/cancel`, which restores stock for all items in the order.
+
+#### `Admin.tsx` — Admin Dashboard
+Protected route — only accessible by the configured `ADMIN_EMAIL`. Three tabs:
+
+- **Orders:** View all orders across all users. Displays order ID, customer email, items (with size and quantity), ship-to address, total, date, and a status dropdown. Admin can change status or delete orders.
+- **Products:** Product card grid. Each card shows the image, category name, product name, price, and a **color-coded live stock badge**:
+  - Green: more than 3 units in stock
+  - Amber: 1–3 units (low stock warning)
+  - Red: 0 units (out of stock)
+  - Edit and Delete actions on every card.
+- **Categories:** Category grid with image, name, and delete button. Add new categories with name + image URL.
+
+#### `Profile.tsx` — User Profile
+Shows user info (Firebase account data) and saved delivery addresses. Allows adding, editing, and deleting addresses stored in MongoDB.
+
+#### `Wishlist.tsx` — Saved Items
+Displays all products saved to the wishlist. Items can be moved to cart or removed.
+
+#### `About.tsx` — Brand Story
+Static brand storytelling page with parallax sections and typography.
+
+#### `NotFound.tsx` — 404
+Minimal 404 page with a return-to-home link.
+
+---
+
+### Components
+
+#### `Navbar.tsx`
+Sticky top navigation with the Thunderbolt logo, category links, search icon (opens `SearchOverlay`), wishlist icon, cart icon with item count badge, and a Login/avatar button. Collapses gracefully on mobile.
+
+#### `SearchOverlay.tsx`
+Full-screen search modal. Fetches all products and filters client-side by name as the user types. Displays matching results with images, names, and prices.
+
+#### `CustomCursor.tsx`
+Replaces the default browser cursor with a branded animated circle on desktop. Tracks mouse position and scales on hover over interactive elements.
+
+#### `ScrollProgress.tsx`
+A thin brass-colored progress bar at the top of the viewport that fills as the user scrolls down the page.
+
+#### `CategoriesSection.tsx`
+Animated grid of category cards fetched from the API. Each card links to its `CategoryView`. Uses Framer Motion stagger animations on scroll.
+
+#### `Footer.tsx`
+Site-wide footer with brand links, social links, and legal text.
+
+#### `checkout/ProductSummary.tsx`
+Order summary panel used within the checkout flow. Shows product image, name, size, quantity, and price.
+
+#### UI Components (`components/ui/`)
+All standard shadcn/ui components: Button, Card, Dialog, Drawer, Input, Select, Tooltip, Toast (Sonner), Badge, etc. These are Radix UI primitives styled with Tailwind.
+
+---
+
+### Context (Global State)
+
+#### `AuthContext.tsx`
+Wraps the entire app. Listens to Firebase `onAuthStateChanged` and exposes:
+- `user` — the Firebase `User` object (or `null`)
+- `signIn(email, password)` — email/password sign-in
+- `signUp(email, password)` — new account creation
+- `signOut()` — logs out and clears local state
+- `loading` — boolean while the auth state is being determined
+
+#### `CartContext.tsx`
+Manages the shopping cart. Strategy:
+1. On mount, loads cart from `localStorage` immediately for a zero-latency display.
+2. If the user is authenticated, syncs with `GET /api/cart` to fetch the server-persisted cart.
+3. All mutations (add, remove, update quantity, clear) update both `localStorage` and the API.
+4. Exposes: `cartItems`, `addToCart`, `removeFromCart`, `updateQuantity`, `clearCart`, `isInCart`, `getItemQuantity`, `cartCount`, `cartTotal`.
+
+#### `WishlistContext.tsx`
+Manages the wishlist with the same hybrid local + API strategy as CartContext.
+Exposes: `wishlistItems`, `toggleWishlist`, `isInWishlist`, `wishlistCount`.
+
+---
+
+### Lib Utilities
+
+#### `firebase.ts`
+Initializes the Firebase app and exports the `auth` instance using `VITE_FIREBASE_*` environment variables.
+
+#### `products.ts`
+Contains the `Product` TypeScript interface and API fetch helpers:
+- `fetchProducts()` — fetch all products
+- `fetchProductById(id)` — fetch one product by ID
+- `fetchProductsByCategory(categoryId)` — client-side filter by category
+- `getCategories()` — extract unique category IDs from the products list
+
+#### `requireAuth.ts`
+A higher-order function that wraps any action handler. If the user is not logged in, it redirects them to the login page (or opens a sign-in modal) instead of executing the action. Used on Add to Cart and Order Now.
+
+#### `storage.ts`
+Thin wrappers around `localStorage.getItem` / `setItem` with JSON parsing/serialization and error handling.
+
+#### `utils.ts`
+Exports `cn(...)` — a utility that merges Tailwind class names using `clsx` + `tailwind-merge`.
+
+---
+
+## Backend Deep Dive
+
+### API Routes
+
+All routes are mounted by `server.js` and follow the `/api/` prefix. In production (Vercel), each file in `/api/` becomes a serverless function.
+
+#### Products — `/api/products`
+
+| Method | Auth | Description |
+|---|---|---|
+| `GET /api/products` | None | Returns all products sorted by `createdAt` descending |
+| `POST /api/products` | Admin | Create a new product |
+| `PUT /api/products?id=<id>` | Admin | Update an existing product (name, price, images, stock, etc.) |
+| `DELETE /api/products?id=<id>` | Admin | Delete a product permanently |
+
+**Product document shape:**
+```json
+{
+  "_id": "ObjectId",
+  "name": "Thunderbolt Slim Fit",
+  "price": 2499,
+  "image": "https://...",
+  "images": ["https://...", "https://..."],
+  "description": "Premium 98% cotton denim...",
+  "categoryId": "ObjectId",
+  "stock": 50,
+  "createdAt": "ISODate",
+  "updatedAt": "ISODate"
+}
+```
+
+#### Orders — `/api/orders/create`, `/api/orders/cancel`, `/api/orders/manage`, `/api/orders`
+
+| Method & Route | Auth | Description |
+|---|---|---|
+| `POST /api/orders/create` | User | Place an order. Validates stock, creates order document, decrements product stock |
+| `PUT /api/orders/cancel` | User or Admin | Cancel an order (if not delivered). Restores product stock for all items |
+| `PATCH /api/orders/manage?id=<id>` | Admin | Update order status |
+| `DELETE /api/orders/manage?id=<id>` | Admin | Permanently delete an order |
+| `GET /api/orders` | User or Admin | Admin gets all orders; user gets only their own |
+
+#### Cart — `/api/cart`
+
+| Method | Auth | Description |
+|---|---|---|
+| `GET /api/cart` | User | Fetch the current user's cart |
+| `POST /api/cart` | User | Add/update a cart item |
+| `DELETE /api/cart` | User | Remove an item or clear the entire cart |
+
+#### Wishlist — `/api/wishlist`
+
+| Method | Auth | Description |
+|---|---|---|
+| `GET /api/wishlist` | User | Fetch the current user's wishlist |
+| `POST /api/wishlist` | User | Add an item to wishlist |
+| `DELETE /api/wishlist` | User | Remove an item from wishlist |
+
+#### Categories — `/api/categories`
+
+| Method | Auth | Description |
+|---|---|---|
+| `GET /api/categories` | None | Returns all categories |
+| `POST /api/categories` | Admin | Create a new category |
+| `DELETE /api/categories/:id` | Admin | Delete a category |
+
+#### Users — `/api/users`
+
+| Method | Auth | Description |
+|---|---|---|
+| `POST /api/users` | User | Create or sync a user profile in MongoDB after Firebase registration |
+
+#### Address — `/api/address`
+
+| Method | Auth | Description |
+|---|---|---|
+| `GET /api/address` | User | Fetch saved delivery addresses |
+| `POST /api/address` | User | Add or update a delivery address |
+| `DELETE /api/address` | User | Delete a delivery address |
+
+---
+
+### Shared Lib (`api/_lib/`)
+
+#### `mongodb.js`
+Manages a singleton MongoDB client connection. The `getDb()` function:
+1. Reuses an existing connection if available (important for serverless warm starts)
+2. Creates a new `MongoClient` connection using `process.env.MONGO_URI`
+3. Returns the database instance
+
+#### `response.js`
+Helper functions for consistent JSON responses with proper status codes and CORS headers.
+
+#### `validation.js`
+Input validation utilities shared across handlers.
+
+---
+
+## Inventory & Stock Management
+
+This is one of the most critical systems in the platform. Here is how stock flows through the entire lifecycle:
+
+### Stock Field
+Every product document in MongoDB has a `stock` field (Number, defaults to 0). The admin sets this manually via the product create/edit forms in the Admin Panel.
+
+### Stock Display — User Side (`ProductView.tsx`)
+The product page reads the `stock` field from the API response and shows:
+
+| Stock Value | Display |
+|---|---|
+| Not set / null | Nothing shown (no badge) |
+| > 3 | Nothing shown (product is available, no urgency) |
+| 1, 2, or 3 | Pulsing amber badge: **"Only X left"** |
+| 0 | Red badge: **"Out of Stock"**; Add to Cart and Order Now buttons are disabled |
+
+### Stock Display — Admin Side (`Admin.tsx` → Products Tab)
+Every product card shows a color-coded stock badge next to the price:
+
+| Stock Value | Badge Color | Badge Text |
+|---|---|---|
+| > 3 | Green | "X in stock" |
+| 1–3 | Amber | "X in stock" (low stock warning) |
+| 0 | Red | "Out of stock" |
+
+### Stock Decrement — On Order Creation (`api/orders/create.js`)
+When a user places an order:
+1. Before creating the order document, the API fetches each product from MongoDB.
+2. It checks `availableStock >= requestedQuantity` for every item in the order.
+3. If any item fails the check, the entire order is **rejected** with a descriptive error message (e.g., `"Only 2 unit(s) of 'Thunderbolt Slim Fit' are available"`, or `"'Thunderbolt Slim Fit' is out of stock"`).
+4. If all items pass, the order document is inserted into MongoDB.
+5. The API then iterates through each ordered item and performs an atomic `$inc: { stock: -quantity }` update on the corresponding product document.
+
+This approach ensures stock can never go below zero and handles concurrent orders gracefully through MongoDB's atomic update operations.
+
+### Stock Restore — On Order Cancellation (`api/orders/cancel.js`)
+When an order is cancelled (by user or admin):
+1. The order document's status is updated to `'cancelled'`.
+2. The API iterates through every product in the order and performs an atomic `$inc: { stock: +quantity }` update, returning all units to available inventory.
+3. Cancellation is blocked if the order is already `'cancelled'` or `'delivered'`.
+
+### Manual Stock Adjustment
+The admin can manually override the stock value at any time using the Edit Product modal in the Admin Panel. This is useful for:
+- Initial stock setup when adding new products
+- Manual inventory reconciliation after audits
+- Adjusting for returns not processed through the system
+
+---
+
+## Order Lifecycle
+
+```
+User adds items to cart
+        ↓
+User proceeds to checkout
+        ↓
+Checkout validates address + payment method
+        ↓
+POST /api/orders/create
+        ↓
+API validates stock availability for all items
+        ↓ (insufficient stock) → Error returned to user, order not created
+        ↓ (stock OK)
+Order document created in MongoDB (status: "pending")
+        ↓
+Product stock atomically decremented for each item
+        ↓
+User sees order confirmation
+        ↓
+Admin updates status: pending → confirmed → shipped → delivered
+        ↓
+     (if user/admin cancels before delivery)
+PUT /api/orders/cancel
+        ↓
+Order status set to "cancelled"
+        ↓
+Product stock atomically restored for each item
+```
+
+### Order Status Flow
+
+| Status | Meaning | Can Be Cancelled? |
+|---|---|---|
+| `pending` | Order placed, awaiting confirmation | Yes |
+| `confirmed` | Admin has confirmed the order | Yes |
+| `shipped` | Order dispatched | Yes |
+| `delivered` | Order delivered to customer | No |
+| `cancelled` | Order cancelled, stock restored | No (already cancelled) |
+
+---
+
+## Admin Panel Guide
+
+Access the admin panel at `/admin`. You must be signed in with the email configured in `ADMIN_EMAIL`.
+
+### Orders Tab
+- View all orders from all customers
+- See full item breakdown (name, size, quantity, price) per order
+- Click **View Address** to see shipping details in a modal
+- Use the **status dropdown** to move an order through the pipeline (pending → confirmed → shipped → delivered)
+- Click the **trash icon** to permanently delete an order (with a confirmation modal)
+
+### Products Tab
+- View all products in a responsive card grid
+- Each card displays: image, category name, product name, price, and a **live color-coded stock badge** showing exact stock count
+- Click **Edit** to open the product modal pre-filled with current data — update name, category, price, stock, images, description
+- Click **Delete** to permanently remove a product (with a browser confirmation)
+- Click **Add Product** to open an empty product creation modal
+  - Multiple images can be added (first image is the main display image)
+  - Each image URL field shows a live preview thumbnail
+
+### Categories Tab
+- View all categories with their images
+- Click **Add Category** to create a new one (name + image URL)
+- Click **Delete** to remove a category
+
+---
+
+## Authentication Flow
+
+1. User clicks **Login** in the Navbar.
+2. Firebase Email/Password authentication handles sign-in/sign-up.
+3. On success, Firebase sets a session and `AuthContext` updates `user` with the Firebase User object.
+4. On first sign-up, a `POST /api/users` call syncs the user profile to MongoDB.
+5. For protected API calls (cart, orders, wishlist, etc.), the frontend calls `user.getIdToken()` to get a fresh Firebase ID token and sends it as `Authorization: Bearer <token>`.
+6. Backend handlers decode the token using `jwt.decode()` to extract the user's email, which is used as the `userId` in MongoDB documents.
+7. Admin authorization compares the decoded email against the `ADMIN_EMAIL` environment variable.
+
+---
+
+## Cart & Wishlist System
+
+Both systems use a **hybrid persistence** strategy:
+
+### LocalStorage (Instant)
+- Cart/wishlist items are immediately stored in `localStorage` on every mutation.
+- On page load, the local data is shown instantly — no loading spinner needed for the user.
+
+### MongoDB (Cross-Device Persistence)
+- When the user is authenticated, their cart/wishlist is also stored per-user in MongoDB.
+- On initial load, if the user is logged in, the MongoDB version is fetched and used as the source of truth.
+- Mutations are sent to the API in the background.
+
+### Unauthenticated Users
+- Cart and wishlist work fully in localStorage for guest users.
+- Prompts to sign in appear when attempting protected actions (placing an order).
+
+---
+
+## Database Schema
+
+### `products` Collection
+```json
+{
+  "_id": "ObjectId",
+  "name": "string (required)",
+  "price": "number (required)",
+  "image": "string (first image, backward-compat)",
+  "images": ["string"],
+  "description": "string",
+  "categoryId": "ObjectId string (required)",
+  "stock": "number (default: 0)",
+  "createdAt": "Date",
+  "updatedAt": "Date"
+}
+```
+
+### `orders` Collection
+```json
+{
+  "_id": "ObjectId",
+  "userId": "string (user email)",
+  "products": [
+    {
+      "productId": "string",
+      "name": "string",
+      "price": "number",
+      "image": "string",
+      "size": "string",
+      "quantity": "number"
+    }
+  ],
+  "address": {
+    "fullName": "string",
+    "phone": "string",
+    "addressLine1": "string",
+    "city": "string",
+    "pincode": "string"
+  },
+  "paymentMethod": "string",
+  "status": "pending | confirmed | shipped | delivered | cancelled",
+  "totalAmount": "number",
+  "createdAt": "Date",
+  "updatedAt": "Date"
+}
+```
+
+### `categories` Collection
+```json
+{
+  "_id": "ObjectId",
+  "name": "string",
+  "image": "string",
+  "createdAt": "Date"
+}
+```
+
+### `cart` Collection
+```json
+{
+  "_id": "ObjectId",
+  "userId": "string (user email)",
+  "items": [
+    {
+      "productId": "string",
+      "name": "string",
+      "price": "number",
+      "image": "string",
+      "size": "string",
+      "quantity": "number"
+    }
+  ],
+  "updatedAt": "Date"
+}
+```
+
+### `wishlist` Collection
+```json
+{
+  "_id": "ObjectId",
+  "userId": "string (user email)",
+  "items": [
+    {
+      "productId": "string",
+      "name": "string",
+      "price": "number",
+      "image": "string"
+    }
+  ],
+  "updatedAt": "Date"
+}
+```
+
+### `addresses` Collection
+```json
+{
+  "_id": "ObjectId",
+  "userId": "string (user email)",
+  "fullName": "string",
+  "phone": "string",
+  "addressLine1": "string",
+  "city": "string",
+  "pincode": "string",
+  "isDefault": "boolean"
+}
+```
+
+### `users` Collection
+```json
+{
+  "_id": "ObjectId",
+  "email": "string",
+  "displayName": "string",
+  "createdAt": "Date",
+  "lastLoginAt": "Date"
+}
+```
+
+---
+
+## Deployment
+
+### Vercel (Recommended)
+This project is configured for **Vercel** deployment via `vercel.json`.
+
+- URL rewrites route all `/api/*` requests to the corresponding serverless function in the `/api/` directory.
+- All other requests serve the React SPA (`dist/index.html`).
+- Set all environment variables in **Vercel Project Settings → Environment Variables**.
+- Build command: `npm run build`
+- Output directory: `dist`
+
+### Replit
+The project is fully compatible with Replit hosting:
+- The `Start application` workflow runs `npm run dev`, starting both servers.
+- For production on Replit, use Replit Deployments which builds and serves the production bundle.
+- Port 5000 is exposed externally; the Vite proxy handles API routing internally.
+
+---
+
+## Known Behaviors & Decisions
+
+### Firebase Token Decoding (Not Verification)
+The backend uses `jwt.decode()` (not `jwt.verify()`) to read Firebase ID tokens. This works because Firebase has already issued and signed the token. For stricter security, consider verifying against Firebase's public keys using the Firebase Admin SDK.
+
+### Stock is a Single Total — Not Per-Size
+The current stock model stores a single total `stock` count per product, not broken down by size. All sizes share the same inventory pool. A future enhancement could add per-size stock tracking.
+
+### Admin Email Fallback
+The admin email in `cancel.js` falls back to a hardcoded string if `ADMIN_EMAIL` is not set. Always configure this environment variable in production.
+
+### Cart Merge on Sign-In
+When a guest user signs in, the server cart takes precedence over the guest localStorage cart. Guest-session items are not automatically merged. This is a known limitation.
+
+### Price Display Currency
+Prices are stored as plain numbers in MongoDB. The UI displays a `¥` prefix. Update the currency symbol in price display components if targeting a different market.
+
+### Images Field and Backward Compatibility
+Products store both an `images` array (multi-image support) and a single `image` string (the first image, for backward compatibility with older cart/wishlist records that only stored one image URL).

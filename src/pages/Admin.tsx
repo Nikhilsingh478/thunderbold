@@ -369,7 +369,7 @@ export default function Admin() {
   }, [user, navigate]);
 
   useEffect(() => { if (user && activeTab === 'orders') fetchOrders(); }, [activeTab, user]);
-  useEffect(() => { if (user && activeTab === 'products') fetchProducts(); }, [activeTab, user]);
+  useEffect(() => { if (user && activeTab === 'products') { fetchProducts(); fetchCategories(); } }, [activeTab, user]);
   useEffect(() => { if (user && activeTab === 'categories') fetchCategories(); }, [activeTab, user]);
 
   const fetchOrders = async () => {
@@ -830,7 +830,20 @@ export default function Admin() {
                               {categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}
                             </p>
                             <h3 className="font-condensed font-medium text-tb-white text-sm mb-1 line-clamp-2 leading-snug">{product.name}</h3>
-                            <p className="font-condensed font-semibold text-tb-white text-sm mb-3">¥{product.price}</p>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="font-condensed font-semibold text-tb-white text-sm">¥{product.price}</p>
+                              {typeof product.stock === 'number' && (
+                                <span className={`font-condensed text-xs px-2 py-0.5 rounded-full border ${
+                                  product.stock === 0
+                                    ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                                    : product.stock <= 3
+                                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                                      : 'bg-green-500/15 border-green-500/30 text-green-400'
+                                }`}>
+                                  {product.stock === 0 ? 'Out of stock' : `${product.stock} in stock`}
+                                </span>
+                              )}
+                            </div>
                             <div className="flex gap-2">
                               <button
                                 onClick={() => setEditingProduct(product)}

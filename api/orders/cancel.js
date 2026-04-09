@@ -45,6 +45,7 @@ export default async function handler(req, res) {
 
     const database = await getDb();
     const ordersCollection = database.collection('orders');
+    const productsCollection = database.collection('products');
 
     // Fetch the order first to verify it belongs to this user
     const order = await ordersCollection.findOne({ _id: new ObjectId(orderId) });
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
     }
 
     // Allow the order owner OR admin to cancel
-    const ADMIN_EMAIL = 'nikhilwebworks@gmail.com';
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nikhilwebworks@gmail.com';
     if (order.userId !== userEmail && userEmail !== ADMIN_EMAIL) {
       return res.status(403).json({ error: 'You can only cancel your own orders' });
     }
@@ -75,6 +76,29 @@ export default async function handler(req, res) {
     if (result.modifiedCount === 0) {
       return res.status(400).json({ error: 'Order could not be cancelled' });
     }
+
+    // Restore stock for each product in the cancelled order
+    const orderProducts = order.products || [];
+    for (const item of orderProducts) {
+      if (!item.productId || !item.quantity) continue;
+      try {
+        await productsCollection.updateOne(
+          { _id: new ObjectId(item.productId) },
+          { $inc: { stock: item.quantity } }
+        );
+      } catch {
+        try {
+          await productsCollection.updateOne(
+            { _id: item.productId },
+            { $inc: { stock: item.quantity } }
+          );
+        } catch (stockErr) {
+          console.error('ORDER CANCEL: Failed to restore stock for product:', item.productId, stockErr);
+        }
+      }
+    }
+
+    console.log('ORDER CANCEL: Stock restored for all products in order:', orderId);
 
     return res.status(200).json({
       success: true,

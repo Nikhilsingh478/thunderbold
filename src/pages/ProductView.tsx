@@ -123,6 +123,10 @@ export default function ProductView() {
   const isInCartWithSize = selectedSize && product ? isInCart(product._id, selectedSize) : false;
   const itemQuantity = selectedSize && product ? getItemQuantity(product._id, selectedSize) : 0;
 
+  const stock = typeof product?.stock === 'number' ? product.stock : null;
+  const isOutOfStock = stock !== null && stock <= 0;
+  const isLowStock = stock !== null && stock > 0 && stock <= 3;
+
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
       <CustomCursor />
@@ -216,10 +220,28 @@ export default function ProductView() {
               <h1 className="font-display text-5xl md:text-6xl lg:text-7xl tracking-[0.1em] metal-text uppercase mb-4 leading-none">
                 {product?.name || 'Thunderbolt Jeans'}
               </h1>
-              <div className="font-condensed text-3xl tracking-widest text-tb-white mb-8">
+              <div className="font-condensed text-3xl tracking-widest text-tb-white mb-4">
                 {product?.price || '₹ 2,499'}
               </div>
-              
+
+              {/* Stock status badge */}
+              {product && (
+                <div className="mb-8">
+                  {isOutOfStock && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 font-condensed text-xs uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                      Out of Stock
+                    </span>
+                  )}
+                  {isLowStock && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-condensed text-xs uppercase tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+                      Only {stock} left
+                    </span>
+                  )}
+                </div>
+              )}
+
               <p className="font-serif italic font-light text-white/90 text-xl mb-10 leading-snug max-w-[90%]">
                 {product?.description}
               </p>
@@ -277,17 +299,17 @@ export default function ProductView() {
                 <div className="flex gap-4">
                   <button
                     onClick={handleAddToCart}
-                    disabled={!selectedSize}
+                    disabled={!selectedSize || isOutOfStock}
                     className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
-                      selectedSize
+                      selectedSize && !isOutOfStock
                         ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
                         : 'bg-white/5 text-white/20 cursor-not-allowed'
                     }`}
                   >
                     <ShoppingCart size={20} />
-                    {isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
+                    {isOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
                   </button>
-                  
+
                   <button
                     onClick={handleAddToWishlist}
                     disabled={!product}
@@ -304,14 +326,14 @@ export default function ProductView() {
                 {/* Order CTA */}
                 <button
                   onClick={handleOrder}
-                  disabled={!selectedSize}
+                  disabled={!selectedSize || isOutOfStock}
                   className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
-                    selectedSize
+                    selectedSize && !isOutOfStock
                       ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
                       : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                 >
-                  {selectedSize ? 'Order Now' : 'Select a Size'}
+                  {isOutOfStock ? 'Out of Stock' : selectedSize ? 'Order Now' : 'Select a Size'}
                 </button>
               </div>
               
