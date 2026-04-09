@@ -1,0 +1,123 @@
+Skip to content
+
+Find…
+F
+Other
+Overview
+Deployments
+Logs
+Analytics
+Speed Insights
+Observability
+Firewall
+CDN
+Domains
+Integrations
+Storage
+Flags
+Agent
+AI Gateway
+Sandboxes
+Usage
+Support
+Settings
+AI Gateway Credits
+Get $5/month in free AI Gateway credits after you add a credit card.
+
+Avatar for nikhilsingh478
+nikhilsingh478
+
+
+Deployments
+7uzW1gpko
+Deployment
+Logs
+Resources
+Source
+Open Graph
+Deployment Details
+Build Failed
+No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan. Create a team (Pro plan) to deploy more.
+Created
+nikhilsingh478 Avatar
+nikhilsingh478
+2m ago
+Status
+Error
+Latest
+Duration
+24s
+1m ago
+Environment
+Production
+Domains
+thunderbold-git-main-nikhilsingh478s-projects.vercel.app
+thunderbold-g6ywhe35d-nikhilsingh478s-projects.vercel.app
+Source
+main
+d63960a
+Add functionality for admins to delete orders and update their status
+
+Deployment Settings
+3 Recommendations
+Build Logs
+24s
+55 lines
+Find in logs
+CtrlF
+13:49:41.556 
+Restored build cache from previous deployment (Dx5ZJG4UDdSeTgo6PZk9FkHCfXjk)
+13:49:41.829 
+Running "vercel build"
+13:49:42.444 
+Vercel CLI 50.38.2
+13:49:43.116 
+Installing dependencies...
+13:49:44.550 
+13:49:44.551 
+up to date in 1s
+13:49:44.551 
+13:49:44.552 
+132 packages are looking for funding
+13:49:44.552 
+  run `npm fund` for details
+13:49:44.584 
+Running "npm run build"
+13:49:45.005 
+13:49:45.005 
+> vite_react_shadcn_ts@0.0.0 build
+13:49:45.005 
+> vite build
+13:49:45.006 
+13:49:45.252 
+vite v5.4.21 building for production...
+13:49:45.316 
+transforming...
+13:49:46.285 
+13:49:46.286 
+warn - The class `duration-[0.8s]` is ambiguous and matches multiple utilities.
+13:49:46.286 
+warn - If this is content and not a class, replace it with `duration-&lsqb;0.8s&rsqb;` to silence this warning.
+13:49:46.286 
+Deployment Summary
+Deployment Checks
+Assigning Custom Domains
+Runtime Logs
+
+View and debug runtime logs & errors
+
+Observability
+
+Monitor app health & performance
+
+Speed Insights
+
+Not Enabled
+Performance metrics from real users
+
+Web Analytics
+
+Not Enabled
+Analyze visitors & traffic in real-time
+
+thunderbold – Deployment Overview – Vercel

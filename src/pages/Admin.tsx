@@ -406,7 +406,7 @@ export default function Admin() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/orders/update-status?id=${orderId}`, {
+      const r = await fetch(`/api/orders/manage?id=${orderId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
@@ -432,7 +432,7 @@ export default function Admin() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/orders/delete?id=${orderId}`, {
+      const r = await fetch(`/api/orders/manage?id=${orderId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

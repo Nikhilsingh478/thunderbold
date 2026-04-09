@@ -27,12 +27,12 @@ async function parseBody(req) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).json({ ok: true });
-  if (req.method !== 'PATCH') {
-    res.setHeader('Allow', ['PATCH']);
+  if (req.method !== 'PATCH' && req.method !== 'DELETE') {
+    res.setHeader('Allow', ['PATCH', 'DELETE']);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -52,27 +52,35 @@ export default async function handler(req, res) {
     try { objectId = new ObjectId(orderId); }
     catch { return res.status(400).json({ error: 'Invalid order ID format' }); }
 
-    const body = await parseBody(req);
-    const { status } = body;
+    const db = await getDb();
+    const orders = db.collection('orders');
 
-    const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered'];
-    if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Valid: pending, confirmed, shipped, delivered' });
+    if (req.method === 'PATCH') {
+      const body = await parseBody(req);
+      const { status } = body;
+      const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status. Valid: pending, confirmed, shipped, delivered' });
+      }
+      console.log('MANAGE ORDERS API: PATCH status →', status, 'for', orderId);
+      const result = await orders.updateOne(
+        { _id: objectId },
+        { $set: { status, updatedAt: new Date() } }
+      );
+      if (result.matchedCount === 0) return res.status(404).json({ error: 'Order not found' });
+      console.log('MANAGE ORDERS API: Status updated');
+      return res.status(200).json({ message: 'Status updated', orderId, newStatus: status });
     }
 
-    console.log('UPDATE STATUS API: orderId:', orderId, '→', status);
-    const db = await getDb();
-    const result = await db.collection('orders').updateOne(
-      { _id: objectId },
-      { $set: { status, updatedAt: new Date() } }
-    );
-
-    if (result.matchedCount === 0) return res.status(404).json({ error: 'Order not found' });
-
-    console.log('UPDATE STATUS API: Success');
-    return res.status(200).json({ message: 'Status updated', orderId, newStatus: status });
+    if (req.method === 'DELETE') {
+      console.log('MANAGE ORDERS API: DELETE order', orderId);
+      const result = await orders.deleteOne({ _id: objectId });
+      if (result.deletedCount === 0) return res.status(404).json({ error: 'Order not found' });
+      console.log('MANAGE ORDERS API: Deleted');
+      return res.status(200).json({ message: 'Order deleted', orderId });
+    }
   } catch (error) {
-    console.error('UPDATE STATUS API ERROR:', error.message);
+    console.error('MANAGE ORDERS API ERROR:', error.message);
     return res.status(500).json({ error: 'Internal server error', detail: error.message });
   }
 }
