@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,15 @@ interface SearchOverlayProps {
   onClose: () => void;
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState<T>(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
@@ -17,19 +26,21 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const debouncedQuery = useDebounce(query, 300);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setTimeout(() => inputRef.current?.focus(), 100);
-      // Load products when overlay opens
       loadProducts();
     } else {
       document.body.style.overflow = '';
-      setTimeout(() => setQuery(''), 300); // clear after animation
+      setTimeout(() => setQuery(''), 300);
     }
   }, [isOpen]);
 
   const loadProducts = async () => {
+    if (allProducts.length > 0) return; // Already loaded
     try {
       setLoading(true);
       const productsData = await fetchProducts();
@@ -43,24 +54,20 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   };
 
   useEffect(() => {
-    if (query.trim() === '') {
-      setResults([]);
-      return;
-    }
-
-    const q = query.toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
+    if (!q) { setResults([]); return; }
     const filtered = allProducts.filter((product) =>
       (product.name ?? '').toLowerCase().includes(q) ||
       (product.description ?? '').toLowerCase().includes(q) ||
       (product.category ?? '').toLowerCase().includes(q)
     );
     setResults(filtered);
-  }, [query, allProducts]);
+  }, [debouncedQuery, allProducts]);
 
-  const handleSelect = (id: string) => {
+  const handleSelect = useCallback((id: string) => {
     onClose();
     navigate(`/product/${id}`);
-  };
+  }, [onClose, navigate]);
 
   return (
     <AnimatePresence>
@@ -80,8 +87,8 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <X size={32} strokeWidth={1} />
           </button>
 
-          {/* Search Input Container */}
-          <motion.div 
+          {/* Search Input */}
+          <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -98,9 +105,16 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             />
           </motion.div>
 
+          {/* Loading state */}
+          {loading && (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-7 w-7 border-2 border-white/10 border-t-white/60" />
+            </div>
+          )}
+
           {/* Results Grid */}
-          {query.trim().length > 0 && (
-            <motion.div 
+          {!loading && query.trim().length > 0 && (
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               className="w-full max-w-[1200px] grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 pb-32"
@@ -116,11 +130,12 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                     className="group cursor-pointer flex flex-col"
                   >
                     <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/20 transition-colors duration-500 rounded-sm">
-                       <img
-                         src={prod.image || '/placeholder.png'}
-                         alt={prod.name}
-                         className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-[1.05] transition-transform duration-700 ease-[0.16,1,0.3,1]"
-                       />
+                      <img
+                        src={prod.image || '/placeholder.png'}
+                        alt={prod.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-[1.05] transition-transform duration-700 ease-[0.16,1,0.3,1]"
+                      />
                     </div>
                     <div className="mt-4">
                       <h3 className="font-condensed text-sm md:text-base tracking-[0.1em] text-tb-white group-hover:text-brass uppercase transition-colors">
@@ -140,18 +155,17 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             </motion.div>
           )}
 
-          {/* Fallback idle state */}
-          {query.trim().length === 0 && (
-            <motion.div 
-               initial={{ opacity: 0 }} 
-               animate={{ opacity: 1 }} 
-               transition={{ delay: 0.4 }}
-               className="text-center font-condensed tracking-[0.2em] text-sm text-white/70 uppercase"
+          {/* Idle state */}
+          {!loading && query.trim().length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-center font-condensed tracking-[0.2em] text-sm text-white/70 uppercase"
             >
-               Type anything (e.g. Bootcut, Straight, Denim)
+              Type anything (e.g. Bootcut, Straight, Denim)
             </motion.div>
           )}
-
         </motion.div>
       )}
     </AnimatePresence>

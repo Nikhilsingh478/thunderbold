@@ -5,18 +5,30 @@ import { useAuth } from "./context/AuthContext";
 import LoginModal from "./components/auth/LoginModal";
 import { executeStoredAction } from "./lib/requireAuth";
 import { modalController, ModalControlEvent } from "./lib/modalController";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
+
+// Eagerly loaded (small / always needed on first paint)
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import About from "./pages/About";
 import CategoryView from "./pages/CategoryView";
-import ProductView from "./pages/ProductView";
-import Checkout from "./pages/Checkout";
-import Cart from "./pages/Cart";
-import Wishlist from "./pages/Wishlist";
-import Admin from "./pages/Admin";
-import Orders from "./pages/Orders";
-import Profile from "./pages/Profile";
+
+// Lazy loaded (heavy pages — split into separate JS chunks)
+const ProductView = lazy(() => import("./pages/ProductView"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Orders = lazy(() => import("./pages/Orders"));
+const Profile = lazy(() => import("./pages/Profile"));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-void">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-white/10 border-t-white/60" />
+    </div>
+  );
+}
 
 const AppContent = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -24,7 +36,6 @@ const AppContent = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Subscribe to modal controller events
     const unsubscribe = modalController.subscribe((event: ModalControlEvent) => {
       if (event.type === 'open-login-modal') {
         setShowLoginModal(true);
@@ -34,7 +45,6 @@ const AppContent = () => {
       }
     });
 
-    // Also handle legacy DOM events for backward compatibility
     const handleShowLoginModal = (e: CustomEvent) => {
       setShowLoginModal(true);
       setModalSource(e.detail?.source || 'manual');
@@ -51,52 +61,47 @@ const AppContent = () => {
     };
   }, []);
 
-  // Delayed login prompt
+  // Delayed login prompt for unauthenticated users
   useEffect(() => {
-    // Only show delayed prompt if user is not logged in
     if (user) return;
-
-    // Check if prompt was already shown this session
     const promptShown = sessionStorage.getItem('login_prompt_shown');
     if (promptShown) return;
-
-    // Show prompt after 10 seconds
     const timer = setTimeout(() => {
       modalController.openModal('delayedPrompt');
       sessionStorage.setItem('login_prompt_shown', 'true');
-    }, 10000); // 10 seconds
-
+    }, 10000);
     return () => clearTimeout(timer);
   }, [user]);
 
   const handleLoginModalClose = () => {
     setShowLoginModal(false);
     modalController.closeModal();
-    executeStoredAction(); // Execute stored action after successful login
+    executeStoredAction();
   };
 
   return (
     <>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/category/:categoryId" element={<CategoryView />} />
-          <Route path="/product/:productId" element={<ProductView />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/profile" element={<Profile />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/category/:categoryId" element={<CategoryView />} />
+            <Route path="/product/:productId" element={<ProductView />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
       <Toaster />
       <Sonner />
-      <LoginModal 
-        isOpen={showLoginModal} 
+      <LoginModal
+        isOpen={showLoginModal}
         onClose={handleLoginModalClose}
         isDelayedPrompt={modalSource === 'delayedPrompt'}
       />

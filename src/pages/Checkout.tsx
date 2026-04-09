@@ -118,21 +118,23 @@ export default function Checkout() {
       return;
     }
 
+    if (submitting) return; // Prevent double-submit
+
     setSubmitting(true);
     setSubmittedAddress(address);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
 
+    // Generate a unique idempotency key for this submission attempt
+    const clientOrderId = crypto.randomUUID();
+
     try {
-      console.log("CHECKOUT: Starting order submission...");
-      
-      // Prepare products array for order API
       const orderProducts = cartItems.map(item => ({
         productId: item.productId || item.productUrl?.split('/').pop() || 'unknown',
         name: item.name || item.productName || 'Unknown Product',
         price: typeof item.price === 'string' ? parseFloat(item.price.replace(/[^\d.]/g, '')) : (item.price || 0),
         size: item.size || 'N/A',
         quantity: item.quantity || 1,
-        image: item.image || item.productImage || '/placeholder.png'
+        image: item.image || item.productImage || '/placeholder.png',
       }));
 
       const orderData = {
@@ -145,67 +147,69 @@ export default function Checkout() {
           city: address.city,
           state: address.state,
           pincode: address.pincode,
-          landmark: address.landmark || ''
+          landmark: address.landmark || '',
         },
-        paymentMethod: 'COD'
+        paymentMethod: 'COD',
+        clientOrderId,
       };
 
-      console.log("CHECKOUT: Order data prepared:", JSON.stringify(orderData, null, 2));
-      console.log("CHECKOUT: Sending request to /api/orders/create");
-
-      // Get auth token
       const token = await user.getIdToken();
-      
-      const response = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(orderData)
-      });
 
-      console.log("CHECKOUT: Response received");
-      console.log("CHECKOUT: Response status:", response.status);
+      // Retry wrapper — up to 2 retries on network failure
+      let response: Response | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          response = await fetch('/api/orders/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(orderData),
+          });
+          break;
+        } catch {
+          if (attempt < 2) await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+        }
+      }
+
+      if (!response) {
+        toast.error('Network error. Please check your connection and try again.');
+        setSubmitting(false);
+        return;
+      }
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("CHECKOUT: HTTP error - status:", response.status);
-        console.error("CHECKOUT: Response text:", errorText);
-        toast.error(`Order failed with status ${response.status}. Please try again.`);
+        let errMsg = `Order failed (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData?.error) errMsg = errData.error;
+        } catch {}
+        toast.error(errMsg);
         setSubmitting(false);
         return;
       }
 
       const result = await response.json();
-      console.log("CHECKOUT: Response body:", JSON.stringify(result, null, 2));
 
       if (result.error) {
-        console.error("CHECKOUT: API returned error:", result.error);
-        toast.error(`Order failed: ${result.error}. Please try again.`);
+        toast.error(`Order failed: ${result.error}`);
         setSubmitting(false);
         return;
       }
 
-      console.log("CHECKOUT: Order created successfully:", result.orderId);
-      
       // Clear cart after successful order only if it was a cart checkout
       if (location.state?.cartItems) {
         await clearCartData();
       }
-      
+
       toast.success('Order placed successfully!');
       setShowConfirmation(true);
       setSubmitting(false);
-      
+
     } catch (error) {
-      console.error("CHECKOUT: Network error during order submission:", error);
-      console.error("CHECKOUT: Error details:", {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      });
-      toast.error('Network error. Please check your connection and try again.');
+      console.error("CHECKOUT: Unexpected error:", error);
+      toast.error('Something went wrong. Please try again.');
       setSubmitting(false);
     }
   };

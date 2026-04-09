@@ -1,87 +1,43 @@
 import { getDb } from "../_lib/mongodb.js";
-import jwt from 'jsonwebtoken';
+import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
 
-const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
-
-function decodeFirebaseToken(token) {
-  try {
-    // For Firebase tokens, we can decode without verification since Firebase handles it
-    const decoded = jwt.decode(token);
-    return decoded;
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-}
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "nikhilwebworks@gmail.com";
 
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', ['GET']);
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('GET ORDERS API: Starting request...');
-    
-    // Get user ID from token
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('GET ORDERS API: No auth header found');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
+    if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+
     const token = authHeader.split(' ')[1];
-    
-    // Decode Firebase token to get user info
-    const decodedToken = decodeFirebaseToken(token);
-    if (!decodedToken || !decodedToken.email) {
-      console.log('GET ORDERS API: Invalid token or missing email');
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(token);
+    } catch {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    
-    const userId = decodedToken.email; // Use email as userId instead of raw token
-    
-    console.log('GET ORDERS API: User ID:', userId);
-    
-    // Get database connection
+    if (!decoded?.email) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = decoded.email;
     const database = await getDb();
     const ordersCollection = database.collection('orders');
-    
-    console.log('GET ORDERS API: Connected to database');
 
-    switch (req.method) {
-      case 'GET':
-        console.log('GET ORDERS API: Fetching orders for user:', userId);
-        
-        // Admin sees all orders; regular users see only their own
-        const query = userId === ADMIN_EMAIL ? {} : { userId };
-        const orders = await ordersCollection
-          .find(query)
-          .sort({ createdAt: -1 })
-          .toArray();
-        
-        console.log('GET ORDERS API: Found orders:', orders.length);
-        
-        return res.status(200).json({ 
-          orders,
-          count: orders.length 
-        });
+    const query = userId === ADMIN_EMAIL ? {} : { userId };
+    const orders = await ordersCollection.find(query).sort({ createdAt: -1 }).toArray();
 
-      default:
-        res.setHeader('Allow', ['GET']);
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+    return res.status(200).json({ orders, count: orders.length });
+
   } catch (error) {
-    console.error('GET ORDERS API ERROR:', error);
-    console.error('GET ORDERS API ERROR DETAILS:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack
-    });
+    console.error('GET ORDERS API ERROR:', error.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

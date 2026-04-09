@@ -1,30 +1,22 @@
 import { getDb } from "../_lib/mongodb.js";
 import { ObjectId } from "mongodb";
-import jwt from 'jsonwebtoken';
+import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
 
-const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "nikhilwebworks@gmail.com";
 
-function checkAdminAuth(req) {
+async function checkAdminAuth(req) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) return { authorized: false, error: 'Unauthorized' };
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = await verifyFirebaseToken(token);
+    if (decoded?.email !== ADMIN_EMAIL) return { authorized: false, error: 'Admin access required' };
+    return { authorized: true, userEmail: decoded.email };
+  } catch {
     return { authorized: false, error: 'Unauthorized' };
   }
-  const token = authHeader.split(' ')[1];
-  let decodedToken;
-  try {
-    decodedToken = jwt.decode(token);
-  } catch {
-    return { authorized: false, error: 'Invalid token' };
-  }
-  const userEmail = decodedToken?.email;
-  if (userEmail !== ADMIN_EMAIL) {
-    return { authorized: false, error: 'Admin access required' };
-  }
-  return { authorized: true, userEmail };
 }
 
-// Normalise the images field so we always store both `images` (array) and
-// `image` (first item, for backward-compat with cart/wishlist/categoryView)
 function normaliseImages(body) {
   let images = [];
   if (Array.isArray(body.images) && body.images.length > 0) {
@@ -48,61 +40,49 @@ export default async function handler(req, res) {
 
     switch (req.method) {
 
-      // ── GET ────────────────────────────────────────────────────────────────
       case 'GET': {
         const products = await col.find({}).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
 
-      // ── POST ───────────────────────────────────────────────────────────────
       case 'POST': {
-        const auth = checkAdminAuth(req);
+        const auth = await checkAdminAuth(req);
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-
         const { name, price, description, categoryId, stock } = req.body;
         const images = normaliseImages(req.body);
-
         if (!name || !price || images.length === 0 || !categoryId) {
           return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
         }
         if (typeof price !== 'number' || price <= 0) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
-
         const product = {
-          name,
-          price,
-          image: images[0],   // backward-compat
+          name, price,
+          image: images[0],
           images,
           description: description || '',
           categoryId,
-          stock: stock || 0,
+          stock: typeof stock === 'number' ? stock : (parseInt(stock, 10) || 0),
           createdAt: new Date(),
         };
-
         const result = await col.insertOne(product);
         return res.status(201).json({ message: 'Product created successfully', product: { _id: result.insertedId, ...product } });
       }
 
-      // ── PUT ────────────────────────────────────────────────────────────────
       case 'PUT': {
-        const auth = checkAdminAuth(req);
+        const auth = await checkAdminAuth(req);
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing product ID' });
-
         const { name, price, description, categoryId, stock } = req.body;
         const images = normaliseImages(req.body);
-
         if (!name || !price || images.length === 0 || !categoryId) {
           return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
         }
-
         const updates = {
           name,
           price: typeof price === 'number' ? price : parseFloat(price),
@@ -110,41 +90,27 @@ export default async function handler(req, res) {
           images,
           description: description || '',
           categoryId,
-          stock: stock || 0,
+          stock: typeof stock === 'number' ? stock : (parseInt(stock, 10) || 0),
           updatedAt: new Date(),
         };
-
         const result = await col.updateOne(
           { _id: new ObjectId(id) },
           { $set: updates }
-        ).catch(async () =>
-          col.updateOne({ _id: id }, { $set: updates })
-        );
-
-        if (result.matchedCount === 0) {
-          return res.status(404).json({ error: 'Product not found' });
-        }
-
+        ).catch(async () => col.updateOne({ _id: id }, { $set: updates }));
+        if (result.matchedCount === 0) return res.status(404).json({ error: 'Product not found' });
         return res.status(200).json({ message: 'Product updated successfully', product: { _id: id, ...updates } });
       }
 
-      // ── DELETE ─────────────────────────────────────────────────────────────
       case 'DELETE': {
-        const auth = checkAdminAuth(req);
-        if (!auth.authorized) {
-          return res.status(401).json({ error: 'Unauthorized' });
-        }
-
+        const auth = await checkAdminAuth(req);
+        if (!auth.authorized) return res.status(401).json({ error: 'Unauthorized' });
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing ID' });
-
         const result = await col.deleteOne({ _id: new ObjectId(id) })
           .catch(async () => col.deleteOne({ _id: id }));
-
         if (!result || result.deletedCount === 0) {
           return res.status(404).json({ success: false, deletedCount: 0, message: 'Product not found' });
         }
-
         return res.status(200).json({ success: true, deletedCount: 1 });
       }
 

@@ -1,0 +1,299 @@
+You are a senior full-stack engineer. You are working on a production-grade e-commerce platform called "Thunderbolt Brand World" built with React (Vite + TypeScript) frontend and Node.js serverless/Express backend with MongoDB Atlas and Firebase Authentication.
+
+Your task is to implement **critical production fixes + performance optimizations** WITHOUT breaking existing functionality. Do NOT rewrite the project. Only improve and patch.
+
+---
+
+# 🚨 PRIORITY 1: FIX AUTH SECURITY (MANDATORY)
+
+## Problem:
+
+Backend is using `jwt.decode()` to read Firebase tokens. This is insecure because tokens are NOT verified.
+
+## Task:
+
+Replace ALL token decoding logic with proper Firebase Admin SDK verification.
+
+## Steps:
+
+1. Install Firebase Admin SDK in backend:
+
+```bash
+npm install firebase-admin
+```
+
+2. Create a new file:
+   `/api/_lib/firebaseAdmin.js`
+
+3. Initialize Firebase Admin:
+
+* Use service account credentials (from Firebase console)
+* Initialize ONLY ONCE (singleton pattern)
+
+4. Export a function:
+
+```js
+export async function verifyFirebaseToken(token) {
+  // verifyIdToken
+  // return decoded user
+}
+```
+
+5. Replace ALL usages of:
+
+```js
+jwt.decode(token)
+```
+
+WITH:
+
+```js
+await verifyFirebaseToken(token)
+```
+
+6. Ensure:
+
+* Throw 401 if token invalid
+* Extract `email` and `uid` from verified token
+* NEVER trust raw token input
+
+---
+
+# 🚨 PRIORITY 2: PREVENT DUPLICATE ORDERS (CRITICAL)
+
+## Problem:
+
+Users can click "Place Order" multiple times → duplicate orders created.
+
+## Backend Fix (REQUIRED):
+
+Implement idempotency protection in `/api/orders/create.js`
+
+### Steps:
+
+1. Accept a unique `clientOrderId` from frontend
+2. Before creating order:
+
+```js
+const existing = await db.orders.findOne({ clientOrderId });
+if (existing) return existing;
+```
+
+3. Add `clientOrderId` field in order schema
+
+---
+
+## Frontend Fix (REQUIRED):
+
+In `Checkout.tsx`:
+
+1. Add loading state:
+
+```ts
+const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+```
+
+2. Disable button after click:
+
+* Disable "Place Order" button
+* Show spinner
+
+3. Generate unique ID:
+
+```ts
+const clientOrderId = crypto.randomUUID();
+```
+
+4. Send it in API request
+
+---
+
+# 🚨 PRIORITY 3: HARDEN ORDER + STOCK LOGIC
+
+## Problem:
+
+Order creation + stock decrement is not atomic (risk in edge cases)
+
+## Task:
+
+Improve reliability WITHOUT full refactor.
+
+### Steps:
+
+1. Wrap stock decrement in safe checks:
+
+```js
+const result = await db.products.updateOne(
+  { _id: productId, stock: { $gte: quantity } },
+  { $inc: { stock: -quantity } }
+);
+
+if (result.modifiedCount === 0) {
+  throw new Error("Stock changed, retry");
+}
+```
+
+2. If ANY product fails:
+
+* rollback previously updated products (manual compensation)
+
+---
+
+# 🚨 PRIORITY 4: BASIC RATE LIMITING
+
+## Task:
+
+Prevent spam on critical endpoints:
+
+* `/api/orders/create`
+* `/api/cart`
+* `/api/wishlist`
+
+### Implementation:
+
+* Use in-memory map (simple)
+* Limit: 10 requests / minute per IP
+
+---
+
+# ⚡ PRIORITY 5: PERFORMANCE OPTIMIZATION
+
+## FRONTEND OPTIMIZATION
+
+### 1. Lazy Load Pages
+
+Convert heavy pages to lazy:
+
+* Admin
+* Checkout
+* ProductView
+* Orders
+
+Use:
+
+```ts
+const Admin = lazy(() => import('./pages/Admin'));
+```
+
+---
+
+### 2. Optimize Images (IMPORTANT)
+
+You are using Cloudinary.
+
+Ensure:
+
+* Use transformed URLs:
+
+  * width auto
+  * format auto
+  * quality auto
+
+Example:
+
+```
+https://res.cloudinary.com/.../f_auto,q_auto,w_800/...
+```
+
+---
+
+### 3. Reduce Re-renders
+
+* Wrap heavy components with `React.memo`
+* Use `useCallback` for handlers
+* Avoid unnecessary state updates
+
+---
+
+### 4. Debounce Search
+
+In `SearchOverlay.tsx`:
+
+* Add debounce (300ms)
+
+---
+
+### 5. API Optimization
+
+* Use `Promise.all` where possible
+* Avoid sequential API calls
+
+---
+
+## BACKEND OPTIMIZATION
+
+### 1. MongoDB Indexes (IMPORTANT)
+
+Add indexes:
+
+```js
+db.orders.createIndex({ userId: 1 });
+db.orders.createIndex({ createdAt: -1 });
+db.products.createIndex({ categoryId: 1 });
+db.cart.createIndex({ userId: 1 });
+db.wishlist.createIndex({ userId: 1 });
+```
+
+---
+
+### 2. Ensure DB Connection Reuse
+
+In `mongodb.js`:
+
+* Confirm singleton pattern
+* No new connection per request
+
+---
+
+### 3. Response Optimization
+
+* Remove unnecessary fields
+* Use projections when fetching data
+
+---
+
+# ⚡ PRIORITY 6: UX IMPROVEMENTS
+
+### 1. Loading States Everywhere
+
+* Cart
+* Orders
+* Product page
+
+---
+
+### 2. Error Handling
+
+* Show proper toast messages
+* No silent failures
+
+---
+
+### 3. Network Retry
+
+Wrap API calls with retry logic (2 retries)
+
+---
+
+# ⚠️ CONSTRAINTS
+
+* DO NOT break existing APIs
+* DO NOT change database structure drastically
+* DO NOT remove features
+* Keep backward compatibility
+* Code must be clean, readable, production-grade
+
+---
+
+# ✅ FINAL OUTPUT EXPECTATION
+
+* Secure auth (verified tokens)
+* No duplicate orders
+* Stable stock handling
+* Faster load times
+* Optimized frontend + backend
+* No regression in existing features
+
+---
+
+Take your time. Implement carefully. This is a production-critical patch.

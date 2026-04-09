@@ -1,16 +1,8 @@
 import { getDb } from "../_lib/mongodb.js";
 import { ObjectId } from "mongodb";
-import jwt from 'jsonwebtoken';
+import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
 
-const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
-
-function decodeFirebaseToken(token) {
-  try {
-    return jwt.decode(token);
-  } catch {
-    return null;
-  }
-}
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "nikhilwebworks@gmail.com";
 
 async function parseBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -41,7 +33,12 @@ export default async function handler(req, res) {
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
 
     const token = authHeader.split(' ')[1];
-    const decoded = decodeFirebaseToken(token);
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(token);
+    } catch {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     if (!decoded?.email) return res.status(401).json({ error: 'Unauthorized' });
     if (decoded.email !== ADMIN_EMAIL) return res.status(403).json({ error: 'Admin access required' });
 
@@ -62,23 +59,20 @@ export default async function handler(req, res) {
       if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status. Valid: pending, confirmed, shipped, delivered' });
       }
-      console.log('MANAGE ORDERS API: PATCH status →', status, 'for', orderId);
       const result = await orders.updateOne(
         { _id: objectId },
         { $set: { status, updatedAt: new Date() } }
       );
       if (result.matchedCount === 0) return res.status(404).json({ error: 'Order not found' });
-      console.log('MANAGE ORDERS API: Status updated');
       return res.status(200).json({ message: 'Status updated', orderId, newStatus: status });
     }
 
     if (req.method === 'DELETE') {
-      console.log('MANAGE ORDERS API: DELETE order', orderId);
       const result = await orders.deleteOne({ _id: objectId });
       if (result.deletedCount === 0) return res.status(404).json({ error: 'Order not found' });
-      console.log('MANAGE ORDERS API: Deleted');
       return res.status(200).json({ message: 'Order deleted', orderId });
     }
+
   } catch (error) {
     console.error('MANAGE ORDERS API ERROR:', error.message);
     return res.status(500).json({ error: 'Internal server error', detail: error.message });
