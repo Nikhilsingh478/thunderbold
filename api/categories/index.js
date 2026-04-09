@@ -1,29 +1,25 @@
 import { getDb } from "../_lib/mongodb.js";
-import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
+import { verifyFirebaseToken } from '../_lib/firebaseAdmin.js';
+import { isAdmin } from '../_lib/adminHelper.js';
 
-const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
-
-// Helper function to check admin authentication
-function checkAdminAuth(req) {
+// Helper function to check admin authentication (Firebase-based, same as other routes)
+async function checkAdminAuth(req, database) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return { authorized: false, error: 'Unauthorized' };
   }
-  
   const token = authHeader.split(' ')[1];
-  let decodedToken;
+  let decoded;
   try {
-    decodedToken = jwt.decode(token);
-  } catch (decodeError) {
-    return { authorized: false, error: 'Invalid token' };
+    decoded = await verifyFirebaseToken(token);
+  } catch {
+    return { authorized: false, error: 'Unauthorized' };
   }
-  
-  const userEmail = decodedToken?.email;
-  if (userEmail !== ADMIN_EMAIL) {
-    return { authorized: false, error: 'Admin access required' };
-  }
-  
-  return { authorized: true, userEmail };
+  if (!decoded?.email) return { authorized: false, error: 'Unauthorized' };
+  const admin = await isAdmin(decoded.email, database);
+  if (!admin) return { authorized: false, error: 'Admin access required' };
+  return { authorized: true, userEmail: decoded.email };
 }
 
 export default async function handler(req, res) {
@@ -67,7 +63,7 @@ export default async function handler(req, res) {
         console.log('CATEGORIES API: Creating new category');
         
         // Check if user is admin
-        const postAuthResult = checkAdminAuth(req);
+        const postAuthResult = await checkAdminAuth(req, database);
         if (!postAuthResult.authorized) {
           console.log('CATEGORIES API: Auth failed for POST:', postAuthResult.error);
           return res.status(postAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: postAuthResult.error });
@@ -107,16 +103,29 @@ export default async function handler(req, res) {
 
       case 'DELETE':
         console.log('CATEGORIES API: Deleting category:', categoryId);
+
+        if (!categoryId || categoryId === '' || categoryId === '/') {
+          return res.status(400).json({ error: 'Category ID is required' });
+        }
         
         // Check if user is admin
-        const deleteAuthResult = checkAdminAuth(req);
+        const deleteAuthResult = await checkAdminAuth(req, database);
         if (!deleteAuthResult.authorized) {
           console.log('CATEGORIES API: Auth failed for DELETE:', deleteAuthResult.error);
           return res.status(deleteAuthResult.error === 'Unauthorized' ? 401 : 403).json({ error: deleteAuthResult.error });
         }
         
-        // Delete category
-        const deleteResult = await categoriesCollection.deleteOne({ _id: categoryId });
+        // Delete category — try ObjectId first, fall back to string match
+        let deleteCategoryResult;
+        try {
+          deleteCategoryResult = await categoriesCollection.deleteOne({ _id: new ObjectId(categoryId) });
+        } catch {
+          deleteCategoryResult = await categoriesCollection.deleteOne({ _id: categoryId });
+        }
+
+        if (deleteCategoryResult.deletedCount === 0) {
+          return res.status(404).json({ error: 'Category not found' });
+        }
         
         console.log('CATEGORIES API: Category deleted successfully');
         return res.status(200).json({ 
