@@ -573,7 +573,7 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this category?')) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/categories/${categoryId}`, {
+      const r = await fetch(`/api/categories?id=${categoryId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

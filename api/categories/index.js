@@ -41,9 +41,11 @@ export default async function handler(req, res) {
     
     console.log('CATEGORIES API: Connected to database');
 
-    // Extract category ID from URL for PUT/DELETE operations
-    const urlParts = req.url.split('/');
-    const categoryId = urlParts[urlParts.length - 1];
+    // Extract category ID — prefer query param (e.g. ?id=xxx), fall back to URL path segment
+    const categoryId = req.query?.id || (() => {
+      const urlParts = req.url.split('?')[0].split('/');
+      return urlParts[urlParts.length - 1];
+    })();
 
     switch (req.method) {
       case 'GET':
@@ -102,7 +104,7 @@ export default async function handler(req, res) {
         });
 
       case 'DELETE':
-        console.log('CATEGORIES API: Deleting category:', categoryId);
+        console.log('CATEGORIES API: DELETE request received, categoryId:', categoryId, 'query:', req.query);
 
         if (!categoryId || categoryId === '' || categoryId === '/') {
           return res.status(400).json({ error: 'Category ID is required' });
