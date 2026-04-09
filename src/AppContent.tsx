@@ -16,6 +16,7 @@ import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Admin from "./pages/Admin";
 import Orders from "./pages/Orders";
+import Profile from "./pages/Profile";
 
 const AppContent = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -87,6 +88,7 @@ const AppContent = () => {
           <Route path="/orders" element={<Orders />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -15,10 +15,10 @@ A full-stack e-commerce storefront called **Thunderbolt** (denim/apparel). Built
 - `src/App.tsx` — Root component with providers (Auth, Cart, Wishlist, QueryClient)
 - `src/AppContent.tsx` — Router, modal management, delayed login prompt
 - `src/context/` — AuthContext, CartContext, WishlistContext
-- `src/pages/` — Index, About, CategoryView, ProductView, Cart, Wishlist, Checkout, Orders, Admin, NotFound
+- `src/pages/` — Index, About, CategoryView, ProductView, Cart, Wishlist, Checkout, Orders, Admin, Profile, NotFound
 - `src/components/` — UI components (shadcn/ui base + custom: Navbar, Footer, HeroSection, etc.)
 - `server.js` — Express API server, routes to `/api/` handlers
-- `api/` — Serverless-style route handlers for products, orders, users
+- `api/` — Serverless-style route handlers for products, orders, users (create, profile, addresses)
 - `vite.config.ts` — Vite config (port 5000, proxy to backend on 3001)
 
 ## Running the App

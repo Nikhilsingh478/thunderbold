@@ -53,9 +53,47 @@ export default function Checkout() {
   console.log("CHECKOUT DEBUG: totalAmount:", totalAmount);
   
   const [submitting, setSubmitting] = useState(false);
-  const [savedAddress] = useState<AddressData | null>(loadSavedAddress);
+  const [savedAddress, setSavedAddress] = useState<AddressData | null>(loadSavedAddress);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submittedAddress, setSubmittedAddress] = useState<AddressData | null>(null);
+
+  // Try to load default address from user profile (overrides localStorage)
+  useEffect(() => {
+    if (!user) return;
+    const fetchDefaultAddress = async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch('/api/users/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const addresses: Array<{
+            id: string; fullName: string; phone: string; addressLine1: string;
+            addressLine2: string; city: string; state: string; pincode: string;
+            landmark: string; isDefault: boolean;
+          }> = data.data?.addresses || [];
+          const defaultAddr = addresses.find(a => a.isDefault) || addresses[0];
+          if (defaultAddr) {
+            const mapped: AddressData = {
+              fullName: defaultAddr.fullName,
+              phone: defaultAddr.phone,
+              addressLine1: defaultAddr.addressLine1,
+              addressLine2: defaultAddr.addressLine2 || '',
+              city: defaultAddr.city,
+              state: defaultAddr.state,
+              pincode: defaultAddr.pincode,
+              landmark: defaultAddr.landmark || '',
+            };
+            setSavedAddress(mapped);
+          }
+        }
+      } catch {
+        // silently fall back to localStorage
+      }
+    };
+    fetchDefaultAddress();
+  }, [user]);
 
   useEffect(() => { 
     // Scroll to top first, then to address form after a short delay
