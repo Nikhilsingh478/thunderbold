@@ -3,44 +3,32 @@ import { useAuth } from './AuthContext';
 import { WishlistItem, CartItem, getWishlist, setWishlist, clearWishlist, mergeWishlistItems } from '../lib/storage';
 import { toast } from 'sonner';
 
-// Wishlist State Interface
 interface WishlistState {
   items: WishlistItem[];
   loading: boolean;
   error: string | null;
 }
 
-// Wishlist Actions
 type WishlistAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'SET_WISHLIST'; payload: WishlistItem[] }
   | { type: 'ADD_ITEM'; payload: WishlistItem }
-  | { type: 'REMOVE_ITEM'; payload: string } // productId
+  | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'CLEAR_WISHLIST' };
 
-// Initial State
-const initialState: WishlistState = {
-  items: [],
-  loading: false,
-  error: null,
-};
+const initialState: WishlistState = { items: [], loading: false, error: null };
 
-// Wishlist Reducer
 const wishlistReducer = (state: WishlistState, action: WishlistAction): WishlistState => {
   switch (action.type) {
-    case 'SET_LOADING':
-      return { ...state, loading: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload, loading: false };
-    case 'SET_WISHLIST':
-      return { ...state, items: action.payload, loading: false, error: null };
+    case 'SET_LOADING':   return { ...state, loading: action.payload };
+    case 'SET_ERROR':     return { ...state, error: action.payload, loading: false };
+    case 'SET_WISHLIST':  return { ...state, items: action.payload, loading: false, error: null };
     case 'ADD_ITEM':
-      const exists = state.items.some(item => item.productId === action.payload.productId);
-      if (exists) return state;
+      if (state.items.some(i => i.productId === action.payload.productId)) return state;
       return { ...state, items: [...state.items, action.payload] };
     case 'REMOVE_ITEM':
-      return { ...state, items: state.items.filter(item => item.productId !== action.payload) };
+      return { ...state, items: state.items.filter(i => i.productId !== action.payload) };
     case 'CLEAR_WISHLIST':
       return { ...state, items: [] };
     default:
@@ -48,7 +36,6 @@ const wishlistReducer = (state: WishlistState, action: WishlistAction): Wishlist
   }
 };
 
-// Wishlist Context Interface
 interface WishlistContextType extends WishlistState {
   addToWishlist: (item: WishlistItem) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
@@ -56,61 +43,34 @@ interface WishlistContextType extends WishlistState {
   clearWishlistData: () => Promise<void>;
   isInWishlist: (productId: string) => boolean;
   getWishlistCount: () => number;
-  moveToCart: (productId: string) => void; // Move item from wishlist to cart
+  moveToCart: (productId: string) => void;
 }
 
-// Create Context
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-// Wishlist Provider Component
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(wishlistReducer, initialState);
   const { user } = useAuth();
 
-  // Load wishlist on mount and auth changes
-  useEffect(() => {
-    loadWishlist();
-  }, [user]);
-
-  // Sync local to DB on login
-  useEffect(() => {
-    if (user) {
-      syncLocalToDB();
-    }
-  }, [user]);
+  useEffect(() => { loadWishlist(); }, [user]);
+  useEffect(() => { if (user) syncLocalToDB(); }, [user]);
 
   const loadWishlist = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
-    
     try {
       if (user) {
-        // Load from DB with auth headers
         const token = await user.getIdToken();
-        const response = await fetch('/api/wishlist', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        console.log('Load wishlist response:', response.status);
-        
+        const response = await fetch('/api/wishlist', { headers: { 'Authorization': `Bearer ${token}` } });
         if (response.ok) {
           const data = await response.json();
-          console.log('Loaded wishlist from DB:', data.items);
           dispatch({ type: 'SET_WISHLIST', payload: data.items || [] });
         } else {
-          const errorData = await response.text();
-          console.error('Load wishlist error:', errorData);
-          throw new Error('Failed to load wishlist from database');
+          throw new Error('Failed to load wishlist');
         }
       } else {
-        // Load from localStorage
-        const localWishlist = getWishlist();
-        console.log('Loading wishlist from localStorage:', localWishlist);
-        dispatch({ type: 'SET_WISHLIST', payload: localWishlist });
+        dispatch({ type: 'SET_WISHLIST', payload: getWishlist() });
       }
-    } catch (error) {
-      console.error('Error loading wishlist:', error);
+    } catch {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load wishlist' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -119,116 +79,47 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const syncLocalToDB = async () => {
     if (!user) return;
-
     try {
-      // Get local wishlist
       const localWishlist = getWishlist();
-      console.log('Syncing local wishlist to DB:', localWishlist);
       if (localWishlist.length === 0) return;
-
-      // Get auth token
       const token = await user.getIdToken();
-      
-      // Get DB wishlist with auth headers
-      const response = await fetch('/api/wishlist', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/wishlist', { headers: { 'Authorization': `Bearer ${token}` } });
       const dbWishlist = response.ok ? (await response.json()).items || [] : [];
-
-      // Merge wishlists
       const mergedWishlist = mergeWishlistItems(localWishlist, dbWishlist);
-      console.log('Merged wishlist:', mergedWishlist);
-
-      // Save merged wishlist to DB
       const saveResponse = await fetch('/api/wishlist', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ items: mergedWishlist }),
       });
-
       if (saveResponse.ok) {
-        console.log('Successfully saved merged wishlist to DB');
-        // Clear local storage only after successful save
         clearWishlist();
-        // Reload wishlist from DB to get latest state
         loadWishlist();
-      } else {
-        console.error('Failed to save merged wishlist to DB');
-        throw new Error('Failed to save merged wishlist to database');
       }
-    } catch (error) {
-      console.error('Error syncing wishlist to DB:', error);
-    }
+    } catch {}
   };
 
   const saveWishlist = async (items: WishlistItem[]) => {
-    try {
-      if (user) {
-        // Get auth token
-        const token = await user.getIdToken();
-        
-        // Save to DB
-        const response = await fetch('/api/wishlist', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ items }),
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Wishlist API error:', errorData);
-          throw new Error('Failed to save wishlist to database');
-        }
-      } else {
-        // Save to localStorage
-        console.log('Saving wishlist to localStorage for logged-out user');
-        setWishlist(items);
-        console.log('Wishlist saved to localStorage');
-      }
-    } catch (error) {
-      console.error('Error saving wishlist:', error);
-      // Don't throw error for localStorage issues, just log them
-      if (user) {
-        throw error; // Only throw for logged-in users (API errors)
-      }
+    if (user) {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ items }),
+      });
+      if (!response.ok) throw new Error('Failed to save wishlist');
+    } else {
+      setWishlist(items);
     }
   };
 
   const addToWishlist = async (item: WishlistItem) => {
     try {
-      console.log('=== ADD TO WISHLIST START ===');
-      console.log('Item:', item);
-      console.log('Current state items:', state.items);
-      
-      // Check if item already exists
-      const exists = state.items.some(existingItem => existingItem.productId === item.productId);
-      if (exists) {
-        console.log('Item already exists in wishlist');
-        return;
-      }
-      
-      // Create new items array with the new item
+      if (state.items.some(i => i.productId === item.productId)) return;
       const newItems = [...state.items, item];
-      console.log('New items array:', newItems);
-      
       dispatch({ type: 'ADD_ITEM', payload: item });
-      console.log('Dispatched ADD_ITEM action');
-      
-      // Save the NEW items array, not the old state
       await saveWishlist(newItems);
-      console.log('=== ADD TO WISHLIST SUCCESS ===');
-      
       toast.success(`${item.name} added to wishlist`);
-    } catch (error) {
-      console.error('=== ADD TO WISHLIST ERROR ===', error);
+    } catch {
       toast.error('Failed to add item to wishlist');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add item to wishlist' });
     }
@@ -236,24 +127,11 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const removeFromWishlist = async (productId: string) => {
     try {
-      console.log('=== REMOVE FROM WISHLIST START ===');
-      console.log('Product ID:', productId);
-      console.log('Current state items:', state.items);
-      
-      // Create new items array without the removed item
-      const newItems = state.items.filter(item => item.productId !== productId);
-      console.log('New items array after removal:', newItems);
-      
+      const newItems = state.items.filter(i => i.productId !== productId);
       dispatch({ type: 'REMOVE_ITEM', payload: productId });
-      console.log('Dispatched REMOVE_ITEM action');
-      
-      // Save to storage with NEW items array, not old state
       await saveWishlist(newItems);
-      console.log('=== REMOVE FROM WISHLIST SUCCESS ===');
-      
       toast.success('Item removed from wishlist');
-    } catch (error) {
-      console.error('=== REMOVE FROM WISHLIST ERROR ===', error);
+    } catch {
       toast.error('Failed to remove item from wishlist');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to remove item from wishlist' });
     }
@@ -270,70 +148,39 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   const clearWishlistData = async () => {
     try {
       dispatch({ type: 'CLEAR_WISHLIST' });
-      
       if (user) {
         await fetch('/api/wishlist', { method: 'DELETE' });
       } else {
         clearWishlist();
       }
-      
       toast.success('Wishlist cleared');
-    } catch (error) {
-      console.error('Error clearing wishlist:', error);
+    } catch {
       toast.error('Failed to clear wishlist');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to clear wishlist' });
     }
   };
 
-  const isInWishlist = (productId: string) => {
-    return state.items.some(item => item.productId === productId);
-  };
-
-  const getWishlistCount = () => {
-    return state.items.length;
-  };
+  const isInWishlist = (productId: string) => state.items.some(i => i.productId === productId);
+  const getWishlistCount = () => state.items.length;
 
   const moveToCart = (productId: string) => {
-    const item = state.items.find(item => item.productId === productId);
+    const item = state.items.find(i => i.productId === productId);
     if (!item) return;
-
-    // Create a custom event to notify cart to add this item
-    // This avoids circular dependency between contexts
-    const event = new CustomEvent('add-to-cart-from-wishlist', {
-      detail: {
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        image: item.image,
-        size: 'M', // Default size - should be improved
-        quantity: 1
-      }
-    });
-    window.dispatchEvent(event);
-
-    // Remove from wishlist
+    window.dispatchEvent(new CustomEvent('add-to-cart-from-wishlist', {
+      detail: { productId: item.productId, name: item.name, price: item.price, image: item.image, size: 'M', quantity: 1 }
+    }));
     removeFromWishlist(productId);
   };
 
-  const value: WishlistContextType = {
-    ...state,
-    addToWishlist,
-    removeFromWishlist,
-    toggleWishlist,
-    clearWishlistData,
-    isInWishlist,
-    getWishlistCount,
-    moveToCart,
-  };
-
-  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+  return (
+    <WishlistContext.Provider value={{ ...state, addToWishlist, removeFromWishlist, toggleWishlist, clearWishlistData, isInWishlist, getWishlistCount, moveToCart }}>
+      {children}
+    </WishlistContext.Provider>
+  );
 };
 
-// Hook to use wishlist context
 export const useWishlist = (): WishlistContextType => {
   const context = useContext(WishlistContext);
-  if (context === undefined) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
-  }
+  if (!context) throw new Error('useWishlist must be used within a WishlistProvider');
   return context;
 };
