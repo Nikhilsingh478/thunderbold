@@ -362,6 +362,7 @@ export default function Admin() {
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewAddressOrder, setViewAddressOrder] = useState<Order | null>(null);
+  const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (user && user.email !== ADMIN_EMAIL) navigate('/');
@@ -405,7 +406,7 @@ export default function Admin() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/orders/${orderId}`, {
+      const r = await fetch(`/api/orders/update-status?id=${orderId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
@@ -424,6 +425,32 @@ export default function Admin() {
     } catch (e) {
       console.error('Status update error:', e);
       alert('Failed to update order status. Please try again.');
+    }
+  };
+
+  const deleteOrder = async (orderId: string) => {
+    if (!user) return;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`/api/orders/delete?id=${orderId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      let data: any = {};
+      try {
+        const text = await r.text();
+        if (text) data = JSON.parse(text);
+      } catch {}
+      if (r.ok) {
+        setOrders(prev => prev.filter(o => o._id !== orderId));
+        setConfirmDeleteOrder(null);
+      } else {
+        console.error('Delete failed:', r.status, data);
+        alert(`Failed to delete order: ${data.error || `HTTP ${r.status}`}`);
+      }
+    } catch (e) {
+      console.error('Delete error:', e);
+      alert('Failed to delete order. Please try again.');
     }
   };
 
@@ -664,6 +691,13 @@ export default function Admin() {
                                 </select>
                                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                               </div>
+                              <button
+                                onClick={() => setConfirmDeleteOrder(order)}
+                                className="p-2 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0"
+                                title="Delete order"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -674,7 +708,7 @@ export default function Admin() {
                         <table className="w-full bg-white/[0.02]">
                           <thead>
                             <tr className="border-b border-white/10">
-                              {['Order ID', 'Customer', 'Items', 'Ship To', 'Total', 'Date', 'Status', 'Update'].map((h) => (
+                              {['Order ID', 'Customer', 'Items', 'Ship To', 'Total', 'Date', 'Status', 'Update', ''].map((h) => (
                                 <th key={h} className="px-4 py-3 text-left font-condensed text-xs text-sv-mid uppercase tracking-wider">{h}</th>
                               ))}
                             </tr>
@@ -742,6 +776,16 @@ export default function Admin() {
                                     </select>
                                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                                   </div>
+                                </td>
+                                {/* Delete */}
+                                <td className="px-4 py-4">
+                                  <button
+                                    onClick={() => setConfirmDeleteOrder(order)}
+                                    className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                                    title="Delete order"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -863,6 +907,41 @@ export default function Admin() {
       <Footer />
 
       <AnimatePresence>
+        {confirmDeleteOrder && (
+          <ModalShell onClose={() => setConfirmDeleteOrder(null)}>
+            <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+              <p className="font-condensed text-xs text-red-400/70 uppercase tracking-widest mb-0.5">Danger Zone</p>
+              <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">Delete Order?</h3>
+            </div>
+            <div className="px-6 py-6 flex-1">
+              <p className="text-sv-mid text-sm leading-relaxed mb-2">
+                Are you sure you want to delete order
+              </p>
+              <p className="font-mono text-xs text-tb-white bg-white/5 border border-white/10 rounded-lg px-3 py-2 mb-4">
+                #{confirmDeleteOrder._id?.slice(-10)}
+              </p>
+              <p className="text-sv-mid text-xs">
+                This will permanently remove the order for{' '}
+                <span className="text-tb-white">{confirmDeleteOrder.userId}</span>.
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-6 pb-6 pt-3 shrink-0 border-t border-white/10 flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteOrder(null)}
+                className="flex-1 py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteOrder(confirmDeleteOrder._id)}
+                className="flex-1 py-3 bg-red-500/90 hover:bg-red-500 rounded-lg text-white text-sm font-condensed font-bold uppercase tracking-wider transition-colors"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </ModalShell>
+        )}
         {viewAddressOrder && (
           <ModalShell onClose={() => setViewAddressOrder(null)}>
             <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">

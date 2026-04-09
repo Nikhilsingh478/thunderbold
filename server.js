@@ -30,6 +30,28 @@ app.use('/api/orders/cancel', async (req, res) => {
   }
 });
 
+app.use('/api/orders/update-status', async (req, res) => {
+  try {
+    req.query = { ...req.query, id: req.query.id };
+    const { default: handler } = await import('./api/orders/update-status.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in orders/update-status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.use('/api/orders/delete', async (req, res) => {
+  try {
+    req.query = { ...req.query, id: req.query.id };
+    const { default: handler } = await import('./api/orders/delete.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in orders/delete:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.use('/api/orders/:id', async (req, res) => {
   try {
     req.query = { ...req.query, id: req.params.id };

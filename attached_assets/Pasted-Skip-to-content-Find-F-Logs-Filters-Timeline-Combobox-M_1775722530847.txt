@@ -1,0 +1,351 @@
+Skip to content
+
+Find…
+F
+
+Logs
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Warning
+0
+
+​
+Error
+0
+
+​
+Fatal
+0
+
+
+Resource
+
+
+
+
+
+Environment
+
+
+
+
+Route
+
+
+
+Request Path
+
+
+
+Status Code
+
+
+
+Request Type
+
+
+
+
+
+
+
+
+Host
+
+
+
+Request Method
+
+
+
+
+
+
+
+
+
+Cache
+
+
+
+Branch
+
+
+
+Deployment ID
+1
+
+
+
+Avatar for nikhilsingh478
+nikhilsingh478
+
+
+Logs
+deploymentId:dpl_Dx5ZJG4UDdSeTgo6PZk9FkHCfXjk 
+
+13:15:00
+13:23:50
+13:32:20
+13:45:00
+Time
+Status
+Host
+Request
+Messages
+Apr 09 13:44:45.16
+GET
+200
+thunderbold-ataqc76pw-nikhilsingh478s-projects.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:44:45.08
+GET
+200
+thunderbold-ataqc76pw-nikhilsingh478s-projects.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:43:55.19
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:43:55.19
+GET
+200
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 21
+Apr 09 13:43:52.90
+GET
+200
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 3
+Apr 09 13:43:49.25
+POST
+201
+thunderbold.vercel.app
+/api/orders/create
+6
+ORDERS API: Order created successfully: new ObjectId('69d75fbd725f016d8a3011fe')
+Apr 09 13:43:40.12
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:43:40.12
+GET
+200
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 20
+Apr 09 13:43:31.95
+PUT
+200
+thunderbold.vercel.app
+/api/orders/cancel
+Apr 09 13:43:28.84
+GET
+200
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 2
+Apr 09 13:43:23.19
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:43:23.18
+GET
+200
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 20
+Apr 09 13:43:12.52
+POST
+201
+thunderbold.vercel.app
+/api/orders/create
+6
+ORDERS API: Order created successfully: new ObjectId('69d75f9b725f016d8a3011fd')
+Apr 09 13:43:05.90
+GET
+304
+thunderbold.vercel.app
+/api/products
+Apr 09 13:43:04.09
+GET
+304
+thunderbold.vercel.app
+/api/products
+Apr 09 13:43:04.09
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:42:58.59
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:42:58.54
+POST
+200
+thunderbold.vercel.app
+/api/users/create
+11
+USER API: Update result: { acknowledged: true, modifiedCount: 1, upsertedId: null, upsertedCount: 0, matchedCount: 1 }
+Apr 09 13:42:46.76
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:42:46.16
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:42:45.65
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:42:43.22
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:42:42.71
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:42:42.19
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:42:25.98
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:42:25.43
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:41:18.17
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:41:18.17
+GET
+304
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 19
+Apr 09 13:41:14.00
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:41:12.73
+GET
+304
+thunderbold.vercel.app
+/api/orders
+5
+GET ORDERS API: Found orders: 19
+Apr 09 13:41:07.25
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:41:05.04
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+Apr 09 13:41:05.04
+GET
+304
+thunderbold.vercel.app
+/api/products
+Apr 09 13:41:01.82
+GET
+304
+thunderbold.vercel.app
+/api/wishlist
+5
+WISHLIST API: Found wishlist: No
+Apr 09 13:40:57.88
+GET
+304
+thunderbold.vercel.app
+/api/categories
+4
+CATEGORIES API: Found categories in DB: 2
+No more logs to show within selected timeline
+
+thunderbold – Logs – Vercel
+18 seconds ago
+UTC
+April 9, 2026
+08:14:45 AM
+GMT+5:30
+April 9, 2026
+01:44:45 PM
+13:32:20
