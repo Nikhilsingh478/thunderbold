@@ -82,19 +82,28 @@ export default async function handler(req, res) {
     }
 
     // ── Pre-flight stock check ─────────────────────────────────────────────────
+    const dbProductsMap = new Map();
     for (const item of products) {
       let dbProduct = null;
       try { dbProduct = await productsCollection.findOne({ _id: new ObjectId(item.productId) }); }
       catch { dbProduct = await productsCollection.findOne({ _id: item.productId }); }
 
       if (!dbProduct) return res.status(400).json({ error: `Product "${item.name}" not found` });
+      dbProductsMap.set(item.productId, dbProduct);
 
-      const available = typeof dbProduct.stock === 'number' ? dbProduct.stock : 0;
+      // Use size-specific stock if available, otherwise fall back to total stock
+      let available;
+      if (dbProduct.sizeStock && typeof dbProduct.sizeStock === 'object' && item.size in dbProduct.sizeStock) {
+        available = dbProduct.sizeStock[item.size];
+      } else {
+        available = typeof dbProduct.stock === 'number' ? dbProduct.stock : 0;
+      }
+
       if (available < item.quantity) {
         return res.status(400).json({
           error: available === 0
-            ? `"${item.name}" is out of stock`
-            : `Only ${available} unit(s) of "${item.name}" are available`,
+            ? `"${item.name}" (size ${item.size}) is out of stock`
+            : `Only ${available} unit(s) of "${item.name}" in size ${item.size} are available`,
         });
       }
     }
@@ -139,23 +148,34 @@ export default async function handler(req, res) {
       try { productObjectId = new ObjectId(item.productId); }
       catch { productObjectId = item.productId; }
 
-      const updateResult = await productsCollection.updateOne(
-        { _id: productObjectId, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } }
-      );
+      const dbProduct = dbProductsMap.get(item.productId);
+      const hasSizeStock = dbProduct?.sizeStock && typeof dbProduct.sizeStock === 'object' && item.size in dbProduct.sizeStock;
+
+      const updateFilter = hasSizeStock
+        ? { _id: productObjectId, [`sizeStock.${item.size}`]: { $gte: item.quantity } }
+        : { _id: productObjectId, stock: { $gte: item.quantity } };
+
+      const updateOp = hasSizeStock
+        ? { $inc: { [`sizeStock.${item.size}`]: -item.quantity, stock: -item.quantity } }
+        : { $inc: { stock: -item.quantity } };
+
+      const updateResult = await productsCollection.updateOne(updateFilter, updateOp);
 
       if (updateResult.modifiedCount === 0) {
-        stockError = `Stock changed for "${item.name}" — please retry`;
+        stockError = `Stock changed for "${item.name}" (size ${item.size}) — please retry`;
         break;
       }
 
-      decremented.push({ id: productObjectId, quantity: item.quantity });
+      decremented.push({ id: productObjectId, quantity: item.quantity, size: item.size, hasSizeStock });
     }
 
     if (stockError) {
       // Compensate: restore all decrements made so far
       for (const prev of decremented) {
-        await productsCollection.updateOne({ _id: prev.id }, { $inc: { stock: prev.quantity } });
+        const restoreOp = prev.hasSizeStock
+          ? { $inc: { [`sizeStock.${prev.size}`]: prev.quantity, stock: prev.quantity } }
+          : { $inc: { stock: prev.quantity } };
+        await productsCollection.updateOne({ _id: prev.id }, restoreOp);
       }
       // Also remove the created order
       await ordersCollection.deleteOne({ _id: result.insertedId });

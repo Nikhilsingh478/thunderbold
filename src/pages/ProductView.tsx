@@ -134,7 +134,16 @@ export default function ProductView() {
 
   const stock = typeof product?.stock === 'number' ? product.stock : null;
   const isOutOfStock = stock !== null && stock <= 0;
-  const isLowStock = stock !== null && stock > 0 && stock <= 3;
+  const isLowStock = stock !== null && stock > 0 && stock <= 5;
+
+  // Per-size availability using sizeStock (when present)
+  const isSizeOos = (size: string): boolean => {
+    if (!product?.sizeStock) return false;
+    return (product.sizeStock[size] ?? 0) <= 0;
+  };
+  const selectedSizeOos = selectedSize ? isSizeOos(selectedSize) : false;
+  // Effective OOS: total stock gone OR selected size is gone
+  const effectiveOutOfStock = isOutOfStock || selectedSizeOos;
 
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
@@ -262,19 +271,27 @@ export default function ProductView() {
                   <button className="text-sv-mid hover:text-brass transition-colors underline underline-offset-4 decoration-white/20">Size Guide</button>
                 </div>
                 <div className="grid grid-cols-5 gap-2 sm:gap-4 md:flex md:flex-wrap">
-                  {SIZES.map(size => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`h-12 w-full md:w-14 md:h-14 flex items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 ${
-                        selectedSize === size
-                          ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
-                          : 'border-white text-tb-white hover:bg-white/5 hover:scale-[1.02]'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {SIZES.map(size => {
+                    const oos = isSizeOos(size);
+                    return (
+                      <button
+                        key={size}
+                        onClick={() => !oos && setSelectedSize(size)}
+                        disabled={oos}
+                        title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
+                        className={`h-12 w-full md:w-14 md:h-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                          oos
+                            ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
+                            : selectedSize === size
+                              ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
+                              : 'border-white text-tb-white hover:bg-white/5 hover:scale-[1.02]'
+                        }`}
+                      >
+                        <span className={oos ? 'line-through decoration-white/30' : ''}>{size}</span>
+                        {oos && <span className="text-[9px] tracking-wider text-white/25 leading-none mt-0.5">OOS</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -308,15 +325,15 @@ export default function ProductView() {
                 <div className="flex gap-4">
                   <button
                     onClick={handleAddToCart}
-                    disabled={!selectedSize || isOutOfStock || isAddingToCart}
+                    disabled={!selectedSize || effectiveOutOfStock || isAddingToCart}
                     className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
-                      selectedSize && !isOutOfStock && !isAddingToCart
+                      selectedSize && !effectiveOutOfStock && !isAddingToCart
                         ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
                         : 'bg-white/5 text-white/20 cursor-not-allowed'
                     }`}
                   >
                     <ShoppingCart size={20} />
-                    {isAddingToCart ? 'Adding...' : isOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
+                    {isAddingToCart ? 'Adding...' : effectiveOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
                   </button>
 
                   <button
@@ -337,14 +354,14 @@ export default function ProductView() {
                 {/* Order CTA */}
                 <button
                   onClick={handleOrder}
-                  disabled={!selectedSize || isOutOfStock || isOrdering}
+                  disabled={!selectedSize || effectiveOutOfStock || isOrdering}
                   className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
-                    selectedSize && !isOutOfStock && !isOrdering
+                    selectedSize && !effectiveOutOfStock && !isOrdering
                       ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
                       : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                 >
-                  {isOrdering ? 'Processing...' : isOutOfStock ? 'Out of Stock' : selectedSize ? 'Order Now' : 'Select a Size'}
+                  {isOrdering ? 'Processing...' : effectiveOutOfStock ? 'Out of Stock' : selectedSize ? 'Order Now' : 'Select a Size'}
                 </button>
               </div>
               

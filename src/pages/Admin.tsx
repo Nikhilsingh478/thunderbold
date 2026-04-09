@@ -38,14 +38,18 @@ interface Order {
   paymentMethod?: string;
 }
 
+const SIZES = ['28', '30', '32', '34', '36'] as const;
+
 interface Product {
   _id: string;
   name: string;
   categoryId: string;
   price: number;
   image?: string;
+  images?: string[];
   description?: string;
   stock?: number;
+  sizeStock?: Record<string, number>;
 }
 
 interface CategoryFormData {
@@ -142,10 +146,11 @@ interface ProductFormData {
   price: string;
   images: string[];
   description: string;
-  stock: string;
+  sizeStock: Record<string, string>;
 }
 
-const defaultFormData: ProductFormData = { name: '', categoryId: '', price: '', images: [''], description: '', stock: '' };
+const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
+const defaultFormData: ProductFormData = { name: '', categoryId: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock() };
 
 function ImageInput({
   images,
@@ -205,6 +210,43 @@ function ImageInput({
         <Plus className="w-3.5 h-3.5" />
         Add Another Image
       </button>
+    </div>
+  );
+}
+
+function SizeStockInput({
+  sizeStock,
+  onChange,
+}: {
+  sizeStock: Record<string, string>;
+  onChange: (ss: Record<string, string>) => void;
+}) {
+  const total = SIZES.reduce((sum, s) => sum + (parseInt(sizeStock[s] ?? '0') || 0), 0);
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-5 gap-2">
+        {SIZES.map(size => {
+          const qty = parseInt(sizeStock[size] ?? '0') || 0;
+          return (
+            <div key={size} className="flex flex-col gap-1.5 items-center">
+              <span className={`font-condensed text-xs uppercase tracking-wider ${qty === 0 ? 'text-red-400/70' : 'text-sv-mid'}`}>
+                {size}
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={sizeStock[size] ?? '0'}
+                onChange={(e) => onChange({ ...sizeStock, [size]: e.target.value })}
+                className={`w-full px-1 py-2 bg-white/5 border rounded-lg text-tb-white text-sm text-center focus:outline-none transition-colors ${qty === 0 ? 'border-red-500/20 focus:border-red-400/40' : 'border-white/10 focus:border-white/30'}`}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <p className="font-condensed text-xs text-sv-mid/60">
+        Total stock: <span className="text-sv-mid">{total} units</span>
+        {total === 0 && <span className="text-red-400/70 ml-2">— product will show as out of stock</span>}
+      </p>
     </div>
   );
 }
@@ -281,28 +323,27 @@ function ProductModal({
           </div>
         </div>
 
-        {/* Price + Stock row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Price (¥)</label>
-            <input
-              type="number"
-              value={form.price}
-              onChange={(e) => setForm(p => ({ ...p, price: e.target.value }))}
-              placeholder="0"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Stock</label>
-            <input
-              type="number"
-              value={form.stock}
-              onChange={(e) => setForm(p => ({ ...p, stock: e.target.value }))}
-              placeholder="0"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
-            />
-          </div>
+        {/* Price */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Price (¥)</label>
+          <input
+            type="number"
+            value={form.price}
+            onChange={(e) => setForm(p => ({ ...p, price: e.target.value }))}
+            placeholder="0"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+          />
+        </div>
+
+        {/* Size-based Stock */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-2">
+            Stock by Size
+          </label>
+          <SizeStockInput
+            sizeStock={form.sizeStock}
+            onChange={(ss) => setForm(p => ({ ...p, sizeStock: ss }))}
+          />
         </div>
 
         {/* Images */}
@@ -459,16 +500,19 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
-      const stock = parseInt(formData.stock, 10) || 0;
+      const sizeStock = Object.fromEntries(
+        SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
+      );
+      const stock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
       const images = formData.images.map(s => s.trim()).filter(Boolean);
       const r = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, stock, images, description: formData.description }),
+        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
       });
       const d = await r.json();
       if (r.ok) {
-        setProducts(prev => [{ _id: d.product._id, name: formData.name, categoryId: formData.categoryId, price, stock, images, image: images[0], description: formData.description }, ...prev]);
+        setProducts(prev => [{ _id: d.product._id, name: formData.name, categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }, ...prev]);
         setShowAddProductModal(false);
         return true;
       }
@@ -481,17 +525,20 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
-      const stock = parseInt(formData.stock, 10) || 0;
+      const sizeStock = Object.fromEntries(
+        SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
+      );
+      const stock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
       const images = formData.images.map(s => s.trim()).filter(Boolean);
       const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, stock, images, description: formData.description }),
+        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
       });
       const d = await r.json();
       if (r.ok) {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
-          ? { _id: editingProduct._id, name: formData.name, categoryId: formData.categoryId, price, stock, images, image: images[0], description: formData.description }
+          ? { _id: editingProduct._id, name: formData.name, categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }
           : p
         ));
         setEditingProduct(null);
@@ -836,14 +883,27 @@ export default function Admin() {
                                 <span className={`font-condensed text-xs px-2 py-0.5 rounded-full border ${
                                   product.stock === 0
                                     ? 'bg-red-500/15 border-red-500/30 text-red-400'
-                                    : product.stock <= 3
+                                    : product.stock <= 5
                                       ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
                                       : 'bg-green-500/15 border-green-500/30 text-green-400'
                                 }`}>
-                                  {product.stock === 0 ? 'Out of stock' : `${product.stock} in stock`}
+                                  {product.stock === 0 ? 'Out of stock' : `${product.stock} total`}
                                 </span>
                               )}
                             </div>
+                            {product.sizeStock && (
+                              <div className="grid grid-cols-5 gap-1 mb-2">
+                                {SIZES.map(size => {
+                                  const qty = product.sizeStock![size] ?? 0;
+                                  return (
+                                    <div key={size} className={`text-center rounded py-0.5 border ${qty === 0 ? 'border-red-500/20 bg-red-500/5' : 'border-white/8 bg-white/3'}`}>
+                                      <div className="font-condensed text-[10px] text-sv-mid/70">{size}</div>
+                                      <div className={`font-condensed text-xs font-semibold ${qty === 0 ? 'text-red-400/60' : 'text-tb-white'}`}>{qty}</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                             <div className="flex gap-2">
                               <button
                                 onClick={() => setEditingProduct(product)}
@@ -1006,7 +1066,9 @@ export default function Admin() {
                   ? [editingProduct.image]
                   : [''],
               description: editingProduct.description ?? '',
-              stock: String(editingProduct.stock ?? 0),
+              sizeStock: editingProduct.sizeStock
+                ? Object.fromEntries(SIZES.map(s => [s, String(editingProduct.sizeStock![s] ?? 0)]))
+                : makeDefaultSizeStock(),
             }}
             onSubmit={updateProduct}
             onClose={() => setEditingProduct(null)}

@@ -47,24 +47,26 @@ export default async function handler(req, res) {
     );
     if (result.modifiedCount === 0) return res.status(400).json({ error: 'Order could not be cancelled' });
 
-    // Restore stock for each item
+    // Restore stock for each item (size-aware)
     const orderProducts = order.products || [];
     for (const item of orderProducts) {
       if (!item.productId || !item.quantity) continue;
       try {
-        await productsCollection.updateOne(
-          { _id: new ObjectId(item.productId) },
-          { $inc: { stock: item.quantity } }
-        );
-      } catch {
-        try {
-          await productsCollection.updateOne(
-            { _id: item.productId },
-            { $inc: { stock: item.quantity } }
-          );
-        } catch (err) {
-          console.error('ORDER CANCEL: Failed to restore stock for:', item.productId, err.message);
-        }
+        let productObjectId;
+        try { productObjectId = new ObjectId(item.productId); }
+        catch { productObjectId = item.productId; }
+
+        // Fetch the product to check if it uses sizeStock
+        const dbProduct = await productsCollection.findOne({ _id: productObjectId });
+        const hasSizeStock = dbProduct?.sizeStock && typeof dbProduct.sizeStock === 'object' && item.size in dbProduct.sizeStock;
+
+        const restoreOp = hasSizeStock
+          ? { $inc: { [`sizeStock.${item.size}`]: item.quantity, stock: item.quantity } }
+          : { $inc: { stock: item.quantity } };
+
+        await productsCollection.updateOne({ _id: productObjectId }, restoreOp);
+      } catch (err) {
+        console.error('ORDER CANCEL: Failed to restore stock for:', item.productId, err.message);
       }
     }
 

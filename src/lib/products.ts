@@ -4,9 +4,11 @@ export interface Product {
   price: number;
   description?: string;
   image: string;
+  images?: string[];
   categoryId: string;
   category?: string;
   stock?: number;
+  sizeStock?: Record<string, number>;
   createdAt?: string;
   updatedAt?: string;
 }

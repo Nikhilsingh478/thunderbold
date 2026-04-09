@@ -18,6 +18,21 @@ async function checkAdminAuth(req, db) {
   }
 }
 
+const VALID_SIZES = ['28', '30', '32', '34', '36'];
+
+function normaliseSizeStock(sizeStock) {
+  if (!sizeStock || typeof sizeStock !== 'object') {
+    return Object.fromEntries(VALID_SIZES.map(s => [s, 0]));
+  }
+  return Object.fromEntries(
+    VALID_SIZES.map(s => [s, Math.max(0, parseInt(sizeStock[s] ?? 0, 10) || 0)])
+  );
+}
+
+function computeTotalStock(sizeStock) {
+  return Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
+}
+
 function normaliseImages(body) {
   let images = [];
   if (Array.isArray(body.images) && body.images.length > 0) {
@@ -44,7 +59,7 @@ export default async function handler(req, res) {
       case 'GET': {
         const products = await col.find(
           {},
-          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, stock: 1, createdAt: 1 } }
+          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, stock: 1, sizeStock: 1, createdAt: 1 } }
         ).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
@@ -54,7 +69,7 @@ export default async function handler(req, res) {
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-        const { name, price, description, categoryId, stock } = req.body;
+        const { name, price, description, categoryId, sizeStock } = req.body;
         const images = normaliseImages(req.body);
         if (!name || !price || images.length === 0 || !categoryId) {
           return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
@@ -62,13 +77,16 @@ export default async function handler(req, res) {
         if (typeof price !== 'number' || price <= 0) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
+        const normalisedSizeStock = normaliseSizeStock(sizeStock);
+        const totalStock = computeTotalStock(normalisedSizeStock);
         const product = {
           name, price,
           image: images[0],
           images,
           description: description || '',
           categoryId,
-          stock: typeof stock === 'number' ? stock : (parseInt(stock, 10) || 0),
+          sizeStock: normalisedSizeStock,
+          stock: totalStock,
           createdAt: new Date(),
         };
         const result = await col.insertOne(product);
@@ -82,11 +100,13 @@ export default async function handler(req, res) {
         }
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing product ID' });
-        const { name, price, description, categoryId, stock } = req.body;
+        const { name, price, description, categoryId, sizeStock } = req.body;
         const images = normaliseImages(req.body);
         if (!name || !price || images.length === 0 || !categoryId) {
           return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
         }
+        const normalisedSizeStock = normaliseSizeStock(sizeStock);
+        const totalStock = computeTotalStock(normalisedSizeStock);
         const updates = {
           name,
           price: typeof price === 'number' ? price : parseFloat(price),
@@ -94,7 +114,8 @@ export default async function handler(req, res) {
           images,
           description: description || '',
           categoryId,
-          stock: typeof stock === 'number' ? stock : (parseInt(stock, 10) || 0),
+          sizeStock: normalisedSizeStock,
+          stock: totalStock,
           updatedAt: new Date(),
         };
         const result = await col.updateOne(

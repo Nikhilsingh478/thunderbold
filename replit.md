@@ -36,6 +36,16 @@ Set these as Replit secrets:
 - `VITE_FIREBASE_APP_ID`
 - `MONGO_URI` — MongoDB Atlas connection string
 
+## Size-Based Stock System
+Products use a `sizeStock` map (`Record<string, number>`) with keys `['28','30','32','34','36']`. The flat `stock` field is kept as the computed total (sum of all sizeStock values).
+
+- **Admin (`src/pages/Admin.tsx`)**: `SizeStockInput` component allows setting per-size stock for each product. Product cards show per-size breakdown grid. `SIZES` constant is the single source of truth.
+- **Store (`src/pages/ProductView.tsx`)**: Size buttons are disabled + strikethrough + "OOS" label when `sizeStock[size] === 0`. Action buttons use `effectiveOutOfStock` (total OOS OR selected size OOS).
+- **Backend (`api/products/index.js`)**: POST/PUT accept `sizeStock`, compute total `stock` with `normaliseSizeStock` + `computeTotalStock` helpers. GET projects `sizeStock`.
+- **Orders (`api/orders/create.js`)**: Pre-flight stock check uses `sizeStock[size]` when available. Atomic decrement/rollback is size-aware.
+- **Cancel (`api/orders/cancel.js`)**: Stock restore fetches product to check sizeStock presence before restoring per-size + total.
+- **Backward compat**: Products without `sizeStock` fall back to flat `stock` throughout.
+
 ## Deployment
 - Build: `npm run build` (Vite output to `dist/`)
 - The `.replit` deployment config targets autoscale with `node ./dist/index.cjs`
