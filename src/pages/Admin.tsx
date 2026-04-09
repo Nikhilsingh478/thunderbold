@@ -13,6 +13,18 @@ const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
 interface OrderProduct {
   name: string;
   quantity: number;
+  size?: string;
+  price?: number;
+  image?: string;
+  productId?: string;
+}
+
+interface OrderAddress {
+  fullName?: string;
+  phone?: string;
+  addressLine1?: string;
+  city?: string;
+  pincode?: string;
 }
 
 interface Order {
@@ -22,6 +34,8 @@ interface Order {
   totalAmount: number;
   status: string;
   createdAt: string;
+  address?: OrderAddress;
+  paymentMethod?: string;
 }
 
 interface Product {
@@ -395,8 +409,17 @@ export default function Admin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (r.ok) setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
-    } catch (e) { console.error(e); }
+      const data = await r.json();
+      if (r.ok) {
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+      } else {
+        console.error('Status update failed:', r.status, data);
+        alert(`Failed to update status: ${data.error || r.status}`);
+      }
+    } catch (e) {
+      console.error('Status update error:', e);
+      alert('Failed to update status — network error');
+    }
   };
 
   const addProduct = async (formData: ProductFormData): Promise<boolean> => {
@@ -575,42 +598,63 @@ export default function Admin() {
                       <div className="block md:hidden space-y-3">
                         {orders.map((order) => (
                           <div key={order._id} className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                            {/* Order ID + Status */}
                             <div className="flex items-start justify-between gap-3 mb-3">
                               <div className="min-w-0">
-                                <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Customer</p>
-                                <p className="text-tb-white text-sm truncate">{order.userId?.includes('@') ? order.userId : 'Unknown User'}</p>
+                                <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Order ID</p>
+                                <p className="text-tb-white text-xs font-mono">#{order._id?.slice(-10) ?? '—'}</p>
                               </div>
                               <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
-                                {order.status}
+                                {order.status ?? 'pending'}
                               </span>
                             </div>
+                            {/* Customer */}
                             <div className="mb-3">
-                              <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">Items</p>
-                              <div className="space-y-0.5">
+                              <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Customer</p>
+                              <p className="text-tb-white text-sm truncate">{order.userId?.includes('@') ? order.userId : 'Unknown User'}</p>
+                            </div>
+                            {/* Items */}
+                            <div className="mb-3">
+                              <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Items</p>
+                              <div className="space-y-2">
                                 {(order.products ?? []).map((p, i) => (
-                                  <p key={i} className="text-tb-white text-sm">{p.name} <span className="text-sv-mid">×{p.quantity}</span></p>
+                                  <div key={i} className="bg-white/[0.03] rounded-lg px-3 py-2">
+                                    <p className="text-tb-white text-sm font-medium">{p.name}</p>
+                                    <div className="flex items-center gap-3 mt-0.5">
+                                      {p.size && <span className="text-sv-mid text-xs">Size: <span className="text-tb-white">{p.size}</span></span>}
+                                      <span className="text-sv-mid text-xs">Qty: <span className="text-tb-white">{p.quantity}</span></span>
+                                      {p.price != null && <span className="text-sv-mid text-xs">¥{p.price.toFixed(2)}</span>}
+                                    </div>
+                                  </div>
                                 ))}
                               </div>
                             </div>
+                            {/* Address */}
+                            {order.address?.fullName && (
+                              <div className="mb-3">
+                                <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Ship To</p>
+                                <p className="text-tb-white text-xs">{order.address.fullName}</p>
+                                <p className="text-sv-mid text-xs">{[order.address.addressLine1, order.address.city, order.address.pincode].filter(Boolean).join(', ')}</p>
+                              </div>
+                            )}
+                            {/* Total + Date + Update */}
                             <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
                               <div>
                                 <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Total</p>
-                                <p className="text-tb-white font-condensed font-semibold">¥{order.totalAmount?.toFixed(2)}</p>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <p className="text-sv-mid text-xs">
+                                <p className="text-tb-white font-condensed font-semibold">¥{order.totalAmount?.toFixed(2) ?? '—'}</p>
+                                <p className="text-sv-mid text-xs mt-0.5">
                                   {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                 </p>
-                                <div className="relative">
-                                  <select
-                                    value={order.status}
-                                    onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                                    className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
-                                  >
-                                    {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-                                  </select>
-                                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
-                                </div>
+                              </div>
+                              <div className="relative">
+                                <select
+                                  value={order.status ?? 'pending'}
+                                  onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                                  className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
+                                >
+                                  {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                               </div>
                             </div>
                           </div>
@@ -622,35 +666,66 @@ export default function Admin() {
                         <table className="w-full bg-white/[0.02]">
                           <thead>
                             <tr className="border-b border-white/10">
-                              {['Customer', 'Items', 'Total', 'Status', 'Date', 'Update'].map((h) => (
-                                <th key={h} className="px-5 py-3 text-left font-condensed text-xs text-sv-mid uppercase tracking-wider">{h}</th>
+                              {['Order ID', 'Customer', 'Items', 'Ship To', 'Total', 'Date', 'Status', 'Update'].map((h) => (
+                                <th key={h} className="px-4 py-3 text-left font-condensed text-xs text-sv-mid uppercase tracking-wider">{h}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
                             {orders.map((order) => (
-                              <tr key={order._id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors">
-                                <td className="px-5 py-4 text-sm text-sv-mid">{order.userId?.includes('@') ? order.userId : 'Unknown'}</td>
-                                <td className="px-5 py-4">
-                                  <div className="space-y-0.5">
+                              <tr key={order._id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors align-top">
+                                {/* Order ID */}
+                                <td className="px-4 py-4 text-xs text-sv-mid font-mono whitespace-nowrap">
+                                  #{order._id?.slice(-10) ?? '—'}
+                                </td>
+                                {/* Customer */}
+                                <td className="px-4 py-4 text-sm text-sv-mid max-w-[160px]">
+                                  <span className="block truncate">{order.userId?.includes('@') ? order.userId : 'Unknown'}</span>
+                                </td>
+                                {/* Items */}
+                                <td className="px-4 py-4 max-w-[220px]">
+                                  <div className="space-y-2">
                                     {(order.products ?? []).map((p, i) => (
-                                      <div key={i} className="text-sm text-tb-white">{p.name} <span className="text-sv-mid">×{p.quantity}</span></div>
+                                      <div key={i}>
+                                        <div className="text-sm text-tb-white font-medium">{p.name}</div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {p.size && <span className="text-xs text-sv-mid">Size: <span className="text-tb-white">{p.size}</span></span>}
+                                          <span className="text-xs text-sv-mid">Qty: <span className="text-tb-white">{p.quantity}</span></span>
+                                          {p.price != null && <span className="text-xs text-sv-mid">¥{p.price.toFixed(2)}</span>}
+                                        </div>
+                                      </div>
                                     ))}
                                   </div>
                                 </td>
-                                <td className="px-5 py-4 text-sm text-tb-white font-condensed font-semibold">¥{order.totalAmount?.toFixed(2)}</td>
-                                <td className="px-5 py-4">
-                                  <span className={`px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
-                                    {order.status}
-                                  </span>
+                                {/* Ship To */}
+                                <td className="px-4 py-4 text-xs text-sv-mid max-w-[160px]">
+                                  {order.address?.fullName ? (
+                                    <>
+                                      <div className="text-tb-white">{order.address.fullName}</div>
+                                      <div>{order.address.addressLine1}</div>
+                                      <div>{[order.address.city, order.address.pincode].filter(Boolean).join(', ')}</div>
+                                    </>
+                                  ) : '—'}
                                 </td>
-                                <td className="px-5 py-4 text-sm text-sv-mid">
+                                {/* Total */}
+                                <td className="px-4 py-4 text-sm text-tb-white font-condensed font-semibold whitespace-nowrap">
+                                  ¥{order.totalAmount?.toFixed(2) ?? '—'}
+                                </td>
+                                {/* Date */}
+                                <td className="px-4 py-4 text-sm text-sv-mid whitespace-nowrap">
                                   {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                 </td>
-                                <td className="px-5 py-4">
+                                {/* Status badge */}
+                                <td className="px-4 py-4">
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+                                    {order.status ?? 'pending'}
+                                  </span>
+                                </td>
+                                {/* Update dropdown */}
+                                <td className="px-4 py-4">
                                   <div className="relative inline-block">
                                     <select
-                                      value={order.status}
+                                      value={order.status ?? 'pending'}
                                       onChange={(e) => updateOrderStatus(order._id, e.target.value)}
                                       className="pl-3 pr-8 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
                                     >

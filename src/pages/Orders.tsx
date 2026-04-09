@@ -96,7 +96,7 @@ const Orders = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status ?? '').toLowerCase()) {
       case 'pending':
         return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
       case 'confirmed':
@@ -111,7 +111,7 @@ const Orders = () => {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status ?? '').toLowerCase()) {
       case 'pending':
         return <Clock className="w-4 h-4" />;
       case 'confirmed':
@@ -260,15 +260,15 @@ const Orders = () => {
                       Items
                     </h3>
                     <div className="space-y-3">
-                      {order.products.map((product, index) => (
+                      {(order.products ?? []).map((product, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <div className="flex-1">
                             <p className="text-tb-white font-medium">{product.name}</p>
                             <p className="text-sv-mid text-sm">
-                              Size: {product.size} × {product.quantity}
+                              {product.size ? `Size: ${product.size} · ` : ''}Qty: {product.quantity}
                             </p>
                           </div>
-                          <p className="text-tb-white">¥{product.price}</p>
+                          <p className="text-tb-white">¥{product.price?.toFixed(2) ?? '—'}</p>
                         </div>
                       ))}
                     </div>
