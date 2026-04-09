@@ -1,16 +1,17 @@
 import { getDb } from "../_lib/mongodb.js";
 import { ObjectId } from "mongodb";
 import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
+import { isAdmin } from "../_lib/adminHelper.js";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "nikhilwebworks@gmail.com";
-
-async function checkAdminAuth(req) {
+async function checkAdminAuth(req, db) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) return { authorized: false, error: 'Unauthorized' };
   const token = authHeader.split(' ')[1];
   try {
     const decoded = await verifyFirebaseToken(token);
-    if (decoded?.email !== ADMIN_EMAIL) return { authorized: false, error: 'Admin access required' };
+    if (!decoded?.email) return { authorized: false, error: 'Unauthorized' };
+    const admin = await isAdmin(decoded.email, db);
+    if (!admin) return { authorized: false, error: 'Admin access required' };
     return { authorized: true, userEmail: decoded.email };
   } catch {
     return { authorized: false, error: 'Unauthorized' };
@@ -41,12 +42,15 @@ export default async function handler(req, res) {
     switch (req.method) {
 
       case 'GET': {
-        const products = await col.find({}).sort({ createdAt: -1 }).toArray();
+        const products = await col.find(
+          {},
+          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, stock: 1, createdAt: 1 } }
+        ).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
 
       case 'POST': {
-        const auth = await checkAdminAuth(req);
+        const auth = await checkAdminAuth(req, database);
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
@@ -72,7 +76,7 @@ export default async function handler(req, res) {
       }
 
       case 'PUT': {
-        const auth = await checkAdminAuth(req);
+        const auth = await checkAdminAuth(req, database);
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
@@ -102,7 +106,7 @@ export default async function handler(req, res) {
       }
 
       case 'DELETE': {
-        const auth = await checkAdminAuth(req);
+        const auth = await checkAdminAuth(req, database);
         if (!auth.authorized) return res.status(401).json({ error: 'Unauthorized' });
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing ID' });

@@ -1,8 +1,7 @@
 import { getDb } from "../_lib/mongodb.js";
 import { ObjectId } from "mongodb";
 import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "nikhilwebworks@gmail.com";
+import { isAdmin } from "../_lib/adminHelper.js";
 
 async function parseBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -40,7 +39,8 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     if (!decoded?.email) return res.status(401).json({ error: 'Unauthorized' });
-    if (decoded.email !== ADMIN_EMAIL) return res.status(403).json({ error: 'Admin access required' });
+    const db = await getDb();
+    if (!await isAdmin(decoded.email, db)) return res.status(403).json({ error: 'Admin access required' });
 
     const orderId = req.query.id;
     if (!orderId) return res.status(400).json({ error: 'Order ID is required' });
@@ -49,7 +49,6 @@ export default async function handler(req, res) {
     try { objectId = new ObjectId(orderId); }
     catch { return res.status(400).json({ error: 'Invalid order ID format' }); }
 
-    const db = await getDb();
     const orders = db.collection('orders');
 
     if (req.method === 'PATCH') {

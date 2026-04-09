@@ -17,6 +17,22 @@ export interface ProductResponse {
   source: 'database';
 }
 
+async function fetchWithRetry(url: string, options?: RequestInit, retries = 2): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      return response;
+    } catch (err) {
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error('All fetch attempts failed');
+}
+
 /**
  * Fetch all products from API
  */
@@ -24,7 +40,7 @@ export async function fetchProducts(): Promise<ProductResponse> {
   console.log('PRODUCT FETCH: Fetching from API...');
   
   try {
-    const response = await fetch('/api/products');
+    const response = await fetchWithRetry('/api/products');
     
     if (!response.ok) {
       throw new Error(`API returned ${response.status}`);
@@ -44,7 +60,7 @@ export async function fetchProducts(): Promise<ProductResponse> {
  */
 export async function fetchProductById(id: string): Promise<Product | null> {
   try {
-    const response = await fetch('/api/products');
+    const response = await fetchWithRetry('/api/products');
     if (!response.ok) {
       throw new Error(`API returned ${response.status}`);
     }
@@ -62,7 +78,7 @@ export async function fetchProductById(id: string): Promise<Product | null> {
  */
 export async function fetchProductsByCategory(category: string): Promise<Product[]> {
   try {
-    const response = await fetch('/api/products');
+    const response = await fetchWithRetry('/api/products');
     if (!response.ok) {
       throw new Error(`API returned ${response.status}`);
     }

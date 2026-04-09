@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -8,6 +9,10 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = 3001;
 
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}));
 app.use(express.json());
 
 app.use('/api/orders/create', async (req, res) => {

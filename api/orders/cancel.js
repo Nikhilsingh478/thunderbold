@@ -1,6 +1,7 @@
 import { getDb } from "../_lib/mongodb.js";
 import { ObjectId } from "mongodb";
 import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
+import { isAdmin } from "../_lib/adminHelper.js";
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -34,8 +35,7 @@ export default async function handler(req, res) {
     const order = await ordersCollection.findOne({ _id: new ObjectId(orderId) });
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
-    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nikhilwebworks@gmail.com';
-    if (order.userId !== userEmail && userEmail !== ADMIN_EMAIL) {
+    if (order.userId !== userEmail && !await isAdmin(userEmail, database)) {
       return res.status(403).json({ error: 'You can only cancel your own orders' });
     }
     if (order.status === 'cancelled') return res.status(400).json({ error: 'Order is already cancelled' });

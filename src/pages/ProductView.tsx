@@ -25,6 +25,9 @@ export default function ProductView() {
   const [quantity, setQuantity] = useState<number>(1);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
   
   const IMAGES: string[] = product?.images?.length
     ? product.images
@@ -76,7 +79,8 @@ export default function ProductView() {
   }, [productId]);
 
   const handleOrder = requireAuth(() => {
-    if (!selectedSize || !product) return;
+    if (!selectedSize || !product || isOrdering) return;
+    setIsOrdering(true);
     navigate('/checkout', {
       state: {
         productName: product.name,
@@ -87,11 +91,12 @@ export default function ProductView() {
         productUrl: window.location.href,
       },
     });
+    setTimeout(() => setIsOrdering(false), 1500);
   }, user);
 
   const handleAddToCart = async () => {
-    if (!selectedSize || !product) return;
-    
+    if (!selectedSize || !product || isAddingToCart) return;
+    setIsAddingToCart(true);
     try {
       await addToCart({
         productId: product._id,
@@ -102,12 +107,14 @@ export default function ProductView() {
       }, quantity);
     } catch (error) {
       console.error('Error adding to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
   const handleAddToWishlist = async () => {
-    if (!product) return;
-    
+    if (!product || isTogglingWishlist) return;
+    setIsTogglingWishlist(true);
     try {
       await toggleWishlist({
         productId: product._id,
@@ -117,6 +124,8 @@ export default function ProductView() {
       });
     } catch (error) {
       console.error('Error toggling wishlist:', error);
+    } finally {
+      setIsTogglingWishlist(false);
     }
   };
 
@@ -299,41 +308,43 @@ export default function ProductView() {
                 <div className="flex gap-4">
                   <button
                     onClick={handleAddToCart}
-                    disabled={!selectedSize || isOutOfStock}
+                    disabled={!selectedSize || isOutOfStock || isAddingToCart}
                     className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
-                      selectedSize && !isOutOfStock
+                      selectedSize && !isOutOfStock && !isAddingToCart
                         ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
                         : 'bg-white/5 text-white/20 cursor-not-allowed'
                     }`}
                   >
                     <ShoppingCart size={20} />
-                    {isOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
+                    {isAddingToCart ? 'Adding...' : isOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
                   </button>
 
                   <button
                     onClick={handleAddToWishlist}
-                    disabled={!product}
+                    disabled={!product || isTogglingWishlist}
                     className={`p-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center ${
-                      product && isInWishlist(product._id)
-                        ? 'bg-brass text-void hover:bg-yellow-400'
-                        : 'bg-white/5 text-white hover:bg-white/10'
+                      isTogglingWishlist
+                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                        : product && isInWishlist(product._id)
+                          ? 'bg-brass text-void hover:bg-yellow-400'
+                          : 'bg-white/5 text-white hover:bg-white/10'
                     }`}
                   >
-                    <Heart size={20} className={product && isInWishlist(product._id) ? 'fill-current' : ''} />
+                    <Heart size={20} className={!isTogglingWishlist && product && isInWishlist(product._id) ? 'fill-current' : ''} />
                   </button>
                 </div>
 
                 {/* Order CTA */}
                 <button
                   onClick={handleOrder}
-                  disabled={!selectedSize || isOutOfStock}
+                  disabled={!selectedSize || isOutOfStock || isOrdering}
                   className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
-                    selectedSize && !isOutOfStock
+                    selectedSize && !isOutOfStock && !isOrdering
                       ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
                       : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                 >
-                  {isOutOfStock ? 'Out of Stock' : selectedSize ? 'Order Now' : 'Select a Size'}
+                  {isOrdering ? 'Processing...' : isOutOfStock ? 'Out of Stock' : selectedSize ? 'Order Now' : 'Select a Size'}
                 </button>
               </div>
               

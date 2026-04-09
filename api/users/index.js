@@ -58,7 +58,7 @@ export default async function handler(req, res) {
           await users.updateOne({ uid }, { $set: { name, email, updatedAt: new Date() } });
           return res.status(200).json(successResponse({ message: 'User updated', user: { uid, email, name } }));
         }
-        const result = await users.insertOne({ uid, email, name, addresses: [], createdAt: new Date(), updatedAt: new Date() });
+        const result = await users.insertOne({ uid, email, name, role: 'user', addresses: [], createdAt: new Date(), updatedAt: new Date() });
         return res.status(201).json(successResponse({ id: result.insertedId, message: 'User created', user: { uid, email, name } }));
       } catch (err) {
         return res.status(500).json(errorResponse('Failed to create/update user: ' + err.message));

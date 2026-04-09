@@ -1,7 +1,6 @@
 import { getDb } from "../_lib/mongodb.js";
 import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "nikhilwebworks@gmail.com";
+import { isAdmin } from "../_lib/adminHelper.js";
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,7 +30,8 @@ export default async function handler(req, res) {
     const database = await getDb();
     const ordersCollection = database.collection('orders');
 
-    const query = userId === ADMIN_EMAIL ? {} : { userId };
+    const adminUser = await isAdmin(userId, database);
+    const query = adminUser ? {} : { userId };
     const orders = await ordersCollection.find(query).sort({ createdAt: -1 }).toArray();
 
     return res.status(200).json({ orders, count: orders.length });

@@ -111,7 +111,23 @@ export default async function handler(req, res) {
       ...(clientOrderId ? { clientOrderId } : {}),
     };
 
-    const result = await ordersCollection.insertOne(order);
+    let result;
+    try {
+      result = await ordersCollection.insertOne(order);
+    } catch (insertError) {
+      if (insertError.code === 11000 && clientOrderId) {
+        const existing = await ordersCollection.findOne({ clientOrderId });
+        if (existing) {
+          console.log('ORDERS API: E11000 duplicate — returning existing order:', existing._id);
+          return res.status(200).json({
+            message: 'Order already created',
+            orderId: existing._id,
+            order: existing,
+          });
+        }
+      }
+      throw insertError;
+    }
     console.log('ORDERS API: Order created:', result.insertedId);
 
     // ── Atomic stock decrement with compensation rollback ──────────────────────
