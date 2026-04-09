@@ -361,6 +361,7 @@ export default function Admin() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [viewAddressOrder, setViewAddressOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (user && user.email !== ADMIN_EMAIL) navigate('/');
@@ -409,16 +410,20 @@ export default function Admin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
       });
-      const data = await r.json();
+      let data: any = {};
+      try {
+        const text = await r.text();
+        if (text) data = JSON.parse(text);
+      } catch {}
       if (r.ok) {
         setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
       } else {
         console.error('Status update failed:', r.status, data);
-        alert(`Failed to update status: ${data.error || r.status}`);
+        alert(`Failed to update status: ${data.error || `HTTP ${r.status}`}`);
       }
     } catch (e) {
       console.error('Status update error:', e);
-      alert('Failed to update status — network error');
+      alert('Failed to update order status. Please try again.');
     }
   };
 
@@ -632,9 +637,12 @@ export default function Admin() {
                             {/* Address */}
                             {order.address?.fullName && (
                               <div className="mb-3">
-                                <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Ship To</p>
-                                <p className="text-tb-white text-xs">{order.address.fullName}</p>
-                                <p className="text-sv-mid text-xs">{[order.address.addressLine1, order.address.city, order.address.pincode].filter(Boolean).join(', ')}</p>
+                                <button
+                                  onClick={() => setViewAddressOrder(order)}
+                                  className="w-full px-3 py-2 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors"
+                                >
+                                  View Address
+                                </button>
                               </div>
                             )}
                             {/* Total + Date + Update */}
@@ -698,14 +706,15 @@ export default function Admin() {
                                   </div>
                                 </td>
                                 {/* Ship To */}
-                                <td className="px-4 py-4 text-xs text-sv-mid max-w-[160px]">
+                                <td className="px-4 py-4">
                                   {order.address?.fullName ? (
-                                    <>
-                                      <div className="text-tb-white">{order.address.fullName}</div>
-                                      <div>{order.address.addressLine1}</div>
-                                      <div>{[order.address.city, order.address.pincode].filter(Boolean).join(', ')}</div>
-                                    </>
-                                  ) : '—'}
+                                    <button
+                                      onClick={() => setViewAddressOrder(order)}
+                                      className="px-3 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors whitespace-nowrap"
+                                    >
+                                      View Address
+                                    </button>
+                                  ) : <span className="text-sv-mid text-xs">—</span>}
                                 </td>
                                 {/* Total */}
                                 <td className="px-4 py-4 text-sm text-tb-white font-condensed font-semibold whitespace-nowrap">
@@ -854,6 +863,38 @@ export default function Admin() {
       <Footer />
 
       <AnimatePresence>
+        {viewAddressOrder && (
+          <ModalShell onClose={() => setViewAddressOrder(null)}>
+            <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+              <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest mb-0.5">Order #{viewAddressOrder._id?.slice(-10)}</p>
+              <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">Delivery Address</h3>
+            </div>
+            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+              {[
+                { label: 'Full Name', value: viewAddressOrder.address?.fullName },
+                { label: 'Phone Number', value: viewAddressOrder.address?.phone },
+                { label: 'Address', value: viewAddressOrder.address?.addressLine1 },
+                { label: 'City', value: viewAddressOrder.address?.city },
+                { label: 'Pincode', value: viewAddressOrder.address?.pincode },
+                { label: 'Payment Method', value: viewAddressOrder.paymentMethod },
+                { label: 'Customer Email', value: viewAddressOrder.userId },
+              ].map(({ label, value }) => value ? (
+                <div key={label}>
+                  <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">{label}</p>
+                  <p className="text-tb-white text-sm">{value}</p>
+                </div>
+              ) : null)}
+            </div>
+            <div className="px-6 pb-6 pt-3 shrink-0 border-t border-white/10">
+              <button
+                onClick={() => setViewAddressOrder(null)}
+                className="w-full py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </ModalShell>
+        )}
         {showAddProductModal && (
           <ProductModal title="Add Product" onSubmit={addProduct} onClose={() => setShowAddProductModal(false)} />
         )}
