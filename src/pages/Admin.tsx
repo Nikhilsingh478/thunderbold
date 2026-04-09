@@ -587,7 +587,7 @@ export default function Admin() {
                             <div className="mb-3">
                               <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1">Items</p>
                               <div className="space-y-0.5">
-                                {order.products.map((p, i) => (
+                                {(order.products ?? []).map((p, i) => (
                                   <p key={i} className="text-tb-white text-sm">{p.name} <span className="text-sv-mid">×{p.quantity}</span></p>
                                 ))}
                               </div>
@@ -633,7 +633,7 @@ export default function Admin() {
                                 <td className="px-5 py-4 text-sm text-sv-mid">{order.userId?.includes('@') ? order.userId : 'Unknown'}</td>
                                 <td className="px-5 py-4">
                                   <div className="space-y-0.5">
-                                    {order.products.map((p, i) => (
+                                    {(order.products ?? []).map((p, i) => (
                                       <div key={i} className="text-sm text-tb-white">{p.name} <span className="text-sv-mid">×{p.quantity}</span></div>
                                     ))}
                                   </div>
