@@ -578,7 +578,7 @@ export default function Admin() {
                             <div className="flex items-start justify-between gap-3 mb-3">
                               <div className="min-w-0">
                                 <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Customer</p>
-                                <p className="text-tb-white text-sm truncate">{order.userId.includes('@') ? order.userId : 'Unknown User'}</p>
+                                <p className="text-tb-white text-sm truncate">{order.userId?.includes('@') ? order.userId : 'Unknown User'}</p>
                               </div>
                               <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
                                 {order.status}
@@ -630,7 +630,7 @@ export default function Admin() {
                           <tbody>
                             {orders.map((order) => (
                               <tr key={order._id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors">
-                                <td className="px-5 py-4 text-sm text-sv-mid">{order.userId.includes('@') ? order.userId : 'Unknown'}</td>
+                                <td className="px-5 py-4 text-sm text-sv-mid">{order.userId?.includes('@') ? order.userId : 'Unknown'}</td>
                                 <td className="px-5 py-4">
                                   <div className="space-y-0.5">
                                     {order.products.map((p, i) => (

@@ -1,0 +1,43 @@
+Loading wishlist from localStorage: Array(0)
+index-kKPExknh.js:1526 Loading cart from localStorage ONLY: Array(0)
+index-kKPExknh.js:1526 Cart reducer action: SET_LOADING
+index-kKPExknh.js:1526 Action payload: true
+index-kKPExknh.js:1526 Cart reducer action: SET_CART
+index-kKPExknh.js:1526 Action payload: Array(0)
+index-kKPExknh.js:1526 Setting cart items: Array(0)
+index-kKPExknh.js:1526 Cart reducer action: SET_LOADING
+index-kKPExknh.js:1526 Action payload: false
+index-kKPExknh.js:1526 Syncing local wishlist to DB: Array(0)
+index-kKPExknh.js:1526 Loading cart from localStorage ONLY: Array(0)
+index-kKPExknh.js:1526 Cart reducer action: SET_LOADING
+index-kKPExknh.js:1526 Action payload: true
+index-kKPExknh.js:1526 Cart reducer action: SET_CART
+index-kKPExknh.js:1526 Action payload: Array(0)
+index-kKPExknh.js:1526 Setting cart items: Array(0)
+index-kKPExknh.js:1526 Cart reducer action: SET_LOADING
+index-kKPExknh.js:1526 Action payload: false
+index-kKPExknh.js:1526 Load wishlist response: 200
+index-kKPExknh.js:1526 Loaded wishlist from DB: Array(0)
+installHook.js:1 TypeError: Cannot read properties of null (reading 'includes')
+    at index-kKPExknh.js:1701:173995
+    at Array.map (<anonymous>)
+    at aB (index-kKPExknh.js:1701:173576)
+    at Xp (index-kKPExknh.js:38:16998)
+    at Zf (index-kKPExknh.js:40:3139)
+    at i1 (index-kKPExknh.js:40:44737)
+    at n1 (index-kKPExknh.js:40:39727)
+    at eP (index-kKPExknh.js:40:39655)
+    at $c (index-kKPExknh.js:40:39508)
+    at uh (index-kKPExknh.js:40:35875)
+overrideMethod @ installHook.js:1Understand this error
+index-kKPExknh.js:40 Uncaught TypeError: Cannot read properties of null (reading 'includes')
+    at index-kKPExknh.js:1701:173995
+    at Array.map (<anonymous>)
+    at aB (index-kKPExknh.js:1701:173576)
+    at Xp (index-kKPExknh.js:38:16998)
+    at Zf (index-kKPExknh.js:40:3139)
+    at i1 (index-kKPExknh.js:40:44737)
+    at n1 (index-kKPExknh.js:40:39727)
+    at eP (index-kKPExknh.js:40:39655)
+    at $c (index-kKPExknh.js:40:39508)
+    at uh (index-kKPExknh.js:40:35875)
