@@ -166,7 +166,7 @@ export default function ProductView() {
             {/* Left: Image Slider */}
             <div className="w-full md:w-1/2 flex flex-col">
               <div 
-                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group" 
+                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-square w-full max-w-[500px] mx-auto group" 
                 ref={emblaRef}
               >
                 <div className="flex h-full touch-pan-y">
