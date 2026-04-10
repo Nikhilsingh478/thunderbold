@@ -367,21 +367,6 @@ export default function ProductView() {
                 </button>
               </div>
               
-              {/* Extra product details */}
-              <div className="mt-16 flex flex-col gap-5 border-t border-white/10 pt-10">
-                 <div className="flex justify-between items-center text-sm font-condensed text-sv-mid tracking-widest uppercase">
-                   <span>Fit</span>
-                   <span className="text-tb-white">Standard / Comfortable</span>
-                 </div>
-                 <div className="flex justify-between items-center text-sm font-condensed text-sv-mid tracking-widest uppercase">
-                   <span>Material</span>
-                   <span className="text-tb-white">98% Cotton, 2% Elastane</span>
-                 </div>
-                 <div className="flex justify-between items-center text-sm font-condensed text-sv-mid tracking-widest uppercase">
-                   <span>Shipping</span>
-                   <span className="text-tb-white">Free All Over India / Cash on Delivery</span>
-                 </div>
-              </div>
             </motion.div>
           </div>
         </div>

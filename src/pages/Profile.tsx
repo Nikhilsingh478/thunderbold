@@ -86,6 +86,7 @@ export default function Profile() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersLoaded, setOrdersLoaded] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { navigate('/'); return; }
@@ -133,6 +134,29 @@ export default function Profile() {
     } finally {
       setOrdersLoading(false);
       setOrdersLoaded(true);
+    }
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    setCancellingOrder(orderId);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/orders/cancel', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o));
+        toast.success('Order cancelled successfully');
+      } else {
+        toast.error(data.error || 'Failed to cancel order');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setCancellingOrder(null);
     }
   };
 
@@ -791,6 +815,28 @@ export default function Profile() {
                                 </div>
                               ))}
                             </div>
+
+                            {!['cancelled', 'delivered', 'shipped'].includes(order.status) && (
+                              <div className="mt-4 pt-4 border-t border-white/[0.06] flex justify-end">
+                                <button
+                                  onClick={() => cancelOrder(order._id)}
+                                  disabled={cancellingOrder === order._id}
+                                  className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-400/80 hover:text-red-400 hover:border-red-500/60 hover:bg-red-500/5 font-condensed text-[0.65rem] tracking-[0.16em] uppercase transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                  {cancellingOrder === order._id ? (
+                                    <>
+                                      <span className="w-3 h-3 border border-red-400/40 border-t-red-400 rounded-full animate-spin" />
+                                      Cancelling...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="w-3 h-3" />
+                                      Cancel Order
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            )}
                           </motion.div>
                         ))}
                       </div>

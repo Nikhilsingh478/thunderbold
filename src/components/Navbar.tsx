@@ -96,17 +96,17 @@ const Navbar = () => {
   const menuVariants = {
     closed: {
       clipPath: 'circle(0% at calc(100% - 40px) 40px)',
-      transition: { duration: 0.6, ease: [0.32, 0, 0.67, 0] as [number, number, number, number] },
+      transition: { duration: 0.3, ease: [0.32, 0, 0.67, 0] as [number, number, number, number] },
     },
     open: {
       clipPath: 'circle(150% at calc(100% - 40px) 40px)',
-      transition: { duration: 0.8, ease: [0.32, 0, 0.67, 0] as [number, number, number, number] },
+      transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
     },
   };
 
   const linkVariants = {
-    closed: { opacity: 0, x: 100 },
-    open: { opacity: 1, x: 0, transition: { delay: 0.3, duration: 0.6, ease: 'easeOut' as const } },
+    closed: { opacity: 0, x: 40 },
+    open: { opacity: 1, x: 0, transition: { delay: 0.1, duration: 0.25, ease: 'easeOut' as const } },
   };
 
   useEffect(() => {
