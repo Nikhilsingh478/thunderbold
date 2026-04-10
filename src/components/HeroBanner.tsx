@@ -11,8 +11,7 @@ const HeroBanner = () => {
       <img
         src="/banner.webp"
         alt="Get an extra 40% off — Live Now"
-        className="w-full h-auto block object-cover"
-        style={{ maxHeight: '260px', objectPosition: 'center' }}
+        className="w-full block object-cover object-center h-[150px] md:h-auto md:max-h-[260px]"
         loading="eager"
         decoding="async"
       />
