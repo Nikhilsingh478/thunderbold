@@ -162,7 +162,7 @@ export default function Cart() {
                       <p className="text-sm text-sv-mid mb-2">Size: {item.size}</p>
                       <p className="font-condensed text-lg text-tb-white">
                         {typeof item.price === 'number' 
-                          ? `¥${item.price.toFixed(2)}`
+                          ? `₹${item.price.toFixed(2)}`
                           : item.price
                         }
                       </p>
@@ -215,7 +215,7 @@ export default function Cart() {
                       <span className="text-sv-mid">Subtotal ({getTotalItems()} items)</span>
                       <span className="text-tb-white font-condensed">
                         {typeof getTotalPrice() === 'number' 
-                          ? `¥${getTotalPrice().toFixed(2)}`
+                          ? `₹${getTotalPrice().toFixed(2)}`
                           : getTotalPrice()
                         }
                       </span>
@@ -237,7 +237,7 @@ export default function Cart() {
                       <span className="text-tb-white">Total</span>
                       <span className="text-tb-white font-condensed">
                         {typeof getTotalPrice() === 'number' 
-                          ? `¥${getTotalPrice().toFixed(2)}`
+                          ? `₹${getTotalPrice().toFixed(2)}`
                           : getTotalPrice()
                         }
                       </span>

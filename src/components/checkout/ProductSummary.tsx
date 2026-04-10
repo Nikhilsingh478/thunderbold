@@ -79,7 +79,7 @@ export default function ProductSummary({ items, totalAmount }: Props) {
                   <span>Qty: {item.quantity}</span>
                 </div>
                 <div className="font-condensed text-tb-white">
-                  ¥{(price * (item.quantity || 0)).toFixed(2)}
+                  ₹{(price * (item.quantity || 0)).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -102,7 +102,7 @@ export default function ProductSummary({ items, totalAmount }: Props) {
           
           <div className="text-right">
             <div className="font-condensed text-2xl text-tb-white">
-              ¥{(totalAmount || 0).toFixed(2)}
+              ₹{(totalAmount || 0).toFixed(2)}
             </div>
           </div>
         </div>

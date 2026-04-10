@@ -102,7 +102,7 @@ export default function OrderConfirmation({ address, items, totalAmount, onClose
                     </div>
                   </div>
                   <div className="font-condensed text-tb-white text-sm">
-                    ¥{(() => {
+                    ₹{(() => {
                       let price: number;
                       if (typeof item.price === 'string') {
                         price = parseFloat(item.price.replace(/[^\d.]/g, ''));
@@ -147,7 +147,7 @@ export default function OrderConfirmation({ address, items, totalAmount, onClose
               Total Amount
             </h4>
             <div className="font-condensed text-2xl text-tb-white">
-              ¥{totalAmount.toFixed(2)}
+              ₹{totalAmount.toFixed(2)}
             </div>
           </div>
         </div>

@@ -137,7 +137,7 @@ export default function CategoryView() {
                   </h3>
                   <div className="flex justify-between items-center mt-1">
                     <span className="font-condensed text-sm tracking-wider text-tb-white">
-                      ¥{prod.price}
+                      ₹{prod.price}
                     </span>
                   </div>
                 </div>

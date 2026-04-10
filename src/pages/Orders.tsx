@@ -242,7 +242,7 @@ const Orders = () => {
                         {order.status}
                       </div>
                       <div className="text-right">
-                        <p className="font-condensed text-tb-white">¥{order.totalAmount}</p>
+                        <p className="font-condensed text-tb-white">₹{order.totalAmount}</p>
                       </div>
                       {order.status !== 'cancelled' && order.status !== 'delivered' && (
                         <button
@@ -268,7 +268,7 @@ const Orders = () => {
                               {product.size ? `Size: ${product.size} · ` : ''}Qty: {product.quantity}
                             </p>
                           </div>
-                          <p className="text-tb-white">¥{product.price?.toFixed(2) ?? '—'}</p>
+                          <p className="text-tb-white">₹{product.price?.toFixed(2) ?? '—'}</p>
                         </div>
                       ))}
                     </div>

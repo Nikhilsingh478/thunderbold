@@ -157,7 +157,7 @@ export default function Wishlist() {
                     <div className="flex items-center justify-between mb-4">
                       <p className="font-condensed text-lg text-tb-white">
                         {typeof item.price === 'number' 
-                          ? `¥${item.price.toFixed(2)}`
+                          ? `₹${item.price.toFixed(2)}`
                           : item.price
                         }
                       </p>
@@ -208,7 +208,7 @@ export default function Wishlist() {
                   <p className="font-condensed text-sm text-sv-mid mb-1">Total Value</p>
                   <p className="font-condensed text-2xl text-tb-white">
                     {typeof items.reduce((total, item) => total + (typeof item.price === 'number' ? item.price : 0), 0) === 'number'
-                      ? `¥${items.reduce((total, item) => total + (typeof item.price === 'number' ? item.price : 0), 0).toFixed(2)}`
+                      ? `₹${items.reduce((total, item) => total + (typeof item.price === 'number' ? item.price : 0), 0).toFixed(2)}`
                       : 'Calculate at checkout'
                     }
                   </p>

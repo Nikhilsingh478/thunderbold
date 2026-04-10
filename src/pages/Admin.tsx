@@ -328,7 +328,7 @@ function ProductModal({
 
         {/* Price */}
         <div>
-          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Price (¥)</label>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Price (₹)</label>
           <input
             type="number"
             value={form.price}
@@ -705,7 +705,7 @@ export default function Admin() {
                                     <div className="flex items-center gap-3 mt-0.5">
                                       {p.size && <span className="text-sv-mid text-xs">Size: <span className="text-tb-white">{p.size}</span></span>}
                                       <span className="text-sv-mid text-xs">Qty: <span className="text-tb-white">{p.quantity}</span></span>
-                                      {p.price != null && <span className="text-sv-mid text-xs">¥{p.price.toFixed(2)}</span>}
+                                      {p.price != null && <span className="text-sv-mid text-xs">₹{p.price.toFixed(2)}</span>}
                                     </div>
                                   </div>
                                 ))}
@@ -726,7 +726,7 @@ export default function Admin() {
                             <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
                               <div>
                                 <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Total</p>
-                                <p className="text-tb-white font-condensed font-semibold">¥{order.totalAmount?.toFixed(2) ?? '—'}</p>
+                                <p className="text-tb-white font-condensed font-semibold">₹{order.totalAmount?.toFixed(2) ?? '—'}</p>
                                 <p className="text-sv-mid text-xs mt-0.5">
                                   {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                 </p>
@@ -783,7 +783,7 @@ export default function Admin() {
                                         <div className="flex items-center gap-2 mt-0.5">
                                           {p.size && <span className="text-xs text-sv-mid">Size: <span className="text-tb-white">{p.size}</span></span>}
                                           <span className="text-xs text-sv-mid">Qty: <span className="text-tb-white">{p.quantity}</span></span>
-                                          {p.price != null && <span className="text-xs text-sv-mid">¥{p.price.toFixed(2)}</span>}
+                                          {p.price != null && <span className="text-xs text-sv-mid">₹{p.price.toFixed(2)}</span>}
                                         </div>
                                       </div>
                                     ))}
@@ -802,7 +802,7 @@ export default function Admin() {
                                 </td>
                                 {/* Total */}
                                 <td className="px-4 py-4 text-sm text-tb-white font-condensed font-semibold whitespace-nowrap">
-                                  ¥{order.totalAmount?.toFixed(2) ?? '—'}
+                                  ₹{order.totalAmount?.toFixed(2) ?? '—'}
                                 </td>
                                 {/* Date */}
                                 <td className="px-4 py-4 text-sm text-sv-mid whitespace-nowrap">
@@ -883,7 +883,7 @@ export default function Admin() {
                             </p>
                             <h3 className="font-condensed font-medium text-tb-white text-sm mb-1 line-clamp-2 leading-snug">{product.name}</h3>
                             <div className="flex items-center justify-between mb-2">
-                              <p className="font-condensed font-semibold text-tb-white text-sm">¥{product.price}</p>
+                              <p className="font-condensed font-semibold text-tb-white text-sm">₹{product.price}</p>
                               {typeof product.stock === 'number' && (
                                 <span className={`font-condensed text-xs px-2 py-0.5 rounded-full border ${
                                   product.stock === 0
