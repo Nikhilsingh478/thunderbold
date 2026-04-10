@@ -74,10 +74,10 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-[200] bg-[#070707]/98 backdrop-blur-2xl flex flex-col items-center pt-24 md:pt-32 px-6 md:px-16 overflow-y-auto"
         >
           {/* Close Button */}

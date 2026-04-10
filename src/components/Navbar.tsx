@@ -63,6 +63,13 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Listen for mobile search trigger from below-navbar search bar
+  useEffect(() => {
+    const handler = () => setIsSearchOpen(true);
+    window.addEventListener('open-search-overlay', handler);
+    return () => window.removeEventListener('open-search-overlay', handler);
+  }, []);
+
   // Close user menu on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -143,8 +150,27 @@ const Navbar = () => {
           </motion.span>
         </Link>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-10">
+        {/* Desktop nav — search bar first, then links, then icons */}
+        <div className="hidden md:flex items-center gap-8">
+
+          {/* Search Bar — first position */}
+          <motion.button
+            variants={itemVariants}
+            onClick={() => setIsSearchOpen(true)}
+            aria-label="Open search"
+            className="group flex items-center gap-2.5 px-4 py-2 border border-white/[0.11] hover:border-white/30 rounded-sm bg-white/[0.025] hover:bg-white/[0.05] transition-all duration-300 focus:outline-none w-[196px] xl:w-[228px]"
+          >
+            <Search
+              size={13}
+              strokeWidth={1.8}
+              className="text-sv-mid group-hover:text-white/70 transition-colors duration-300 flex-shrink-0"
+            />
+            <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-sv-dim group-hover:text-white/50 transition-colors duration-300 truncate">
+              Search styles & fits…
+            </span>
+          </motion.button>
+
+          {/* Nav links */}
           {links.map(link => (
             <motion.div variants={itemVariants} key={link.name}>
               <Link
@@ -157,7 +183,7 @@ const Navbar = () => {
             </motion.div>
           ))}
 
-          {/* Cart & Wishlist Icons */}
+          {/* Wishlist & Cart */}
           <motion.div variants={itemVariants} className="flex items-center gap-3">
             <Link
               to="/wishlist"
@@ -210,13 +236,10 @@ const Navbar = () => {
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                       className="absolute right-0 top-full mt-3 w-52 bg-[#0e0e0e] border border-white/[0.09] rounded-xl shadow-2xl overflow-hidden z-[200]"
                     >
-                      {/* User Info */}
                       <div className="px-4 py-3.5 border-b border-white/[0.07]">
                         <p className="font-body text-xs font-medium text-tb-white truncate">{displayName}</p>
                         <p className="font-body text-[0.7rem] text-sv-dim truncate mt-0.5">{user.email}</p>
                       </div>
-
-                      {/* Menu Items */}
                       <div className="py-1">
                         <Link
                           to="/profile"
@@ -256,15 +279,6 @@ const Navbar = () => {
               </button>
             )}
           </motion.div>
-
-          <motion.button
-            variants={itemVariants}
-            onClick={() => setIsSearchOpen(true)}
-            className="text-sv-mid hover:text-tb-white transition-colors focus:outline-none"
-            aria-label="Search"
-          >
-            <Search size={20} strokeWidth={1.5} />
-          </motion.button>
         </div>
 
         {/* Mobile Header Right */}
@@ -288,7 +302,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile user avatar / login */}
           {user ? (
             <Link
               to="/profile"

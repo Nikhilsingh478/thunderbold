@@ -1,5 +1,4 @@
 import express from 'express';
-import helmet from 'helmet';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -9,10 +8,15 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = 3001;
 
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false,
-}));
+// Security headers (replaces helmet)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 app.use(express.json());
 
 app.use('/api/orders/create', async (req, res) => {
