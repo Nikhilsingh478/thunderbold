@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useWishlist } from '../context/WishlistContext';
+import PriceDisplay from '../components/PriceDisplay';
 
 export default function CategoryView() {
   const { categoryId } = useParams();
@@ -125,7 +126,7 @@ export default function CategoryView() {
                   <motion.img
                     src={optimizeCloudinaryUrl(prod.images?.[0] || prod.image, IMG_SIZES.card)}
                     alt={prod.name}
-                    className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] grayscale-[0.1]"
+                    className="w-full h-full object-contain object-center"
                     loading={i < 4 ? "eager" : "lazy"}
                     decoding="async"
                     onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
@@ -135,10 +136,8 @@ export default function CategoryView() {
                   <h3 className="font-condensed text-lg tracking-[0.15em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300">
                     {prod.name}
                   </h3>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="font-condensed text-sm tracking-wider text-tb-white">
-                      ₹{prod.price}
-                    </span>
+                  <div className="mt-1">
+                    <PriceDisplay price={prod.price} size="sm" />
                   </div>
                 </div>
               </motion.div>

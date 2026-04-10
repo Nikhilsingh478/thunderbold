@@ -1,0 +1,181 @@
+I already have a working e-commerce web application with:
+- Admin dashboard (product creation)
+- Product listing page
+- Product detail page
+- A "price" field (currently used as final selling price)
+
+--------------------------------------------------
+
+🎯 GOAL:
+
+Implement a PROFESSIONAL DISCOUNT SYSTEM like Flipkart/Amazon where:
+
+- Admin enters ONLY the FINAL SELLING PRICE
+- System automatically calculates ORIGINAL PRICE
+- Display a REAL "40% OFF" discount
+
+--------------------------------------------------
+
+🧠 CORE BUSINESS LOGIC (VERY IMPORTANT):
+
+The admin price is the FINAL PRICE after discount.
+
+We must reverse-calculate the original price.
+
+FORMULA:
+
+original_price = final_price / (1 - discount)
+
+For 40% discount:
+
+original_price = final_price / 0.6
+
+--------------------------------------------------
+
+📌 EXAMPLE:
+
+If admin enters:
+final_price = 800
+
+Then:
+original_price = 800 / 0.6 = 1333.33 → round to 1333
+
+Frontend display should be:
+
+₹1333  (strikethrough)
+₹800   (bold)
+40% OFF
+
+--------------------------------------------------
+
+⚙️ IMPLEMENTATION DETAILS:
+
+1. DATABASE:
+- DO NOT modify schema
+- Keep storing only:
+  {
+    price: number  // this is FINAL price
+  }
+
+- DO NOT store original_price in DB
+
+--------------------------------------------------
+
+2. PRICE CALCULATION:
+
+Compute dynamically:
+
+JavaScript:
+const originalPrice = Math.round(price / 0.6);
+
+--------------------------------------------------
+
+3. API RESPONSE (if backend-driven):
+
+Return:
+{
+  price: number,
+  original_price: number,
+  discount_percentage: 40,
+  savings: original_price - price
+}
+
+--------------------------------------------------
+
+4. FRONTEND UI (CRITICAL — MAKE IT LOOK PREMIUM):
+
+Update product cards and product detail page.
+
+A. ORIGINAL PRICE:
+- Show above or left of final price
+- Style:
+  - text-decoration: line-through
+  - color: #9ca3af (gray-400)
+  - font-size: smaller
+
+B. FINAL PRICE:
+- Bold
+- Larger font (1.3x–1.6x)
+- Color: #111827 (near black)
+
+C. DISCOUNT BADGE:
+- Text: "40% OFF"
+- Style:
+  - background: #dc2626 (red-600)
+  - color: white
+  - padding: 2px 6px
+  - border-radius: 6px
+  - font-size: small
+  - font-weight: 600
+
+D. SAVINGS TEXT (IMPORTANT — adds realism):
+- Text: "You save ₹533"
+- Calculation:
+  savings = original_price - final_price
+
+- Style:
+  - color: #16a34a (green-600)
+  - small text
+
+--------------------------------------------------
+
+5. PRICE FORMAT:
+
+- Always show ₹ symbol
+- No decimals
+- Use rounding:
+  Math.round()
+
+Example:
+₹1333
+₹800
+
+--------------------------------------------------
+
+6. EDGE CASES:
+
+- If price <= 0:
+  - Do not show discount
+- Prevent NaN / division errors
+- Ensure UI does not break for small prices
+
+--------------------------------------------------
+
+7. OPTIONAL (IF EASY):
+
+- Make discount configurable later
+- For now, hardcode:
+  const DISCOUNT = 0.4
+
+--------------------------------------------------
+
+8. DO NOT BREAK EXISTING FEATURES:
+
+- Product creation must remain unchanged
+- Existing API structure should not break
+- Only enhance price display
+
+--------------------------------------------------
+
+🎨 EXPECTED FINAL UI (IMPORTANT):
+
+It should visually match modern e-commerce:
+
+Example:
+
+₹1333   (gray, strikethrough)
+₹800    (bold, large)
+[40% OFF]   (red badge)
+You save ₹533 (green text)
+
+Clean spacing, aligned layout, professional feel.
+
+--------------------------------------------------
+
+Focus on:
+- Clean code
+- Reusable logic
+- Accurate math
+- Premium UI/UX
+
+This should feel like Flipkart/Amazon pricing system.

@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
+import PriceDisplay from '../components/PriceDisplay';
 import { fetchProductById } from '../lib/products';
 import { requireAuth } from '../lib/requireAuth';
 import { useAuth } from '../context/AuthContext';
@@ -240,8 +241,11 @@ export default function ProductView() {
               <h1 className="font-display text-5xl md:text-6xl lg:text-7xl tracking-[0.1em] metal-text uppercase mb-4 leading-none">
                 {product?.name || 'Thunderbolt Jeans'}
               </h1>
-              <div className="font-condensed text-3xl tracking-widest text-tb-white mb-4">
-                {product?.price || '₹ 2,499'}
+              <div className="mb-4">
+                {product?.price
+                  ? <PriceDisplay price={product.price} size="lg" showSavings />
+                  : <span className="font-condensed text-3xl tracking-widest text-tb-white">₹ 2,499</span>
+                }
               </div>
 
               {/* Stock status badge */}
