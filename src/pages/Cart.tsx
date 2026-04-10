@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -144,9 +145,12 @@ export default function Cart() {
                     {/* Product Image */}
                     <div className="w-20 h-20 bg-[#0c0c0c] rounded-lg overflow-hidden flex-shrink-0">
                       <img
-                        src={item.image}
+                        src={optimizeCloudinaryUrl(item.image, IMG_SIZES.thumbnail)}
                         alt={item.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                       />
                     </div>
 

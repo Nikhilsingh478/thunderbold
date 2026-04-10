@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -122,11 +123,12 @@ export default function CategoryView() {
                   </button>
                   
                   <motion.img
-                    src={prod.images?.[0] || prod.image}
+                    src={optimizeCloudinaryUrl(prod.images?.[0] || prod.image, IMG_SIZES.card)}
                     alt={prod.name}
                     className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] grayscale-[0.1]"
                     loading={i < 4 ? "eager" : "lazy"}
                     decoding="async"
+                    onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                   />
                 </div>
                 <div className="mt-5 flex flex-col">

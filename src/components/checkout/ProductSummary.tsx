@@ -1,4 +1,5 @@
 import { CartItem } from '../../lib/storage';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../../lib/cloudinary';
 
 // Flexible interface to handle both cart items and single product data
 interface CheckoutItem {
@@ -56,9 +57,11 @@ export default function ProductSummary({ items, totalAmount }: Props) {
               {/* Product Image */}
               <div className="w-16 h-16 flex-shrink-0">
                 <img
-                  src={item.image || item.productImage || '/placeholder.png'}
+                  src={optimizeCloudinaryUrl(item.image || item.productImage || '/placeholder.png', IMG_SIZES.thumbnail)}
                   alt={item.name || item.productName || 'Product'}
                   className="w-full h-full object-cover rounded"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     e.currentTarget.src = '/placeholder.png';
                   }}

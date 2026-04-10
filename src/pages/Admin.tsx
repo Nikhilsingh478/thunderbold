@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -175,9 +176,11 @@ function ImageInput({
           <div className="shrink-0 w-10 h-10 rounded-md overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
             {url.trim() ? (
               <img
-                src={url}
+                src={optimizeCloudinaryUrl(url, IMG_SIZES.thumbnail)}
                 alt=""
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             ) : (
@@ -866,9 +869,11 @@ export default function Admin() {
                         <div key={product._id} className="group bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all duration-200">
                           <div className="aspect-square bg-[#0c0c0c] overflow-hidden">
                             <img
-                              src={(product as any).images?.[0] || product.image || '/placeholder.png'}
+                              src={optimizeCloudinaryUrl((product as any).images?.[0] || product.image || '/placeholder.png', IMG_SIZES.card)}
                               alt={product.name}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                             />
                           </div>
@@ -950,9 +955,11 @@ export default function Admin() {
                         <div key={category._id} className="group bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all duration-200">
                           <div className="aspect-square bg-[#0c0c0c] overflow-hidden">
                             <img
-                              src={category.image || '/placeholder.png'}
+                              src={optimizeCloudinaryUrl(category.image || '/placeholder.png', IMG_SIZES.card)}
                               alt={category.name}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                             />
                           </div>

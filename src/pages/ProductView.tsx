@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Heart, ShoppingCart } from 'lucide-react';
@@ -172,11 +173,12 @@ export default function ProductView() {
                   {IMAGES.map((img, index) => (
                     <div className="flex-[0_0_100%] min-w-0 relative h-full" key={index}>
                       <img
-                        src={img}
+                        src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
                         className="w-full h-full object-cover object-center scale-[1.01] transition-transform duration-[1.5s] ease-out group-hover:scale-[1.04]"
                         loading={index === 0 ? "eager" : "lazy"}
                         decoding="async"
+                        onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                       />
                     </div>
                   ))}
@@ -219,7 +221,7 @@ export default function ProductView() {
                         : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/30'
                     }`}
                   >
-                    <img src={img} alt={`Thumbnail ${index}`} className="w-full h-full object-cover object-center" loading="lazy" decoding="async" />
+                    <img src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} alt={`Thumbnail ${index}`} className="w-full h-full object-cover object-center" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = '/placeholder.png'; }} />
                   </button>
                 ))}
               </div>

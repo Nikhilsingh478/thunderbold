@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import { X, Heart, ShoppingBag, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -130,9 +131,12 @@ export default function Wishlist() {
                   {/* Product Image */}
                   <div className="relative aspect-[4/5] bg-[#0c0c0c] overflow-hidden">
                     <img
-                      src={item.image}
+                      src={optimizeCloudinaryUrl(item.image, IMG_SIZES.card)}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                     />
                     
                     {/* Remove Button */}

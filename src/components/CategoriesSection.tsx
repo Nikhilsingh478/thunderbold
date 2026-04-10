@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 
 const SKELETON_COUNT = 3;
 
@@ -86,7 +87,7 @@ export default function CategoriesSection() {
                     <div className="absolute inset-0 bg-brass-bright/5 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 z-0 pointer-events-none" />
                     <div className="w-full h-full bg-gradient-to-br from-brass/20 to-brass/10 flex items-center justify-center">
                       <img
-                        src={cat.image || '/placeholder.png'}
+                        src={optimizeCloudinaryUrl(cat.image || '/placeholder.png', IMG_SIZES.card)}
                         alt={cat.name}
                         className="w-full h-full object-cover"
                         loading={index < 2 ? 'eager' : 'lazy'}
