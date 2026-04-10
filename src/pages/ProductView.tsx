@@ -166,7 +166,7 @@ export default function ProductView() {
             {/* Left: Image Slider */}
             <div className="w-full md:w-1/2 flex flex-col">
               <div 
-                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[4/5] md:aspect-auto md:h-[55vh] lg:h-[60vh] w-full max-w-[500px] mx-auto group" 
+                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group" 
                 ref={emblaRef}
               >
                 <div className="flex h-full touch-pan-y">
@@ -175,7 +175,7 @@ export default function ProductView() {
                       <img
                         src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
-                        className="w-full h-full object-cover object-center scale-[1.01] transition-transform duration-[1.5s] ease-out group-hover:scale-[1.04]"
+                        className="w-full h-full object-contain object-center"
                         loading={index === 0 ? "eager" : "lazy"}
                         decoding="async"
                         onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
