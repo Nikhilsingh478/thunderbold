@@ -66,7 +66,7 @@ export default function CategoryView() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-32 pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[164px] pb-24 px-6 md:px-16">
         <div className="max-w-[1400px] mx-auto">
           {/* Header */}
           <motion.div

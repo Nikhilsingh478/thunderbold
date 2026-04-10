@@ -7,6 +7,8 @@ import { executeStoredAction } from "./lib/requireAuth";
 import { modalController, ModalControlEvent } from "./lib/modalController";
 import { useEffect, useState, lazy, Suspense } from "react";
 
+import AnnouncementBar from "./components/AnnouncementBar";
+
 // Eagerly loaded (small / always needed on first paint)
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -81,6 +83,7 @@ const AppContent = () => {
 
   return (
     <>
+      <AnnouncementBar />
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>

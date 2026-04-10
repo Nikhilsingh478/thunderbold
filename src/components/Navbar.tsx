@@ -130,7 +130,7 @@ const Navbar = () => {
         variants={navVariants}
         initial="hidden"
         animate="visible"
-        className={`fixed top-0 left-0 w-full px-6 py-5 md:px-[52px] md:py-6 flex items-center justify-between transition-colors duration-500 z-[100] ${
+        className={`fixed top-9 left-0 w-full px-6 py-5 md:px-[52px] md:py-6 flex items-center justify-between transition-colors duration-500 z-[100] ${
           scrolled ? 'bg-[#070707]/90 backdrop-blur-md border-b border-white/5' : 'bg-transparent'
         }`}
       >

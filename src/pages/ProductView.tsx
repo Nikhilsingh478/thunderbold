@@ -152,7 +152,7 @@ export default function ProductView() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-32 pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[164px] pb-24 px-6 md:px-16">
         <div className="max-w-[1240px] mx-auto">
           {/* Back Button */}
           <button

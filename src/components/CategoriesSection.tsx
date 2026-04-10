@@ -46,7 +46,7 @@ export default function CategoriesSection() {
   }, []);
 
   return (
-    <section className="min-h-screen pt-32 pb-24 px-6 md:px-16" id="categories">
+    <section className="min-h-screen pt-12 md:pt-20 pb-24 px-6 md:px-16" id="categories">
       <div className="max-w-[1000px] mx-auto">
 
         {/* Header — renders immediately, no waiting */}

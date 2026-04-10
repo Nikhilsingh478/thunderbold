@@ -316,7 +316,7 @@ export default function Profile() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-28 pb-24 px-4 md:px-10 lg:px-16">
+      <main className="flex-1 pt-[148px] pb-24 px-4 md:px-10 lg:px-16">
         <div className="max-w-[1100px] mx-auto">
 
           {/* Back */}

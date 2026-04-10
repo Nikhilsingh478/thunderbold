@@ -52,7 +52,7 @@ export default function Cart() {
         <ScrollProgress />
         <Navbar />
         
-        <main className="flex-1 pt-32 pb-24 px-6 md:px-16">
+        <main className="flex-1 pt-[164px] pb-24 px-6 md:px-16">
           <div className="max-w-[1240px] mx-auto">
             <div className="animate-pulse">
               <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
@@ -82,7 +82,7 @@ export default function Cart() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-32 pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[164px] pb-24 px-6 md:px-16">
         <div className="max-w-[1240px] mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
