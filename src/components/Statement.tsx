@@ -35,8 +35,8 @@ const Statement = () => (
     </motion.h2>
 
     <motion.p
-      className="font-serif italic font-light text-sv-mid max-w-[580px] md:max-w-[440px] mx-auto relative z-10 mt-8 md:mt-6"
-      style={{ fontSize: 'clamp(1rem, 2vw, 1.28rem)', lineHeight: 1.72 }}
+      className="font-serif font-light text-sv max-w-[580px] md:max-w-[440px] mx-auto relative z-10 mt-8 md:mt-6 tracking-wide"
+      style={{ fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', lineHeight: 1.72 }}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}

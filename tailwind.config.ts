@@ -29,7 +29,7 @@ export default {
         'leather-light': '#8a4f3a',
         'sv-bright': '#d8d8d8',
         sv: '#a0a0a0',
-        'sv-mid': '#686868',
+        'sv-mid': '#8c8c8c',
         'sv-dim': '#383838',
         'tb-white': '#f0eeea',
         'tb-off': '#c4c2be',
@@ -80,7 +80,7 @@ export default {
       fontFamily: {
         display: ['"Bebas Neue"', 'sans-serif'],
         condensed: ['"Barlow Condensed"', 'sans-serif'],
-        serif: ['"Cormorant Garamond"', 'serif'],
+        serif: ['Inter', 'sans-serif'],
         body: ['Barlow', 'sans-serif'],
       },
       borderRadius: {

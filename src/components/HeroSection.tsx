@@ -123,8 +123,8 @@ const HeroSection = () => {
           {/* Tagline */}
           <motion.p
             variants={item}
-            className="font-serif italic font-light text-sv-mid mt-4 md:mt-6 max-w-[420px] md:max-w-[400px] md:text-left"
-            style={{ fontSize: 'clamp(1rem, 2.2vw, 1.18rem)', lineHeight: 1.72 }}
+            className="font-serif font-light text-sv mt-4 md:mt-6 max-w-[420px] md:max-w-[400px] md:text-left tracking-wide"
+            style={{ fontSize: 'clamp(0.93rem, 2vw, 1.08rem)', lineHeight: 1.72 }}
           >
             Premium stretch denim engineered for movement and durability.
           </motion.p>

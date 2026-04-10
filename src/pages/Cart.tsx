@@ -118,7 +118,7 @@ export default function Cart() {
             >
               <ShoppingBag className="w-24 h-24 text-white/20 mx-auto mb-6" />
               <h2 className="font-display text-2xl text-tb-white mb-4">Your cart is empty</h2>
-              <p className="font-serif text-white/60 mb-8 max-w-md mx-auto">
+              <p className="font-condensed text-sv text-sm tracking-[0.10em] mb-8 max-w-md mx-auto">
                 Looks like you haven't added anything to your cart yet. Start shopping to fill it up!
               </p>
               <Link

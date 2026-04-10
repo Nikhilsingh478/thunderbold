@@ -68,7 +68,7 @@ const ManifestoSection = () => {
 
           {/* Quote card */}
           <div className="bg-surface border-l-2 border-brass/40 pl-5 md:pl-6 py-4 md:py-5 mt-8">
-            <blockquote className="font-serif italic font-light text-tb-off mb-3" style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.62 }}>
+            <blockquote className="font-serif font-light text-tb-white mb-3 tracking-wide" style={{ fontSize: 'clamp(0.95rem, 1.8vw, 1.12rem)', lineHeight: 1.62 }}>
               &ldquo;Engineered to handle daily wear while keeping a sharp, modern look.&rdquo;
             </blockquote>
             <cite className="font-condensed not-italic font-semibold text-[0.64rem] md:text-[0.66rem] tracking-[0.22em] uppercase text-brass block">

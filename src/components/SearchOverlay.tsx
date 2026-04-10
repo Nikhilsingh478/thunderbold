@@ -151,7 +151,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   </motion.div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-20 font-serif italic text-sv-mid text-lg md:text-xl">
+                <div className="col-span-full text-center py-20 font-condensed text-sv tracking-[0.12em] text-base md:text-lg uppercase">
                   No products found for "{query}".
                 </div>
               )}

@@ -46,7 +46,7 @@ const NotFound = () => {
             Pattern Not Found
           </h2>
           
-          <p className="font-serif italic font-light text-sv-mid text-lg md:text-xl mb-12 leading-relaxed">
+          <p className="font-serif font-light text-sv text-base md:text-lg mb-12 leading-relaxed tracking-wide">
             The seam you're looking for seems to have frayed. This page doesn't exist in the Thunderbolt collection.
           </p>
           

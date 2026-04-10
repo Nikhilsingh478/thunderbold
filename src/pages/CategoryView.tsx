@@ -84,7 +84,7 @@ export default function CategoryView() {
             <h1 className="font-display text-5xl md:text-6xl tracking-[0.12em] metal-text uppercase">
               {categoryName}
             </h1>
-            <p className="font-serif italic font-light text-sv-mid mt-4 text-lg">
+            <p className="font-serif font-light text-sv mt-4 text-base tracking-wide">
               Explore our premium {categoryName.toLowerCase()} collection.
             </p>
           </motion.div>

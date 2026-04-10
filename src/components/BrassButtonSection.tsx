@@ -74,7 +74,7 @@ const BrassButtonSection = () => {
         {/* Sub-copy */}
         <motion.p
           {...reveal}
-          className="font-serif font-light text-sv max-w-[500px] md:max-w-[600px] mx-auto mb-10"
+          className="font-serif font-light text-sv-bright max-w-[500px] md:max-w-[600px] mx-auto mb-10 tracking-wide"
           style={{ fontSize: 'clamp(1rem, 2vw, 1.22rem)', lineHeight: 1.7 }}
           transition={{ ...reveal.transition, delay: 1.6 }}
         >

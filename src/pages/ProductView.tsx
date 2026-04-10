@@ -262,7 +262,7 @@ export default function ProductView() {
                 </div>
               )}
 
-              <p className="font-serif italic font-light text-white/90 text-xl mb-10 leading-snug max-w-[90%]">
+              <p className="font-serif font-light text-tb-off text-base mb-10 leading-relaxed max-w-[90%] tracking-wide">
                 {product?.description}
               </p>
 

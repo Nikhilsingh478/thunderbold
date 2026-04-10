@@ -72,8 +72,8 @@ export default function OrderConfirmation({ address, items, totalAmount, onClose
           <p className="font-body text-lg text-tb-white">
             Your order has been placed successfully!
           </p>
-          <p className="font-serif text-sv-mid">
-            We'll send you updates on your WhatsApp
+          <p className="font-condensed text-sm tracking-[0.08em] text-sv mt-1">
+            We will contact you shortly to confirm delivery.
           </p>
         </div>
 

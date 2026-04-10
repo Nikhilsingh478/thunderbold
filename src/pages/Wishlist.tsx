@@ -106,7 +106,7 @@ export default function Wishlist() {
             >
               <Heart className="w-24 h-24 text-white/20 mx-auto mb-6" />
               <h2 className="font-display text-2xl text-tb-white mb-4">Your wishlist is empty</h2>
-              <p className="font-serif text-white/60 mb-8 max-w-md mx-auto">
+              <p className="font-condensed text-sv text-sm tracking-[0.10em] mb-8 max-w-md mx-auto">
                 Start adding items you love to your wishlist. They'll be waiting for you here!
               </p>
               <Link

@@ -66,7 +66,7 @@ export default function CategoriesSection() {
           </h1>
         </motion.div>
 
-        {/* Grid — skeleton cards appear immediately, replaced by real cards */}
+        {/* Denim / Jeans Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
           {loading
             ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -106,6 +106,48 @@ export default function CategoriesSection() {
               ))
           }
         </div>
+
+        {/* ── T-Shirts Section ─────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-28 md:mt-36 mb-16 md:mb-20 text-center"
+        >
+          <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
+            <span className="w-5 h-px bg-brass-dim inline-block" />
+            New Category
+            <span className="w-5 h-px bg-brass-dim inline-block" />
+          </div>
+          <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
+            The T-Shirt Collection
+          </h2>
+          <p className="font-condensed text-sv text-sm md:text-base tracking-[0.12em] mt-4">
+            Premium cuts. Everyday essentials. Coming to the store.
+          </p>
+        </motion.div>
+
+        {/* ── Coming Soon Section ───────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          className="mt-20 md:mt-28 py-16 md:py-20 border-t border-b border-white/[0.06] text-center"
+        >
+          <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
+            <span className="w-5 h-px bg-brass-dim inline-block" />
+            On the Horizon
+            <span className="w-5 h-px bg-brass-dim inline-block" />
+          </div>
+          <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] uppercase text-sv-dim">
+            Coming Soon
+          </h2>
+          <p className="font-condensed text-sv-mid text-sm md:text-base tracking-[0.10em] mt-4 max-w-md mx-auto">
+            More collections are in the works. Stay tuned.
+          </p>
+        </motion.div>
 
       </div>
     </section>
