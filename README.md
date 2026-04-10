@@ -1,798 +1,1294 @@
-# Thunderbolt Brand World
+# Thunderbolt — Premium Denim E-Commerce Platform
 
-A production-grade, cinematic e-commerce platform for premium denim. Built with a React + Vite frontend and an Express + MongoDB backend, Thunderbolt delivers a luxury shopping experience with full inventory management, user authentication, cart/wishlist persistence, and a powerful admin dashboard.
+> A cinematic, production-grade full-stack e-commerce storefront for a premium denim brand. React 18 + Vite frontend · Node.js/Express API · MongoDB Atlas · Firebase Authentication · Cloudinary image CDN.
 
 ---
 
 ## Table of Contents
 
-1. [Project Overview](#project-overview)
-2. [Technology Stack](#technology-stack)
-3. [Architecture](#architecture)
-4. [Folder Structure](#folder-structure)
-5. [Environment Variables & Secrets](#environment-variables--secrets)
-6. [Getting Started](#getting-started)
-7. [Frontend Deep Dive](#frontend-deep-dive)
-8. [Backend Deep Dive](#backend-deep-dive)
-9. [Inventory & Stock Management](#inventory--stock-management)
-10. [Order Lifecycle](#order-lifecycle)
-11. [Admin Panel Guide](#admin-panel-guide)
-12. [Authentication Flow](#authentication-flow)
-13. [Cart & Wishlist System](#cart--wishlist-system)
-14. [Database Schema](#database-schema)
-15. [Deployment](#deployment)
-16. [Known Behaviors & Decisions](#known-behaviors--decisions)
+1. [Project Overview](#1-project-overview)
+2. [Technology Stack](#2-technology-stack)
+3. [System Architecture](#3-system-architecture)
+4. [Repository Structure](#4-repository-structure)
+5. [Environment Variables & Secrets](#5-environment-variables--secrets)
+6. [Getting Started](#6-getting-started)
+7. [Scripts Reference](#7-scripts-reference)
+8. [Frontend Deep Dive](#8-frontend-deep-dive)
+    - [Routing](#routing)
+    - [Pages](#pages)
+    - [Components](#components)
+    - [Context Providers](#context-providers)
+    - [Lib Utilities](#lib-utilities)
+9. [Backend Deep Dive](#9-backend-deep-dive)
+    - [Express Server](#express-server)
+    - [API Reference](#api-reference)
+    - [Shared Backend Lib](#shared-backend-lib)
+10. [Database Schema](#10-database-schema)
+11. [Size-Based Stock System](#11-size-based-stock-system)
+12. [Order Lifecycle](#12-order-lifecycle)
+13. [Cloudinary Image Optimization](#13-cloudinary-image-optimization)
+14. [Admin Panel](#14-admin-panel)
+15. [Authentication & Security](#15-authentication--security)
+16. [Cart & Wishlist System](#16-cart--wishlist-system)
+17. [Deployment](#17-deployment)
+18. [Known Behaviors & Design Decisions](#18-known-behaviors--design-decisions)
 
 ---
 
-## Project Overview
+## 1. Project Overview
 
-**Thunderbolt Brand World** is an end-to-end e-commerce solution specializing in premium denim apparel. The platform is designed around a "cinematic" brand experience — with smooth Framer Motion animations, a striking dark aesthetic, custom cursors, and cinematic typography — while maintaining a robust backend that handles real-world commerce requirements:
+**Thunderbolt** is an end-to-end e-commerce platform for a premium denim brand. It is built around a "cinematic" brand experience — smooth Framer Motion animations, a striking dark aesthetic, custom cursors, and condensed serif typography — while maintaining a robust, production-ready backend.
 
-- Live product catalog backed by MongoDB
-- Firebase-powered user authentication
-- Hybrid cart/wishlist system (localStorage for instant UX + MongoDB for cross-device persistence)
-- Real-time inventory tracking with automatic stock decrements on purchase and stock restoration on cancellation
-- Full admin dashboard for product, category, and order management
-- Mobile-first responsive design
+### Core Capabilities
+
+| Domain | What it does |
+|---|---|
+| **Catalog** | Live product catalog backed by MongoDB; products belong to categories; multiple images per product via Cloudinary CDN |
+| **Stock** | Per-size stock tracking (`sizeStock` map) for waist sizes 28/30/32/34/36; size buttons auto-disable on OOS; atomic decrement/rollback on checkout |
+| **Auth** | Firebase email/password authentication; server-side token verification via Firebase Admin SDK |
+| **Cart** | localStorage-first (zero latency); background DB sync; quantity management; size-aware items |
+| **Wishlist** | Guest mode (localStorage); authenticated mode (MongoDB); toggle from any product card |
+| **Checkout** | Address capture; duplicate-order guard; atomic multi-item stock decrement with compensation rollback |
+| **Orders** | Full order history per user; admin sees all; status workflow; cancel with stock restoration |
+| **Admin** | Full CRUD for products (with per-size stock editor), categories, and orders; no separate dashboard app needed |
+| **Images** | Cloudinary CDN with auto-format (WebP/AVIF), auto-quality, and responsive widths applied at render time |
 
 ---
 
-## Technology Stack
+## 2. Technology Stack
 
 ### Frontend
-| Technology | Version | Purpose |
+
+| Package | Version | Role |
 |---|---|---|
-| React | 18.x | UI framework |
-| Vite | 5.x | Build tool & dev server |
-| TypeScript | 5.x | Type safety |
-| Tailwind CSS | 3.x | Utility-first styling |
-| Framer Motion | 12.x | Page & element animations |
-| React Router DOM | 6.x | Client-side routing |
-| TanStack Query | 5.x | Server state management |
-| Embla Carousel | 8.x | Product image slider |
-| shadcn/ui + Radix UI | — | Accessible UI primitives |
-| Lucide React | — | Icon library |
-| React Hook Form + Zod | — | Form validation |
-| Firebase SDK | 10.x | Authentication |
-| Sonner | — | Toast notifications |
+| `react` | 18.3 | UI framework |
+| `typescript` | 5.9 | Type safety |
+| `vite` | 5.4 | Dev server (port 5000) + bundler |
+| `tailwindcss` | 3.4 | Utility-first CSS |
+| `framer-motion` | 12 | Animations, page transitions, stagger effects |
+| `react-router-dom` | 6.30 | Client-side routing (SPA) |
+| `@tanstack/react-query` | 5 | Server-state caching |
+| `embla-carousel-react` | 8 | Product image carousel |
+| `@radix-ui/*` + `shadcn/ui` | various | Accessible component primitives |
+| `lucide-react` | 0.462 | Icon library |
+| `react-hook-form` | 7.72 | Form state management |
+| `zod` | 3.25 | Runtime schema validation |
+| `firebase` | 10.14 | Firebase client SDK (auth) |
+| `sonner` | 1.7 | Toast notifications |
+| `clsx` + `tailwind-merge` | — | Conditional class merging (`cn()`) |
+| `date-fns` | 3.6 | Date formatting |
 
 ### Backend
-| Technology | Version | Purpose |
-|---|---|---|
-| Node.js | — | Runtime |
-| Express | 5.x | Local dev API server |
-| MongoDB Driver | 6.x | Database access |
-| JSON Web Token | 9.x | Token decoding for auth |
-| dotenv | — | Environment variable loading |
 
-### Services
+| Package | Version | Role |
+|---|---|---|
+| `express` | 5.2 | HTTP server (port 3001) |
+| `mongodb` | 6.21 | MongoDB native driver |
+| `firebase-admin` | 13.7 | Server-side Firebase token verification |
+| `jsonwebtoken` | 9.0 | JWT decode (dev fallback when Firebase Admin is unconfigured) |
+| `helmet` | 8.1 | HTTP security headers |
+| `dotenv` | 17.4 | Environment variable loading |
+
+### External Services
+
 | Service | Purpose |
 |---|---|
-| Firebase Authentication | User sign-up, sign-in, token issuance |
-| MongoDB Atlas | Cloud database for products, orders, cart, wishlist, users, categories, addresses |
+| **MongoDB Atlas** | Primary database — products, orders, users, cart, wishlist, categories, addresses |
+| **Firebase Authentication** | Email/password auth; issues Firebase ID tokens |
+| **Cloudinary** | Image CDN; cloud name `djptdutak`; auto-format (WebP/AVIF) + responsive resizing |
 
 ---
 
-## Architecture
+## 3. System Architecture
 
 ```
-┌───────────────────────────────────────────────────────────────────┐
-│                        Browser (User)                             │
-│  React App (Vite, port 5000)                                      │
-│  ├─ Pages → Components → Context (Auth / Cart / Wishlist)        │
-│  └─ /api/* requests → proxied to Express                         │
-└──────────────────────────┬────────────────────────────────────────┘
-                           │ HTTP proxy (/api/*)
-                           ▼
-┌───────────────────────────────────────────────────────────────────┐
-│          Express API Server (server.js, port 3001)                │
-│  Dynamically imports serverless-style handlers from /api/**       │
-│  └─ Each handler connects to MongoDB Atlas via getDb()           │
-└──────────────────────────┬────────────────────────────────────────┘
-                           │ MongoDB Driver
-                           ▼
-┌───────────────────────────────────────────────────────────────────┐
-│                     MongoDB Atlas                                  │
-│  Collections: products, orders, cart, wishlist, users,            │
-│               categories, addresses                               │
-└───────────────────────────────────────────────────────────────────┘
+Browser
+  │
+  ├─ Vite Dev Server (:5000) ──proxy /api/*──► Express (:3001)
+  │       │                                        │
+  │   React SPA                              server.js
+  │   ├── React Router                             │
+  │   ├── AuthContext      ◄── Firebase client     │
+  │   ├── CartContext           SDK (auth only)    │
+  │   └── WishlistContext                    api/_lib/
+  │                                          ├── mongodb.js       (connection pool)
+  │                                          ├── firebaseAdmin.js (token verify)
+  │                                          └── adminHelper.js   (role check)
+  │                                                │
+  │                                          MongoDB Atlas
+  │                                          Firebase Admin SDK
+  │
+  └── Cloudinary CDN (image URLs transformed at render time — no proxy needed)
 ```
 
-**Development dual-server setup:**
-- `npm run dev` runs both the Express API server (port 3001) and the Vite dev server (port 5000) concurrently.
-- Vite proxies all `/api/*` requests to `http://localhost:3001`, so the frontend never needs to know the API port.
-- **Deployment target:** Vercel (serverless functions per `vercel.json`). The local Express server is only used for development.
+### Request Flow — Authenticated Admin Action
+
+```
+1. Browser sends:
+      Authorization: Bearer <firebase-id-token>
+
+2. Express handler calls verifyFirebaseToken(token):
+      ├── IF FIREBASE_SERVICE_ACCOUNT is set:
+      │     adminAuth.verifyIdToken(token, true)   ← cryptographically verified
+      └── ELSE (dev fallback):
+            jwt.decode(token)                      ← claims only, no sig check
+
+3. isAdmin(email, db):
+      ├── Query: db.collection('users').findOne({ email })
+      │     → return true if user.role === 'admin'
+      └── Fallback: email === process.env.ADMIN_EMAIL
+
+4. Handler executes or returns 401/403
+```
+
+### Vite Proxy
+
+`vite.config.ts` proxies all `/api/*` requests to `http://localhost:3001`:
+
+```ts
+server: {
+  port: 5000,
+  proxy: {
+    '/api': { target: 'http://localhost:3001', changeOrigin: true }
+  }
+}
+```
+
+This means the frontend uses relative URLs (`/api/products`) in all environments. No hardcoded ports in React code.
 
 ---
 
-## Folder Structure
+## 4. Repository Structure
 
 ```
-thunderbolt-brand-world/
+thunderbolt/
 │
-├── api/                          # Backend serverless-style API handlers
-│   ├── _lib/                     # Shared backend utilities
-│   │   ├── mongodb.js            # DB connection singleton (getDb)
-│   │   ├── response.js           # Standardized response helpers
-│   │   └── validation.js        # Input validation helpers
-│   ├── address/
-│   │   └── index.js              # GET / POST user delivery addresses
-│   ├── cart/
-│   │   └── index.js              # GET / POST / DELETE cart items (per user)
-│   ├── categories/
-│   │   └── index.js              # GET all / POST / DELETE categories
-│   ├── orders/
-│   │   ├── create.js             # POST create order + validate & decrement stock
-│   │   ├── cancel.js             # PUT cancel order + restore stock
-│   │   ├── manage.js             # PATCH update status / DELETE order (admin)
-│   │   └── index.js              # GET orders (user or admin)
+├── server.js                          # Express entry — dynamically imports all /api/* handlers
+├── vite.config.ts                     # Vite: port 5000, /api proxy → 3001, path aliases
+├── tailwind.config.ts                 # Custom theme: brass, void, tb-white, sv-mid colors
+├── tsconfig.json / tsconfig.app.json  # TypeScript configuration
+├── package.json                       # All dependencies and npm scripts
+├── vercel.json                        # Vercel deployment rewrites (serverless functions)
+│
+├── api/                               # Backend route handlers (serverless-compatible)
+│   ├── _lib/
+│   │   ├── mongodb.js                 # Singleton MongoClient — getDb() connection pool
+│   │   ├── firebaseAdmin.js           # Firebase Admin init + verifyFirebaseToken()
+│   │   └── adminHelper.js             # isAdmin(email, db) — DB role + env fallback
+│   │
 │   ├── products/
-│   │   ├── index.js              # GET all / POST / PUT / DELETE products
-│   │   └── [id].js               # GET single product by ID
+│   │   ├── index.js                   # GET all / POST / PUT ?id= / DELETE ?id=
+│   │   └── [id].js                    # GET single product (legacy route)
+│   │
+│   ├── orders/
+│   │   ├── index.js                   # GET all orders (admin) or user orders
+│   │   ├── create.js                  # POST — atomic size-aware stock decrement + rollback
+│   │   ├── cancel.js                  # PUT — order cancel + stock restoration
+│   │   └── manage.js                  # PUT — status update / DELETE (admin)
+│   │
 │   ├── users/
-│   │   └── index.js              # POST create/sync user profile
-│   └── wishlist/
-│       └── index.js              # GET / POST / DELETE wishlist items
+│   │   └── index.js                   # POST create/sync user; sets role: "user"
+│   │
+│   ├── categories/
+│   │   └── index.js                   # GET / POST / DELETE /:id
+│   │
+│   ├── cart/
+│   │   └── index.js                   # GET / POST cart (DB sync target)
+│   │
+│   ├── wishlist/
+│   │   └── index.js                   # GET / POST wishlist (authenticated users)
+│   │
+│   └── address/
+│       └── index.js                   # GET / POST / DELETE delivery addresses
 │
-├── src/                          # Frontend React application
-│   ├── components/               # Reusable UI components
-│   │   ├── ui/                   # shadcn/ui generated components
-│   │   ├── authHeroSection.tsx   # Hero banner shown when logged in
-│   │   ├── CategoriesSection.tsx # Homepage categories grid
-│   │   ├── checkoutNavbar.tsx    # Minimal navbar for checkout flow
-│   │   ├── CustomCursor.tsx      # Branded cursor overlay
-│   │   ├── Footer.tsx
-│   │   ├── HangTagSection.tsx    # Product "hang tag" UI element
-│   │   ├── ManifestoSection.tsx  # Brand manifesto section
-│   │   ├── Navbar.tsx            # Main site navigation
-│   │   ├── Numbers.tsx           # Animated statistics section
-│   │   ├── Pillars.tsx           # Brand pillars section
-│   │   ├── ScrollProgress.tsx    # Scroll progress indicator bar
-│   │   ├── SearchOverlay.tsx     # Full-screen search overlay
-│   │   ├── Statement.tsx         # Bold brand statement section
-│   │   ├── Ticker.tsx            # Marquee text ticker
-│   │   ├── TraitsSection.tsx     # Brand traits display
-│   │   └── checkout/
-│   │       └── ProductSummary.tsx # Order summary in checkout
-│   │
-│   ├── context/                  # React Context providers (global state)
-│   │   ├── AuthContext.tsx       # Firebase auth state, user object
-│   │   ├── CartContext.tsx       # Cart state, add/remove/clear, API sync
-│   │   └── WishlistContext.tsx   # Wishlist state, toggle, API sync
-│   │
-│   ├── lib/                      # Utility modules
-│   │   ├── firebase.ts           # Firebase app & auth initialization
-│   │   ├── modalController.ts    # Imperative modal open/close helpers
-│   │   ├── products.ts           # Product fetch helpers, TypeScript interfaces
-│   │   ├── requireAuth.ts        # HOF: redirect to login if not authenticated
-│   │   ├── storage.ts            # localStorage helpers
-│   │   └── utils.ts              # General utilities (cn, etc.)
-│   │
-│   ├── pages/                    # Route-level page components
-│   │   ├── About.tsx             # Brand story / about page
-│   │   ├── Admin.tsx             # Admin dashboard (orders / products / categories)
-│   │   ├── Cart.tsx              # Shopping cart page
-│   │   ├── CategoryView.tsx      # Products filtered by category
-│   │   ├── Checkout.tsx          # Multi-step checkout flow
-│   │   ├── Index.tsx             # Homepage
-│   │   ├── NotFound.tsx          # 404 page
-│   │   ├── Orders.tsx            # User order history
-│   │   ├── ProductView.tsx       # Single product detail page
-│   │   ├── Profile.tsx           # User profile & address management
-│   │   └── Wishlist.tsx          # Saved wishlist items
-│   │
-│   ├── App.tsx                   # Root component, route definitions
-│   ├── main.tsx                  # React DOM entry point
-│   └── index.css                 # Global CSS, Tailwind directives, custom fonts
-│
-├── server.js                     # Local Express dev server (wraps API handlers)
-├── vite.config.ts                # Vite config: port 5000, /api proxy, path aliases
-├── tailwind.config.ts            # Tailwind theme: custom colors, fonts, animations
-├── tsconfig.json                 # TypeScript config
-├── vercel.json                   # Vercel deployment rewrites & function config
-└── package.json                  # Scripts and dependencies
+└── src/                               # React + TypeScript frontend
+    │
+    ├── main.tsx                       # ReactDOM.createRoot entry point
+    ├── App.tsx                        # Provider tree: QueryClient → Auth → Cart → Wishlist
+    ├── AppContent.tsx                 # Router, routes, modal manager, delayed login prompt
+    ├── index.css                      # Tailwind directives, custom fonts, global resets
+    │
+    ├── lib/
+    │   ├── cloudinary.ts              # optimizeCloudinaryUrl() + IMG_SIZES constants
+    │   ├── firebase.ts                # Firebase app init (client SDK, VITE_* env vars)
+    │   ├── products.ts                # fetchProducts(), Product interface, retry wrapper
+    │   ├── storage.ts                 # localStorage get/set with JSON parsing + error guard
+    │   ├── utils.ts                   # cn() — clsx + tailwind-merge
+    │   ├── modalController.ts         # Imperative modal open/close (non-context approach)
+    │   └── requireAuth.ts             # Auth guard HOF: redirects to login if unauthenticated
+    │
+    ├── context/
+    │   ├── AuthContext.tsx            # Firebase onAuthStateChanged; login/logout/register
+    │   ├── CartContext.tsx            # localStorage-first cart; background DB sync
+    │   └── WishlistContext.tsx        # Guest localStorage / authenticated DB wishlist
+    │
+    ├── pages/
+    │   ├── Index.tsx                  # Home: hero + categories + manifesto + stats + CTA
+    │   ├── About.tsx                  # Brand story — parallax sections + typography
+    │   ├── CategoryView.tsx           # Product grid filtered by categoryId
+    │   ├── ProductView.tsx            # Detail: Embla slider + size selector + OOS handling
+    │   ├── Cart.tsx                   # Cart: quantity management + subtotal + checkout link
+    │   ├── Wishlist.tsx               # Saved items; move-to-cart action
+    │   ├── Checkout.tsx               # Address form + order summary + place order
+    │   ├── Orders.tsx                 # Order history + cancel flow
+    │   ├── Admin.tsx                  # Admin panel: orders / products / categories tabs
+    │   ├── Profile.tsx                # Address book (view / add / delete)
+    │   └── NotFound.tsx               # 404 fallback
+    │
+    └── components/
+        ├── Navbar.tsx                 # Sticky nav: logo, links, search, wishlist, cart count
+        ├── Footer.tsx                 # Site-wide footer
+        ├── CustomCursor.tsx           # Branded animated cursor (desktop only)
+        ├── ScrollProgress.tsx         # Brass progress bar at viewport top
+        ├── HeroSection.tsx            # Animated homepage hero
+        ├── CategoriesSection.tsx      # Framer Motion stagger grid of category cards
+        ├── SearchOverlay.tsx          # Full-screen live product search
+        ├── HangTagSection.tsx         # Product detail visual element
+        ├── BrassButtonSection.tsx     # Brand CTA section
+        ├── ManifestoSection.tsx       # Brand manifesto copy
+        ├── Numbers.tsx                # Animated brand statistics
+        ├── Legacy.tsx                 # Brand heritage section
+        ├── Pillars.tsx                # Brand pillars section
+        ├── TraitsSection.tsx          # Product traits grid
+        ├── Statement.tsx              # Bold brand statement typography
+        ├── Ticker.tsx                 # Scrolling marquee text
+        ├── auth/
+        │   └── LoginModal.tsx         # Firebase email/password sign-in + sign-up modal
+        ├── checkout/
+        │   ├── AddressForm.tsx        # Shipping address capture form with validation
+        │   ├── ProductSummary.tsx     # Line-item order summary (Cloudinary-optimized images)
+        │   └── OrderConfirmation.tsx  # Post-order confirmation screen
+        └── ui/                        # shadcn/ui primitives (Button, Input, Select, Dialog…)
 ```
 
 ---
 
-## Environment Variables & Secrets
+## 5. Environment Variables & Secrets
 
-All secrets are stored as environment variables. **Never commit these to source control.**
+**Never commit secrets to source control.** Set these as Replit Secrets or in a `.env` file.
 
-### Required Variables
+### Required Secrets
 
 | Variable | Where Used | Description |
 |---|---|---|
-| `MONGO_URI` | Backend (`api/_lib/mongodb.js`) | MongoDB Atlas connection string |
-| `VITE_FIREBASE_API_KEY` | Frontend (`src/lib/firebase.ts`) | Firebase project API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Frontend | Firebase auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Frontend | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Frontend | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Frontend | Firebase messaging sender |
-| `VITE_FIREBASE_APP_ID` | Frontend | Firebase app ID |
-| `ADMIN_EMAIL` | Backend (`api/orders/cancel.js`, `api/orders/manage.js`) | Email address with admin privileges |
+| `MONGO_URI` | `api/_lib/mongodb.js` | Full MongoDB Atlas connection string. Example: `mongodb+srv://user:pass@cluster.mongodb.net/thunderbolt?retryWrites=true&w=majority` |
+| `FIREBASE_SERVICE_ACCOUNT` | `api/_lib/firebaseAdmin.js` | Complete Firebase service account JSON as a **single-line string**. Obtain from Firebase Console → Project Settings → Service Accounts → Generate new private key. Without this, the server falls back to `jwt.decode` — acceptable for local development only. |
 
-> **Note:** Frontend variables must be prefixed with `VITE_` to be exposed to the browser by Vite.
+### Optional / Defaults
+
+| Variable | Default | Description |
+|---|---|---|
+| `ADMIN_EMAIL` | `nikhilwebworks@gmail.com` | Email address with unconditional admin access. The DB role check (`users.role === "admin"`) takes priority. Set this to protect against default email exposure. |
+
+### Firebase Client Config
+
+The Firebase client-side config object is embedded directly in `src/lib/firebase.ts`. These values are **intentionally public** — Firebase enforces security through Authentication rules and database rules, not by hiding client config. If you need to switch Firebase projects, update that file directly.
 
 ---
 
-## Getting Started
+## 6. Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- npm 9+
-- A MongoDB Atlas cluster with connection string
-- A Firebase project with Email/Password authentication enabled
+
+- Node.js 20+
+- npm 10+
+- MongoDB Atlas cluster (free tier M0 is sufficient)
+- Firebase project with **Email/Password** sign-in method enabled
 
 ### Installation
 
 ```bash
 # 1. Clone the repository
 git clone <repo-url>
-cd thunderbolt-brand-world
+cd thunderbolt
 
 # 2. Install all dependencies
 npm install
 
-# 3. Set up environment variables
-#    Add all required variables listed above to your environment
+# 3. Set secrets (Replit Secrets, or create .env)
+#    MONGO_URI=<your atlas URI>
+#    FIREBASE_SERVICE_ACCOUNT=<your JSON, single line>
+#    ADMIN_EMAIL=<your admin email>
 
-# 4. Start the development servers (runs both Express API + Vite frontend)
+# 4. Start development servers
 npm run dev
 ```
 
-The app will be available at `http://localhost:5000`.
+Open `http://localhost:5000`. The Vite dev server proxies all `/api/*` calls to Express on port 3001.
 
-### Available Scripts
+### First-Run Database Setup
 
-| Script | Description |
-|---|---|
-| `npm run dev` | Start both API server and Vite frontend concurrently |
-| `npm run dev:client` | Start only the Vite frontend (port 5000) |
-| `npm run server` | Start only the Express API server (port 3001) |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | Run ESLint |
-| `npm run test` | Run Vitest test suite once |
-| `npm run test:watch` | Run Vitest in watch mode |
+MongoDB collections are created lazily — they are auto-created when the first document is inserted. There are no migration scripts to run. However, for a clean start:
+
+1. Create an admin user by registering in the app with your `ADMIN_EMAIL`
+2. In your MongoDB Atlas console, find that user document and set `role: "admin"` manually, or rely on the `ADMIN_EMAIL` fallback
+3. Use the Admin panel to create categories and products
 
 ---
 
-## Frontend Deep Dive
+## 7. Scripts Reference
+
+| Script | Command | What it runs |
+|---|---|---|
+| `dev` | `npm run server & npm run dev:client` | Both servers concurrently |
+| `dev:client` | `vite` | Vite frontend on port 5000 only |
+| `server` | `node server.js` | Express API on port 3001 only |
+| `build` | `vite build` | Production build → `dist/` |
+| `build:dev` | `vite build --mode development` | Build with source maps, no minification |
+| `lint` | `eslint .` | ESLint across the whole project |
+| `preview` | `vite preview` | Serve the production build locally |
+| `test` | `vitest run` | Run test suite once |
+| `test:watch` | `vitest` | Run tests in watch mode |
+
+---
+
+## 8. Frontend Deep Dive
+
+### Routing
+
+Routes are defined in `src/AppContent.tsx` using React Router v6:
+
+| Path | Page | Auth Required |
+|---|---|---|
+| `/` | Index (Home) | No |
+| `/about` | About | No |
+| `/category/:id` | CategoryView | No |
+| `/product/:id` | ProductView | No |
+| `/cart` | Cart | No |
+| `/wishlist` | Wishlist | No |
+| `/checkout` | Checkout | Yes |
+| `/orders` | Orders | Yes |
+| `/profile` | Profile | Yes |
+| `/admin` | Admin | Admin email only |
+| `*` | NotFound | No |
 
 ### Pages
 
-#### `Index.tsx` — Homepage
-The landing page assembles all cinematic sections: hero animation, brand manifesto, categories grid, traits, hang tag, numbers/stats, pillars, and a brass CTA button. It pulls live category data from the API to populate the categories grid.
+#### `Index.tsx` — Home
+Assembles all cinematic brand sections in order: `HeroSection`, `CategoriesSection`, `ManifestoSection`, `TraitsSection`, `HangTagSection`, `Numbers`, `Pillars`, `Legacy`, `Statement`, `BrassButtonSection`. Category data is fetched live from `/api/categories` to populate the grid.
 
 #### `ProductView.tsx` — Product Detail
-The most feature-rich page. Includes:
-- **Embla Carousel** image slider with touch support, desktop navigation arrows, and dot indicators
-- **Size selector** (28, 30, 32, 34, 36)
-- **Quantity selector** with min/max clamping
-- **Real-time stock status display:**
-  - No badge shown when stock is not set or above 3 (product is freely available)
-  - Pulsing **amber badge: "Only X left"** when stock is 1, 2, or 3
-  - **Red badge: "Out of Stock"** when stock is 0; Add to Cart and Order Now buttons are fully disabled
-- **Add to Cart / Wishlist** buttons — disabled when out of stock
-- **Order Now** CTA — disabled when out of stock or no size selected
-- Product specs section (Fit, Material, Shipping info)
 
-#### `CategoryView.tsx` — Category Product Grid
-Displays all products belonging to a given category, fetched from the API and filtered client-side by `categoryId`.
+The most feature-rich page. Key behaviors:
+
+**Image carousel** — `embla-carousel-react` with touch swipe, prev/next navigation arrows, and a thumbnail strip below the main image. Thumbnails highlight the active slide. All images are Cloudinary-optimized: hero at 1000px, thumbnails at 200px.
+
+**Size selector** — 5 buttons for sizes `['28', '30', '32', '34', '36']`. Each button checks `sizeStock[size]`. When stock is 0:
+- Button is `disabled`
+- Text has `line-through` class
+- A small `"OOS"` sub-label renders below the size
+- Button has a muted red border and text color
+
+**Stock display logic:**
+```
+product.stock === 0 or product.sizeStock[selectedSize] === 0
+  → "Out of Stock" badge (red); all action buttons disabled
+
+0 < product.stock <= 3 AND sizeStock[selectedSize] > 0
+  → "Only X left" badge (amber, pulsing animation)
+
+product.stock > 3
+  → No badge shown
+```
+
+**`effectiveOutOfStock`** — a derived boolean combining global OOS (total stock = 0) and per-size OOS (selected size stock = 0). All action buttons (`Add to Cart`, `Order Now`) check this flag, not just the raw `stock` field.
+
+**Add to Cart / Order Now** — both have an `isLoading` flag that disables the button and shows a spinner during the async operation, preventing double-submission.
+
+#### `CategoryView.tsx` — Category Grid
+
+Fetches all products then filters by `product.categoryId === params.id`. Renders a responsive grid with a wishlist-toggle heart on each card. Product images are Cloudinary-optimized at 500px (card size).
 
 #### `Cart.tsx` — Shopping Cart
-Shows all items currently in the cart (synced from CartContext, persisted in MongoDB). Allows quantity changes, item removal, and navigates to checkout.
+
+Reads from `CartContext`. Shows item image (200px), name, size, quantity stepper (+ / − with min=1 guard), subtotal per item, remove button, and cart total. Links to `/checkout`. DB sync is fire-and-forget.
 
 #### `Checkout.tsx` — Checkout Flow
-Multi-step checkout: address selection/entry → payment method → order confirmation. On submission, calls `POST /api/orders/create` which validates stock, creates the order, and decrements inventory atomically.
+
+Three-phase flow:
+1. **Address** — shows saved addresses with a radio selector + "Add New Address" option (inline form)
+2. **Summary** — `ProductSummary` component lists all cart items with Cloudinary images
+3. **Confirmation** — calls `POST /api/orders/create`, clears cart on success, shows order ID
+
+Includes idempotency key (`clientOrderId = uuid`) to prevent duplicate orders on network retry.
 
 #### `Orders.tsx` — Order History
-Lists all orders for the current user. Each order shows status, items, total, and a cancel button (if cancellable — not already cancelled or delivered). Cancellation calls `PUT /api/orders/cancel`, which restores stock for all items in the order.
+
+Fetches `GET /api/orders` (user-scoped by the backend). Shows status badge, items (name + size + qty), total, date, and a **Cancel** button for non-final statuses. Cancel calls `PUT /api/orders/cancel` which restores stock for all items atomically.
 
 #### `Admin.tsx` — Admin Dashboard
-Protected route — only accessible by the configured `ADMIN_EMAIL`. Three tabs:
 
-- **Orders:** View all orders across all users. Displays order ID, customer email, items (with size and quantity), ship-to address, total, date, and a status dropdown. Admin can change status or delete orders.
-- **Products:** Product card grid. Each card shows the image, category name, product name, price, and a **color-coded live stock badge**:
-  - Green: more than 3 units in stock
-  - Amber: 1–3 units (low stock warning)
-  - Red: 0 units (out of stock)
-  - Edit and Delete actions on every card.
-- **Categories:** Category grid with image, name, and delete button. Add new categories with name + image URL.
+Three tabs: **Orders**, **Products**, **Categories**. See [Admin Panel](#14-admin-panel) for full details.
 
-#### `Profile.tsx` — User Profile
-Shows user info (Firebase account data) and saved delivery addresses. Allows adding, editing, and deleting addresses stored in MongoDB.
+#### `Profile.tsx` — Address Book
+
+Lists saved addresses from `GET /api/address`. Supports add and delete via API calls.
 
 #### `Wishlist.tsx` — Saved Items
-Displays all products saved to the wishlist. Items can be moved to cart or removed.
 
-#### `About.tsx` — Brand Story
-Static brand storytelling page with parallax sections and typography.
-
-#### `NotFound.tsx` — 404
-Minimal 404 page with a return-to-home link.
+Reads from `WishlistContext`. Shows product image (500px), name, price, and two actions: **Add to Cart** (via `CartContext.addToCart`) and **Remove** (via `WishlistContext.toggleWishlist`).
 
 ---
 
 ### Components
 
 #### `Navbar.tsx`
-Sticky top navigation with the Thunderbolt logo, category links, search icon (opens `SearchOverlay`), wishlist icon, cart icon with item count badge, and a Login/avatar button. Collapses gracefully on mobile.
+Sticky top navigation. Contains: Thunderbolt wordmark, category nav links, `SearchOverlay` trigger, wishlist icon with item-count badge (red), cart icon with item-count badge (red), and a login/avatar button. Collapses to a hamburger on mobile. Uses `CartContext` and `WishlistContext` for live counts.
 
 #### `SearchOverlay.tsx`
-Full-screen search modal. Fetches all products and filters client-side by name as the user types. Displays matching results with images, names, and prices.
-
-#### `CustomCursor.tsx`
-Replaces the default browser cursor with a branded animated circle on desktop. Tracks mouse position and scales on hover over interactive elements.
-
-#### `ScrollProgress.tsx`
-A thin brass-colored progress bar at the top of the viewport that fills as the user scrolls down the page.
+Full-screen overlay triggered from the Navbar. Fetches all products once on open and filters client-side as the user types. Results show Cloudinary-optimized product images (500px), product name, price, and click-to-navigate.
 
 #### `CategoriesSection.tsx`
-Animated grid of category cards fetched from the API. Each card links to its `CategoryView`. Uses Framer Motion stagger animations on scroll.
+Fetches categories from `/api/categories`. Renders an animated grid using Framer Motion `staggerChildren` on scroll entry. Images are Cloudinary-optimized at 500px. Each card navigates to `/category/:id`.
 
-#### `Footer.tsx`
-Site-wide footer with brand links, social links, and legal text.
+#### `CustomCursor.tsx`
+Replaces the default browser cursor on desktop with a branded circular overlay. Tracks `mousemove` and scales on hover. Hidden on mobile (touch devices detected via `pointer: coarse`).
+
+#### `ScrollProgress.tsx`
+Thin progress bar at the top of the viewport. Reads `window.scrollY / (document.body.scrollHeight - window.innerHeight)` on scroll and fills proportionally in the brand brass color.
 
 #### `checkout/ProductSummary.tsx`
-Order summary panel used within the checkout flow. Shows product image, name, size, quantity, and price.
-
-#### UI Components (`components/ui/`)
-All standard shadcn/ui components: Button, Card, Dialog, Drawer, Input, Select, Tooltip, Toast (Sonner), Badge, etc. These are Radix UI primitives styled with Tailwind.
+Renders order line items in the checkout summary panel. Shows Cloudinary-optimized product image (200px thumbnail), product name, selected size, quantity, and line total.
 
 ---
 
-### Context (Global State)
+### Context Providers
 
-#### `AuthContext.tsx`
-Wraps the entire app. Listens to Firebase `onAuthStateChanged` and exposes:
-- `user` — the Firebase `User` object (or `null`)
-- `signIn(email, password)` — email/password sign-in
-- `signUp(email, password)` — new account creation
-- `signOut()` — logs out and clears local state
-- `loading` — boolean while the auth state is being determined
+The provider hierarchy in `App.tsx`:
 
-#### `CartContext.tsx`
-Manages the shopping cart. Strategy:
-1. On mount, loads cart from `localStorage` immediately for a zero-latency display.
-2. If the user is authenticated, syncs with `GET /api/cart` to fetch the server-persisted cart.
-3. All mutations (add, remove, update quantity, clear) update both `localStorage` and the API.
-4. Exposes: `cartItems`, `addToCart`, `removeFromCart`, `updateQuantity`, `clearCart`, `isInCart`, `getItemQuantity`, `cartCount`, `cartTotal`.
+```
+<QueryClientProvider>
+  <AuthProvider>
+    <CartProvider>
+      <WishlistProvider>
+        <AppContent />  ← router lives here
+      </WishlistProvider>
+    </CartProvider>
+  </AuthProvider>
+</QueryClientProvider>
+```
 
-#### `WishlistContext.tsx`
-Manages the wishlist with the same hybrid local + API strategy as CartContext.
-Exposes: `wishlistItems`, `toggleWishlist`, `isInWishlist`, `wishlistCount`.
+#### `AuthContext`
+
+Wraps Firebase `onAuthStateChanged`. Exposes:
+
+| Export | Type | Description |
+|---|---|---|
+| `user` | `User \| null` | The raw Firebase `User` object. Access `user.getIdToken()` for API auth headers. |
+| `loading` | `boolean` | `true` while the initial auth state is being determined |
+| `login(email, password)` | `async` | Firebase `signInWithEmailAndPassword` |
+| `register(email, password)` | `async` | Firebase `createUserWithEmailAndPassword`, then calls `POST /api/users/create` |
+| `logout()` | `async` | Firebase `signOut` + clears local cart/wishlist state |
+
+#### `CartContext`
+
+Strategy: **localStorage-first, DB second.**
+
+| Export | Type | Description |
+|---|---|---|
+| `items` | `CartItem[]` | Current cart items |
+| `addToCart(item)` | `fn` | Adds or increments item; writes localStorage; background DB sync |
+| `removeFromCart(productId, size)` | `fn` | Removes specific item+size combination |
+| `updateQuantity(productId, size, qty)` | `fn` | Sets exact quantity |
+| `clearCart()` | `fn` | Empties cart entirely (used post-checkout) |
+| `isInCart(productId, size)` | `boolean` | Check membership |
+| `getItemQuantity(productId, size)` | `number` | Get quantity for a specific size |
+| `totalItems` | `number` | Sum of all quantities |
+| `totalPrice` | `number` | Sum of all (price × quantity) |
+
+`CartItem` shape:
+```ts
+{
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  size: string;       // e.g. "32"
+  image: string;      // raw Cloudinary URL (optimized at render time)
+}
+```
+
+localStorage key: `thunderbolt_cart`
+
+#### `WishlistContext`
+
+Strategy: **localStorage for guests, DB for authenticated users.** On login, the localStorage wishlist is merged into the DB.
+
+| Export | Type | Description |
+|---|---|---|
+| `items` | `WishlistItem[]` | Current wishlist |
+| `toggleWishlist(item)` | `fn` | Add if not present; remove if present |
+| `isInWishlist(productId)` | `boolean` | Membership check |
+| `totalItems` | `number` | Total count |
+
+`WishlistItem` shape:
+```ts
+{
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+}
+```
+
+localStorage key: `thunderbolt_wishlist`
 
 ---
 
 ### Lib Utilities
 
-#### `firebase.ts`
-Initializes the Firebase app and exports the `auth` instance using `VITE_FIREBASE_*` environment variables.
+#### `src/lib/cloudinary.ts`
 
-#### `products.ts`
-Contains the `Product` TypeScript interface and API fetch helpers:
-- `fetchProducts()` — fetch all products
-- `fetchProductById(id)` — fetch one product by ID
-- `fetchProductsByCategory(categoryId)` — client-side filter by category
-- `getCategories()` — extract unique category IDs from the products list
+See [Section 13](#13-cloudinary-image-optimization) for full documentation.
 
-#### `requireAuth.ts`
-A higher-order function that wraps any action handler. If the user is not logged in, it redirects them to the login page (or opens a sign-in modal) instead of executing the action. Used on Add to Cart and Order Now.
+#### `src/lib/products.ts`
 
-#### `storage.ts`
-Thin wrappers around `localStorage.getItem` / `setItem` with JSON parsing/serialization and error handling.
+Exports the `Product` TypeScript interface and fetch helpers:
 
-#### `utils.ts`
-Exports `cn(...)` — a utility that merges Tailwind class names using `clsx` + `tailwind-merge`.
-
----
-
-## Backend Deep Dive
-
-### API Routes
-
-All routes are mounted by `server.js` and follow the `/api/` prefix. In production (Vercel), each file in `/api/` becomes a serverless function.
-
-#### Products — `/api/products`
-
-| Method | Auth | Description |
-|---|---|---|
-| `GET /api/products` | None | Returns all products sorted by `createdAt` descending |
-| `POST /api/products` | Admin | Create a new product |
-| `PUT /api/products?id=<id>` | Admin | Update an existing product (name, price, images, stock, etc.) |
-| `DELETE /api/products?id=<id>` | Admin | Delete a product permanently |
-
-**Product document shape:**
-```json
-{
-  "_id": "ObjectId",
-  "name": "Thunderbolt Slim Fit",
-  "price": 2499,
-  "image": "https://...",
-  "images": ["https://...", "https://..."],
-  "description": "Premium 98% cotton denim...",
-  "categoryId": "ObjectId",
-  "stock": 50,
-  "createdAt": "ISODate",
-  "updatedAt": "ISODate"
+```ts
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  image: string;
+  images?: string[];
+  description?: string;
+  categoryId?: string;
+  stock: number;
+  sizeStock?: Record<string, number>;
+  createdAt?: string;
 }
 ```
 
-#### Orders — `/api/orders/create`, `/api/orders/cancel`, `/api/orders/manage`, `/api/orders`
+`fetchProducts()` calls `GET /api/products` with an exponential-backoff retry wrapper (3 attempts, 300ms → 600ms → 1200ms delays).
 
-| Method & Route | Auth | Description |
-|---|---|---|
-| `POST /api/orders/create` | User | Place an order. Validates stock, creates order document, decrements product stock |
-| `PUT /api/orders/cancel` | User or Admin | Cancel an order (if not delivered). Restores product stock for all items |
-| `PATCH /api/orders/manage?id=<id>` | Admin | Update order status |
-| `DELETE /api/orders/manage?id=<id>` | Admin | Permanently delete an order |
-| `GET /api/orders` | User or Admin | Admin gets all orders; user gets only their own |
+#### `src/lib/utils.ts`
 
-#### Cart — `/api/cart`
+```ts
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+export function cn(...inputs) { return twMerge(clsx(inputs)); }
+```
 
-| Method | Auth | Description |
-|---|---|---|
-| `GET /api/cart` | User | Fetch the current user's cart |
-| `POST /api/cart` | User | Add/update a cart item |
-| `DELETE /api/cart` | User | Remove an item or clear the entire cart |
+The standard shadcn/ui class merge utility. Used universally across all components.
 
-#### Wishlist — `/api/wishlist`
+#### `src/lib/requireAuth.ts`
 
-| Method | Auth | Description |
-|---|---|---|
-| `GET /api/wishlist` | User | Fetch the current user's wishlist |
-| `POST /api/wishlist` | User | Add an item to wishlist |
-| `DELETE /api/wishlist` | User | Remove an item from wishlist |
-
-#### Categories — `/api/categories`
-
-| Method | Auth | Description |
-|---|---|---|
-| `GET /api/categories` | None | Returns all categories |
-| `POST /api/categories` | Admin | Create a new category |
-| `DELETE /api/categories/:id` | Admin | Delete a category |
-
-#### Users — `/api/users`
-
-| Method | Auth | Description |
-|---|---|---|
-| `POST /api/users` | User | Create or sync a user profile in MongoDB after Firebase registration |
-
-#### Address — `/api/address`
-
-| Method | Auth | Description |
-|---|---|---|
-| `GET /api/address` | User | Fetch saved delivery addresses |
-| `POST /api/address` | User | Add or update a delivery address |
-| `DELETE /api/address` | User | Delete a delivery address |
+A higher-order function that wraps any async action. If the user is not authenticated, it opens the `LoginModal` instead of executing the action. Used on `addToCart` and `orderNow` triggers.
 
 ---
 
-### Shared Lib (`api/_lib/`)
+## 9. Backend Deep Dive
 
-#### `mongodb.js`
-Manages a singleton MongoDB client connection. The `getDb()` function:
-1. Reuses an existing connection if available (important for serverless warm starts)
-2. Creates a new `MongoClient` connection using `process.env.MONGO_URI`
-3. Returns the database instance
+### Express Server (`server.js`)
 
-#### `response.js`
-Helper functions for consistent JSON responses with proper status codes and CORS headers.
+`server.js` creates an Express app, applies `helmet` for security headers, parses JSON bodies, then dynamically routes each `/api/*` path to the corresponding file in the `api/` directory. This mirrors the Vercel serverless function convention, making the codebase deploy-ready without modification.
 
-#### `validation.js`
-Input validation utilities shared across handlers.
+```js
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: false }));
+app.use(express.json());
 
----
+// Dynamic routing: /api/orders/create → api/orders/create.js
+app.all('/api/*path', async (req, res) => {
+  const modulePath = `./api/${req.params.path.join('/')}.js`;
+  const handler = (await import(modulePath)).default;
+  return handler(req, res);
+});
+```
 
-## Inventory & Stock Management
+### API Reference
 
-This is one of the most critical systems in the platform. Here is how stock flows through the entire lifecycle:
+#### `GET /api/products`
 
-### Stock Field
-Every product document in MongoDB has a `stock` field (Number, defaults to 0). The admin sets this manually via the product create/edit forms in the Admin Panel.
+Public. Returns all products sorted by `createdAt` descending.
 
-### Stock Display — User Side (`ProductView.tsx`)
-The product page reads the `stock` field from the API response and shows:
+Response:
+```json
+{
+  "products": [ { "_id": "...", "name": "...", "sizeStock": { "28": 5, "30": 10 }, "stock": 33 } ],
+  "count": 25,
+  "source": "database"
+}
+```
 
-| Stock Value | Display |
-|---|---|
-| Not set / null | Nothing shown (no badge) |
-| > 3 | Nothing shown (product is available, no urgency) |
-| 1, 2, or 3 | Pulsing amber badge: **"Only X left"** |
-| 0 | Red badge: **"Out of Stock"**; Add to Cart and Order Now buttons are disabled |
+#### `POST /api/products` — Admin
 
-### Stock Display — Admin Side (`Admin.tsx` → Products Tab)
-Every product card shows a color-coded stock badge next to the price:
+Creates a product. Body must include `name`, `price`, `categoryId`. Optional: `images[]`, `description`, `sizeStock`.
 
-| Stock Value | Badge Color | Badge Text |
-|---|---|---|
-| > 3 | Green | "X in stock" |
-| 1–3 | Amber | "X in stock" (low stock warning) |
-| 0 | Red | "Out of stock" |
+`sizeStock` is normalised on the server:
+```js
+function normaliseSizeStock(raw) {
+  const out = {};
+  for (const size of SIZES) {
+    out[size] = Math.max(0, parseInt(raw?.[size] ?? 0, 10)) || 0;
+  }
+  return out;
+}
+```
+Then `stock = Object.values(sizeStock).reduce((a, b) => a + b, 0)`.
 
-### Stock Decrement — On Order Creation (`api/orders/create.js`)
-When a user places an order:
-1. Before creating the order document, the API fetches each product from MongoDB.
-2. It checks `availableStock >= requestedQuantity` for every item in the order.
-3. If any item fails the check, the entire order is **rejected** with a descriptive error message (e.g., `"Only 2 unit(s) of 'Thunderbolt Slim Fit' are available"`, or `"'Thunderbolt Slim Fit' is out of stock"`).
-4. If all items pass, the order document is inserted into MongoDB.
-5. The API then iterates through each ordered item and performs an atomic `$inc: { stock: -quantity }` update on the corresponding product document.
+#### `PUT /api/products?id=<id>` — Admin
 
-This approach ensures stock can never go below zero and handles concurrent orders gracefully through MongoDB's atomic update operations.
+Updates an existing product. All fields optional. `sizeStock` and `stock` follow the same normalisation. Uses `$set` to avoid clobbering unmodified fields.
 
-### Stock Restore — On Order Cancellation (`api/orders/cancel.js`)
-When an order is cancelled (by user or admin):
-1. The order document's status is updated to `'cancelled'`.
-2. The API iterates through every product in the order and performs an atomic `$inc: { stock: +quantity }` update, returning all units to available inventory.
-3. Cancellation is blocked if the order is already `'cancelled'` or `'delivered'`.
+#### `DELETE /api/products?id=<id>` — Admin
 
-### Manual Stock Adjustment
-The admin can manually override the stock value at any time using the Edit Product modal in the Admin Panel. This is useful for:
-- Initial stock setup when adding new products
-- Manual inventory reconciliation after audits
-- Adjusting for returns not processed through the system
+Hard-deletes the product document. No soft-delete; no cascade on orders (historical orders keep their product names as strings).
 
----
+#### `GET /api/categories`
 
-## Order Lifecycle
+Public. Returns all categories.
+
+```json
+{ "categories": [ { "_id": "...", "name": "Slim Fit", "image": "https://..." } ], "count": 4 }
+```
+
+#### `POST /api/categories` — Admin
+
+Body: `{ "name": "...", "image": "..." }`. Inserts and returns the new document.
+
+#### `DELETE /api/categories/:id` — Admin
+
+Deletes a category by MongoDB ObjectId. Uses `new ObjectId(id)` — plain string comparison would silently fail.
+
+#### `POST /api/orders/create` — Authenticated User
+
+Full order placement with atomic stock decrement:
 
 ```
-User adds items to cart
-        ↓
-User proceeds to checkout
-        ↓
-Checkout validates address + payment method
-        ↓
+Body: {
+  products: [{ productId, name, quantity, size, price, image }],
+  totalAmount,
+  address: { fullName, phone, addressLine1, city, pincode },
+  paymentMethod: "COD",
+  clientOrderId: "<uuid v4>"
+}
+```
+
+Flow:
+1. Verify Firebase token → extract `userId` (email)
+2. **Idempotency check**: if `clientOrderId` exists in orders collection → return existing order (200, not 201)
+3. **Pre-flight stock check**: for each item, read current `sizeStock[size]` (or `stock` for legacy products). Return 400 with the first OOS item name if insufficient.
+4. **Insert order** document with `status: "pending"`
+5. **Atomic decrement loop**: for each item:
+   - If product has `sizeStock`: `$inc: { "sizeStock.SIZE": -qty, stock: -qty }` with filter `{ "sizeStock.SIZE": { $gte: qty } }`
+   - Otherwise: `$inc: { stock: -qty }` with filter `{ stock: { $gte: qty } }`
+   - If `modifiedCount === 0` → concurrent buyer grabbed the last unit → break and enter rollback
+6. **Rollback** (on race condition): for each successfully-decremented item, apply the inverse `$inc`. Delete the inserted order. Return 409.
+7. On success: return 201 with full order document.
+
+#### `PUT /api/orders/cancel` — Authenticated User or Admin
+
+```
+Body: { orderId: "<ObjectId>" }
+```
+
+Fetches the order, verifies ownership (or admin). For each item in the order:
+- Fetches current product
+- If product has `sizeStock` and item has a `size` field: `$inc: { "sizeStock.SIZE": +qty, stock: +qty }`
+- Otherwise: `$inc: { stock: +qty }`
+
+Sets `order.status = "cancelled"`.
+
+#### `PUT /api/orders/manage` — Admin
+
+```
+Body: { orderId, action: "updateStatus" | "delete", status?: "confirmed" | "shipped" | "delivered" }
+```
+
+For `updateStatus`: updates `order.status`. For `delete`: `deleteOne` the order document.
+
+#### `GET /api/orders` — User or Admin
+
+Admin (identified by `isAdmin()`) gets all orders sorted by `createdAt` descending. Regular users get only orders where `userId === user.email`.
+
+#### `GET /api/cart` + `POST /api/cart`
+
+`GET` returns the user's cart document. `POST` upserts the entire `items` array (replaces, not appends). Keyed by `userId` (email).
+
+#### `GET /api/wishlist` + `POST /api/wishlist`
+
+Same pattern as cart. `POST` replaces the full `items` array.
+
+#### `GET /api/address` + `POST /api/address` + `DELETE /api/address`
+
+Addresses are stored as an array on the user document. `POST` appends to the array. `DELETE` removes by index.
+
+---
+
+### Shared Backend Lib
+
+#### `api/_lib/mongodb.js`
+
+Singleton connection pool:
+```js
+let cachedDb = null;
+
+export async function getDb() {
+  if (cachedDb) return cachedDb;
+  const client = new MongoClient(process.env.MONGO_URI);
+  await client.connect();
+  cachedDb = client.db('thunderbolt');
+  return cachedDb;
+}
+```
+
+This reuses the TCP connection across requests, which is critical both for serverless cold starts and to prevent connection exhaustion.
+
+#### `api/_lib/firebaseAdmin.js`
+
+Lazy-initialises the Firebase Admin SDK on first call:
+
+```js
+function init() {
+  if (adminAuth || initError) return;
+  const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!serviceAccountEnv) {
+    initError = 'FIREBASE_SERVICE_ACCOUNT not set — using jwt.decode fallback';
+    return;
+  }
+  initializeApp({ credential: cert(JSON.parse(serviceAccountEnv)) });
+  adminAuth = getAuth();
+}
+```
+
+`verifyFirebaseToken(token)`:
+- With Admin SDK: `adminAuth.verifyIdToken(token, true)` — checks cryptographic signature + expiry + Firebase project binding
+- Without Admin SDK (dev only): `jwt.decode(token)` — reads claims with no signature check
+
+#### `api/_lib/adminHelper.js`
+
+```js
+export async function isAdmin(email, db) {
+  if (!email) return false;
+  const user = await db.collection('users').findOne({ email }, { projection: { role: 1 } });
+  if (user?.role === 'admin') return true;
+  return email === (process.env.ADMIN_EMAIL || 'nikhilwebworks@gmail.com');
+}
+```
+
+Two-layer check: DB role first (correct for multi-admin setups), env var fallback (for bootstrapping).
+
+---
+
+## 10. Database Schema
+
+Database name: **`thunderbolt`**
+
+### `products`
+
+```js
+{
+  _id: ObjectId,
+  name: String,                         // required
+  price: Number,                        // in smallest currency unit (paise or cents)
+  image: String,                        // first image URL — kept for backward compatibility
+  images: [String],                     // all image URLs
+  description: String,
+  categoryId: String,                   // ObjectId as string (ref to categories._id)
+  stock: Number,                        // total = sum(sizeStock values), auto-computed
+  sizeStock: {                          // per-size availability map
+    "28": Number,
+    "30": Number,
+    "32": Number,
+    "34": Number,
+    "36": Number,
+  },
+  createdAt: Date,
+  updatedAt: Date,                      // set on every PUT
+}
+```
+
+### `orders`
+
+```js
+{
+  _id: ObjectId,
+  userId: String,                       // Firebase email
+  clientOrderId: String,                // UUID — unique index for idempotency
+  products: [{
+    productId: String,                  // ObjectId as string
+    name: String,                       // snapshot at order time
+    quantity: Number,
+    size: String,                       // e.g. "32"
+    price: Number,
+    image: String,
+  }],
+  totalAmount: Number,
+  status: String,                       // "pending" | "confirmed" | "shipped" | "delivered" | "cancelled"
+  address: {
+    fullName: String,
+    phone: String,
+    addressLine1: String,
+    city: String,
+    pincode: String,
+  },
+  paymentMethod: String,                // "COD"
+  createdAt: Date,
+}
+```
+
+Indexes: `{ clientOrderId: 1 }` — **unique** (enforces idempotency).
+
+### `users`
+
+```js
+{
+  _id: ObjectId,
+  email: String,                        // unique index
+  uid: String,                          // Firebase UID
+  role: String,                         // "user" | "admin"
+  addresses: [{
+    fullName: String,
+    phone: String,
+    addressLine1: String,
+    city: String,
+    pincode: String,
+  }],
+  createdAt: Date,
+}
+```
+
+### `categories`
+
+```js
+{
+  _id: ObjectId,
+  name: String,
+  image: String,                        // Cloudinary URL
+  createdAt: Date,
+}
+```
+
+### `cart`
+
+```js
+{
+  _id: ObjectId,
+  userId: String,                       // Firebase email — unique index
+  items: [{
+    productId: String,
+    name: String,
+    price: Number,
+    quantity: Number,
+    size: String,
+    image: String,
+  }],
+  updatedAt: Date,
+}
+```
+
+### `wishlist`
+
+```js
+{
+  _id: ObjectId,
+  userId: String,                       // Firebase email — unique index
+  items: [{
+    productId: String,
+    name: String,
+    price: Number,
+    image: String,
+  }],
+  updatedAt: Date,
+}
+```
+
+---
+
+## 11. Size-Based Stock System
+
+### Overview
+
+Products track stock at two levels simultaneously:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `sizeStock` | `Record<string, number>` | Units available per individual size |
+| `stock` | `number` | Total units across all sizes (always = Σ sizeStock values) |
+
+The two fields are always kept in sync — `stock` is never set directly by the admin; it is always computed.
+
+### Available Sizes
+
+```ts
+const SIZES = ['28', '30', '32', '34', '36'] as const;
+```
+
+This constant is defined in both `src/pages/Admin.tsx` (for the form) and `src/pages/ProductView.tsx` (for the size buttons). Changing available sizes only requires updating these two constants.
+
+### Admin: `SizeStockInput` Component
+
+The admin product form includes a dedicated `SizeStockInput` component that renders a 5-column responsive grid:
+
+- Each column shows the size label (red when qty = 0) and a number input (red border when qty = 0)
+- A running total is displayed below the grid
+- On form submit, `sizeStock` values are parsed to integers and clamped to ≥ 0
+
+### Backend Normalisation
+
+On every `POST` and `PUT` to `/api/products`:
+
+```js
+function normaliseSizeStock(raw) {
+  const out = {};
+  for (const size of ['28', '30', '32', '34', '36']) {
+    out[size] = Math.max(0, parseInt(raw?.[size] ?? 0, 10)) || 0;
+  }
+  return out;
+}
+
+function computeTotalStock(sizeStock) {
+  return Object.values(sizeStock).reduce((a, b) => a + b, 0);
+}
+```
+
+This ensures all 5 sizes always exist in the stored document and that no negative values are stored.
+
+### Product Page: OOS Size Buttons
+
+```ts
+const isSizeOos = (size: string): boolean => {
+  if (!product?.sizeStock) return false;
+  return (product.sizeStock[size] ?? 0) <= 0;
+};
+
+// Combined OOS: total stock 0 OR selected size stock 0
+const effectiveOutOfStock = isOutOfStock || (selectedSize ? isSizeOos(selectedSize) : false);
+```
+
+When `isSizeOos(size)` is `true`, the size button renders:
+```tsx
+<button disabled className="opacity-50 border-red-900/50 text-gray-500 cursor-not-allowed">
+  <span className="line-through">{size}</span>
+  <span className="text-[9px] text-red-400 block">OOS</span>
+</button>
+```
+
+### Backward Compatibility
+
+Products without `sizeStock` (imported from legacy data) are handled everywhere:
+
+- `ProductView`: `if (!product.sizeStock)` skips per-size OOS checks
+- `orders/create.js`: falls back to `product.stock` when no `sizeStock` key exists
+- `orders/cancel.js`: re-fetches the product to check `sizeStock` presence before restore
+
+---
+
+## 12. Order Lifecycle
+
+```
+User clicks "Order Now" or "Place Order" from Checkout
+         │
+         ▼
 POST /api/orders/create
-        ↓
-API validates stock availability for all items
-        ↓ (insufficient stock) → Error returned to user, order not created
-        ↓ (stock OK)
-Order document created in MongoDB (status: "pending")
-        ↓
-Product stock atomically decremented for each item
-        ↓
-User sees order confirmation
-        ↓
-Admin updates status: pending → confirmed → shipped → delivered
-        ↓
-     (if user/admin cancels before delivery)
-PUT /api/orders/cancel
-        ↓
-Order status set to "cancelled"
-        ↓
-Product stock atomically restored for each item
+  │
+  ├── [1] Token verification (Firebase Admin SDK or jwt.decode)
+  │
+  ├── [2] Idempotency check
+  │       Query: { clientOrderId: req.body.clientOrderId }
+  │       If found → return 200 with existing order (no new stock decrement)
+  │
+  ├── [3] Pre-flight stock validation
+  │       For each item:
+  │         read sizeStock[item.size] (or stock for legacy)
+  │         if available < item.quantity → return 400 "X is out of stock"
+  │
+  ├── [4] Insert order document (status: "pending")
+  │
+  ├── [5] Atomic decrement loop
+  │       For each item:
+  │         $inc { "sizeStock.SIZE": -qty, stock: -qty }
+  │         filter { "sizeStock.SIZE": { $gte: qty } }
+  │         if modifiedCount === 0 → race condition → break
+  │
+  └── [6] Race condition detected?
+          YES → rollback all decrements → deleteOne(order) → return 409
+          NO  → return 201 with order document
+
+
+Admin changes status → PUT /api/orders/manage
+  status flow: pending → confirmed → shipped → delivered
+
+
+User cancels → PUT /api/orders/cancel
+  For each item in order:
+    re-fetch product → check sizeStock presence
+    $inc { "sizeStock.SIZE": +qty, stock: +qty }
+  order.status = "cancelled"
 ```
-
-### Order Status Flow
-
-| Status | Meaning | Can Be Cancelled? |
-|---|---|---|
-| `pending` | Order placed, awaiting confirmation | Yes |
-| `confirmed` | Admin has confirmed the order | Yes |
-| `shipped` | Order dispatched | Yes |
-| `delivered` | Order delivered to customer | No |
-| `cancelled` | Order cancelled, stock restored | No (already cancelled) |
 
 ---
 
-## Admin Panel Guide
+## 13. Cloudinary Image Optimization
 
-Access the admin panel at `/admin`. You must be signed in with the email configured in `ADMIN_EMAIL`.
+### The Problem Solved
+
+Without optimization, a product hero image uploaded at 4000×6000px and 8MB would be served at full resolution to every visitor on every device. With Cloudinary's transformation API, the server delivers the right format and size for every context automatically.
+
+### Utility: `src/lib/cloudinary.ts`
+
+```ts
+const CLOUD_NAME = 'djptdutak';
+
+export function optimizeCloudinaryUrl(
+  url: string | null | undefined,
+  width: number = 800,
+): string {
+  if (!url) return '/placeholder.png';
+  if (!url.includes('res.cloudinary.com')) return url;      // pass-through for non-Cloudinary
+  if (url.includes('/upload/f_auto')) return url;           // idempotent — already optimised
+
+  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+}
+
+export const IMG_SIZES = {
+  thumbnail: 200,   // cart items, checkout summary, admin URL previews
+  card:      500,   // product cards, category cards, search results, wishlist
+  detail:    1000,  // product detail page hero slider
+} as const;
+```
+
+**Transformations explained:**
+
+| Transformation | Effect |
+|---|---|
+| `f_auto` | Cloudinary auto-negotiates the best format: **AVIF** (Chrome 85+, Firefox 86+), **WebP** (all modern browsers), **JPEG** (legacy fallback). Typically saves 30–70% vs. original JPEG. |
+| `q_auto` | Cloudinary's perceptual quality engine picks the lowest quality that looks visually identical to the source. Saves 20–40% additional. |
+| `w_<n>` | Resize to N pixels wide; height scales proportionally to maintain aspect ratio. |
+
+**Example URL transformation:**
+```
+Raw:
+https://res.cloudinary.com/djptdutak/image/upload/v1234/products/abc.jpg
+
+Optimized (card size):
+https://res.cloudinary.com/djptdutak/image/upload/f_auto,q_auto,w_500/v1234/products/abc.jpg
+```
+
+### Applied Locations
+
+| Component | Context | IMG_SIZE |
+|---|---|---|
+| `ProductView.tsx` | Hero carousel slides | `detail` (1000px) |
+| `ProductView.tsx` | Thumbnail strip | `thumbnail` (200px) |
+| `CategoryView.tsx` | Product cards | `card` (500px) |
+| `CategoriesSection.tsx` | Category cards | `card` (500px) |
+| `SearchOverlay.tsx` | Search result thumbnails | `card` (500px) |
+| `Wishlist.tsx` | Wishlist product cards | `card` (500px) |
+| `Cart.tsx` | Cart line item images | `thumbnail` (200px) |
+| `checkout/ProductSummary.tsx` | Order summary images | `thumbnail` (200px) |
+| `Admin.tsx` — URL input preview | Paste preview | `thumbnail` (200px) |
+| `Admin.tsx` — Products tab | Product card grid | `card` (500px) |
+| `Admin.tsx` — Categories tab | Category card grid | `card` (500px) |
+
+### Safety Properties
+
+- **Non-Cloudinary URLs** (local paths `/placeholder.png`, external CDNs): returned unchanged — zero risk
+- **Already-optimised URLs** (containing `/upload/f_auto`): returned unchanged — no double-transformation
+- **Null/undefined**: returns `/placeholder.png` — no runtime errors
+- **Admin workflow**: raw URLs are stored in MongoDB as-is; transformation is a pure render-time concern
+
+---
+
+## 14. Admin Panel
+
+The admin panel at `/admin` is the operations center for the store. Access is restricted to the configured admin email.
+
+### Client-Side Guard
+
+In `Admin.tsx`:
+```tsx
+if (!user || user.email !== ADMIN_EMAIL) {
+  return <Navigate to="/" />;
+}
+```
+
+### Server-Side Guard
+
+Every admin API call:
+1. Verifies the Firebase ID token
+2. Calls `isAdmin(email, db)` — DB role check + env fallback
+3. Returns 403 if not admin
 
 ### Orders Tab
-- View all orders from all customers
-- See full item breakdown (name, size, quantity, price) per order
-- Click **View Address** to see shipping details in a modal
-- Use the **status dropdown** to move an order through the pipeline (pending → confirmed → shipped → delivered)
-- Click the **trash icon** to permanently delete an order (with a confirmation modal)
+
+A full sortable table with columns: Order ID (truncated), Customer email, Items (name + size + quantity), Address (opens a modal with full address), Total, Date, Status.
+
+- **Status dropdown**: admin can change to `pending | confirmed | shipped | delivered`
+- **Delete button**: removes the order with a confirmation dialog before executing
+- **Address modal**: shows full delivery address in a dialog overlay
 
 ### Products Tab
-- View all products in a responsive card grid
-- Each card displays: image, category name, product name, price, and a **live color-coded stock badge** showing exact stock count
-- Click **Edit** to open the product modal pre-filled with current data — update name, category, price, stock, images, description
-- Click **Delete** to permanently remove a product (with a browser confirmation)
-- Click **Add Product** to open an empty product creation modal
-  - Multiple images can be added (first image is the main display image)
-  - Each image URL field shows a live preview thumbnail
+
+Responsive card grid. Each card shows:
+- Cloudinary-optimized product image (500px)
+- Category name (looked up from loaded categories)
+- Product name + price
+- **Stock badge**:
+  - 🟢 Green: > 5 units
+  - 🟡 Amber: 1–5 units
+  - 🔴 Red: 0 units
+- **Per-size breakdown**: 5 small cells showing each size and its stock count (red background when 0)
+- **Edit** → opens pre-populated modal (all fields including `sizeStock`)
+- **Delete** → confirmation dialog → `DELETE /api/products?id=...`
+
+**Add/Edit Product Modal** fields:
+- Name, Price, Category (dropdown populated from categories), Description
+- Image URLs (dynamic array: add/remove URL rows; each row shows a 200px preview thumbnail)
+- `SizeStockInput` — 5-column grid for per-size quantities
 
 ### Categories Tab
-- View all categories with their images
-- Click **Add Category** to create a new one (name + image URL)
-- Click **Delete** to remove a category
+
+Grid of category cards. Each shows:
+- Cloudinary-optimized category image (500px)
+- Category name
+- **Delete** button (with confirmation)
+
+**Add Category** form: Name + Image URL input. Immediately reflected in the grid on success.
 
 ---
 
-## Authentication Flow
+## 15. Authentication & Security
 
-1. User clicks **Login** in the Navbar.
-2. Firebase Email/Password authentication handles sign-in/sign-up.
-3. On success, Firebase sets a session and `AuthContext` updates `user` with the Firebase User object.
-4. On first sign-up, a `POST /api/users` call syncs the user profile to MongoDB.
-5. For protected API calls (cart, orders, wishlist, etc.), the frontend calls `user.getIdToken()` to get a fresh Firebase ID token and sends it as `Authorization: Bearer <token>`.
-6. Backend handlers decode the token using `jwt.decode()` to extract the user's email, which is used as the `userId` in MongoDB documents.
-7. Admin authorization compares the decoded email against the `ADMIN_EMAIL` environment variable.
+### Firebase Client Auth Flow
+
+```
+User submits login form
+  → signInWithEmailAndPassword(auth, email, password)
+  → Firebase returns User object
+  → onAuthStateChanged fires with the User
+  → user.getIdToken() → short-lived ID token (valid 1 hour)
+  → token sent in Authorization: Bearer <token> for all API calls
+```
+
+### Server Token Verification
+
+| Condition | Mode | Security |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` set | Full verification | Checks RSA signature, expiry, Firebase project ID, token revocation |
+| Not set | jwt.decode fallback | Claims read without signature verification — **never use in production** |
+
+In production, always set `FIREBASE_SERVICE_ACCOUNT`. The server logs a warning to stdout if it starts without it.
+
+### HTTP Security Headers (Helmet)
+
+Applied to all Express responses:
+- `X-Frame-Options: DENY` — prevents clickjacking
+- `X-Content-Type-Options: nosniff` — prevents MIME sniffing
+- `Strict-Transport-Security` — enforces HTTPS
+- `X-XSS-Protection` — legacy XSS filter for older browsers
+- `Referrer-Policy: no-referrer` — prevents referrer leakage
+- `Cross-Origin-Resource-Policy: cross-origin` — allows Cloudinary image requests
+
+`Content-Security-Policy` is **disabled** (`contentSecurityPolicy: false`) because the app loads dynamic Cloudinary image URLs that are not statically known.
+
+### Duplicate Order Prevention
+
+MongoDB unique index on `orders.clientOrderId`:
+```js
+await db.collection('orders').createIndex({ clientOrderId: 1 }, { unique: true });
+```
+
+If the same UUID is submitted twice (network timeout + retry, or rapid double-click), the second `insertOne` throws `E11000 Duplicate Key`. The handler catches this and returns the original order — no double charge, no double stock decrement.
+
+### Admin Authorization — Two Layers
+
+```
+Layer 1: Firebase ID token verification (cryptographic)
+Layer 2: isAdmin(email, db)
+  → users.role === "admin" in MongoDB
+  → OR email === ADMIN_EMAIL env var
+```
+
+Setting `role: "admin"` in the database enables a proper multi-admin setup without changing any code.
 
 ---
 
-## Cart & Wishlist System
+## 16. Cart & Wishlist System
 
-Both systems use a **hybrid persistence** strategy:
+### Cart Architecture
 
-### LocalStorage (Instant)
-- Cart/wishlist items are immediately stored in `localStorage` on every mutation.
-- On page load, the local data is shown instantly — no loading spinner needed for the user.
+```
+User action (Add to Cart)
+        │
+        ├── Immediate: update CartContext state (React re-render)
+        ├── Immediate: write to localStorage
+        └── Background: POST /api/cart (fire-and-forget, never blocks UI)
 
-### MongoDB (Cross-Device Persistence)
-- When the user is authenticated, their cart/wishlist is also stored per-user in MongoDB.
-- On initial load, if the user is logged in, the MongoDB version is fetched and used as the source of truth.
-- Mutations are sent to the API in the background.
-
-### Unauthenticated Users
-- Cart and wishlist work fully in localStorage for guest users.
-- Prompts to sign in appear when attempting protected actions (placing an order).
-
----
-
-## Database Schema
-
-### `products` Collection
-```json
-{
-  "_id": "ObjectId",
-  "name": "string (required)",
-  "price": "number (required)",
-  "image": "string (first image, backward-compat)",
-  "images": ["string"],
-  "description": "string",
-  "categoryId": "ObjectId string (required)",
-  "stock": "number (default: 0)",
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
+App load
+        │
+        ├── Synchronous: read localStorage → populate CartContext (instant)
+        └── If logged in: GET /api/cart → merge with localStorage (server wins for conflicts)
 ```
 
-### `orders` Collection
-```json
-{
-  "_id": "ObjectId",
-  "userId": "string (user email)",
-  "products": [
-    {
-      "productId": "string",
-      "name": "string",
-      "price": "number",
-      "image": "string",
-      "size": "string",
-      "quantity": "number"
-    }
-  ],
-  "address": {
-    "fullName": "string",
-    "phone": "string",
-    "addressLine1": "string",
-    "city": "string",
-    "pincode": "string"
-  },
-  "paymentMethod": "string",
-  "status": "pending | confirmed | shipped | delivered | cancelled",
-  "totalAmount": "number",
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
-```
+This design means:
+- Cart is **never empty on hydration** (localStorage loads before any network call)
+- Cart **persists across devices** when logged in (DB sync)
+- Cart **survives page refreshes** when logged out (localStorage)
+- **Offline-tolerant**: cart works without network; sync catches up when back online
 
-### `categories` Collection
-```json
-{
-  "_id": "ObjectId",
-  "name": "string",
-  "image": "string",
-  "createdAt": "Date"
-}
-```
+### Wishlist Architecture
 
-### `cart` Collection
-```json
-{
-  "_id": "ObjectId",
-  "userId": "string (user email)",
-  "items": [
-    {
-      "productId": "string",
-      "name": "string",
-      "price": "number",
-      "image": "string",
-      "size": "string",
-      "quantity": "number"
-    }
-  ],
-  "updatedAt": "Date"
-}
 ```
+Guest user:
+  All operations → localStorage only
 
-### `wishlist` Collection
-```json
-{
-  "_id": "ObjectId",
-  "userId": "string (user email)",
-  "items": [
-    {
-      "productId": "string",
-      "name": "string",
-      "price": "number",
-      "image": "string"
-    }
-  ],
-  "updatedAt": "Date"
-}
-```
+Authenticated user:
+  On login → read localStorage → POST /api/wishlist (merge to DB) → clear localStorage
+  All operations → DB via API + update WishlistContext state
 
-### `addresses` Collection
-```json
-{
-  "_id": "ObjectId",
-  "userId": "string (user email)",
-  "fullName": "string",
-  "phone": "string",
-  "addressLine1": "string",
-  "city": "string",
-  "pincode": "string",
-  "isDefault": "boolean"
-}
-```
-
-### `users` Collection
-```json
-{
-  "_id": "ObjectId",
-  "email": "string",
-  "displayName": "string",
-  "createdAt": "Date",
-  "lastLoginAt": "Date"
-}
+On logout:
+  WishlistContext clears to empty (localStorage version also cleared)
 ```
 
 ---
 
-## Deployment
+## 17. Deployment
 
-### Vercel (Recommended)
-This project is configured for **Vercel** deployment via `vercel.json`.
+### Build
 
-- URL rewrites route all `/api/*` requests to the corresponding serverless function in the `/api/` directory.
-- All other requests serve the React SPA (`dist/index.html`).
-- Set all environment variables in **Vercel Project Settings → Environment Variables**.
-- Build command: `npm run build`
-- Output directory: `dist`
+```bash
+npm run build
+# → dist/ (Vite output: JS bundles, assets, index.html)
+```
 
-### Replit
-The project is fully compatible with Replit hosting:
-- The `Start application` workflow runs `npm run dev`, starting both servers.
-- For production on Replit, use Replit Deployments which builds and serves the production bundle.
-- Port 5000 is exposed externally; the Vite proxy handles API routing internally.
+### Replit Deployment
+
+The `.replit` config targets autoscale deployment. The Express server serves both the API and the static build from `dist/`.
+
+### Vercel Deployment
+
+`vercel.json` rewrites all routes to the serverless function handlers in `api/`. The Vite build output goes to the `dist/` directory which Vercel serves as static assets.
+
+### Production Checklist
+
+```
+□ MONGO_URI secret set (Atlas URI with correct DB name)
+□ FIREBASE_SERVICE_ACCOUNT secret set (full JSON, single line)
+□ ADMIN_EMAIL secret set (or admin user has role: "admin" in DB)
+□ Firebase project → Authentication → Email/Password enabled
+□ MongoDB Atlas → Network Access → allow deployment IP (or 0.0.0.0/0 for serverless)
+□ MongoDB Atlas → Database Access → user has readWrite on thunderbolt DB
+□ Cloudinary account active under cloud name djptdutak
+```
 
 ---
 
-## Known Behaviors & Decisions
+## 18. Known Behaviors & Design Decisions
 
-### Firebase Token Decoding (Not Verification)
-The backend uses `jwt.decode()` (not `jwt.verify()`) to read Firebase ID tokens. This works because Firebase has already issued and signed the token. For stricter security, consider verifying against Firebase's public keys using the Firebase Admin SDK.
+| Behavior | Rationale |
+|---|---|
+| Firebase client config is hardcoded | Firebase client configs are publicly safe by design; security is enforced by Firebase rules, not by hiding the config |
+| `FIREBASE_SERVICE_ACCOUNT` falls back to `jwt.decode` | Allows local development without the full Firebase Admin setup. The fallback logs a warning on startup so developers know it is in use |
+| Cart uses localStorage-first | Provides zero-latency UI — cart renders immediately on page load without waiting for a network round-trip |
+| `stock` field is kept alongside `sizeStock` | Backward compatibility with products that predate the size-stock system; also enables quick total-stock queries without summing the map |
+| `clientOrderId` UUID for idempotency | Prevents duplicate orders from network retries or double-clicks without requiring distributed locks |
+| Admin does not cascade-delete products → orders | Historical orders preserve a point-in-time snapshot of product names and prices. Deleting a product does not invalidate order history |
+| Cloudinary transformations at render time | Raw URLs are stored; transformation is a pure display concern. Changing image sizes site-wide requires only updating `IMG_SIZES` constants |
+| Tailwind `duration-[0.8s]` / `ease-[...]` warnings | Tailwind 3 produces ambiguity warnings for arbitrary animation values. These are harmless and expected — the CSS is generated correctly |
+| `Content-Security-Policy` is disabled | Dynamic Cloudinary image URLs cannot be whitelisted statically. A production hardening step would be to set `img-src 'self' res.cloudinary.com` |
 
-### Stock is a Single Total — Not Per-Size
-The current stock model stores a single total `stock` count per product, not broken down by size. All sizes share the same inventory pool. A future enhancement could add per-size stock tracking.
+---
 
-### Admin Email Fallback
-The admin email in `cancel.js` falls back to a hardcoded string if `ADMIN_EMAIL` is not set. Always configure this environment variable in production.
-
-### Cart Merge on Sign-In
-When a guest user signs in, the server cart takes precedence over the guest localStorage cart. Guest-session items are not automatically merged. This is a known limitation.
-
-### Price Display Currency
-Prices are stored as plain numbers in MongoDB. The UI displays a `¥` prefix. Update the currency symbol in price display components if targeting a different market.
-
-### Images Field and Backward Compatibility
-Products store both an `images` array (multi-image support) and a single `image` string (the first image, for backward compatibility with older cart/wishlist records that only stored one image URL).
+*Thunderbolt — Crafted for speed, designed for premium.*
