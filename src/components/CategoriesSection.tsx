@@ -141,7 +141,7 @@ export default function CategoriesSection() {
             On the Horizon
             <span className="w-5 h-px bg-brass-dim inline-block" />
           </div>
-          <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] uppercase text-sv-dim">
+          <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] uppercase text-white">
             Coming Soon
           </h2>
           <p className="font-condensed text-sv-mid text-sm md:text-base tracking-[0.10em] mt-4 max-w-md mx-auto">

@@ -6,7 +6,7 @@ const HeroBanner = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-      className="w-full relative overflow-hidden"
+      className="relative overflow-hidden mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0"
     >
       <img
         src="/banner.webp"

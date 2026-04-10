@@ -29,7 +29,7 @@ const AnnouncementBar = () => {
           className="flex items-center gap-5"
           animate={{ x: ['0%', '-50%'] }}
           transition={{
-            duration: 28,
+            duration: 45,
             ease: 'linear',
             repeat: Infinity,
           }}
