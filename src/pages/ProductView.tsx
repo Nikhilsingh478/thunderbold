@@ -39,6 +39,7 @@ export default function ProductView() {
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -266,9 +267,39 @@ export default function ProductView() {
                 </div>
               )}
 
-              <p className="font-serif font-light text-tb-off text-base mb-10 leading-relaxed max-w-[90%] tracking-wide">
-                {product?.description}
-              </p>
+              {product?.description && (
+                <div className="mb-10 max-w-[90%]">
+                  <p
+                    className={`font-serif font-light text-tb-off text-base leading-relaxed tracking-wide transition-all duration-300 ${
+                      !descExpanded ? 'line-clamp-4' : ''
+                    }`}
+                  >
+                    {product.description}
+                  </p>
+                  {product.description.length > 200 && (
+                    <button
+                      onClick={() => setDescExpanded(v => !v)}
+                      className="mt-2 font-condensed text-[0.7rem] tracking-[0.18em] uppercase text-brass hover:text-brass-bright transition-colors duration-200 flex items-center gap-1.5"
+                    >
+                      {descExpanded ? (
+                        <>
+                          Show Less
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="transition-transform duration-200">
+                            <path d="M2 8L6 4L10 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </>
+                      ) : (
+                        <>
+                          Read More
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="transition-transform duration-200">
+                            <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Size Selector */}
               <div className="mb-10">
