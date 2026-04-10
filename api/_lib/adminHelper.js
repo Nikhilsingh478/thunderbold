@@ -1,4 +1,4 @@
-const ADMIN_EMAIL_FALLBACK = process.env.ADMIN_EMAIL || 'nikhilwebworks@gmail.com';
+const ADMIN_EMAIL_FALLBACK = process.env.ADMIN_EMAIL || 'adminthunderbolt@gmail.com';
 
 /**
  * Check if an email belongs to an admin user.

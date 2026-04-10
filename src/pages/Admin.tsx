@@ -9,7 +9,7 @@ import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
 
-const ADMIN_EMAIL = "nikhilwebworks@gmail.com";
+const ADMIN_EMAIL = "adminthunderbolt@gmail.com";
 
 interface OrderProduct {
   name: string;
