@@ -168,7 +168,7 @@ thunderbolt/
 ├── tailwind.config.ts                 # Custom theme: brass, void, tb-white, sv-mid colors
 ├── tsconfig.json / tsconfig.app.json  # TypeScript configuration
 ├── package.json                       # All dependencies and npm scripts
-├── vercel.json                        # Vercel deployment rewrites (serverless functions)
+├── vercel.json                        # Vercel rewrites + cron job (pings /api/products every 5 min)
 │
 ├── api/                               # Backend route handlers (serverless-compatible)
 │   ├── _lib/
@@ -184,7 +184,7 @@ thunderbolt/
 │   │   ├── index.js                   # GET all orders (admin) or user orders
 │   │   ├── create.js                  # POST — atomic size-aware stock decrement + rollback
 │   │   ├── cancel.js                  # PUT — order cancel + stock restoration
-│   │   └── manage.js                  # PUT — status update / DELETE (admin)
+│   │   └── manage.js                  # PATCH ?id= (status update) / DELETE ?id= (admin only)
 │   │
 │   ├── users/
 │   │   └── index.js                   # POST create/sync user; sets role: "user"
@@ -444,6 +444,11 @@ Fetches categories from `/api/categories`. Renders an animated grid using Framer
 #### `CustomCursor.tsx`
 Replaces the default browser cursor on desktop with a branded circular overlay. Tracks `mousemove` and scales on hover. Hidden on mobile (touch devices detected via `pointer: coarse`).
 
+#### `HeroBanner.tsx`
+Auto-advancing image slider (3 s interval) with prev/next arrow buttons, dot-indicator navigation, and touch swipe support. Framer Motion handles the crossfade transition between slides. Currently displays two slides:
+- Slide 1: "Get an Extra 40% Off — Live Now"
+- Slide 2: "Buy Three Jeans at Only ₹1299 — Limited Offer" (links to the Live Sale section)
+
 #### `ScrollProgress.tsx`
 Thin progress bar at the top of the viewport. Reads `window.scrollY / (document.body.scrollHeight - window.innerHeight)` on scroll and fills proportionally in the brand brass color.
 
@@ -613,7 +618,7 @@ Response:
 
 #### `POST /api/products` — Admin
 
-Creates a product. Body must include `name`, `price`, `categoryId`. Optional: `images[]`, `description`, `sizeStock`.
+Creates a product. Body must include `name`, `price`, and `images[]`. `categoryId` is required for all sections **except** `live-sale` — when `section === "live-sale"`, `categoryId` is optional and stored as an empty string. Optional: `description`, `sizeStock`, `section` (defaults to `"denim"`).
 
 `sizeStock` is normalised on the server:
 ```js
@@ -645,7 +650,7 @@ Public. Returns all categories.
 
 #### `POST /api/categories` — Admin
 
-Body: `{ "name": "...", "image": "..." }`. Inserts and returns the new document.
+Body: `{ "name": "...", "image": "...", "section": "denim" | "tshirts" | "coming-soon" }`. The `section` field determines which storefront section the category belongs to. Defaults to `"denim"` if omitted. The `live-sale` section is intentionally excluded — Live Sale products don't use categories. Inserts and returns the new document.
 
 #### `DELETE /api/categories/:id` — Admin
 
@@ -690,13 +695,19 @@ Fetches the order, verifies ownership (or admin). For each item in the order:
 
 Sets `order.status = "cancelled"`.
 
-#### `PUT /api/orders/manage` — Admin
+#### `PATCH /api/orders/manage?id=<orderId>` — Admin
+
+Updates an order's status. The order ID is passed as a query parameter (not in the body) to avoid Vercel dynamic-route resolution issues.
 
 ```
-Body: { orderId, action: "updateStatus" | "delete", status?: "confirmed" | "shipped" | "delivered" }
+Body: { "status": "pending" | "confirmed" | "shipped" | "delivered" }
 ```
 
-For `updateStatus`: updates `order.status`. For `delete`: `deleteOne` the order document.
+Valid statuses: `pending`, `confirmed`, `shipped`, `delivered`. Returns 404 if the order is not found.
+
+#### `DELETE /api/orders/manage?id=<orderId>` — Admin
+
+Permanently removes the order document from the database. The order ID is passed as a query parameter. Returns 404 if not found. Both PATCH and DELETE are handled by the same `api/orders/manage.js` handler, distinguished by HTTP method.
 
 #### `GET /api/orders` — User or Admin
 
@@ -785,7 +796,8 @@ Database name: **`thunderbolt`**
   image: String,                        // first image URL — kept for backward compatibility
   images: [String],                     // all image URLs
   description: String,
-  categoryId: String,                   // ObjectId as string (ref to categories._id)
+  categoryId: String,                   // ObjectId as string (ref to categories._id); empty string for live-sale products
+  section: String,                      // "denim" | "live-sale" | "tshirts" | "coming-soon"; defaults to "denim"
   stock: Number,                        // total = sum(sizeStock values), auto-computed
   sizeStock: {                          // per-size availability map
     "28": Number,
@@ -856,6 +868,7 @@ Indexes: `{ clientOrderId: 1 }` — **unique** (enforces idempotency).
   _id: ObjectId,
   name: String,
   image: String,                        // Cloudinary URL
+  section: String,                      // "denim" | "tshirts" | "coming-soon"; defaults to "denim" for legacy docs
   createdAt: Date,
 }
 ```
@@ -1007,8 +1020,11 @@ POST /api/orders/create
           NO  → return 201 with order document
 
 
-Admin changes status → PUT /api/orders/manage
+Admin changes status → PATCH /api/orders/manage?id=<orderId>
   status flow: pending → confirmed → shipped → delivered
+
+Admin deletes order → DELETE /api/orders/manage?id=<orderId>
+  permanently removes order document — no stock restoration
 
 
 User cancels → PUT /api/orders/cancel
@@ -1113,17 +1129,17 @@ Every admin API call:
 
 ### Orders Tab
 
-A full sortable table with columns: Order ID (truncated), Customer email, Items (name + size + quantity), Address (opens a modal with full address), Total, Date, Status.
+A full table (desktop) / card list (mobile) with columns: Order ID (truncated), Customer email, Items (name + size + quantity + price), Ship To, Total, Date, Status, Update, Delete.
 
-- **Status dropdown**: admin can change to `pending | confirmed | shipped | delivered`
-- **Delete button**: removes the order with a confirmation dialog before executing
-- **Address modal**: shows full delivery address in a dialog overlay
+- **View Address button**: opens a modal showing the full delivery address including Full Name, Phone Number, Address, City, Pincode, Payment Method, and Customer Email
+- **Status dropdown**: admin can change to `pending | confirmed | shipped | delivered`; calls `PATCH /api/orders/manage?id=...`
+- **Delete button** (red trash icon): clicking shows a confirmation popup with the order ID and customer email; confirming calls `DELETE /api/orders/manage?id=...` and removes the order from the list instantly
 
 ### Products Tab
 
 Responsive card grid. Each card shows:
 - Cloudinary-optimized product image (500px)
-- Category name (looked up from loaded categories)
+- Category name (looked up from loaded categories; shows "Uncategorized" for Live Sale products)
 - Product name + price
 - **Stock badge**:
   - 🟢 Green: > 5 units
@@ -1134,7 +1150,8 @@ Responsive card grid. Each card shows:
 - **Delete** → confirmation dialog → `DELETE /api/products?id=...`
 
 **Add/Edit Product Modal** fields:
-- Name, Price, Category (dropdown populated from categories), Description
+- Name, Section (dropdown: Live Sale / Denim Collection / T-Shirts / Coming Soon), Price, Description
+- **Category** — dropdown populated from categories. **Hidden entirely when section is "Live Sale"** — Live Sale products are section-only, no category needed
 - Image URLs (dynamic array: add/remove URL rows; each row shows a 200px preview thumbnail)
 - `SizeStockInput` — 5-column grid for per-size quantities
 
@@ -1143,9 +1160,10 @@ Responsive card grid. Each card shows:
 Grid of category cards. Each shows:
 - Cloudinary-optimized category image (500px)
 - Category name
+- **Section label** — shows which section the category belongs to (e.g. "Denim Collection"). Legacy categories without a stored section display as "Denim Collection" by default
 - **Delete** button (with confirmation)
 
-**Add Category** form: Name + Image URL input. Immediately reflected in the grid on success.
+**Add Category** form: Name, Image URL, and **Section** dropdown (Denim Collection / T-Shirts Section / Coming Soon). Live Sale is intentionally excluded from this dropdown — Live Sale is a product-level section, not a category-based one. Changes are immediately reflected in the grid on success.
 
 ---
 
@@ -1261,6 +1279,21 @@ The `.replit` config targets autoscale deployment. The Express server serves bot
 
 `vercel.json` rewrites all routes to the serverless function handlers in `api/`. The Vite build output goes to the `dist/` directory which Vercel serves as static assets.
 
+#### Cron Job — Keep-Warm
+
+A Vercel Cron Job is configured in `vercel.json` to prevent serverless cold starts:
+
+```json
+"crons": [
+  {
+    "path": "/api/products",
+    "schedule": "*/5 * * * *"
+  }
+]
+```
+
+This sends a `GET` request to `/api/products` every 5 minutes, keeping the MongoDB connection pool alive and the function warm. No new API file is needed — it reuses the existing products handler. Note: Vercel Cron Jobs require a Pro plan or higher for sub-hourly schedules in production.
+
 ### Production Checklist
 
 ```
@@ -1285,6 +1318,9 @@ The `.replit` config targets autoscale deployment. The Express server serves bot
 | `stock` field is kept alongside `sizeStock` | Backward compatibility with products that predate the size-stock system; also enables quick total-stock queries without summing the map |
 | `clientOrderId` UUID for idempotency | Prevents duplicate orders from network retries or double-clicks without requiring distributed locks |
 | Admin does not cascade-delete products → orders | Historical orders preserve a point-in-time snapshot of product names and prices. Deleting a product does not invalidate order history |
+| Admin deleting an order does NOT restore stock | Order delete is an administrative cleanup action (e.g. test orders, spam). It is distinct from user-cancel which explicitly restores stock. If stock must be restored, cancel the order first, then delete it |
+| Live Sale products have no category | `categoryId` is stored as an empty string for `section === "live-sale"` products. This is intentional — Live Sale is a time-limited promotional slot, not a permanent category |
+| Category `section` defaults to `"denim"` for legacy docs | Categories created before the section field was introduced have no `section` field in MongoDB. All display logic treats a missing/null section as `"denim"` |
 | Cloudinary transformations at render time | Raw URLs are stored; transformation is a pure display concern. Changing image sizes site-wide requires only updating `IMG_SIZES` constants |
 | Tailwind `duration-[0.8s]` / `ease-[...]` warnings | Tailwind 3 produces ambiguity warnings for arbitrary animation values. These are harmless and expected — the CSS is generated correctly |
 | `Content-Security-Policy` is disabled | Dynamic Cloudinary image URLs cannot be whitelisted statically. A production hardening step would be to set `img-src 'self' res.cloudinary.com` |
