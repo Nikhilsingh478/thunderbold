@@ -10,7 +10,7 @@ const slides = [
   },
   {
     src: '/banner2.webp',
-    alt: 'Buy Three Jeans at Only ₹1299 — Limited Offer',
+    alt: 'Buy Three Jeans at Only ₹1399 — Limited Offer',
     href: '#live-sale',
   },
 ];

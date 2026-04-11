@@ -112,7 +112,7 @@ export default function LiveSaleSection() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.14 }}
             className="font-condensed text-sv-mid text-sm md:text-base tracking-[0.10em] mt-4"
           >
-            Buy Three Jeans at Only ₹1299 — Limited Time Only
+            Buy Three Jeans at Only ₹1399 — Limited Time Only
           </motion.p>
 
           {/* Animated underline accent */}
