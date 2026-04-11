@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
@@ -14,43 +15,61 @@ const slides = [
   },
 ];
 
+const INTERVAL = 3000;
+
 export default function HeroBanner() {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [direction, setDirection] = useState(1);
+
+  const go = useCallback((index: number, dir: number) => {
+    setDirection(dir);
+    setCurrent(index);
+  }, []);
 
   const next = useCallback(() => {
-    setCurrent(c => (c + 1) % slides.length);
-  }, []);
+    go((current + 1) % slides.length, 1);
+  }, [current, go]);
+
+  const prev = useCallback(() => {
+    go((current - 1 + slides.length) % slides.length, -1);
+  }, [current, go]);
 
   useEffect(() => {
     if (paused) return;
-    const id = setInterval(next, 4500);
+    const id = setInterval(next, INTERVAL);
     return () => clearInterval(id);
   }, [paused, next]);
 
   const handleClick = (href: string | null) => {
     if (!href) return;
     const el = document.getElementById(href.replace('#', ''));
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const variants = {
+    enter: (dir: number) => ({ opacity: 0, x: dir * 40 }),
+    center: { opacity: 1, x: 0 },
+    exit: (dir: number) => ({ opacity: 0, x: dir * -40 }),
   };
 
   return (
     <div
-      className="relative overflow-hidden mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0 select-none"
+      className="relative overflow-hidden mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0 select-none group/banner"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {/* Slides */}
       <div className="relative w-full h-[150px] md:h-auto md:max-h-[260px]">
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={current}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.42, ease: [0.32, 0, 0.67, 0] }}
             className={`absolute inset-0 w-full h-full ${slides[current].href ? 'cursor-pointer' : ''}`}
             onClick={() => handleClick(slides[current].href)}
           >
@@ -64,7 +83,7 @@ export default function HeroBanner() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Placeholder to maintain height before image loads */}
+        {/* Height placeholder */}
         <img
           src={slides[0].src}
           alt=""
@@ -74,26 +93,44 @@ export default function HeroBanner() {
         />
       </div>
 
-      {/* Side gradient overlays */}
+      {/* Side gradients */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, rgba(7,7,7,0.35) 0%, transparent 30%, transparent 70%, rgba(7,7,7,0.35) 100%)',
+            'linear-gradient(90deg, rgba(7,7,7,0.40) 0%, transparent 28%, transparent 72%, rgba(7,7,7,0.40) 100%)',
         }}
       />
+
+      {/* Prev arrow */}
+      <button
+        onClick={(e) => { e.stopPropagation(); prev(); }}
+        aria-label="Previous slide"
+        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+      >
+        <ChevronLeft className="w-4 h-4 text-white/80" strokeWidth={2} />
+      </button>
+
+      {/* Next arrow */}
+      <button
+        onClick={(e) => { e.stopPropagation(); next(); }}
+        aria-label="Next slide"
+        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+      >
+        <ChevronRight className="w-4 h-4 text-white/80" strokeWidth={2} />
+      </button>
 
       {/* Dot indicators */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
         {slides.map((_, i) => (
           <button
             key={i}
-            onClick={() => setCurrent(i)}
+            onClick={() => go(i, i > current ? 1 : -1)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`rounded-full transition-all duration-400 focus:outline-none ${
+            className={`rounded-full transition-all duration-300 focus:outline-none ${
               i === current
                 ? 'w-5 h-[3px] bg-white'
-                : 'w-[3px] h-[3px] bg-white/40 hover:bg-white/60'
+                : 'w-[3px] h-[3px] bg-white/40 hover:bg-white/70'
             }`}
           />
         ))}
