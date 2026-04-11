@@ -70,9 +70,11 @@ export default async function handler(req, res) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
         const { name, price, description, categoryId, sizeStock } = req.body;
+        const section = req.body.section || 'denim';
         const images = normaliseImages(req.body);
-        if (!name || !price || images.length === 0 || !categoryId) {
-          return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
+        const needsCategory = section !== 'live-sale';
+        if (!name || !price || images.length === 0 || (needsCategory && !categoryId)) {
+          return res.status(400).json({ error: 'Name, price, at least one image are required' + (needsCategory ? ', and categoryId' : '') });
         }
         if (typeof price !== 'number' || price <= 0) {
           return res.status(400).json({ error: 'Price must be a positive number' });
@@ -84,8 +86,8 @@ export default async function handler(req, res) {
           image: images[0],
           images,
           description: description || '',
-          categoryId,
-          section: req.body.section || 'denim',
+          categoryId: categoryId || '',
+          section,
           sizeStock: normalisedSizeStock,
           stock: totalStock,
           createdAt: new Date(),
@@ -102,9 +104,11 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing product ID' });
         const { name, price, description, categoryId, sizeStock } = req.body;
+        const putSection = req.body.section || 'denim';
         const images = normaliseImages(req.body);
-        if (!name || !price || images.length === 0 || !categoryId) {
-          return res.status(400).json({ error: 'Name, price, at least one image, and categoryId are required' });
+        const putNeedsCategory = putSection !== 'live-sale';
+        if (!name || !price || images.length === 0 || (putNeedsCategory && !categoryId)) {
+          return res.status(400).json({ error: 'Name, price, at least one image are required' + (putNeedsCategory ? ', and categoryId' : '') });
         }
         const normalisedSizeStock = normaliseSizeStock(sizeStock);
         const totalStock = computeTotalStock(normalisedSizeStock);
@@ -114,8 +118,8 @@ export default async function handler(req, res) {
           image: images[0],
           images,
           description: description || '',
-          categoryId,
-          section: req.body.section || 'denim',
+          categoryId: categoryId || '',
+          section: putSection,
           sizeStock: normalisedSizeStock,
           stock: totalStock,
           updatedAt: new Date(),
