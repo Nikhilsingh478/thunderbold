@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -10,17 +10,19 @@ const slides = [
   },
   {
     src: '/banner2.webp',
-    alt: 'Buy Three Jeans at Only ₹1199 — Limited Offer',
+    alt: 'Buy Three Jeans at Only ₹1299 — Limited Offer',
     href: '#live-sale',
   },
 ];
 
 const INTERVAL = 3000;
+const SWIPE_THRESHOLD = 40;
 
 export default function HeroBanner() {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState(1);
+  const touchStartX = useRef<number | null>(null);
 
   const go = useCallback((index: number, dir: number) => {
     setDirection(dir);
@@ -34,6 +36,21 @@ export default function HeroBanner() {
   const prev = useCallback(() => {
     go((current - 1 + slides.length) % slides.length, -1);
   }, [current, go]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    setPaused(true);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(delta) >= SWIPE_THRESHOLD) {
+      delta > 0 ? next() : prev();
+    }
+    touchStartX.current = null;
+    setPaused(false);
+  };
 
   useEffect(() => {
     if (paused) return;
@@ -58,6 +75,8 @@ export default function HeroBanner() {
       className="relative overflow-hidden mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0 select-none group/banner"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Slides */}
       <div className="relative w-full h-[150px] md:h-auto md:max-h-[260px]">
