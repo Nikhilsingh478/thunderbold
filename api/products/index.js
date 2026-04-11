@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       case 'GET': {
         const products = await col.find(
           {},
-          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, stock: 1, sizeStock: 1, createdAt: 1 } }
+          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, section: 1, stock: 1, sizeStock: 1, createdAt: 1 } }
         ).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
@@ -85,6 +85,7 @@ export default async function handler(req, res) {
           images,
           description: description || '',
           categoryId,
+          section: req.body.section || 'denim',
           sizeStock: normalisedSizeStock,
           stock: totalStock,
           createdAt: new Date(),
@@ -114,6 +115,7 @@ export default async function handler(req, res) {
           images,
           description: description || '',
           categoryId,
+          section: req.body.section || 'denim',
           sizeStock: normalisedSizeStock,
           stock: totalStock,
           updatedAt: new Date(),

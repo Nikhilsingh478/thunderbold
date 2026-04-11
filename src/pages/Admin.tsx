@@ -41,10 +41,18 @@ interface Order {
 
 const SIZES = ['28', '30', '32', '34', '36'] as const;
 
+const SECTIONS = [
+  { value: 'live-sale', label: 'Live Sale Section' },
+  { value: 'denim', label: 'Denim Collection' },
+  { value: 'tshirts', label: 'T-Shirts Section' },
+  { value: 'coming-soon', label: 'Coming Soon' },
+] as const;
+
 interface Product {
   _id: string;
   name: string;
   categoryId: string;
+  section?: string;
   price: number;
   image?: string;
   images?: string[];
@@ -143,6 +151,7 @@ function CategoryModal({
 
 interface ProductFormData {
   name: string;
+  section: string;
   categoryId: string;
   price: string;
   images: string[];
@@ -151,7 +160,7 @@ interface ProductFormData {
 }
 
 const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
-const defaultFormData: ProductFormData = { name: '', categoryId: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock() };
+const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock() };
 
 function ImageInput({
   images,
@@ -306,6 +315,23 @@ function ProductModal({
             placeholder="Product name"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
           />
+        </div>
+
+        {/* Section */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Section</label>
+          <div className="relative">
+            <select
+              value={form.section}
+              onChange={(e) => setForm(p => ({ ...p, section: e.target.value }))}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
+            >
+              {SECTIONS.map((s) => (
+                <option key={s.value} value={s.value} className="bg-zinc-900 text-tb-white">{s.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
+          </div>
         </div>
 
         {/* Category */}
@@ -511,11 +537,11 @@ export default function Admin() {
       const r = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
+        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
       });
       const d = await r.json();
       if (r.ok) {
-        setProducts(prev => [{ _id: d.product._id, name: formData.name, categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }, ...prev]);
+        setProducts(prev => [{ _id: d.product._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }, ...prev]);
         setShowAddProductModal(false);
         return true;
       }
@@ -536,12 +562,12 @@ export default function Admin() {
       const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
+        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
       });
       const d = await r.json();
       if (r.ok) {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
-          ? { _id: editingProduct._id, name: formData.name, categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }
+          ? { _id: editingProduct._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }
           : p
         ));
         setEditingProduct(null);
@@ -1065,6 +1091,7 @@ export default function Admin() {
             title="Edit Product"
             initialData={{
               name: editingProduct.name,
+              section: editingProduct.section || 'denim',
               categoryId: editingProduct.categoryId,
               price: String(editingProduct.price),
               images: (editingProduct as any).images?.length
