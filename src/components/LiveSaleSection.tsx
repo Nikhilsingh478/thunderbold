@@ -88,7 +88,7 @@ export default function LiveSaleSection() {
           >
             <span className="w-6 h-px bg-brass/50 inline-block" />
             <Zap className="w-3.5 h-3.5 text-brass fill-brass/20" strokeWidth={2.5} />
-            Live Sale
+            {/* Live Sale */}
             <Zap className="w-3.5 h-3.5 text-brass fill-brass/20" strokeWidth={2.5} />
             <span className="w-6 h-px bg-brass/50 inline-block" />
           </motion.div>
@@ -103,17 +103,6 @@ export default function LiveSaleSection() {
           >
             Sale Is Live
           </motion.h2>
-
-          {/* Sub line */}
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.14 }}
-            className="font-condensed text-sv-mid text-sm md:text-base tracking-[0.10em] mt-4"
-          >
-            Buy Three Jeans at Only ₹1399 — Limited Time Only
-          </motion.p>
 
           {/* Animated underline accent */}
           <motion.div
