@@ -64,9 +64,12 @@ interface Product {
 interface CategoryFormData {
   name: string;
   image: string;
+  section: string;
 }
 
-const defaultCategoryFormData: CategoryFormData = { name: '', image: '' };
+const CATEGORY_SECTIONS = SECTIONS.filter(s => s.value !== 'live-sale');
+
+const defaultCategoryFormData: CategoryFormData = { name: '', image: '', section: 'denim' };
 
 function ModalShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
@@ -104,7 +107,7 @@ function CategoryModal({
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!form.name || !form.image) { setError('Name and image are required.'); return; }
+    if (!form.name || !form.image || !form.section) { setError('Name, image, and section are required.'); return; }
     setSubmitting(true);
     const ok = await onSubmit(form);
     setSubmitting(false);
@@ -131,6 +134,22 @@ function CategoryModal({
             />
           </div>
         ))}
+        {/* Section */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Section</label>
+          <div className="relative">
+            <select
+              value={form.section}
+              onChange={(e) => setForm({ ...form, section: e.target.value })}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
+            >
+              {CATEGORY_SECTIONS.map((s) => (
+                <option key={s.value} value={s.value} className="bg-zinc-900 text-tb-white">{s.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
+          </div>
+        </div>
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
@@ -286,10 +305,12 @@ function ProductModal({
       .catch(() => {});
   }, []);
 
+  const isLiveSale = form.section === 'live-sale';
+
   const handleSubmit = async () => {
     const validImages = form.images.map(s => s.trim()).filter(Boolean);
-    if (!form.name || !form.price || !form.categoryId || validImages.length === 0) {
-      setError('Name, price, category, and at least one image are required.');
+    if (!form.name || !form.price || (!isLiveSale && !form.categoryId) || validImages.length === 0) {
+      setError(`Name, price, ${isLiveSale ? '' : 'category, '}and at least one image are required.`);
       return;
     }
     setSubmitting(true);
@@ -334,23 +355,25 @@ function ProductModal({
           </div>
         </div>
 
-        {/* Category */}
-        <div>
-          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Category</label>
-          <div className="relative">
-            <select
-              value={form.categoryId}
-              onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
-            >
-              <option value="" className="bg-zinc-900 text-sv-mid">Select a category</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id} className="bg-zinc-900 text-tb-white">{cat.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
+        {/* Category — hidden for Live Sale */}
+        {!isLiveSale && (
+          <div>
+            <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Category</label>
+            <div className="relative">
+              <select
+                value={form.categoryId}
+                onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
+              >
+                <option value="" className="bg-zinc-900 text-sv-mid">Select a category</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id} className="bg-zinc-900 text-tb-white">{cat.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Price */}
         <div>
@@ -990,7 +1013,10 @@ export default function Admin() {
                             />
                           </div>
                           <div className="p-3">
-                            <h3 className="font-condensed font-semibold text-tb-white text-sm mb-3 line-clamp-1">{category.name}</h3>
+                            <h3 className="font-condensed font-semibold text-tb-white text-sm mb-1 line-clamp-1">{category.name}</h3>
+                            <p className="font-condensed text-xs text-sv-mid mb-3">
+                              {CATEGORY_SECTIONS.find(s => s.value === (category.section || 'denim'))?.label ?? 'Denim Collection'}
+                            </p>
                             <button
                               onClick={() => deleteCategory(category._id)}
                               className="w-full flex items-center justify-center gap-1.5 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-condensed hover:bg-red-500/20 transition-colors"

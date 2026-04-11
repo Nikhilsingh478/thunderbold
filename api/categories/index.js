@@ -46,11 +46,11 @@ export default async function handler(req, res) {
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-        const { name: categoryName, image: categoryImage } = req.body;
+        const { name: categoryName, image: categoryImage, section: categorySection } = req.body;
         if (!categoryName || !categoryImage || typeof categoryImage !== 'string' || !categoryImage.trim()) {
           return res.status(400).json({ error: 'Name and image are required' });
         }
-        const category = { name: categoryName, image: categoryImage, createdAt: new Date() };
+        const category = { name: categoryName, image: categoryImage, section: categorySection || 'denim', createdAt: new Date() };
         const createResult = await categoriesCollection.insertOne(category);
         return res.status(201).json({
           message: 'Category created successfully',
