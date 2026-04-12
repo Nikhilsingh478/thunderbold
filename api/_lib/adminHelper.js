@@ -1,8 +1,12 @@
-const ADMIN_EMAIL_FALLBACK = process.env.ADMIN_EMAIL || 'adminthunderbolt@gmail.com';
+const ADMIN_EMAILS = [
+  'adminthunderbolt@gmail.com',
+  'neelsingh45940s@gmail.com',
+  'thepavanartt@gmail.com',
+];
 
 /**
  * Check if an email belongs to an admin user.
- * Checks DB role first, falls back to ADMIN_EMAIL env var.
+ * Checks DB role first, falls back to hardcoded admin list.
  */
 export async function isAdmin(email, db) {
   if (!email) return false;
@@ -12,5 +16,5 @@ export async function isAdmin(email, db) {
   } catch {
     // DB check failed — fall back silently
   }
-  return email === ADMIN_EMAIL_FALLBACK;
+  return ADMIN_EMAILS.includes(email);
 }

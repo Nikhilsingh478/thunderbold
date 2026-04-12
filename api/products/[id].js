@@ -30,7 +30,8 @@ function checkAdminAuth(req) {
   }
   
   // Check if user is admin
-  if (decoded.email !== (process.env.ADMIN_EMAIL || 'adminthunderbolt@gmail.com')) {
+  const ADMIN_EMAILS = ['adminthunderbolt@gmail.com', 'neelsingh45940s@gmail.com', 'thepavanartt@gmail.com'];
+  if (!ADMIN_EMAILS.includes(decoded.email)) {
     return { authorized: false, error: 'Forbidden' };
   }
   

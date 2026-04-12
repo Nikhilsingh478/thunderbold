@@ -9,7 +9,11 @@ import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
 
-const ADMIN_EMAIL = "adminthunderbolt@gmail.com";
+const ADMIN_EMAILS = [
+  "adminthunderbolt@gmail.com",
+  "neelsingh45940s@gmail.com",
+  "thepavanartt@gmail.com",
+];
 
 interface OrderProduct {
   name: string;
@@ -458,7 +462,7 @@ export default function Admin() {
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    if (user && user.email !== ADMIN_EMAIL) navigate('/');
+    if (user && !ADMIN_EMAILS.includes(user.email)) navigate('/');
   }, [user, navigate]);
 
   useEffect(() => { if (user && activeTab === 'orders') fetchOrders(); }, [activeTab, user]);
@@ -660,7 +664,7 @@ export default function Admin() {
     );
   }
 
-  if (user.email !== ADMIN_EMAIL) return null;
+  if (!ADMIN_EMAILS.includes(user.email)) return null;
 
   const tabs = [
     { key: 'orders' as const, label: 'Orders', Icon: Users },
