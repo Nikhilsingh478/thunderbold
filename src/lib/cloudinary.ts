@@ -1,4 +1,5 @@
-const CLOUD_NAME = 'djptdutak';
+export const CLOUD_NAME = 'djptdutak';
+export const CLOUD_NAME_2 = 'dyyjowb8g';
 
 /**
  * Transforms a raw Cloudinary URL into an optimised one.
@@ -21,6 +22,18 @@ export function optimizeCloudinaryUrl(
   if (url.includes('/upload/f_auto')) return url;  // already optimised
 
   return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+}
+
+/**
+ * Builds a Cloudinary URL from a public ID and optional cloud name.
+ * Defaults to CLOUD_NAME (djptdutak). Pass CLOUD_NAME_2 for the second account.
+ */
+export function buildCloudinaryUrl(
+  publicId: string,
+  cloudName: string = CLOUD_NAME,
+  width: number = 800,
+): string {
+  return `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,w_${width}/${publicId}`;
 }
 
 /**
