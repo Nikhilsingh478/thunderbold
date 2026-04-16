@@ -270,7 +270,7 @@ export default function ProductView() {
               {product?.description && (
                 <div className="mb-10 max-w-[90%]">
                   <p
-                    className={`font-serif font-light text-tb-off text-base leading-relaxed tracking-wide transition-all duration-300 ${
+                    className={`font-serif font-light text-tb-off text-sm leading-snug tracking-wide transition-all duration-300 ${
                       !descExpanded ? 'line-clamp-4' : ''
                     }`}
                   >
