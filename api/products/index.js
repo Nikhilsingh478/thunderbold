@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       case 'GET': {
         const products = await col.find(
           {},
-          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, section: 1, stock: 1, sizeStock: 1, createdAt: 1 } }
+          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, section: 1, stock: 1, sizeStock: 1, highlights: 1, createdAt: 1 } }
         ).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-        const { name, price, description, categoryId, sizeStock } = req.body;
+        const { name, price, description, categoryId, sizeStock, highlights } = req.body;
         const section = req.body.section || 'denim';
         const images = normaliseImages(req.body);
         const needsCategory = section !== 'live-sale';
@@ -81,6 +81,14 @@ export default async function handler(req, res) {
         }
         const normalisedSizeStock = normaliseSizeStock(sizeStock);
         const totalStock = computeTotalStock(normalisedSizeStock);
+        const normalisedHighlights = highlights && typeof highlights === 'object' ? {
+          color: highlights.color || '',
+          length: highlights.length || '',
+          printsPattern: highlights.printsPattern || '',
+          waistRise: highlights.waistRise || '',
+          shade: highlights.shade || '',
+          lengthInches: highlights.lengthInches || '',
+        } : null;
         const product = {
           name, price,
           image: images[0],
@@ -90,6 +98,7 @@ export default async function handler(req, res) {
           section,
           sizeStock: normalisedSizeStock,
           stock: totalStock,
+          highlights: normalisedHighlights,
           createdAt: new Date(),
         };
         const result = await col.insertOne(product);
@@ -103,7 +112,7 @@ export default async function handler(req, res) {
         }
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing product ID' });
-        const { name, price, description, categoryId, sizeStock } = req.body;
+        const { name, price, description, categoryId, sizeStock, highlights } = req.body;
         const putSection = req.body.section || 'denim';
         const images = normaliseImages(req.body);
         const putNeedsCategory = putSection !== 'live-sale';
@@ -112,6 +121,14 @@ export default async function handler(req, res) {
         }
         const normalisedSizeStock = normaliseSizeStock(sizeStock);
         const totalStock = computeTotalStock(normalisedSizeStock);
+        const normalisedHighlightsPut = highlights && typeof highlights === 'object' ? {
+          color: highlights.color || '',
+          length: highlights.length || '',
+          printsPattern: highlights.printsPattern || '',
+          waistRise: highlights.waistRise || '',
+          shade: highlights.shade || '',
+          lengthInches: highlights.lengthInches || '',
+        } : null;
         const updates = {
           name,
           price: typeof price === 'number' ? price : parseFloat(price),
@@ -122,6 +139,7 @@ export default async function handler(req, res) {
           section: putSection,
           sizeStock: normalisedSizeStock,
           stock: totalStock,
+          highlights: normalisedHighlightsPut,
           updatedAt: new Date(),
         };
         const result = await col.updateOne(

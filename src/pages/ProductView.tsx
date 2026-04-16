@@ -356,6 +356,46 @@ export default function ProductView() {
                 </div>
               </div>
 
+              {/* Product Highlights */}
+              {(() => {
+                const h = product?.highlights;
+                const fields = [
+                  { label: 'Color', value: h?.color },
+                  { label: 'Length', value: h?.length },
+                  { label: 'Prints & Pattern', value: h?.printsPattern },
+                  { label: 'Waist Rise', value: h?.waistRise },
+                  { label: 'Shade', value: h?.shade },
+                  { label: '(Length) In Inches', value: h?.lengthInches },
+                ];
+                const hasAny = h && fields.some(f => f.value?.trim());
+                if (!hasAny) return null;
+                return (
+                  <div className="mb-10 lg:mb-12">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-brass shrink-0"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2"/></svg>
+                      <span className="font-condensed text-[0.72rem] tracking-[0.22em] uppercase text-brass">Product Highlights</span>
+                    </div>
+                    <div className="border border-white/[0.08] rounded-sm overflow-hidden">
+                      <div className="grid grid-cols-2">
+                        {fields.filter(f => f.value?.trim()).map((f, i, arr) => (
+                          <div
+                            key={f.label}
+                            className={`px-4 py-3.5 flex flex-col gap-1 ${
+                              i % 2 === 0 ? 'border-r border-white/[0.06]' : ''
+                            } ${
+                              i < arr.length - (arr.length % 2 === 0 ? 2 : 1) ? 'border-b border-white/[0.06]' : ''
+                            } bg-white/[0.015]`}
+                          >
+                            <span className="font-condensed text-[0.6rem] tracking-[0.18em] uppercase text-sv-mid">{f.label}</span>
+                            <span className="font-condensed text-sm tracking-[0.08em] text-tb-white font-medium">{f.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Trust Badges */}
               <div className="mb-10 lg:mb-12 flex flex-col gap-3 border border-white/[0.07] rounded-sm px-5 py-4 bg-white/[0.02]">
                 <div className="flex items-center gap-3">

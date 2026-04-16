@@ -1,3 +1,12 @@
+export interface ProductHighlights {
+  color?: string;
+  length?: string;
+  printsPattern?: string;
+  waistRise?: string;
+  shade?: string;
+  lengthInches?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -9,6 +18,7 @@ export interface Product {
   category?: string;
   stock?: number;
   sizeStock?: Record<string, number>;
+  highlights?: ProductHighlights | null;
   createdAt?: string;
   updatedAt?: string;
 }

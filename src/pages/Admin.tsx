@@ -63,6 +63,7 @@ interface Product {
   description?: string;
   stock?: number;
   sizeStock?: Record<string, number>;
+  highlights?: ProductHighlights | null;
 }
 
 interface CategoryFormData {
@@ -172,6 +173,15 @@ function CategoryModal({
   );
 }
 
+interface ProductHighlights {
+  color: string;
+  length: string;
+  printsPattern: string;
+  waistRise: string;
+  shade: string;
+  lengthInches: string;
+}
+
 interface ProductFormData {
   name: string;
   section: string;
@@ -180,10 +190,12 @@ interface ProductFormData {
   images: string[];
   description: string;
   sizeStock: Record<string, string>;
+  highlights: ProductHighlights;
 }
 
 const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
-const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock() };
+const defaultHighlights: ProductHighlights = { color: '', length: '', printsPattern: '', waistRise: '', shade: '', lengthInches: '' };
+const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
 
 function ImageInput({
   images,
@@ -422,6 +434,33 @@ function ProductModal({
           />
         </div>
 
+        {/* Product Highlights */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Product Highlights</label>
+          <p className="font-condensed text-[0.65rem] text-sv-mid/50 mb-3">Leave all blank to hide this section on the store.</p>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { key: 'color', label: 'Color' },
+              { key: 'length', label: 'Length' },
+              { key: 'printsPattern', label: 'Prints & Pattern' },
+              { key: 'waistRise', label: 'Waist Rise' },
+              { key: 'shade', label: 'Shade' },
+              { key: 'lengthInches', label: '(Length) In Inches' },
+            ] as { key: keyof ProductHighlights; label: string }[]).map(({ key, label }) => (
+              <div key={key}>
+                <label className="block font-condensed text-[0.6rem] text-sv-mid/70 uppercase tracking-wider mb-1">{label}</label>
+                <input
+                  type="text"
+                  value={form.highlights[key]}
+                  onChange={(e) => setForm(p => ({ ...p, highlights: { ...p.highlights, [key]: e.target.value } }))}
+                  placeholder={label}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/30 focus:outline-none focus:border-brass/40 transition-colors"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
@@ -561,14 +600,16 @@ export default function Admin() {
       );
       const stock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
       const images = formData.images.map(s => s.trim()).filter(Boolean);
+      const hasHighlights = Object.values(formData.highlights).some(v => v.trim() !== '');
+      const highlights = hasHighlights ? formData.highlights : null;
       const r = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
+        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description, highlights }),
       });
       const d = await r.json();
       if (r.ok) {
-        setProducts(prev => [{ _id: d.product._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }, ...prev]);
+        setProducts(prev => [{ _id: d.product._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description, highlights }, ...prev]);
         setShowAddProductModal(false);
         return true;
       }
@@ -586,15 +627,17 @@ export default function Admin() {
       );
       const stock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
       const images = formData.images.map(s => s.trim()).filter(Boolean);
+      const hasHighlightsPut = Object.values(formData.highlights).some(v => v.trim() !== '');
+      const highlightsPut = hasHighlightsPut ? formData.highlights : null;
       const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description }),
+        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description, highlights: highlightsPut }),
       });
       const d = await r.json();
       if (r.ok) {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
-          ? { _id: editingProduct._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description }
+          ? { _id: editingProduct._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description, highlights: highlightsPut }
           : p
         ));
         setEditingProduct(null);
@@ -1133,6 +1176,9 @@ export default function Admin() {
               sizeStock: editingProduct.sizeStock
                 ? Object.fromEntries(SIZES.map(s => [s, String(editingProduct.sizeStock![s] ?? 0)]))
                 : makeDefaultSizeStock(),
+              highlights: editingProduct.highlights
+                ? { ...defaultHighlights, ...editingProduct.highlights }
+                : defaultHighlights,
             }}
             onSubmit={updateProduct}
             onClose={() => setEditingProduct(null)}
