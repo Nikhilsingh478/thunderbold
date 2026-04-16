@@ -101,7 +101,7 @@ export default function LiveSaleSection() {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
             className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase leading-none"
           >
-            Sale Is Live
+            Special Offer
           </motion.h2>
 
           {/* Animated underline accent */}
@@ -152,7 +152,7 @@ export default function LiveSaleSection() {
                   <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
                     <div className="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1.5">
                       <span className="font-condensed text-[0.58rem] tracking-[0.14em] uppercase px-2 py-0.5 bg-brass text-void font-bold rounded-sm">
-                        Sale
+                        Offer
                       </span>
                       {isOutOfStock && (
                         <span className="font-condensed text-[0.55rem] tracking-[0.12em] uppercase px-2 py-0.5 bg-red-500/90 text-white font-bold rounded-sm">

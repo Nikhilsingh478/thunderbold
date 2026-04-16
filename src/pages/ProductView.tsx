@@ -356,6 +356,30 @@ export default function ProductView() {
                 </div>
               </div>
 
+              {/* Trust Badges */}
+              <div className="mb-10 lg:mb-12 flex flex-col gap-3 border border-white/[0.07] rounded-sm px-5 py-4 bg-white/[0.02]">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-brass/10 border border-brass/25 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-brass"><path d="M17 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2m2 4h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z"/></svg>
+                  </div>
+                  <span className="font-condensed text-[0.72rem] tracking-[0.16em] uppercase text-tb-off">Cash on Delivery Available</span>
+                </div>
+                <div className="h-px bg-white/[0.06]" />
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-brass/10 border border-brass/25 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-brass"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                  </div>
+                  <span className="font-condensed text-[0.72rem] tracking-[0.16em] uppercase text-tb-off">1 Day Assured Refund</span>
+                </div>
+                <div className="h-px bg-white/[0.06]" />
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-brass/10 border border-brass/25 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-brass"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"/></svg>
+                  </div>
+                  <span className="font-condensed text-[0.72rem] tracking-[0.16em] uppercase text-tb-off">Easy Exchange and Returns</span>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex flex-col gap-4 mb-10 lg:mb-12">
                 {/* Cart and Wishlist Buttons */}
