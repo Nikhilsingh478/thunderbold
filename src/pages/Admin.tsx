@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -797,7 +797,19 @@ export default function Admin() {
                               <div className="space-y-2">
                                 {(order.products ?? []).map((p, i) => (
                                   <div key={i} className="bg-white/[0.03] rounded-lg px-3 py-2">
-                                    <p className="text-tb-white text-sm font-medium">{p.name}</p>
+                                    {p.productId ? (
+                                      <a
+                                        href={`/product/${p.productId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-tb-white hover:text-brass transition-colors duration-200 group"
+                                      >
+                                        <span>{p.name}</span>
+                                        <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                                      </a>
+                                    ) : (
+                                      <p className="text-tb-white text-sm font-medium">{p.name}</p>
+                                    )}
                                     <div className="flex items-center gap-3 mt-0.5">
                                       {p.size && <span className="text-sv-mid text-xs">Size: <span className="text-tb-white">{p.size}</span></span>}
                                       <span className="text-sv-mid text-xs">Qty: <span className="text-tb-white">{p.quantity}</span></span>
@@ -875,7 +887,19 @@ export default function Admin() {
                                   <div className="space-y-2">
                                     {(order.products ?? []).map((p, i) => (
                                       <div key={i}>
-                                        <div className="text-sm text-tb-white font-medium">{p.name}</div>
+                                        {p.productId ? (
+                                          <a
+                                            href={`/product/${p.productId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-sm font-medium text-tb-white hover:text-brass transition-colors duration-200 group"
+                                          >
+                                            <span>{p.name}</span>
+                                            <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                                          </a>
+                                        ) : (
+                                          <div className="text-sm text-tb-white font-medium">{p.name}</div>
+                                        )}
                                         <div className="flex items-center gap-2 mt-0.5">
                                           {p.size && <span className="text-xs text-sv-mid">Size: <span className="text-tb-white">{p.size}</span></span>}
                                           <span className="text-xs text-sv-mid">Qty: <span className="text-tb-white">{p.quantity}</span></span>
