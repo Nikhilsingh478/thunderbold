@@ -314,6 +314,7 @@ npm install
 npm run dev
 ```
 
+
 Open `http://localhost:5000`. The Vite dev server proxies all `/api/*` calls to Express on port 3001.
 
 ### First-Run Database Setup
