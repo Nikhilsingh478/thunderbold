@@ -1,0 +1,79 @@
+Create a modern, dark-themed eCommerce footer section for a brand named “Thunderbolt”. The design should feel premium, minimal, and slightly futuristic with clean spacing, subtle hover effects, and responsive layout.
+
+Structure the footer in a well-balanced multi-column layout (3–4 columns on desktop, stacked on mobile).
+
+Include the following sections:
+
+1. Brand Section:
+
+* Thunderbolt logo (text-based is fine)
+* Short tagline (e.g., performance-driven tech products)
+* Keep it minimal and bold
+
+2. Quick Links:
+
+* Home
+* Shop
+* Categories
+* About
+* Contact
+
+3. Customer Support:
+
+* Help Center
+* FAQs
+* Shipping Info
+* Track Order
+
+4. Policies:
+
+* Privacy Policy
+* Terms & Conditions
+* Returns & Cancellation Policy
+
+For the Returns & Cancellation Policy page/modal:
+
+* Write it in a professional, clear tone
+* Include logic such as:
+  • Orders are first verified via a confirmation call by admin
+  • Once confirmed, orders cannot be cancelled during processing/shipping
+  • After delivery, return/cancellation requests may be accepted for valid reasons
+  • A small fixed cancellation/return fee (₹50) may apply
+* Keep wording user-friendly, not harsh or robotic
+* Format it cleanly (headings + short paragraphs)
+
+5. Contact Info:
+
+* Add a realistic dummy address (India-based)
+* Email ([support@thunderbolt.com](mailto:support@thunderbolt.com))
+* Phone number format (+91 XXXXX XXXXX)
+
+6. Social Media:
+
+* Only include Instagram icon (clean minimal icon style)
+* Add hover animation
+
+7. Trust Element:
+
+* Add a subtle “secure experience” indicator (like a small shield icon with text such as “Secure Shopping Experience”)
+
+8. Footer Bottom Bar:
+
+* Copyright line (© 2026 Thunderbolt. All rights reserved.)
+
+Design Guidelines:
+
+* Dark UI (black/charcoal background)
+* Soft contrast text (off-white/gray)
+* Smooth hover transitions
+* Clean typography (modern sans-serif)
+* Proper spacing and alignment
+* Mobile-first responsiveness
+
+Avoid:
+
+* Newsletter section
+* Payment method icons
+* Cluttered layout
+
+Let the design feel premium, clean, and slightly cinematic.
