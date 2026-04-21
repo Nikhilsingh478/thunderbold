@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
+import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin, Plus } from 'lucide-react';
 
 type PolicyType = 'returns' | 'privacy' | 'terms' | null;
 
@@ -204,6 +204,147 @@ const ColHeading = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+const QuickLinksList = () => (
+  <ul className="space-y-3.5">
+    {quickLinks.map(l => (
+      <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
+    ))}
+  </ul>
+);
+
+const SupportList = () => (
+  <ul className="space-y-3.5">
+    {supportLinks.map(l => (
+      <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
+    ))}
+    <li>
+      <a
+        href="mailto:support@thunderboltdenim.com"
+        className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
+      >
+        <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
+        Contact Us
+      </a>
+    </li>
+  </ul>
+);
+
+const PoliciesList = ({ onSelect }: { onSelect: (p: PolicyType) => void }) => (
+  <ul className="space-y-3.5">
+    <li><FooterBtn onClick={() => onSelect('privacy')}>Privacy Policy</FooterBtn></li>
+    <li><FooterBtn onClick={() => onSelect('terms')}>Terms & Conditions</FooterBtn></li>
+    <li><FooterBtn onClick={() => onSelect('returns')}>Returns & Cancellation</FooterBtn></li>
+  </ul>
+);
+
+const ContactBlock = () => (
+  <address className="not-italic space-y-4">
+    <div className="flex items-start gap-2.5">
+      <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
+      <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
+        Matrabhumi Circle,<br />
+        Near Ring Road,<br />
+        Bhusawal – 425201, India
+      </p>
+    </div>
+    <div className="flex items-center gap-2.5">
+      <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
+      <a
+        href="mailto:support@thunderboltdenim.com"
+        className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+      >
+        support@thunderboltdenim.com
+      </a>
+    </div>
+    <div className="flex items-center gap-2.5">
+      <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
+      <a
+        href="tel:+919561172681"
+        className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+      >
+        +91 95611 72681
+      </a>
+    </div>
+  </address>
+);
+
+const BrandBlock = () => (
+  <div>
+    <span className="font-display text-2xl tracking-[0.20em] text-white block mb-3">
+      THUNDER<span className="brass-text">⚡</span>BOLT
+    </span>
+    <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-white/45 leading-relaxed max-w-[220px]">
+      Original Denim Supply.<br />Built for the Bold.
+    </p>
+
+    {/* Instagram */}
+    <div className="mt-7 flex items-center gap-3">
+      <a
+        href="https://www.instagram.com/thunderbold.shop?igsh=MXM5dnFvMW45Z2Fh"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Instagram"
+        className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/15 text-white/50 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all duration-300 group"
+      >
+        <Instagram className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+      </a>
+    </div>
+
+    {/* Secure badge */}
+    <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03]">
+      <Shield className="w-3 h-3 text-brass shrink-0" />
+      <span className="font-condensed text-[0.6rem] tracking-[0.18em] uppercase text-white/40">Secure Shopping</span>
+    </div>
+  </div>
+);
+
+function MobileAccordion({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-white/[0.07]">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between py-5 group"
+      >
+        <span className="font-condensed text-[0.78rem] tracking-[0.28em] uppercase text-white font-bold">
+          {title}
+        </span>
+        <motion.span
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-white/15 bg-white/[0.03] text-brass group-hover:border-white/30 group-hover:bg-white/[0.06] transition-colors duration-200"
+        >
+          <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <motion.div
+              initial={{ y: -6 }}
+              animate={{ y: 0 }}
+              exit={{ y: -6 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="pb-5 pt-1"
+            >
+              {children}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function Footer() {
   const [activePolicy, setActivePolicy] = useState<PolicyType>(null);
 
@@ -212,105 +353,57 @@ export default function Footer() {
       <footer className="bg-void border-t border-white/[0.07] pt-16 pb-0 px-6 md:px-16">
         <div className="max-w-[1200px] mx-auto">
 
-          {/* Main grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-14">
+          {/* Mobile layout: brand + accordions */}
+          <div className="sm:hidden pb-10">
+            <div className="mb-8">
+              <BrandBlock />
+            </div>
+
+            <div className="border-t border-white/[0.07]">
+              <MobileAccordion title="Quick Links">
+                <QuickLinksList />
+              </MobileAccordion>
+              <MobileAccordion title="Support">
+                <SupportList />
+              </MobileAccordion>
+              <MobileAccordion title="Policies">
+                <PoliciesList onSelect={setActivePolicy} />
+              </MobileAccordion>
+              <MobileAccordion title="Contact">
+                <ContactBlock />
+              </MobileAccordion>
+            </div>
+          </div>
+
+          {/* Desktop / tablet grid */}
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-14">
 
             {/* 1 — Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
-              <span className="font-display text-2xl tracking-[0.20em] text-white block mb-3">
-                THUNDER<span className="brass-text">⚡</span>BOLT
-              </span>
-              <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-white/45 leading-relaxed max-w-[220px]">
-                Original Denim Supply.<br />Built for the Bold.
-              </p>
-
-              {/* Instagram */}
-              <div className="mt-7 flex items-center gap-3">
-                <a
-                  href="https://www.instagram.com/thunderbold.shop?igsh=MXM5dnFvMW45Z2Fh"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/15 text-white/50 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all duration-300 group"
-                >
-                  <Instagram className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-                </a>
-              </div>
-
-              {/* Secure badge */}
-              <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03]">
-                <Shield className="w-3 h-3 text-brass shrink-0" />
-                <span className="font-condensed text-[0.6rem] tracking-[0.18em] uppercase text-white/40">Secure Shopping</span>
-              </div>
+              <BrandBlock />
             </div>
 
             {/* 2 — Quick Links */}
             <div>
               <ColHeading>Quick Links</ColHeading>
-              <ul className="space-y-3.5">
-                {quickLinks.map(l => (
-                  <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
-                ))}
-              </ul>
+              <QuickLinksList />
             </div>
 
             {/* 3 — Support + Policies */}
             <div>
               <ColHeading>Support</ColHeading>
-              <ul className="space-y-3.5 mb-9">
-                {supportLinks.map(l => (
-                  <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
-                ))}
-                <li>
-                  <a
-                    href="mailto:support@thunderboltdenim.com"
-                    className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
-                  >
-                    <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
-                    Contact Us
-                  </a>
-                </li>
-              </ul>
+              <div className="mb-9">
+                <SupportList />
+              </div>
 
               <ColHeading>Policies</ColHeading>
-              <ul className="space-y-3.5">
-                <li><FooterBtn onClick={() => setActivePolicy('privacy')}>Privacy Policy</FooterBtn></li>
-                <li><FooterBtn onClick={() => setActivePolicy('terms')}>Terms & Conditions</FooterBtn></li>
-                <li><FooterBtn onClick={() => setActivePolicy('returns')}>Returns & Cancellation</FooterBtn></li>
-              </ul>
+              <PoliciesList onSelect={setActivePolicy} />
             </div>
 
             {/* 4 — Contact */}
             <div>
               <ColHeading>Contact</ColHeading>
-              <address className="not-italic space-y-4">
-                <div className="flex items-start gap-2.5">
-                  <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
-                  <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
-                    Matrabhumi Circle,<br />
-                    Near Ring Road,<br />
-                    Bhusawal – 425201, India
-                  </p>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
-                  <a
-                    href="mailto:support@thunderboltdenim.com"
-                    className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
-                  >
-                    support@thunderboltdenim.com
-                  </a>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
-                  <a
-                    href="tel:+919561172681"
-                    className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
-                  >
-                    +91 95611 72681
-                  </a>
-                </div>
-              </address>
+              <ContactBlock />
             </div>
           </div>
 
