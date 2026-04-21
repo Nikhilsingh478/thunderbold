@@ -8,6 +8,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
+import { schedulePrefetchOrders, clearOrdersCache } from '../lib/ordersCache';
 
 interface AuthContextType {
   user: User | null;
@@ -32,6 +33,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+      // Warm the orders cache during idle time so the Orders page opens instantly.
+      // Fully silent on failure — never affects auth flow.
+      if (currentUser) {
+        schedulePrefetchOrders(currentUser);
+      } else {
+        clearOrdersCache();
+      }
     });
 
     return unsubscribe;

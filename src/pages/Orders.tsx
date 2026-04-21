@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { getStaleOrders, setCachedOrders } from '../lib/ordersCache';
 
 interface Order {
   _id: string;
@@ -20,8 +21,11 @@ interface Order {
 
 const Orders = () => {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hydrate from in-memory cache instantly if it's already populated for this user.
+  // This makes the page render with content on the first paint instead of a spinner.
+  const initialCached = user ? getStaleOrders(user.uid) : null;
+  const [orders, setOrders] = useState<Order[]>(initialCached || []);
+  const [loading, setLoading] = useState(!initialCached);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -30,6 +34,14 @@ const Orders = () => {
       if (!user) {
         setLoading(false);
         return;
+      }
+
+      // If we have any cached data for this user, render it immediately
+      // and revalidate silently in the background (stale-while-revalidate).
+      const cached = getStaleOrders(user.uid);
+      if (cached) {
+        setOrders(cached);
+        setLoading(false);
       }
 
       try {
@@ -42,12 +54,14 @@ const Orders = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setOrders(data.orders || []);
-        } else {
+          const fresh: Order[] = data.orders || [];
+          setOrders(fresh);
+          setCachedOrders(user.uid, fresh);
+        } else if (!cached) {
           setError('Failed to fetch orders');
         }
       } catch (err) {
-        setError('Error fetching orders');
+        if (!cached) setError('Error fetching orders');
         console.error('Error fetching orders:', err);
       } finally {
         setLoading(false);
