@@ -231,7 +231,7 @@ const DropdownSection = ({ title, children, isOpen, onToggle }: {
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="overflow-hidden"
         >
-          <div className="pt-3">
+          <div className="pt-3 pb-2">
             {children}
           </div>
         </motion.div>
@@ -257,7 +257,7 @@ export default function Footer() {
         <div className="max-w-[1200px] mx-auto">
 
           {/* Main grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8 pb-14">
 
             {/* 1 — Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
