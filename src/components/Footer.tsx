@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
+import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 
 type PolicyType = 'returns' | 'privacy' | 'terms' | null;
 
@@ -204,8 +204,52 @@ const ColHeading = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+const DropdownSection = ({ title, children, isOpen, onToggle }: { 
+  title: string; 
+  children: React.ReactNode; 
+  isOpen: boolean; 
+  onToggle: () => void;
+}) => (
+  <div className="border-b border-white/[0.07] pb-4 mb-4 last:border-b-0 last:pb-0">
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between py-3 text-left font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
+    >
+      <span>{title}</span>
+      {isOpen ? (
+        <ChevronUp className="w-4 h-4 text-brass transition-transform duration-200" />
+      ) : (
+        <ChevronDown className="w-4 h-4 text-brass transition-transform duration-200" />
+      )}
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="overflow-hidden"
+        >
+          <div className="pt-3">
+            {children}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
+
 export default function Footer() {
   const [activePolicy, setActivePolicy] = useState<PolicyType>(null);
+  const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
+
+  const toggleDropdown = (key: string) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
   return (
     <>
@@ -245,72 +289,170 @@ export default function Footer() {
             </div>
 
             {/* 2 — Quick Links */}
-            <div>
-              <ColHeading>Quick Links</ColHeading>
-              <ul className="space-y-3.5">
-                {quickLinks.map(l => (
-                  <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
-                ))}
-              </ul>
+            <div className="lg:block">
+              {/* Desktop: Regular layout */}
+              <div className="hidden lg:block">
+                <ColHeading>Quick Links</ColHeading>
+                <ul className="space-y-3.5">
+                  {quickLinks.map(l => (
+                    <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Mobile: Dropdown */}
+              <div className="lg:hidden">
+                <DropdownSection 
+                  title="Quick Links" 
+                  isOpen={openDropdowns['quicklinks'] || false}
+                  onToggle={() => toggleDropdown('quicklinks')}
+                >
+                  <ul className="space-y-3.5">
+                    {quickLinks.map(l => (
+                      <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
+                    ))}
+                  </ul>
+                </DropdownSection>
+              </div>
             </div>
 
             {/* 3 — Support + Policies */}
-            <div>
-              <ColHeading>Support</ColHeading>
-              <ul className="space-y-3.5 mb-9">
-                {supportLinks.map(l => (
-                  <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
-                ))}
-                <li>
-                  <a
-                    href="mailto:support@thunderboltdenim.com"
-                    className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
-                  >
-                    <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
-                    Contact Us
-                  </a>
-                </li>
-              </ul>
+            <div className="lg:block">
+              {/* Desktop: Regular layout */}
+              <div className="hidden lg:block">
+                <ColHeading>Support</ColHeading>
+                <ul className="space-y-3.5 mb-9">
+                  {supportLinks.map(l => (
+                    <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
+                  ))}
+                  <li>
+                    <a
+                      href="mailto:support@thunderboltdenim.com"
+                      className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
+                    >
+                      <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
+                      Contact Us
+                    </a>
+                  </li>
+                </ul>
 
-              <ColHeading>Policies</ColHeading>
-              <ul className="space-y-3.5">
-                <li><FooterBtn onClick={() => setActivePolicy('privacy')}>Privacy Policy</FooterBtn></li>
-                <li><FooterBtn onClick={() => setActivePolicy('terms')}>Terms & Conditions</FooterBtn></li>
-                <li><FooterBtn onClick={() => setActivePolicy('returns')}>Returns & Cancellation</FooterBtn></li>
-              </ul>
+                <ColHeading>Policies</ColHeading>
+                <ul className="space-y-3.5">
+                  <li><FooterBtn onClick={() => setActivePolicy('privacy')}>Privacy Policy</FooterBtn></li>
+                  <li><FooterBtn onClick={() => setActivePolicy('terms')}>Terms & Conditions</FooterBtn></li>
+                  <li><FooterBtn onClick={() => setActivePolicy('returns')}>Returns & Cancellation</FooterBtn></li>
+                </ul>
+              </div>
+              
+              {/* Mobile: Dropdowns */}
+              <div className="lg:hidden">
+                <DropdownSection 
+                  title="Support" 
+                  isOpen={openDropdowns['support'] || false}
+                  onToggle={() => toggleDropdown('support')}
+                >
+                  <ul className="space-y-3.5">
+                    {supportLinks.map(l => (
+                      <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
+                    ))}
+                    <li>
+                      <a
+                        href="mailto:support@thunderboltdenim.com"
+                        className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
+                      >
+                        <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
+                        Contact Us
+                      </a>
+                    </li>
+                  </ul>
+                </DropdownSection>
+
+                <DropdownSection 
+                  title="Policies" 
+                  isOpen={openDropdowns['policies'] || false}
+                  onToggle={() => toggleDropdown('policies')}
+                >
+                  <ul className="space-y-3.5">
+                    <li><FooterBtn onClick={() => setActivePolicy('privacy')}>Privacy Policy</FooterBtn></li>
+                    <li><FooterBtn onClick={() => setActivePolicy('terms')}>Terms & Conditions</FooterBtn></li>
+                    <li><FooterBtn onClick={() => setActivePolicy('returns')}>Returns & Cancellation</FooterBtn></li>
+                  </ul>
+                </DropdownSection>
+              </div>
             </div>
 
             {/* 4 — Contact */}
-            <div>
-              <ColHeading>Contact</ColHeading>
-              <address className="not-italic space-y-4">
-                <div className="flex items-start gap-2.5">
-                  <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
-                  <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
-                    Matrabhumi Circle,<br />
-                    Near Ring Road,<br />
-                    Bhusawal – 425201, India
-                  </p>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
-                  <a
-                    href="mailto:support@thunderboltdenim.com"
-                    className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
-                  >
-                    support@thunderboltdenim.com
-                  </a>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
-                  <a
-                    href="tel:+919561172681"
-                    className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
-                  >
-                    +91 95611 72681
-                  </a>
-                </div>
-              </address>
+            <div className="lg:block">
+              {/* Desktop: Regular layout */}
+              <div className="hidden lg:block">
+                <ColHeading>Contact</ColHeading>
+                <address className="not-italic space-y-4">
+                  <div className="flex items-start gap-2.5">
+                    <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
+                    <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
+                      Matrabhumi Circle,<br />
+                      Near Ring Road,<br />
+                      Bhusawal – 425201, India
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
+                    <a
+                      href="mailto:support@thunderboltdenim.com"
+                      className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+                    >
+                      support@thunderboltdenim.com
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
+                    <a
+                      href="tel:+919561172681"
+                      className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+                    >
+                      +91 95611 72681
+                    </a>
+                  </div>
+                </address>
+              </div>
+              
+              {/* Mobile: Dropdown */}
+              <div className="lg:hidden">
+                <DropdownSection 
+                  title="Contact" 
+                  isOpen={openDropdowns['contact'] || false}
+                  onToggle={() => toggleDropdown('contact')}
+                >
+                  <address className="not-italic space-y-4">
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
+                      <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
+                        Matrabhumi Circle,<br />
+                        Near Ring Road,<br />
+                        Bhusawal – 425201, India
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
+                      <a
+                        href="mailto:support@thunderboltdenim.com"
+                        className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+                      >
+                        support@thunderboltdenim.com
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
+                      <a
+                        href="tel:+919561172681"
+                        className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+                      >
+                        +91 95611 72681
+                      </a>
+                    </div>
+                  </address>
+                </DropdownSection>
+              </div>
             </div>
           </div>
 
