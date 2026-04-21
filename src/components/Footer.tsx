@@ -32,7 +32,7 @@ function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void 
         },
         {
           heading: 'How to Raise a Request',
-          text: 'Contact us at support@thunderboltdenim.com or call +91 98765 43210. Please have your order ID ready when reaching out.',
+          text: 'Contact us at support@thunderboltdenim.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
           highlight: true,
         },
       ],
@@ -166,13 +166,15 @@ function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void 
 
 const quickLinks = [
   { label: 'Home', to: '/' },
-  { label: 'Shop', to: '/' },
-  { label: 'Categories', to: '/' },
+  { label: 'Shop', to: '/#categories' },
+  { label: 'Categories', to: '/#categories' },
   { label: 'About', to: '/about' },
 ];
 
 const supportLinks = [
   { label: 'Track Order', to: '/orders' },
+  { label: 'My Cart', to: '/cart' },
+  { label: 'Wishlist', to: '/wishlist' },
 ];
 
 const FooterLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
@@ -225,7 +227,7 @@ export default function Footer() {
               {/* Instagram */}
               <div className="mt-7 flex items-center gap-3">
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/thunderbold.shop?igsh=MXM5dnFvMW45Z2Fh"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
@@ -285,8 +287,9 @@ export default function Footer() {
                 <div className="flex items-start gap-2.5">
                   <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
                   <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
-                    42 MG Road, Connaught Place<br />
-                    New Delhi – 110001, India
+                    Matrabhumi Circle,<br />
+                    Near Ring Road,<br />
+                    Bhusawal – 425201, India
                   </p>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -301,10 +304,10 @@ export default function Footer() {
                 <div className="flex items-center gap-2.5">
                   <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
                   <a
-                    href="tel:+919876543210"
+                    href="tel:+919561172681"
                     className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
                   >
-                    +91 98765 43210
+                    +91 95611 72681
                   </a>
                 </div>
               </address>
