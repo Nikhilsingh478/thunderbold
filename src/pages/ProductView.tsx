@@ -159,12 +159,12 @@ export default function ProductView() {
           {/* Back Button */}
           <button
             onClick={() => navigate(-1)}
-            className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 mb-4 md:mb-10 flex items-center gap-2 group"
+            className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 mb-7 md:mb-10 flex items-center gap-2 group"
           >
             <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span> Back to Collection
           </button>
 
-          <div className="flex flex-col md:flex-row gap-4 md:gap-12 lg:gap-24">
+          <div className="flex flex-col md:flex-row gap-7 md:gap-12 lg:gap-24">
             {/* Left: Image Slider */}
             <div className="w-full md:w-1/2 flex flex-col">
               <div 
