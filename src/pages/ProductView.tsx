@@ -154,17 +154,17 @@ export default function ProductView() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[164px] pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[110px] md:pt-[164px] pb-24 px-6 md:px-16">
         <div className="max-w-[1240px] mx-auto">
           {/* Back Button */}
           <button
             onClick={() => navigate(-1)}
-            className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 mb-10 flex items-center gap-2 group"
+            className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 mb-4 md:mb-10 flex items-center gap-2 group"
           >
             <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span> Back to Collection
           </button>
 
-          <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-12 lg:gap-24">
             {/* Left: Image Slider */}
             <div className="w-full md:w-1/2 flex flex-col">
               <div 
@@ -234,7 +234,7 @@ export default function ProductView() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
-              className="w-full md:w-1/2 flex flex-col justify-center py-4 md:py-8"
+              className="w-full md:w-1/2 flex flex-col justify-center py-0 md:py-8"
             >
               <div className="font-condensed font-semibold text-[0.68rem] tracking-[0.40em] uppercase text-brass mb-4">
                 Premium Collection
