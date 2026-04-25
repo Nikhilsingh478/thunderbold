@@ -239,7 +239,7 @@ export default function ProductView() {
               <div className="font-condensed font-semibold text-[0.68rem] tracking-[0.40em] uppercase text-brass mb-4">
                 Premium Collection
               </div>
-              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl tracking-[0.1em] metal-text uppercase mb-4 leading-none">
+              <h1 className="font-display text-2xl sm:text-4xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em] metal-text uppercase mb-3 sm:mb-4 leading-tight sm:leading-none">
                 {product?.name || 'Thunderbolt Jeans'}
               </h1>
               <div className="mb-4">
