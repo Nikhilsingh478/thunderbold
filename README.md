@@ -32,6 +32,7 @@
 16. [Cart & Wishlist System](#16-cart--wishlist-system)
 17. [Deployment](#17-deployment)
 18. [Known Behaviors & Design Decisions](#18-known-behaviors--design-decisions)
+19. [Recent Frontend Updates](#19-recent-frontend-updates)
 
 ---
 
@@ -372,7 +373,13 @@ Assembles all cinematic brand sections in order: `HeroSection`, `CategoriesSecti
 
 The most feature-rich page. Key behaviors:
 
-**Image carousel** — `embla-carousel-react` with touch swipe, prev/next navigation arrows, and a thumbnail strip below the main image. Thumbnails highlight the active slide. All images are Cloudinary-optimized: hero at 1000px, thumbnails at 200px.
+**Responsive layout** — single-column stack on mobile (image slider on top, details beneath), two-column row from `md` upward. Top padding adapts to the navbar height (`pt-[110px] md:pt-[164px]`); the gap between the slider and the details column is tightened on mobile (`gap-7 md:gap-12 lg:gap-24`) to remove dead space, and the details column drops its mobile vertical padding (`py-0 md:py-8`) so the "Premium Collection" eyebrow sits close to the image.
+
+**Image carousel** — `embla-carousel-react` with touch swipe, prev/next navigation arrows, and a thumbnail strip below the main image. Thumbnails highlight the active slide. Mobile shows compact slide-indicator dots overlaid on the slider instead of the full thumbnail strip. All images are Cloudinary-optimized: hero at 1000px, thumbnails at 200px.
+
+**Title typography** — `font-display` heading scales `text-2xl sm:text-4xl md:text-6xl lg:text-7xl` with tighter tracking on mobile (`tracking-[0.08em] sm:tracking-[0.1em]`) and `leading-tight` on small screens to keep the title compact on phones while preserving the bold cinematic display size on desktop.
+
+**Description** — collapsible (`line-clamp-4` until expanded) with a small "Read More / Show Less" toggle. Sized at `0.78rem` with `leading-snug` so it stays readable but reads as supporting copy, not a hero block. Toggle only renders when the description exceeds ~200 characters.
 
 **Size selector** — 5 buttons for sizes `['28', '30', '32', '34', '36']`. Each button checks `sizeStock[size]`. When stock is 0:
 - Button is `disabled`
@@ -395,6 +402,8 @@ product.stock > 3
 **`effectiveOutOfStock`** — a derived boolean combining global OOS (total stock = 0) and per-size OOS (selected size stock = 0). All action buttons (`Add to Cart`, `Order Now`) check this flag, not just the raw `stock` field.
 
 **Add to Cart / Order Now** — both have an `isLoading` flag that disables the button and shows a spinner during the async operation, preventing double-submission.
+
+**Action ordering** — the visual stack is now: description → size selector → quantity → product highlights → action buttons (`Add to Cart` + wishlist heart, then full-width `Order Now`) → **trust badges** (`Cash on Delivery Available`, `1 Day Assured Refund`, `Easy Exchange and Returns`). The trust badges intentionally sit *after* the primary CTAs so the buy actions stay above the fold on mobile and the badges read as reassurance immediately following the purchase decision.
 
 #### `CategoryView.tsx` — Category Grid
 
@@ -436,11 +445,20 @@ Reads from `WishlistContext`. Shows product image (500px), name, price, and two 
 #### `Navbar.tsx`
 Sticky top navigation. Contains: Thunderbolt wordmark, category nav links, `SearchOverlay` trigger, wishlist icon with item-count badge (red), cart icon with item-count badge (red), and a login/avatar button. Collapses to a hamburger on mobile. Uses `CartContext` and `WishlistContext` for live counts.
 
+#### `Footer.tsx`
+Site-wide footer with a fully responsive layout split between mobile and desktop:
+
+- **Mobile** (`< sm`): brand block (logo, tagline, social icons, secure-checkout badge) followed by four collapsible accordions — `Quick Links`, `Support`, `Policies`, `Contact`. Accordions are closed by default; opening one animates the `+` icon to a `×` (45° rotation) and expands the panel via Framer Motion `AnimatePresence` (height + opacity).
+- **Desktop / tablet** (`sm+`): a balanced **12-column grid** — brand col-span-4, then `Quick Links`, `Support`, `Policies`, `Contact` each col-span-2. Splitting Support and Policies into their own columns avoids the lopsided "tall middle column" the older 4-column layout produced.
+- **Socials**: Instagram (lucide icon) and WhatsApp (inline SVG, since lucide-react ships no WhatsApp glyph). Both render inside circular bordered buttons; WhatsApp deep-links to `https://wa.me/919561172681`, matching the contact phone.
+- **Policies modal**: clicking any item in `PoliciesList` opens a shared modal (`activePolicy` state) that lazy-renders the relevant policy content.
+- All sections share the same typography (`font-condensed`, brass accent labels) and underlying `BrandBlock`, `QuickLinksList`, `SupportList`, `PoliciesList`, `ContactBlock` building blocks — used by both mobile and desktop without duplication.
+
 #### `SearchOverlay.tsx`
 Full-screen overlay triggered from the Navbar. Fetches all products once on open and filters client-side as the user types. Results show Cloudinary-optimized product images (500px), product name, price, and click-to-navigate.
 
 #### `CategoriesSection.tsx`
-Fetches categories from `/api/categories`. Renders an animated grid using Framer Motion `staggerChildren` on scroll entry. Images are Cloudinary-optimized at 500px. Each card navigates to `/category/:id`.
+Fetches categories from `/api/categories`. Renders an animated grid using Framer Motion `staggerChildren` on scroll entry. Images are Cloudinary-optimized at 500px. Each card navigates to `/category/:id`. The legacy "On the Horizon / Coming Soon" teaser strip that previously sat below the grid has been retired from the storefront — the markup remains commented in the source for easy reinstatement, but the section no longer renders. The `coming-soon` value is still a valid `section` on the backend so admin-tagged categories continue to work.
 
 #### `CustomCursor.tsx`
 Replaces the default browser cursor on desktop with a branded circular overlay. Tracks `mousemove` and scales on hover. Hidden on mobile (touch devices detected via `pointer: coarse`).
@@ -1325,6 +1343,30 @@ This sends a `GET` request to `/api/products` every 5 minutes, keeping the Mongo
 | Cloudinary transformations at render time | Raw URLs are stored; transformation is a pure display concern. Changing image sizes site-wide requires only updating `IMG_SIZES` constants |
 | Tailwind `duration-[0.8s]` / `ease-[...]` warnings | Tailwind 3 produces ambiguity warnings for arbitrary animation values. These are harmless and expected — the CSS is generated correctly |
 | `Content-Security-Policy` is disabled | Dynamic Cloudinary image URLs cannot be whitelisted statically. A production hardening step would be to set `img-src 'self' res.cloudinary.com` |
+
+---
+
+## 19. Recent Frontend Updates
+
+A running log of meaningful UI / UX changes shipped to the storefront. Backend, schema, and deployment behavior described above are unchanged unless explicitly noted here.
+
+### Footer overhaul (`src/components/Footer.tsx`)
+- Mobile now uses an accordion pattern (Quick Links, Support, Policies, Contact) — closed by default, animated open/close via Framer Motion `AnimatePresence`, with the `+` icon rotating 45° to a `×`.
+- Desktop / tablet was rebalanced to a **12-column grid**: brand `col-span-4` and four equal `col-span-2` link columns. This replaces the older 4-column layout where Support and Policies stacked into the same column and made the third column visibly taller than the others.
+- Added a **WhatsApp** social button next to Instagram in the brand block. lucide-react has no WhatsApp glyph, so it ships as an inline SVG matching the circular bordered style of the existing Instagram button. Deep-links to `https://wa.me/919561172681`.
+
+### Storefront cleanup (`src/components/CategoriesSection.tsx`)
+- The "On the Horizon / Coming Soon" teaser block beneath the categories grid was retired from the storefront. The JSX is preserved as a block comment for easy reinstatement; the `coming-soon` value remains a valid `section` for admin-tagged categories on the backend.
+
+### Product detail mobile polish (`src/pages/ProductView.tsx`)
+- **Compact mobile heading**: the product title now scales `text-2xl sm:text-4xl md:text-6xl lg:text-7xl` with tighter tracking and `leading-tight` on small screens.
+- **Tightened mobile spacing**:
+  - `<main>` top padding now `pt-[110px] md:pt-[164px]` (matches the smaller mobile navbar).
+  - Back-to-Collection button uses `mb-7 md:mb-10`.
+  - Slider ↔ details column gap is `gap-7 md:gap-12 lg:gap-24`.
+  - Details column drops mobile vertical padding (`py-0 md:py-8`) so the "Premium Collection" eyebrow sits close to the slider.
+- **Description**: reduced to `text-[0.78rem]` with `leading-snug` so it reads as supporting copy rather than a hero block.
+- **Trust badges relocated**: the `Cash on Delivery Available` / `1 Day Assured Refund` / `Easy Exchange and Returns` block was moved from above the action buttons to *below* the `Order Now` button. This keeps the primary CTAs above the fold on mobile and surfaces the reassurance copy immediately after the purchase decision.
 
 ---
 
