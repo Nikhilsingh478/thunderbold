@@ -148,6 +148,10 @@ export default function ProductView() {
   // Effective OOS: total stock gone OR selected size is gone
   const effectiveOutOfStock = isOutOfStock || selectedSizeOos;
 
+  if (loading) {
+    return <ProductViewSkeleton onBack={() => navigate(-1)} />;
+  }
+
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
       <CustomCursor />
@@ -471,6 +475,125 @@ export default function ProductView() {
         </div>
       </main>
       
+      <Footer />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Skeleton — mirrors the real layout 1:1 so there's zero pop-in
+   when the actual product data arrives.
+   ───────────────────────────────────────────────────────────────── */
+function ProductViewSkeleton({ onBack }: { onBack: () => void }) {
+  const block = 'bg-white/[0.05] rounded-sm';
+  const pulse = 'animate-pulse';
+
+  return (
+    <div className="noise-overlay min-h-screen flex flex-col bg-void">
+      <CustomCursor />
+      <ScrollProgress />
+      <Navbar />
+
+      <main className="flex-1 pt-[110px] md:pt-[164px] pb-24 px-6 md:px-16">
+        <div className="max-w-[1240px] mx-auto">
+          {/* Back Button (real, fully functional) */}
+          <button
+            onClick={onBack}
+            className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 mb-7 md:mb-10 flex items-center gap-2 group"
+          >
+            <span className="transition-transform duration-300 group-hover:-translate-x-1">←</span> Back to Collection
+          </button>
+
+          <div className={`flex flex-col md:flex-row gap-7 md:gap-12 lg:gap-24 ${pulse}`}>
+            {/* Left: Image Slider Skeleton */}
+            <div className="w-full md:w-1/2 flex flex-col">
+              <div className={`${block} aspect-[3/4] w-full max-w-[500px] mx-auto`} />
+
+              {/* Desktop thumbnails */}
+              <div className="hidden md:flex gap-4 mt-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className={`${block} w-24 aspect-[4/5]`} />
+                ))}
+              </div>
+
+              {/* Mobile dot indicators */}
+              <div className="flex md:hidden justify-center gap-2 mt-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full ${i === 0 ? 'w-6 bg-white/20' : 'w-2 bg-white/10'}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Product Details Skeleton */}
+            <div className="w-full md:w-1/2 flex flex-col py-0 md:py-8">
+              {/* "Premium Collection" eyebrow */}
+              <div className={`${block} h-3 w-40 mb-5`} />
+
+              {/* Title — 2 lines, mobile-compact then desktop-large */}
+              <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-5">
+                <div className={`${block} h-7 sm:h-10 md:h-14 lg:h-16 w-4/5`} />
+                <div className={`${block} h-7 sm:h-10 md:h-14 lg:h-16 w-3/5`} />
+              </div>
+
+              {/* Price */}
+              <div className={`${block} h-8 w-32 mb-8`} />
+
+              {/* Description — 4 short lines */}
+              <div className="mb-10 max-w-[90%] space-y-2">
+                <div className={`${block} h-3 w-full`} />
+                <div className={`${block} h-3 w-[95%]`} />
+                <div className={`${block} h-3 w-[88%]`} />
+                <div className={`${block} h-3 w-[60%]`} />
+              </div>
+
+              {/* Size Selector */}
+              <div className="mb-10">
+                <div className="flex items-center justify-between mb-5">
+                  <div className={`${block} h-3 w-24`} />
+                  <div className={`${block} h-3 w-20`} />
+                </div>
+                <div className="grid grid-cols-5 gap-2 sm:gap-4 md:flex md:flex-wrap">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className={`${block} h-12 w-full md:w-14 md:h-14`} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity */}
+              <div className="mb-10 lg:mb-12">
+                <div className={`${block} h-3 w-20 mb-5`} />
+                <div className={`${block} h-12 w-[140px]`} />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-4 mb-8 lg:mb-10">
+                <div className="flex gap-4">
+                  <div className={`${block} h-[52px] flex-1`} />
+                  <div className={`${block} h-[52px] w-[52px]`} />
+                </div>
+                <div className={`${block} h-[60px] w-full`} />
+              </div>
+
+              {/* Trust Badges */}
+              <div className="mb-10 lg:mb-12 flex flex-col gap-3 border border-white/[0.07] rounded-sm px-5 py-4 bg-white/[0.02]">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i}>
+                    <div className="flex items-center gap-3">
+                      <div className={`${block} w-7 h-7 rounded-full`} />
+                      <div className={`${block} h-3 flex-1 max-w-[220px]`} />
+                    </div>
+                    {i < 2 && <div className="h-px bg-white/[0.06] mt-3" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <Footer />
     </div>
   );
