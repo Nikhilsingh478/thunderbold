@@ -113,7 +113,7 @@ export default function ProductReviewsSection({ productId, productName, productI
   const updateReview = async (input: { rating: number; comment: string }) => {
     if (!user || !myReview) throw new Error('No review to update');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews/manage?id=${myReview._id}`, {
+    const r = await fetch(`/api/reviews?id=${myReview._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(input),
@@ -127,7 +127,7 @@ export default function ProductReviewsSection({ productId, productName, productI
   const deleteReview = async () => {
     if (!user || !myReview) throw new Error('No review to delete');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews/manage?id=${myReview._id}`, {
+    const r = await fetch(`/api/reviews?id=${myReview._id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });

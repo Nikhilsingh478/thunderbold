@@ -548,7 +548,7 @@ export default function Admin() {
     if (!confirm('Soft-delete this review? It will be hidden from the public.')) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/reviews/manage?id=${reviewId}`, {
+      const r = await fetch(`/api/reviews?id=${reviewId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

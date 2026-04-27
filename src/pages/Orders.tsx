@@ -137,7 +137,7 @@ const Orders = () => {
   const updateReview = async (reviewId: string, productId: string, input: { rating: number; comment: string }) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews/manage?id=${reviewId}`, {
+    const r = await fetch(`/api/reviews?id=${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(input),
@@ -150,7 +150,7 @@ const Orders = () => {
   const deleteReview = async (reviewId: string, productId: string) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews/manage?id=${reviewId}`, {
+    const r = await fetch(`/api/reviews?id=${reviewId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
