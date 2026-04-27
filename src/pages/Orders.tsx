@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft, Pencil } from 'lucide-react';
+import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft, Pencil, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { getStaleOrders, setCachedOrders } from '../lib/ordersCache';
@@ -388,6 +388,15 @@ const Orders = () => {
 
                             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                               <p className="text-tb-white">₹{product.price?.toFixed(2) ?? '—'}</p>
+                              {product.productId && (
+                                <Link
+                                  to={`/product/${product.productId}`}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/20 rounded text-tb-white text-xs font-condensed uppercase tracking-wider hover:bg-white/10 hover:border-white/30 transition-colors duration-200 whitespace-nowrap"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  View Product
+                                </Link>
+                              )}
                               {canReview && (
                                 <button
                                   onClick={() => setReviewTarget({
