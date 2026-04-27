@@ -140,6 +140,26 @@ app.use('/api/address', async (req, res) => {
   }
 });
 
+app.use('/api/reviews/manage', async (req, res) => {
+  try {
+    const { default: handler } = await import('./api/reviews/manage.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in reviews/manage:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.use('/api/reviews', async (req, res) => {
+  try {
+    const { default: handler } = await import('./api/reviews/index.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in reviews:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`API server running on http://localhost:${port}`);
   console.log('Serving API endpoints:');
@@ -150,4 +170,5 @@ app.listen(port, () => {
   console.log('  /api/wishlist');
   console.log('  /api/categories');
   console.log('  /api/address');
+  console.log('  /api/reviews');
 });

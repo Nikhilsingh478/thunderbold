@@ -33,6 +33,7 @@
 17. [Deployment](#17-deployment)
 18. [Known Behaviors & Design Decisions](#18-known-behaviors--design-decisions)
 19. [Recent Frontend Updates](#19-recent-frontend-updates)
+20. [Reviews System](#20-reviews-system)
 
 ---
 
@@ -1367,6 +1368,67 @@ A running log of meaningful UI / UX changes shipped to the storefront. Backend, 
   - Details column drops mobile vertical padding (`py-0 md:py-8`) so the "Premium Collection" eyebrow sits close to the slider.
 - **Description**: reduced to `text-[0.78rem]` with `leading-snug` so it reads as supporting copy rather than a hero block.
 - **Trust badges relocated**: the `Cash on Delivery Available` / `1 Day Assured Refund` / `Easy Exchange and Returns` block was moved from above the action buttons to *below* the `Order Now` button. This keeps the primary CTAs above the fold on mobile and surfaces the reassurance copy immediately after the purchase decision.
+
+---
+
+## 20. Reviews System
+
+A fully additive product-review system layered on top of orders.
+
+### Eligibility (enforced server-side)
+A user can review a product **iff** they own at least one order with `status === "delivered"` containing that product. Computed dynamically from the existing `orders` collection — no migration or new flags are required, so historical delivered orders work out of the box.
+
+### Database — `reviews` collection
+
+```js
+{
+  _id: ObjectId,
+  userId: string,        // user email (matches orders.userId)
+  productId: string,     // matches orders.products[].productId
+  orderId: string,       // verifying order's _id (provenance)
+  rating: number,        // 1–5
+  comment: string,       // trimmed, capped at 1000 chars
+  isDeleted: boolean,    // soft-delete flag (default false)
+  createdAt: Date,
+  updatedAt: Date,
+}
+```
+
+Indexes (created automatically on first DB connect):
+- `{ productId: 1, isDeleted: 1, createdAt: -1 }` → fast public listing
+- `{ userId: 1, isDeleted: 1 }` → "my reviews" lookup
+- `{ userId: 1, productId: 1 }` → duplicate detection
+
+### Endpoints
+
+| Method | Path                            | Auth   | Purpose                                                                |
+|--------|---------------------------------|--------|------------------------------------------------------------------------|
+| GET    | `/api/reviews?productId=xxx`    | public | Active reviews for a product, latest first                             |
+| GET    | `/api/reviews?mine=true`        | user   | Current user's active reviews (used by Orders page)                    |
+| POST   | `/api/reviews`                  | user   | Create review (eligibility + duplicate checks; 409 if already exists)  |
+| PUT    | `/api/reviews/manage?id=xxx`    | owner  | Update rating/comment                                                  |
+| DELETE | `/api/reviews/manage?id=xxx`    | owner or admin | Soft delete (`isDeleted: true`)                                |
+
+Files: `api/reviews/index.js`, `api/reviews/manage.js`. Routes registered in `server.js`. All endpoints share the existing `verifyFirebaseToken`, `isAdmin`, `isRateLimited`, `getDb` helpers.
+
+### Frontend
+
+Reusable components live in `src/components/reviews/`:
+
+- **`LightningRating.tsx`** — interactive 1–5 lightning-bolt rating control (lucide-style SVG path, brass fill on hover/select, framer-motion tap/hover feedback). Supports `readonly` mode for display.
+- **`ReviewModal.tsx`** — modal for both create and edit flows. Auto-pre-fills when an `existingReview` is provided, exposes a soft-delete action in edit mode, validates the rating before submit, traps Esc to close.
+- **`ProductReviewsSection.tsx`** — public reviews block on `ProductView`. Lazy-fetches `/api/reviews?productId=...`, hides itself when there are none, masks reviewer emails (`ale***@gmail.com`) and shows an aggregate average rating in the header.
+
+Page integrations:
+
+- **`Orders.tsx`** — fetches `/api/reviews?mine=true` once on mount and builds a `productId → review` map. For every product in a delivered order the row gets a brass `Review Product` button (or `Edit Review` if the user already reviewed). The single `<ReviewModal/>` mounted at the page root is reused for all items.
+- **`ProductView.tsx`** — renders `<ProductReviewsSection productId={product._id} />` between `<main>` and `<Footer/>`.
+- **`Admin.tsx`** — new **Reviews** tab (`MessageSquare` icon). Step 1 lists all products; clicking one drills into Step 2 which fetches that product's active reviews and shows each as a card with reviewer email, lightning rating, date, comment, and a soft-delete button.
+
+### Design notes
+- Review counts and averages on the product page are derived client-side from the public list — no extra endpoint needed.
+- Single review per `(user, product)` is enforced at the application layer (POST returns 409 with the existing review so the client can transparently switch to edit). A unique partial index isn't used because soft-deleted rows must remain.
+- Rate limiting (10 req/min/IP) is enabled on all write paths via the shared `isRateLimited` helper.
 
 ---
 

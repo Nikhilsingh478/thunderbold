@@ -9,6 +9,7 @@ import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import PriceDisplay from '../components/PriceDisplay';
+import ProductReviewsSection from '../components/reviews/ProductReviewsSection';
 import { fetchProductById } from '../lib/products';
 import { requireAuth } from '../lib/requireAuth';
 import { useAuth } from '../context/AuthContext';
@@ -474,7 +475,9 @@ export default function ProductView() {
           </div>
         </div>
       </main>
-      
+
+      {product?._id && <ProductReviewsSection productId={String(product._id)} />}
+
       <Footer />
     </div>
   );

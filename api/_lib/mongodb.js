@@ -14,6 +14,9 @@ async function ensureIndexes(db) {
     await db.collection('products').createIndex({ categoryId: 1 });
     await db.collection('cart').createIndex({ userId: 1 }, { unique: true });
     await db.collection('wishlist').createIndex({ userId: 1 }, { unique: true });
+    await db.collection('reviews').createIndex({ productId: 1, isDeleted: 1, createdAt: -1 });
+    await db.collection('reviews').createIndex({ userId: 1, isDeleted: 1 });
+    await db.collection('reviews').createIndex({ userId: 1, productId: 1 });
   } catch (err) {
     // Non-fatal — log and continue
     console.warn('[mongodb] Index creation warning:', err.message);

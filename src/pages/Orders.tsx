@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft, X } from 'lucide-react';
+import { Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft, Pencil } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { getStaleOrders, setCachedOrders } from '../lib/ordersCache';
+import ReviewModal, { ReviewData } from '../components/reviews/ReviewModal';
+import LightningRating from '../components/reviews/LightningRating';
+
+interface OrderProduct {
+  productId?: string;
+  name: string;
+  quantity: number;
+  size: string;
+  price: number;
+  image?: string;
+}
 
 interface Order {
   _id: string;
   userId: string;
-  products: Array<{
-    name: string;
-    quantity: number;
-    size: string;
-    price: number;
-  }>;
+  products: OrderProduct[];
   totalAmount: number;
   status: string;
   createdAt: string;
@@ -28,6 +34,14 @@ const Orders = () => {
   const [loading, setLoading] = useState(!initialCached);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // ── Reviews state ───────────────────────────────────────────────────────
+  // Map of productId → user's existing review (for quick lookup per item).
+  const [myReviews, setMyReviews] = useState<Record<string, ReviewData>>({});
+  const [reviewTarget, setReviewTarget] = useState<{
+    product: { id: string; name: string; image?: string };
+    existing: ReviewData | null;
+  } | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -70,6 +84,84 @@ const Orders = () => {
 
     fetchOrders();
   }, [user]);
+
+  // Fetch the user's existing reviews (so each delivered item knows whether to
+  // show "Review Product" vs "Edit Review"). Lightweight — runs once per user.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await user.getIdToken();
+        const r = await fetch('/api/reviews?mine=true', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!r.ok) return;
+        const { reviews } = await r.json();
+        if (cancelled) return;
+        const map: Record<string, ReviewData> = {};
+        for (const rv of reviews ?? []) map[rv.productId] = rv;
+        setMyReviews(map);
+      } catch {
+        /* silent — review badges are non-critical */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // Has this order been delivered AND does the product carry a productId we can review?
+  const reviewableProducts = useMemo(() => {
+    const set = new Set<string>();
+    for (const o of orders) {
+      if ((o.status ?? '').toLowerCase() !== 'delivered') continue;
+      for (const p of o.products ?? []) {
+        if (p.productId) set.add(p.productId);
+      }
+    }
+    return set;
+  }, [orders]);
+
+  const submitReview = async (productId: string, input: { rating: number; comment: string }) => {
+    if (!user) throw new Error('Not signed in');
+    const token = await user.getIdToken();
+    const r = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ productId, ...input }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data?.error || 'Failed to submit review');
+    setMyReviews(prev => ({ ...prev, [productId]: data.review }));
+  };
+
+  const updateReview = async (reviewId: string, productId: string, input: { rating: number; comment: string }) => {
+    if (!user) throw new Error('Not signed in');
+    const token = await user.getIdToken();
+    const r = await fetch(`/api/reviews/manage?id=${reviewId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(input),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data?.error || 'Failed to update review');
+    setMyReviews(prev => ({ ...prev, [productId]: data.review }));
+  };
+
+  const deleteReview = async (reviewId: string, productId: string) => {
+    if (!user) throw new Error('Not signed in');
+    const token = await user.getIdToken();
+    const r = await fetch(`/api/reviews/manage?id=${reviewId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data?.error || 'Failed to delete review');
+    setMyReviews(prev => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
+    });
+  };
 
   const cancelOrder = async (orderId: string) => {
     if (!user) return;
@@ -274,17 +366,44 @@ const Orders = () => {
                       Items
                     </h3>
                     <div className="space-y-3">
-                      {(order.products ?? []).map((product, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-tb-white font-medium">{product.name}</p>
-                            <p className="text-sv-mid text-sm">
-                              {product.size ? `Size: ${product.size} · ` : ''}Qty: {product.quantity}
-                            </p>
+                      {(order.products ?? []).map((product, index) => {
+                        const isDelivered = (order.status ?? '').toLowerCase() === 'delivered';
+                        const canReview = isDelivered && product.productId && reviewableProducts.has(product.productId);
+                        const existing = product.productId ? myReviews[product.productId] : undefined;
+
+                        return (
+                          <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-tb-white font-medium">{product.name}</p>
+                              <p className="text-sv-mid text-sm">
+                                {product.size ? `Size: ${product.size} · ` : ''}Qty: {product.quantity}
+                              </p>
+                              {existing && (
+                                <div className="mt-1.5 flex items-center gap-2">
+                                  <LightningRating value={existing.rating} readonly size="sm" />
+                                  <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.14em]">Your review</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                              <p className="text-tb-white">₹{product.price?.toFixed(2) ?? '—'}</p>
+                              {canReview && (
+                                <button
+                                  onClick={() => setReviewTarget({
+                                    product: { id: product.productId!, name: product.name, image: product.image },
+                                    existing: existing ?? null,
+                                  })}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-brass/15 border border-brass/40 rounded text-brass text-xs font-condensed uppercase tracking-wider hover:bg-brass/25 transition-colors duration-200 whitespace-nowrap"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                  {existing ? 'Edit Review' : 'Review Product'}
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-tb-white">₹{product.price?.toFixed(2) ?? '—'}</p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </motion.div>
@@ -293,6 +412,26 @@ const Orders = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Review Modal — single instance reused for all items */}
+      <ReviewModal
+        open={!!reviewTarget}
+        onClose={() => setReviewTarget(null)}
+        product={reviewTarget?.product ?? { id: '', name: '' }}
+        existingReview={reviewTarget?.existing ?? null}
+        onSubmit={async (input) => {
+          if (!reviewTarget) return;
+          await submitReview(reviewTarget.product.id, input);
+        }}
+        onUpdate={async (input) => {
+          if (!reviewTarget?.existing) return;
+          await updateReview(reviewTarget.existing._id, reviewTarget.product.id, input);
+        }}
+        onDelete={async () => {
+          if (!reviewTarget?.existing) return;
+          await deleteReview(reviewTarget.existing._id, reviewTarget.product.id);
+        }}
+      />
     </div>
   );
 };

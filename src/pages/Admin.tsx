@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft } from 'lucide-react';
+import LightningRating from '../components/reviews/LightningRating';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -41,6 +42,17 @@ interface Order {
   createdAt: string;
   address?: OrderAddress;
   paymentMethod?: string;
+}
+
+interface AdminReview {
+  _id: string;
+  userId: string;
+  productId: string;
+  orderId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 const SIZES = ['28', '30', '32', '34', '36'] as const;
@@ -489,7 +501,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'categories'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'categories' | 'reviews'>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -500,6 +512,11 @@ export default function Admin() {
   const [viewAddressOrder, setViewAddressOrder] = useState<Order | null>(null);
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<Order | null>(null);
 
+  // Reviews tab state
+  const [reviewsProduct, setReviewsProduct] = useState<Product | null>(null);
+  const [productReviews, setProductReviews] = useState<AdminReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
   useEffect(() => {
     if (user && !ADMIN_EMAILS.includes(user.email)) navigate('/');
   }, [user, navigate]);
@@ -507,6 +524,38 @@ export default function Admin() {
   useEffect(() => { if (user && activeTab === 'orders') fetchOrders(); }, [activeTab, user]);
   useEffect(() => { if (user && activeTab === 'products') { fetchProducts(); fetchCategories(); } }, [activeTab, user]);
   useEffect(() => { if (user && activeTab === 'categories') fetchCategories(); }, [activeTab, user]);
+  useEffect(() => { if (user && activeTab === 'reviews') fetchProducts(); }, [activeTab, user]);
+
+  // Reset drill-down when leaving the reviews tab
+  useEffect(() => { if (activeTab !== 'reviews') { setReviewsProduct(null); setProductReviews([]); } }, [activeTab]);
+
+  const fetchReviewsForProduct = async (productId: string) => {
+    setReviewsLoading(true);
+    try {
+      const r = await fetch(`/api/reviews?productId=${encodeURIComponent(productId)}`);
+      if (r.ok) {
+        const d = await r.json();
+        setProductReviews(d.reviews ?? []);
+      } else {
+        setProductReviews([]);
+      }
+    } catch { setProductReviews([]); }
+    finally { setReviewsLoading(false); }
+  };
+
+  const adminDeleteReview = async (reviewId: string) => {
+    if (!user) return;
+    if (!confirm('Soft-delete this review? It will be hidden from the public.')) return;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`/api/reviews/manage?id=${reviewId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) setProductReviews(prev => prev.filter(rv => rv._id !== reviewId));
+      else alert('Failed to delete review.');
+    } catch { alert('Failed to delete review.'); }
+  };
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -713,6 +762,7 @@ export default function Admin() {
     { key: 'orders' as const, label: 'Orders', Icon: Users },
     { key: 'products' as const, label: 'Products', Icon: Package },
     { key: 'categories' as const, label: 'Categories', Icon: Folder },
+    { key: 'reviews' as const, label: 'Reviews', Icon: MessageSquare },
   ];
 
   return (
@@ -1099,6 +1149,115 @@ export default function Admin() {
                         </div>
                       ))}
                     </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── REVIEWS ── */}
+              {activeTab === 'reviews' && (
+                <motion.div key="reviews" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  {!reviewsProduct ? (
+                    <>
+                      <div className="flex items-center justify-between mb-5">
+                        <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Reviews</h2>
+                        <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest">Pick a product</p>
+                      </div>
+
+                      {products.length === 0 ? (
+                        <EmptyState message="No products yet." />
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                          {products.map((product) => (
+                            <button
+                              key={product._id}
+                              onClick={() => { setReviewsProduct(product); fetchReviewsForProduct(product._id); }}
+                              className="group text-left bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden hover:border-brass/40 transition-all duration-200"
+                            >
+                              <div className="aspect-square bg-[#0c0c0c] overflow-hidden">
+                                <img
+                                  src={optimizeCloudinaryUrl((product as any).images?.[0] || product.image || '/placeholder.png', IMG_SIZES.card)}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+                                />
+                              </div>
+                              <div className="p-3">
+                                <h3 className="font-condensed font-medium text-tb-white text-sm line-clamp-2 leading-snug">{product.name}</h3>
+                                <p className="font-condensed text-xs text-sv-mid mt-1 group-hover:text-brass transition-colors">
+                                  View reviews →
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-5 gap-4">
+                        <button
+                          onClick={() => { setReviewsProduct(null); setProductReviews([]); }}
+                          className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-brass transition-colors duration-200 flex items-center gap-2"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                          All Products
+                        </button>
+                        <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest">
+                          {productReviews.length} review{productReviews.length === 1 ? '' : 's'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4 mb-6 p-4 bg-white/[0.03] border border-white/10 rounded-xl">
+                        <img
+                          src={optimizeCloudinaryUrl((reviewsProduct as any).images?.[0] || reviewsProduct.image || '/placeholder.png', IMG_SIZES.card)}
+                          alt={reviewsProduct.name}
+                          className="w-16 h-16 rounded-lg object-cover shrink-0"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
+                        />
+                        <div className="min-w-0">
+                          <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest mb-0.5">Reviews for</p>
+                          <h3 className="font-display text-lg tracking-[0.06em] text-tb-white uppercase truncate">{reviewsProduct.name}</h3>
+                        </div>
+                      </div>
+
+                      {reviewsLoading ? (
+                        <div className="flex justify-center py-12">
+                          <div className="animate-spin rounded-full h-7 w-7 border-2 border-white/10 border-t-white/60" />
+                        </div>
+                      ) : productReviews.length === 0 ? (
+                        <EmptyState message="No reviews for this product yet." />
+                      ) : (
+                        <div className="space-y-3">
+                          {productReviews.map((rv) => (
+                            <div key={rv._id} className="p-4 bg-white/[0.03] border border-white/10 rounded-xl">
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="min-w-0">
+                                  <p className="font-condensed text-sm text-tb-white truncate">{rv.userId}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <LightningRating value={rv.rating} readonly size="sm" />
+                                    <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.14em]">
+                                      {new Date(rv.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => adminDeleteReview(rv._id)}
+                                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs font-condensed uppercase tracking-wider hover:bg-red-500/20 transition-colors shrink-0"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  Delete
+                                </button>
+                              </div>
+                              {rv.comment && (
+                                <p className="text-tb-off text-sm leading-relaxed whitespace-pre-wrap mt-2">{rv.comment}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </motion.div>
               )}
