@@ -36,13 +36,30 @@ export default async function handler(req, res) {
         const decoded = await authUser(req);
         if (!decoded) return res.status(401).json({ error: 'Unauthorized' });
 
-        const query = { userId: decoded.email, isDeleted: { $ne: true } };
+        const userId = decoded.email;
+        const query = { userId, isDeleted: { $ne: true } };
         if (productId) query.productId = String(productId);
 
         const reviews = await reviewsCollection
           .find(query)
           .sort({ createdAt: -1 })
           .toArray();
+
+        // When scoped to a single product, also tell the client whether the
+        // user is eligible to leave a (new) review — needed by the product
+        // page to decide if it should render the call-to-action button.
+        if (productId) {
+          const ordersCollection = database.collection('orders');
+          const eligibleOrder = await ordersCollection.findOne(
+            { userId, status: 'delivered', 'products.productId': String(productId) },
+            { projection: { _id: 1 } },
+          );
+          return res.status(200).json({
+            reviews,
+            eligible: Boolean(eligibleOrder),
+            review: reviews[0] ?? null,
+          });
+        }
 
         return res.status(200).json({ reviews });
       }

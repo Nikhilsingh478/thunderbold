@@ -476,7 +476,13 @@ export default function ProductView() {
         </div>
       </main>
 
-      {product?._id && <ProductReviewsSection productId={String(product._id)} />}
+      {product?._id && (
+        <ProductReviewsSection
+          productId={String(product._id)}
+          productName={product.name}
+          productImage={product.images?.[0] || product.image}
+        />
+      )}
 
       <Footer />
     </div>

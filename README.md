@@ -1417,7 +1417,7 @@ Reusable components live in `src/components/reviews/`:
 
 - **`LightningRating.tsx`** — interactive 1–5 lightning-bolt rating control (lucide-style SVG path, brass fill on hover/select, framer-motion tap/hover feedback). Supports `readonly` mode for display.
 - **`ReviewModal.tsx`** — modal for both create and edit flows. Auto-pre-fills when an `existingReview` is provided, exposes a soft-delete action in edit mode, validates the rating before submit, traps Esc to close.
-- **`ProductReviewsSection.tsx`** — public reviews block on `ProductView`. Lazy-fetches `/api/reviews?productId=...`, hides itself when there are none, masks reviewer emails (`ale***@gmail.com`) and shows an aggregate average rating in the header.
+- **`ProductReviewsSection.tsx`** — reviews block on `ProductView`. Lazy-fetches `/api/reviews?productId=...` for the public list and (when signed in) `?mine=true&productId=...` to learn whether the viewer is eligible. If they own a delivered order for this product the header shows a brass `Write a Review` (or `Edit Your Review`) button that opens the same `ReviewModal` — single review per user per product, server-enforced. Masks reviewer emails (`ale***@gmail.com`) and shows an aggregate average rating in the header. Hides itself only when there are no reviews AND the viewer can't post one.
 
 Page integrations:
 
