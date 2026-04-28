@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import PromoSlide from './PromoSlide';
 import { promoSlides } from './promoSlides';
 
@@ -92,16 +92,24 @@ export default function PromoSlider() {
               <button
                 onClick={goPrev}
                 aria-label="Previous slide"
-                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/80 hover:text-brass hover:border-brass/40 transition-colors duration-200"
+                className="hidden md:flex group/arrow absolute left-5 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
               >
-                <ChevronLeft size={22} strokeWidth={1.6} />
+                <ArrowLeft
+                  size={20}
+                  strokeWidth={1.75}
+                  className="transition-transform duration-300 group-hover/arrow:-translate-x-0.5"
+                />
               </button>
               <button
                 onClick={goNext}
                 aria-label="Next slide"
-                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/80 hover:text-brass hover:border-brass/40 transition-colors duration-200"
+                className="hidden md:flex group/arrow absolute right-5 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
               >
-                <ChevronRight size={22} strokeWidth={1.6} />
+                <ArrowRight
+                  size={20}
+                  strokeWidth={1.75}
+                  className="transition-transform duration-300 group-hover/arrow:translate-x-0.5"
+                />
               </button>
             </>
           )}
