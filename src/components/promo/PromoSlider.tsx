@@ -58,7 +58,7 @@ export default function PromoSlider() {
           className="relative outline-none focus-visible:ring-2 focus-visible:ring-brass/50 rounded-2xl md:rounded-3xl"
         >
           {/* Slide stage — explicit aspect ratio prevents layout shift */}
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-2xl md:rounded-3xl">
+          <div className="relative aspect-[1944/809] w-full overflow-hidden rounded-2xl md:rounded-3xl">
             <AnimatePresence initial={false} mode="wait" custom={direction}>
               <motion.div
                 key={current.id}

@@ -20,11 +20,11 @@ export default function PromoSlide({ slide, eager = false }: PromoSlideProps) {
       className="group relative block w-full overflow-hidden rounded-2xl md:rounded-3xl border border-white/5 hover:border-brass/40 transition-colors duration-500 cursor-pointer"
       draggable={false}
     >
-      <div className="aspect-[16/9] sm:aspect-[21/9] w-full bg-[#0a0a0a]">
+      <div className="aspect-[1944/809] w-full bg-[#0a0a0a]">
         <img
           src={slide.image}
           alt={slide.title}
-          className="w-full h-full object-cover object-center transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] group-hover:scale-[1.03]"
+          className="w-full h-full object-contain object-center transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] group-hover:scale-[1.03]"
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           draggable={false}
