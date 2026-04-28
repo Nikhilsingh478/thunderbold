@@ -129,6 +129,16 @@ app.use('/api/address', async (req, res) => {
   }
 });
 
+app.use('/api/admin/analytics', async (req, res) => {
+  try {
+    const { default: handler } = await import('./api/admin/analytics/index.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in admin/analytics:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.use('/api/reviews', async (req, res) => {
   try {
     const { default: handler } = await import('./api/reviews/index.js');

@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3 } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
+import AnalyticsTab from '../components/Analytics/AnalyticsTab';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -501,7 +502,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'categories' | 'reviews'>('orders');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews'>('analytics');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -759,6 +760,7 @@ export default function Admin() {
   if (!ADMIN_EMAILS.includes(user.email)) return null;
 
   const tabs = [
+    { key: 'analytics' as const, label: 'Analytics', Icon: BarChart3 },
     { key: 'orders' as const, label: 'Orders', Icon: Users },
     { key: 'products' as const, label: 'Products', Icon: Package },
     { key: 'categories' as const, label: 'Categories', Icon: Folder },
@@ -810,6 +812,11 @@ export default function Admin() {
           {/* Content */}
           {!loading && (
             <AnimatePresence mode="wait">
+              {/* ── ANALYTICS ── */}
+              {activeTab === 'analytics' && (
+                <AnalyticsTab key="analytics" />
+              )}
+
               {/* ── ORDERS ── */}
               {activeTab === 'orders' && (
                 <motion.div key="orders" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
