@@ -92,7 +92,7 @@ export default function PromoSlider() {
               <button
                 onClick={goPrev}
                 aria-label="Previous slide"
-                className="hidden md:flex group/arrow absolute left-5 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
+                className="flex group/arrow absolute left-2 sm:left-4 md:left-5 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
               >
                 <ArrowLeft
                   size={20}
@@ -103,7 +103,7 @@ export default function PromoSlider() {
               <button
                 onClick={goNext}
                 aria-label="Next slide"
-                className="hidden md:flex group/arrow absolute right-5 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
+                className="flex group/arrow absolute right-2 sm:right-4 md:right-5 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
               >
                 <ArrowRight
                   size={20}

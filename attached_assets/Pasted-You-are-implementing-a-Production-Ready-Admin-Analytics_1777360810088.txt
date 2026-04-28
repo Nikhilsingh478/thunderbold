@@ -1,0 +1,323 @@
+You are implementing a **Production-Ready Admin Analytics Dashboard** for an existing e-commerce platform called **Thunderbolt**.
+
+⚠️ CRITICAL RULES:
+
+* DO NOT break any existing functionality
+* DO NOT modify core order/product logic
+* This is a **read-only analytics layer**
+* Keep UI **minimal, premium, non-cluttered**
+* Ensure **full responsiveness (mobile-first)**
+* Use **clean, modular, scalable architecture**
+
+---
+
+# 🎯 FEATURE GOAL
+
+Build an **Admin Analytics Tab** that provides:
+
+* Clear business insights
+* Real data from database
+* Clean UI (not overwhelming)
+* Fast performance
+
+---
+
+# 🧱 DATA SOURCES (USE EXISTING COLLECTIONS ONLY)
+
+You MUST use:
+
+* `orders`
+* `products`
+* `users`
+* `reviews`
+
+❌ DO NOT create new collections
+❌ DO NOT store analytics separately
+
+---
+
+# 📊 CORE METRICS (TOP CARDS)
+
+Display 4 KPI cards:
+
+1. **Total Revenue**
+2. **Total Orders**
+3. **Average Order Value (AOV)**
+4. **Total Users**
+
+---
+
+## Backend Aggregation Logic
+
+### Total Revenue
+
+```js id="rev"
+{ $group: { _id: null, total: { $sum: "$totalAmount" } } }
+```
+
+---
+
+### Total Orders
+
+```js id="orders"
+countDocuments()
+```
+
+---
+
+### AOV
+
+```js id="aov"
+totalRevenue / totalOrders
+```
+
+---
+
+### Total Users
+
+```js id="users"
+countDocuments()
+```
+
+---
+
+# 📈 GRAPH SECTION
+
+## 1. Revenue Over Time (Line Chart)
+
+Group by date:
+
+```js id="rev_time"
+{
+  $group: {
+    _id: {
+      $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+    },
+    revenue: { $sum: "$totalAmount" }
+  }
+}
+```
+
+---
+
+## 2. Orders Over Time (Line/Bar)
+
+```js id="orders_time"
+{
+  $group: {
+    _id: {
+      $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+    },
+    count: { $sum: 1 }
+  }
+}
+```
+
+---
+
+# 🔥 TOP PRODUCTS
+
+```js id="top_products"
+[
+  { $unwind: "$products" },
+  {
+    $group: {
+      _id: "$products.productId",
+      totalSold: { $sum: "$products.quantity" }
+    }
+  },
+  { $sort: { totalSold: -1 } },
+  { $limit: 5 }
+]
+```
+
+Join with products collection for:
+
+* name
+* image
+
+---
+
+# ⚠️ STOCK ALERTS
+
+From `products`:
+
+```js id="stock"
+{ stock: { $lte: 5 } }
+```
+
+Show:
+
+* low stock
+* out of stock
+
+---
+
+# 🧾 RECENT ORDERS
+
+```js id="recent"
+.find()
+.sort({ createdAt: -1 })
+.limit(5)
+```
+
+Display:
+
+* user
+* amount
+* status
+
+---
+
+# 🌐 API STRUCTURE
+
+Create:
+
+```txt id="api_routes"
+/api/admin/analytics/overview
+/api/admin/analytics/revenue
+/api/admin/analytics/orders
+/api/admin/analytics/top-products
+/api/admin/analytics/stock-alerts
+/api/admin/analytics/recent-orders
+```
+
+---
+
+# 🎨 FRONTEND IMPLEMENTATION
+
+## Page:
+
+```txt id="page"
+AdminAnalytics.jsx
+```
+
+---
+
+# 🧩 COMPONENT STRUCTURE
+
+```txt id="components"
+components/
+  Analytics/
+    StatsCard.jsx
+    RevenueChart.jsx
+    OrdersChart.jsx
+    TopProducts.jsx
+    StockAlerts.jsx
+    RecentOrders.jsx
+```
+
+---
+
+# 🎯 UI DESIGN REQUIREMENTS
+
+## General Style:
+
+* Dark theme (match Thunderbolt)
+* Minimal layout
+* No clutter
+* Strong typography hierarchy
+
+---
+
+## Layout:
+
+```txt id="layout"
+[ KPI Cards ]
+
+[ Revenue Graph ]
+
+[ Orders Graph ]
+
+[ Top Products | Stock Alerts ]
+
+[ Recent Orders ]
+```
+
+---
+
+## KPI Cards:
+
+* Animated number count (subtle)
+* Use small fade/slide animation
+* DO NOT over-animate
+
+---
+
+## Charts:
+
+Use:
+
+* Recharts (preferred)
+
+Requirements:
+
+* smooth transitions
+* no excessive colors
+* use gold/yellow accent
+
+---
+
+# 📱 RESPONSIVENESS (VERY IMPORTANT)
+
+Mobile layout:
+
+```txt id="mobile"
+[ Cards stacked ]
+[ Graphs stacked ]
+[ Lists scrollable ]
+```
+
+Rules:
+
+* no overflow breaking layout
+* charts must resize
+* avoid horizontal scroll
+
+---
+
+# ⚡ PERFORMANCE
+
+* Fetch all analytics in parallel
+* Use React Query (if already used)
+* Avoid re-fetching unnecessarily
+
+---
+
+# ⚠️ WHAT NOT TO BUILD
+
+❌ No:
+
+* traffic analytics
+* funnel tracking
+* abandoned cart %
+* real-time analytics
+
+👉 Keep it business-focused only
+
+---
+
+# 🧪 TEST CASES
+
+Ensure:
+
+* Works with empty DB
+* Works with large dataset
+* Mobile UI is clean
+* No layout breaks
+* No console errors
+
+---
+
+# 🚨 FINAL CONSTRAINT
+
+This dashboard must:
+
+* feel premium
+* feel fast
+* not overwhelm the user
+* integrate seamlessly into admin panel
+
+---
+
+If anything is unclear, ask BEFORE implementing.
