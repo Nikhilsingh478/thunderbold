@@ -9,6 +9,10 @@
       "destination": "/api/admin"
     },
     {
+      "source": "/api/orders/:sub(create|cancel|manage)",
+      "destination": "/api/orders?subpath=:sub"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

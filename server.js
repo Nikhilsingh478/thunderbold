@@ -19,36 +19,6 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-app.use('/api/orders/create', async (req, res) => {
-  try {
-    const { default: handler } = await import('./api/orders/create.js');
-    await handler(req, res);
-  } catch (error) {
-    console.error('Error in orders/create:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.use('/api/orders/cancel', async (req, res) => {
-  try {
-    const { default: handler } = await import('./api/orders/cancel.js');
-    await handler(req, res);
-  } catch (error) {
-    console.error('Error in orders/cancel:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.use('/api/orders/manage', async (req, res) => {
-  try {
-    const { default: handler } = await import('./api/orders/manage.js');
-    await handler(req, res);
-  } catch (error) {
-    console.error('Error in orders/manage:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 app.use('/api/orders', async (req, res) => {
   try {
     const { default: handler } = await import('./api/orders/index.js');
