@@ -20,13 +20,13 @@ export const promoSlides: PromoSlide[] = [
   {
     id: 'under-999',
     title: 'Jeans Under ₹999',
-    image: '/banners/under-999.png',
+    image: '/banners/under-999.webp',
     route: '/deals/under-999',
   },
   {
     id: 'under-699',
     title: 'Jeans Under ₹699',
-    image: '/banners/under-699.png',
+    image: '/banners/under-699.webp',
     route: '/deals/under-699',
   },
 ];

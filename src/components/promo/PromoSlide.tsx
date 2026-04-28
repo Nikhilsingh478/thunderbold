@@ -17,7 +17,7 @@ export default function PromoSlide({ slide, eager = false }: PromoSlideProps) {
     <Link
       to={slide.route}
       aria-label={slide.title}
-      className="group relative block w-full overflow-hidden rounded-sm border border-white/5 hover:border-brass/40 transition-colors duration-500 cursor-pointer"
+      className="group relative block w-full overflow-hidden rounded-2xl md:rounded-3xl border border-white/5 hover:border-brass/40 transition-colors duration-500 cursor-pointer"
       draggable={false}
     >
       <div className="aspect-[16/9] sm:aspect-[21/9] w-full bg-[#0a0a0a]">
