@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/admin/analytics/:path*",
+      "destination": "/api/admin?subpath=:path*"
+    },
+    {
+      "source": "/api/admin/analytics",
+      "destination": "/api/admin"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

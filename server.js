@@ -131,7 +131,7 @@ app.use('/api/address', async (req, res) => {
 
 app.use('/api/admin/analytics', async (req, res) => {
   try {
-    const { default: handler } = await import('./api/admin/analytics/index.js');
+    const { default: handler } = await import('./api/admin.js');
     await handler(req, res);
   } catch (error) {
     console.error('Error in admin/analytics:', error);

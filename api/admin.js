@@ -1,7 +1,7 @@
-import { getDb } from "../../_lib/mongodb.js";
+import { getDb } from "./_lib/mongodb.js";
 import { ObjectId } from "mongodb";
-import { verifyFirebaseToken } from "../../_lib/firebaseAdmin.js";
-import { isAdmin } from "../../_lib/adminHelper.js";
+import { verifyFirebaseToken } from "./_lib/firebaseAdmin.js";
+import { isAdmin } from "./_lib/adminHelper.js";
 
 async function checkAdminAuth(req, db) {
   const authHeader = req.headers.authorization;
@@ -275,10 +275,14 @@ export default async function handler(req, res) {
   const auth = await checkAdminAuth(req, db);
   if (!auth.authorized) return res.status(auth.status).json({ error: auth.error });
 
-  // Sub-route is whatever path remains after the /api/admin/analytics mount.
-  // e.g. req.url === '/' or '/overview' or '/revenue?from=...'
+  // Sub-route resolution works in two environments:
+  //   • Express (local): the route is mounted at /api/admin/analytics so
+  //     req.url is the remainder, e.g. '/' or '/overview'.
+  //   • Vercel: the rewrite passes the sub-path via ?subpath=overview.
+  const subFromQuery = (req.query && req.query.subpath) || "";
   const rawPath = (req.url || "/").split("?")[0];
-  const sub = rawPath.replace(/^\/+|\/+$/g, "") || "all";
+  const subFromPath = rawPath.replace(/^\/+|\/+$/g, "");
+  const sub = String(subFromQuery || subFromPath || "all").replace(/^\/+|\/+$/g, "") || "all";
   const range = buildDateRange(req.query || {});
 
   try {
