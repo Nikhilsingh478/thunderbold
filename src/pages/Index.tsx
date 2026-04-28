@@ -6,6 +6,7 @@ import HeroBanner from '../components/HeroBanner';
 import LiveSaleSection from '../components/LiveSaleSection';
 import Footer from '../components/Footer';
 import CategoriesSection from '../components/CategoriesSection';
+import PromoSlider from '../components/promo/PromoSlider';
 
 function MobileSearchBar() {
   const openSearch = () => window.dispatchEvent(new CustomEvent('open-search-overlay'));
@@ -43,6 +44,7 @@ const Index = () => (
       </div>
       <LiveSaleSection />
       <CategoriesSection />
+      <PromoSlider />
     </main>
     <Footer />
   </div>

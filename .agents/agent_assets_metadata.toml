@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "XFM_sIrZXfL4gHFIdDJ0L"
+uri = "file://public/banners/under-999.png"
+type = "image"
+title = "denim banner under 999"
+
+[[generated]]
+id = "QdYkMAdiWZtEqiPRjFpqk"
+uri = "file://public/banners/under-699.png"
+type = "image"
+title = "denim banner under 699"
+
+[[generated]]
+id = "g7FAt2wCyrUE8HMygyMN7"
+uri = "file://public/banners/_bg-1.png"
+type = "image"
+title = "denim banner background a"
+
+[[generated]]
+id = "nP7HRwgO4THvc9KtlZcvg"
+uri = "file://public/banners/_bg-2.png"
+type = "image"
+title = "denim banner background b"

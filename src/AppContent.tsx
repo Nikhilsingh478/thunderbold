@@ -23,6 +23,7 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Orders = lazy(() => import("./pages/Orders"));
 const Profile = lazy(() => import("./pages/Profile"));
+const DealsPage = lazy(() => import("./pages/DealsPage"));
 
 function PageLoader() {
   return (
@@ -90,6 +91,7 @@ const AppContent = () => {
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/category/:categoryId" element={<CategoryView />} />
+            <Route path="/deals/:dealKey" element={<DealsPage />} />
             <Route path="/product/:productId" element={<ProductView />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/wishlist" element={<Wishlist />} />

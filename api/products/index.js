@@ -57,8 +57,19 @@ export default async function handler(req, res) {
     switch (req.method) {
 
       case 'GET': {
+        // Optional price-cap filter for /deals/* pages.
+        // Validates strictly so unrelated traffic isn't affected.
+        const filter = {};
+        const rawMax = req.query?.maxPrice;
+        if (rawMax !== undefined) {
+          const maxPrice = Number(rawMax);
+          if (Number.isFinite(maxPrice) && maxPrice > 0) {
+            filter.price = { $lte: maxPrice };
+          }
+        }
+
         const products = await col.find(
-          {},
+          filter,
           { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, section: 1, stock: 1, sizeStock: 1, highlights: 1, createdAt: 1 } }
         ).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ products, count: products.length, source: 'database' });
