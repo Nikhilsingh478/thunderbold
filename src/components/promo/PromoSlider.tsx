@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import PromoSlide from './PromoSlide';
 import { promoSlides } from './promoSlides';
 
-const SWIPE_THRESHOLD = 50; // px — distance required to register a swipe
+const SWIPE_THRESHOLD = 40; // px — distance required to register a swipe
+const SWIPE_VELOCITY = 300; // px/s — flick velocity that also triggers a slide
 
 /**
  * Manual promo slider for the homepage.
@@ -55,25 +56,30 @@ export default function PromoSlider() {
         <div
           ref={containerRef}
           tabIndex={0}
-          className="relative outline-none focus-visible:ring-2 focus-visible:ring-brass/50 rounded-2xl md:rounded-3xl"
+          className="relative outline-none focus-visible:ring-2 focus-visible:ring-brass/50 rounded-3xl md:rounded-[2rem]"
         >
           {/* Slide stage — explicit aspect ratio prevents layout shift */}
-          <div className="relative aspect-[1944/809] w-full overflow-hidden rounded-2xl md:rounded-3xl">
-            <AnimatePresence initial={false} mode="wait" custom={direction}>
+          <div className="relative aspect-[1944/809] w-full overflow-hidden rounded-3xl md:rounded-[2rem]">
+            <AnimatePresence initial={false} custom={direction}>
               <motion.div
                 key={current.id}
                 custom={direction}
-                initial={{ opacity: 0, x: direction * 40 }}
+                initial={{ opacity: 0, x: direction * 80 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction * -40 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ opacity: 0, x: direction * -80 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute inset-0"
                 drag={total > 1 ? 'x' : false}
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
+                dragElastic={0.6}
+                dragMomentum={false}
                 onDragEnd={(_, info) => {
-                  if (info.offset.x < -SWIPE_THRESHOLD) goNext();
-                  else if (info.offset.x > SWIPE_THRESHOLD) goPrev();
+                  const swipedLeft =
+                    info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY;
+                  const swipedRight =
+                    info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY;
+                  if (swipedLeft) goNext();
+                  else if (swipedRight) goPrev();
                 }}
               >
                 <PromoSlide slide={current} eager={index === 0} />
