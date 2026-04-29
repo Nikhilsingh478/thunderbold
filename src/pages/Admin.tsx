@@ -62,7 +62,6 @@ const SECTIONS = [
   { value: 'live-sale', label: 'Live Sale Section' },
   { value: 'denim', label: 'Denim Collection' },
   { value: 'tshirts', label: 'T-Shirts Section' },
-  { value: 'coming-soon', label: 'Coming Soon' },
 ] as const;
 
 interface Product {
@@ -113,16 +112,22 @@ function ModalShell({ onClose, children }: { onClose: () => void; children: Reac
 
 function CategoryModal({
   title,
+  initial,
+  submitLabel,
   onSubmit,
   onClose,
 }: {
   title: string;
+  initial?: CategoryFormData | null;
+  submitLabel?: { idle: string; busy: string };
   onSubmit: (data: CategoryFormData) => Promise<boolean>;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<CategoryFormData>(defaultCategoryFormData);
+  const [form, setForm] = useState<CategoryFormData>(initial ?? defaultCategoryFormData);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const labels = submitLabel ?? { idle: 'Create', busy: 'Creating...' };
 
   const handleSubmit = async () => {
     if (!form.name || !form.image || !form.section) { setError('Name, image, and section are required.'); return; }
@@ -179,7 +184,7 @@ function CategoryModal({
           Cancel
         </button>
         <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.15em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50">
-          {submitting ? 'Creating...' : 'Create'}
+          {submitting ? labels.busy : labels.idle}
         </button>
       </div>
     </ModalShell>
@@ -509,6 +514,7 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewAddressOrder, setViewAddressOrder] = useState<Order | null>(null);
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<Order | null>(null);
@@ -743,6 +749,28 @@ export default function Admin() {
       if (r.ok) {
         setCategories(prev => [{ _id: d.category._id, ...formData }, ...prev]);
         setShowAddCategoryModal(false);
+        return true;
+      }
+      return false;
+    } catch { return false; }
+  };
+
+  const updateCategory = async (formData: CategoryFormData): Promise<boolean> => {
+    if (!user || !editingCategory) return false;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`/api/categories?id=${editingCategory._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(formData),
+      });
+      if (r.ok) {
+        setCategories(prev => prev.map(c =>
+          c._id === editingCategory._id
+            ? { ...c, name: formData.name, image: formData.image, section: formData.section }
+            : c
+        ));
+        setEditingCategory(null);
         return true;
       }
       return false;
@@ -1145,13 +1173,22 @@ export default function Admin() {
                             <p className="font-condensed text-xs text-sv-mid mb-3">
                               {CATEGORY_SECTIONS.find(s => s.value === (category.section || 'denim'))?.label ?? 'Denim Collection'}
                             </p>
-                            <button
-                              onClick={() => deleteCategory(category._id)}
-                              className="w-full flex items-center justify-center gap-1.5 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-condensed hover:bg-red-500/20 transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Delete
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setEditingCategory(category)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white/5 border border-white/10 rounded-lg text-tb-white text-xs font-condensed hover:bg-white/10 transition-colors"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteCategory(category._id)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-condensed hover:bg-red-500/20 transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1348,6 +1385,19 @@ export default function Admin() {
         )}
         {showAddCategoryModal && (
           <CategoryModal title="Add Category" onSubmit={addCategory} onClose={() => setShowAddCategoryModal(false)} />
+        )}
+        {editingCategory && (
+          <CategoryModal
+            title="Edit Category"
+            initial={{
+              name: editingCategory.name ?? '',
+              image: editingCategory.image ?? '',
+              section: editingCategory.section ?? 'denim',
+            }}
+            submitLabel={{ idle: 'Save Changes', busy: 'Saving...' }}
+            onSubmit={updateCategory}
+            onClose={() => setEditingCategory(null)}
+          />
         )}
         {editingProduct && (
           <ProductModal

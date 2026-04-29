@@ -20,7 +20,7 @@ async function checkAdminAuth(req, database) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -58,6 +58,41 @@ export default async function handler(req, res) {
         });
       }
 
+      case 'PUT': {
+        if (!categoryId || categoryId === '' || categoryId === '/') {
+          return res.status(400).json({ error: 'Category ID is required' });
+        }
+        const auth = await checkAdminAuth(req, database);
+        if (!auth.authorized) {
+          return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
+        }
+
+        const { name, image, section } = req.body || {};
+        const updates = {};
+        if (typeof name === 'string' && name.trim()) updates.name = name.trim();
+        if (typeof image === 'string' && image.trim()) updates.image = image.trim();
+        if (typeof section === 'string' && section.trim()) updates.section = section.trim();
+
+        if (Object.keys(updates).length === 0) {
+          return res.status(400).json({ error: 'No updatable fields provided' });
+        }
+        updates.updatedAt = new Date();
+
+        let filterId;
+        try { filterId = new ObjectId(categoryId); }
+        catch { filterId = categoryId; }
+
+        const result = await categoriesCollection.findOneAndUpdate(
+          { _id: filterId },
+          { $set: updates },
+          { returnDocument: 'after' }
+        );
+        const updated = result?.value ?? result;
+        if (!updated) return res.status(404).json({ error: 'Category not found' });
+
+        return res.status(200).json({ message: 'Category updated successfully', category: updated });
+      }
+
       case 'DELETE': {
         if (!categoryId || categoryId === '' || categoryId === '/') {
           return res.status(400).json({ error: 'Category ID is required' });
@@ -77,7 +112,7 @@ export default async function handler(req, res) {
       }
 
       default:
-        res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+        res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
         return res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
