@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import PromoSlide from './PromoSlide';
 import { promoSlides } from './promoSlides';
 
@@ -10,7 +11,7 @@ const SWIPE_VELOCITY = 300; // px/s — flick velocity that also triggers a slid
  * Manual promo slider for the homepage.
  *
  * - No auto-advance (per spec). User-driven only.
- * - Swipe (touch + mouse drag) and keyboard arrows; no on-screen arrows.
+ * - Swipe (touch + mouse drag), keyboard arrows, and on-screen arrows.
  * - The banner images are already capsule-shaped with transparent
  *   backgrounds, so the slider itself has no card/border/background —
  *   the image sits directly on the page.
@@ -44,17 +45,18 @@ export default function PromoSlider() {
   if (total === 0) return null;
 
   const current = promoSlides[index];
+  const showArrows = total > 1;
 
   return (
     <section
       aria-roledescription="carousel"
       aria-label="Promotional offers"
-      className="px-2 sm:px-4 md:px-6 py-8 md:py-12"
+      className="px-1 sm:px-2 md:px-4 py-6 md:py-10"
     >
       <div
         ref={containerRef}
         tabIndex={0}
-        className="relative mx-auto max-w-[1700px] outline-none focus-visible:ring-2 focus-visible:ring-brass/50 rounded-full"
+        className="relative mx-auto w-full max-w-[1900px] outline-none focus-visible:ring-2 focus-visible:ring-brass/50 rounded-full"
       >
         {/* Slide stage — explicit aspect ratio prevents layout shift */}
         <div className="relative aspect-[1944/809] w-full">
@@ -84,6 +86,33 @@ export default function PromoSlider() {
             </motion.div>
           </AnimatePresence>
         </div>
+
+        {showArrows && (
+          <>
+            <button
+              onClick={goPrev}
+              aria-label="Previous slide"
+              className="group/arrow absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
+            >
+              <ArrowLeft
+                size={20}
+                strokeWidth={1.75}
+                className="transition-transform duration-300 group-hover/arrow:-translate-x-0.5"
+              />
+            </button>
+            <button
+              onClick={goNext}
+              aria-label="Next slide"
+              className="group/arrow absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:bg-black/70 hover:border-brass/60 hover:text-brass hover:scale-105 active:scale-95 transition-all duration-300"
+            >
+              <ArrowRight
+                size={20}
+                strokeWidth={1.75}
+                className="transition-transform duration-300 group-hover/arrow:translate-x-0.5"
+              />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Dot indicators */}
