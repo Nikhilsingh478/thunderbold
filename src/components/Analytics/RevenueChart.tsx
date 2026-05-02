@@ -25,10 +25,11 @@ const inrFull = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 });
 
-function fmtDay(d: string) {
-  // d is YYYY-MM-DD
-  const date = new Date(d + 'T00:00:00Z');
-  return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+function fmtMonth(m: string) {
+  // m is YYYY-MM
+  const [year, month] = m.split('-');
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+  return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
 }
 
 export default function RevenueChart({ data }: RevenueChartProps) {
@@ -37,7 +38,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
   return (
     <ChartCard
       title="Revenue"
-      subtitle="Last 30 days"
+      subtitle="Monthly"
       right={
         <div className="text-right">
           <p className="font-condensed text-[10px] uppercase tracking-[0.18em] text-sv-mid">Total</p>
@@ -58,13 +59,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
-              dataKey="date"
-              tickFormatter={fmtDay}
+              dataKey="month"
+              tickFormatter={fmtMonth}
               tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
-              interval="preserveStartEnd"
-              minTickGap={24}
+              interval={0}
+              minTickGap={32}
             />
             <YAxis
               tickFormatter={(v) => '₹' + inrCompact.format(v)}
@@ -82,7 +83,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                 fontSize: 12,
                 color: '#fff',
               }}
-              labelFormatter={(d) => fmtDay(String(d))}
+              labelFormatter={(m) => fmtMonth(String(m))}
               formatter={(v: number) => [inrFull.format(Math.round(v)), 'Revenue']}
             />
             <Area

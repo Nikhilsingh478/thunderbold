@@ -2,14 +2,15 @@ import { computePrice } from '../lib/pricing';
 
 interface PriceDisplayProps {
   price: number | string | undefined;
+  purchasePrice?: number | string | undefined;
   size?: 'sm' | 'md' | 'lg';
   showSavings?: boolean;
 }
 
-export default function PriceDisplay({ price, size = 'md', showSavings = false }: PriceDisplayProps) {
-  const { finalPrice, originalPrice, discountPct, savings, hasDiscount } = computePrice(price);
+export default function PriceDisplay({ price, purchasePrice, size = 'md', showSavings = false }: PriceDisplayProps) {
+  const { sellingPrice, purchasePrice: origPrice, discountPct, savings, hasDiscount } = computePrice(price, purchasePrice);
 
-  if (!hasDiscount) return null;
+  if (!sellingPrice) return null;
 
   const finalSize = size === 'lg' ? 'text-3xl md:text-4xl' : size === 'sm' ? 'text-base' : 'text-xl';
   const origSize = size === 'lg' ? 'text-base' : 'text-xs';
@@ -18,16 +19,20 @@ export default function PriceDisplay({ price, size = 'md', showSavings = false }
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-2 flex-wrap">
         <span className={`font-condensed font-bold tracking-wide text-tb-white ${finalSize}`}>
-          ₹{finalPrice.toLocaleString('en-IN')}
+          ₹{sellingPrice.toLocaleString('en-IN')}
         </span>
-        <span className={`font-condensed text-white/35 line-through tracking-wide ${origSize}`}>
-          ₹{originalPrice.toLocaleString('en-IN')}
-        </span>
-        <span className="text-[0.6rem] font-condensed font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-600 text-white uppercase">
-          {discountPct}% off
-        </span>
+        {hasDiscount && (
+          <>
+            <span className={`font-condensed text-white/35 line-through tracking-wide ${origSize}`}>
+              ₹{origPrice.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[0.6rem] font-condensed font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-600 text-white uppercase">
+              {discountPct}% off
+            </span>
+          </>
+        )}
       </div>
-      {showSavings && (
+      {hasDiscount && showSavings && (
         <span className="font-condensed text-[0.68rem] tracking-wider text-green-400">
           You save ₹{savings.toLocaleString('en-IN')}
         </span>

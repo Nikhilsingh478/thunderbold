@@ -62,6 +62,7 @@ const SECTIONS = [
   { value: 'live-sale', label: 'Live Sale Section' },
   { value: 'denim', label: 'Denim Collection' },
   { value: 'tshirts', label: 'T-Shirts Section' },
+  { value: 'kurta', label: 'Kurta Collection' },
 ] as const;
 
 interface Product {
@@ -70,6 +71,7 @@ interface Product {
   categoryId: string;
   section?: string;
   price: number;
+  purchasePrice?: number;
   image?: string;
   images?: string[];
   description?: string;
@@ -204,6 +206,7 @@ interface ProductFormData {
   name: string;
   section: string;
   categoryId: string;
+  purchasePrice: string;
   price: string;
   images: string[];
   description: string;
@@ -213,7 +216,7 @@ interface ProductFormData {
 
 const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
 const defaultHighlights: ProductHighlights = { color: '', length: '', printsPattern: '', waistRise: '', shade: '', lengthInches: '' };
-const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
+const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', purchasePrice: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
 
 function ImageInput({
   images,
@@ -409,9 +412,22 @@ function ProductModal({
           </div>
         )}
 
-        {/* Price */}
+        {/* Purchase Price */}
         <div>
-          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Price (₹)</label>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Purchase Price / MRP (₹)</label>
+          <input
+            type="number"
+            value={form.purchasePrice}
+            onChange={(e) => setForm(p => ({ ...p, purchasePrice: e.target.value }))}
+            placeholder="0 — leave blank if no crossed-out price"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+          />
+          <p className="font-condensed text-[0.62rem] text-sv-mid/50 mt-1">Shown as crossed-out price on the store. Optional.</p>
+        </div>
+
+        {/* Selling Price */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Selling Price (₹)</label>
           <input
             type="number"
             value={form.price}
@@ -419,6 +435,7 @@ function ProductModal({
             placeholder="0"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
           />
+          <p className="font-condensed text-[0.62rem] text-sv-mid/50 mt-1">The price customers actually pay.</p>
         </div>
 
         {/* Size-based Stock */}
@@ -651,6 +668,7 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
+      const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
       const sizeStock = Object.fromEntries(
         SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
       );
@@ -661,11 +679,19 @@ export default function Admin() {
       const r = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description, highlights }),
+        body: JSON.stringify({
+          name: formData.name, section: formData.section || 'denim',
+          categoryId: formData.categoryId, price, purchasePrice,
+          sizeStock, stock, images, description: formData.description, highlights,
+        }),
       });
       const d = await r.json();
       if (r.ok) {
-        setProducts(prev => [{ _id: d.product._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description, highlights }, ...prev]);
+        setProducts(prev => [{
+          _id: d.product._id, name: formData.name, section: formData.section || 'denim',
+          categoryId: formData.categoryId, price, purchasePrice, stock, sizeStock,
+          images, image: images[0], description: formData.description, highlights,
+        }, ...prev]);
         setShowAddProductModal(false);
         return true;
       }
@@ -678,6 +704,7 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
+      const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
       const sizeStock = Object.fromEntries(
         SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
       );
@@ -688,12 +715,20 @@ export default function Admin() {
       const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, sizeStock, stock, images, description: formData.description, highlights: highlightsPut }),
+        body: JSON.stringify({
+          name: formData.name, section: formData.section || 'denim',
+          categoryId: formData.categoryId, price, purchasePrice,
+          sizeStock, stock, images, description: formData.description, highlights: highlightsPut,
+        }),
       });
       const d = await r.json();
       if (r.ok) {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
-          ? { _id: editingProduct._id, name: formData.name, section: formData.section || 'denim', categoryId: formData.categoryId, price, stock, sizeStock, images, image: images[0], description: formData.description, highlights: highlightsPut }
+          ? {
+              _id: editingProduct._id, name: formData.name, section: formData.section || 'denim',
+              categoryId: formData.categoryId, price, purchasePrice, stock, sizeStock,
+              images, image: images[0], description: formData.description, highlights: highlightsPut,
+            }
           : p
         ));
         setEditingProduct(null);
@@ -1406,6 +1441,7 @@ export default function Admin() {
               name: editingProduct.name,
               section: editingProduct.section || 'denim',
               categoryId: editingProduct.categoryId,
+              purchasePrice: editingProduct.purchasePrice ? String(editingProduct.purchasePrice) : '',
               price: String(editingProduct.price),
               images: (editingProduct as any).images?.length
                 ? (editingProduct as any).images

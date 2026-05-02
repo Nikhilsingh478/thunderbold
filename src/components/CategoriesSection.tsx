@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import PromoBanner from './promo/PromoBanner';
 
 const SKELETON_COUNT = 3;
 
@@ -64,6 +65,53 @@ function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; 
   );
 }
 
+interface CollectionSectionProps {
+  eyebrow: string;
+  heading: string;
+  subtitle?: string;
+  categories: Category[];
+  loading: boolean;
+  navigate: ReturnType<typeof useNavigate>;
+  className?: string;
+}
+
+function CollectionSection({ eyebrow, heading, subtitle, categories, loading, navigate, className = '' }: CollectionSectionProps) {
+  return (
+    <div className={className}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-12 md:mb-20 text-center"
+      >
+        <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
+          <span className="w-5 h-px bg-brass-dim inline-block" />
+          {eyebrow}
+          <span className="w-5 h-px bg-brass-dim inline-block" />
+        </div>
+        <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
+          {heading}
+        </h2>
+        {subtitle && (
+          <p className="font-condensed text-sv text-sm md:text-base tracking-[0.12em] mt-4">
+            {subtitle}
+          </p>
+        )}
+      </motion.div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
+        {loading
+          ? Array.from({ length: SKELETON_COUNT }).map((_, i) => <CategorySkeleton key={i} />)
+          : categories.map((cat, index) => (
+              <CategoryCard key={cat._id} cat={cat} index={index} navigate={navigate} />
+            ))
+        }
+      </div>
+    </div>
+  );
+}
+
 export default function CategoriesSection() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -86,8 +134,7 @@ export default function CategoriesSection() {
     load();
   }, []);
 
-  // Categories without a `section` value default to the Denim Collection so
-  // pre-existing rows continue to render where they used to.
+  // Categories without a `section` value default to Denim Collection.
   const denimCategories = useMemo(
     () => categories.filter(c => !c.section || c.section === 'denim'),
     [categories]
@@ -96,12 +143,19 @@ export default function CategoriesSection() {
     () => categories.filter(c => c.section === 'tshirts'),
     [categories]
   );
+  const kurtaCategories = useMemo(
+    () => categories.filter(c => c.section === 'kurta'),
+    [categories]
+  );
+
+  const showTshirts = loading || tshirtCategories.length > 0;
+  const showKurta = loading || kurtaCategories.length > 0;
 
   return (
     <section className="min-h-screen pt-12 md:pt-20 pb-24 px-6 md:px-16" id="categories">
       <div className="max-w-[1000px] mx-auto">
 
-        {/* ── Denim Collection ───────────────────────────────────────── */}
+        {/* ── Denim Collection ─────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,49 +174,42 @@ export default function CategoriesSection() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
           {loading
-            ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-                <CategorySkeleton key={i} />
-              ))
+            ? Array.from({ length: SKELETON_COUNT }).map((_, i) => <CategorySkeleton key={i} />)
             : denimCategories.map((cat, index) => (
                 <CategoryCard key={cat._id} cat={cat} index={index} navigate={navigate} />
               ))
           }
         </div>
 
-        {/* ── T-Shirt Collection ─────────────────────────────────────── */}
-        {(loading || tshirtCategories.length > 0) && (
-          <>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-28 md:mt-36 mb-12 md:mb-20 text-center"
-            >
-              <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
-                <span className="w-5 h-px bg-brass-dim inline-block" />
-                New Category
-                <span className="w-5 h-px bg-brass-dim inline-block" />
-              </div>
-              <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-                The T-Shirt Collection
-              </h2>
-              <p className="font-condensed text-sv text-sm md:text-base tracking-[0.12em] mt-4">
-                Premium cuts. Everyday essentials.
-              </p>
-            </motion.div>
+        {/* ── Promo Banner (between Denim and T-Shirts) ────────────── */}
+        <div className="mt-16 md:mt-24 -mx-6 md:-mx-16">
+          <PromoBanner />
+        </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
-              {loading
-                ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-                    <CategorySkeleton key={i} />
-                  ))
-                : tshirtCategories.map((cat, index) => (
-                    <CategoryCard key={cat._id} cat={cat} index={index} navigate={navigate} />
-                  ))
-              }
-            </div>
-          </>
+        {/* ── T-Shirt Collection ───────────────────────────────────── */}
+        {showTshirts && (
+          <CollectionSection
+            eyebrow="New Category"
+            heading="The T-Shirt Collection"
+            subtitle="Premium cuts. Everyday essentials."
+            categories={tshirtCategories}
+            loading={loading}
+            navigate={navigate}
+            className="mt-20 md:mt-28"
+          />
+        )}
+
+        {/* ── Kurta Collection ─────────────────────────────────────── */}
+        {showKurta && (
+          <CollectionSection
+            eyebrow="New Arrival"
+            heading="The Kurta Collection"
+            subtitle="Crafted tradition. Contemporary style."
+            categories={kurtaCategories}
+            loading={loading}
+            navigate={navigate}
+            className="mt-20 md:mt-28"
+          />
         )}
 
       </div>

@@ -43,6 +43,18 @@ function normaliseImages(body) {
   return images;
 }
 
+function normaliseHighlights(highlights) {
+  if (!highlights || typeof highlights !== 'object') return null;
+  return {
+    color: highlights.color || '',
+    length: highlights.length || '',
+    printsPattern: highlights.printsPattern || '',
+    waistRise: highlights.waistRise || '',
+    shade: highlights.shade || '',
+    lengthInches: highlights.lengthInches || '',
+  };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -57,8 +69,6 @@ export default async function handler(req, res) {
     switch (req.method) {
 
       case 'GET': {
-        // Optional price-cap filter for /deals/* pages.
-        // Validates strictly so unrelated traffic isn't affected.
         const filter = {};
         const rawMax = req.query?.maxPrice;
         if (rawMax !== undefined) {
@@ -70,8 +80,15 @@ export default async function handler(req, res) {
 
         const products = await col.find(
           filter,
-          { projection: { name: 1, price: 1, image: 1, images: 1, description: 1, categoryId: 1, section: 1, stock: 1, sizeStock: 1, highlights: 1, createdAt: 1 } }
+          {
+            projection: {
+              name: 1, price: 1, purchasePrice: 1, image: 1, images: 1,
+              description: 1, categoryId: 1, section: 1, stock: 1,
+              sizeStock: 1, highlights: 1, createdAt: 1,
+            },
+          }
         ).sort({ createdAt: -1 }).toArray();
+
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
 
@@ -80,28 +97,29 @@ export default async function handler(req, res) {
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
-        const { name, price, description, categoryId, sizeStock, highlights } = req.body;
+
+        const { name, price, purchasePrice, description, categoryId, sizeStock, highlights } = req.body;
         const section = req.body.section || 'denim';
         const images = normaliseImages(req.body);
         const needsCategory = section !== 'live-sale';
+
         if (!name || !price || images.length === 0 || (needsCategory && !categoryId)) {
-          return res.status(400).json({ error: 'Name, price, at least one image are required' + (needsCategory ? ', and categoryId' : '') });
+          return res.status(400).json({
+            error: 'Name, price, at least one image are required' + (needsCategory ? ', and categoryId' : ''),
+          });
         }
         if (typeof price !== 'number' || price <= 0) {
           return res.status(400).json({ error: 'Price must be a positive number' });
         }
+
         const normalisedSizeStock = normaliseSizeStock(sizeStock);
         const totalStock = computeTotalStock(normalisedSizeStock);
-        const normalisedHighlights = highlights && typeof highlights === 'object' ? {
-          color: highlights.color || '',
-          length: highlights.length || '',
-          printsPattern: highlights.printsPattern || '',
-          waistRise: highlights.waistRise || '',
-          shade: highlights.shade || '',
-          lengthInches: highlights.lengthInches || '',
-        } : null;
+        const normalisedHighlights = normaliseHighlights(highlights);
+
         const product = {
-          name, price,
+          name,
+          price,
+          ...(purchasePrice && purchasePrice > 0 ? { purchasePrice: Number(purchasePrice) } : {}),
           image: images[0],
           images,
           description: description || '',
@@ -112,8 +130,12 @@ export default async function handler(req, res) {
           highlights: normalisedHighlights,
           createdAt: new Date(),
         };
+
         const result = await col.insertOne(product);
-        return res.status(201).json({ message: 'Product created successfully', product: { _id: result.insertedId, ...product } });
+        return res.status(201).json({
+          message: 'Product created successfully',
+          product: { _id: result.insertedId, ...product },
+        });
       }
 
       case 'PUT': {
@@ -121,28 +143,31 @@ export default async function handler(req, res) {
         if (!auth.authorized) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
+
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing product ID' });
-        const { name, price, description, categoryId, sizeStock, highlights } = req.body;
+
+        const { name, price, purchasePrice, description, categoryId, sizeStock, highlights } = req.body;
         const putSection = req.body.section || 'denim';
         const images = normaliseImages(req.body);
         const putNeedsCategory = putSection !== 'live-sale';
+
         if (!name || !price || images.length === 0 || (putNeedsCategory && !categoryId)) {
-          return res.status(400).json({ error: 'Name, price, at least one image are required' + (putNeedsCategory ? ', and categoryId' : '') });
+          return res.status(400).json({
+            error: 'Name, price, at least one image are required' + (putNeedsCategory ? ', and categoryId' : ''),
+          });
         }
+
         const normalisedSizeStock = normaliseSizeStock(sizeStock);
         const totalStock = computeTotalStock(normalisedSizeStock);
-        const normalisedHighlightsPut = highlights && typeof highlights === 'object' ? {
-          color: highlights.color || '',
-          length: highlights.length || '',
-          printsPattern: highlights.printsPattern || '',
-          waistRise: highlights.waistRise || '',
-          shade: highlights.shade || '',
-          lengthInches: highlights.lengthInches || '',
-        } : null;
+        const normalisedHighlights = normaliseHighlights(highlights);
+
         const updates = {
           name,
           price: typeof price === 'number' ? price : parseFloat(price),
+          ...(purchasePrice && Number(purchasePrice) > 0
+            ? { purchasePrice: Number(purchasePrice) }
+            : { $unset: { purchasePrice: '' } }),
           image: images[0],
           images,
           description: description || '',
@@ -150,24 +175,37 @@ export default async function handler(req, res) {
           section: putSection,
           sizeStock: normalisedSizeStock,
           stock: totalStock,
-          highlights: normalisedHighlightsPut,
+          highlights: normalisedHighlights,
           updatedAt: new Date(),
         };
+
+        // Separate $set fields from $unset to build a proper MongoDB update doc
+        const { $unset: unsetFields, ...setFields } = updates;
+        const updateDoc = { $set: setFields };
+        if (unsetFields) updateDoc.$unset = unsetFields;
+
         const result = await col.updateOne(
           { _id: new ObjectId(id) },
-          { $set: updates }
-        ).catch(async () => col.updateOne({ _id: id }, { $set: updates }));
+          updateDoc,
+        ).catch(async () => col.updateOne({ _id: id }, updateDoc));
+
         if (result.matchedCount === 0) return res.status(404).json({ error: 'Product not found' });
-        return res.status(200).json({ message: 'Product updated successfully', product: { _id: id, ...updates } });
+        return res.status(200).json({
+          message: 'Product updated successfully',
+          product: { _id: id, ...setFields },
+        });
       }
 
       case 'DELETE': {
         const auth = await checkAdminAuth(req, database);
         if (!auth.authorized) return res.status(401).json({ error: 'Unauthorized' });
+
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing ID' });
+
         const result = await col.deleteOne({ _id: new ObjectId(id) })
           .catch(async () => col.deleteOne({ _id: id }));
+
         if (!result || result.deletedCount === 0) {
           return res.status(404).json({ success: false, deletedCount: 0, message: 'Product not found' });
         }

@@ -249,7 +249,7 @@ export default function ProductView() {
               </h1>
               <div className="mb-4">
                 {product?.price
-                  ? <PriceDisplay price={product.price} size="lg" showSavings />
+                  ? <PriceDisplay price={product.price} purchasePrice={product.purchasePrice} size="lg" showSavings />
                   : <span className="font-condensed text-3xl tracking-widest text-tb-white">₹ 2,499</span>
                 }
               </div>

@@ -9,6 +9,7 @@ export interface GridProduct {
   _id: string;
   name: string;
   price: number;
+  purchasePrice?: number;
   image?: string;
   images?: string[];
 }
@@ -109,7 +110,7 @@ export default function ProductGrid({
               {prod.name}
             </h3>
             <div className="mt-1">
-              <PriceDisplay price={prod.price} size="sm" />
+              <PriceDisplay price={prod.price} purchasePrice={prod.purchasePrice} size="sm" />
             </div>
           </div>
         </motion.div>

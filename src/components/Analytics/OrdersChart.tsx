@@ -15,9 +15,11 @@ interface OrdersChartProps {
   data: OrdersPoint[];
 }
 
-function fmtDay(d: string) {
-  const date = new Date(d + 'T00:00:00Z');
-  return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+function fmtMonth(m: string) {
+  // m is YYYY-MM
+  const [year, month] = m.split('-');
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+  return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
 }
 
 export default function OrdersChart({ data }: OrdersChartProps) {
@@ -26,7 +28,7 @@ export default function OrdersChart({ data }: OrdersChartProps) {
   return (
     <ChartCard
       title="Orders"
-      subtitle="Last 30 days"
+      subtitle="Monthly"
       right={
         <div className="text-right">
           <p className="font-condensed text-[10px] uppercase tracking-[0.18em] text-sv-mid">Total</p>
@@ -47,13 +49,13 @@ export default function OrdersChart({ data }: OrdersChartProps) {
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
-              dataKey="date"
-              tickFormatter={fmtDay}
+              dataKey="month"
+              tickFormatter={fmtMonth}
               tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
-              interval="preserveStartEnd"
-              minTickGap={24}
+              interval={0}
+              minTickGap={32}
             />
             <YAxis
               allowDecimals={false}
@@ -71,7 +73,7 @@ export default function OrdersChart({ data }: OrdersChartProps) {
                 fontSize: 12,
                 color: '#fff',
               }}
-              labelFormatter={(d) => fmtDay(String(d))}
+              labelFormatter={(m) => fmtMonth(String(m))}
               formatter={(v: number) => [v, 'Orders']}
             />
             <Bar dataKey="count" fill="url(#orderBar)" radius={[4, 4, 0, 0]} animationDuration={500} />
