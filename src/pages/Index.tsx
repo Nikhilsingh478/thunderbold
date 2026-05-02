@@ -3,6 +3,7 @@ import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import Navbar from '../components/Navbar';
 import HeroBanner from '../components/HeroBanner';
+import BrandsSection from '../components/BrandsSection';
 import LiveSaleSection from '../components/LiveSaleSection';
 import Footer from '../components/Footer';
 import CategoriesSection from '../components/CategoriesSection';
@@ -41,6 +42,7 @@ const Index = () => (
         <MobileSearchBar />
         <HeroBanner />
       </div>
+      <BrandsSection />
       <LiveSaleSection />
       <CategoriesSection />
     </main>

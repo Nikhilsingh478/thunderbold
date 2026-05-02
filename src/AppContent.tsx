@@ -24,6 +24,8 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Orders = lazy(() => import("./pages/Orders"));
 const Profile = lazy(() => import("./pages/Profile"));
 const DealsPage = lazy(() => import("./pages/DealsPage"));
+const BrandsPage = lazy(() => import("./pages/BrandsPage"));
+const BrandView = lazy(() => import("./pages/BrandView"));
 
 function PageLoader() {
   return (
@@ -97,6 +99,8 @@ const AppContent = () => {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/brands" element={<BrandsPage />} />
+            <Route path="/brand/:brandId" element={<BrandView />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />

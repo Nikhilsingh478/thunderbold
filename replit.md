@@ -1,7 +1,7 @@
 # Thunderbolt — Replit Project
 
 ## Overview
-A full-stack e-commerce storefront called **Thunderbolt** (denim/apparel). React + Vite frontend with a Node.js/Express API backend. Uses Firebase for authentication and MongoDB Atlas for products, orders, users, reviews, cart, wishlist, and addresses. Designed to run identically in local development (Replit) and production (Vercel serverless).
+A full-stack e-commerce storefront called **Thunderbolt** (denim/apparel). React + Vite frontend with a Node.js/Express API backend. Uses Firebase for authentication and MongoDB Atlas for products, orders, users, reviews, cart, wishlist, addresses, categories, and brands. Designed to run identically in local development (Replit) and production (Vercel serverless).
 
 ## Architecture
 
@@ -37,27 +37,31 @@ Without `MONGO_URI`, all data endpoints return `500 Database unavailable` (expec
 - `App.tsx` — Root with providers (Auth, Cart, Wishlist, QueryClient)
 - `AppContent.tsx` — Router, modal management, delayed login prompt
 - `context/` — `AuthContext`, `CartContext`, `WishlistContext`
-- `pages/` — `Index`, `About`, `CategoryView`, `ProductView`, `Cart`, `Wishlist`, `Checkout`, `Orders`, `Admin`, `Profile`, `NotFound`
-- `components/` — UI (shadcn/ui base + custom: `Navbar`, `Footer`, `HeroSection`, etc.)
-- `components/promo/` — Promo banner slider (`PromoSlider`, `PromoSlide`, `promoSlides.ts`)
+- `pages/` — `Index`, `About`, `CategoryView`, `ProductView`, `Cart`, `Wishlist`, `Checkout`, `Orders`, `Admin`, `Profile`, `NotFound`, `BrandsPage`, `BrandView`, `DealsPage`
+- `components/` — UI (shadcn/ui base + custom: `Navbar`, `Footer`, `HeroBanner`, `BrandsSection`, `LiveSaleSection`, `CategoriesSection`, etc.)
+- `components/promo/` — Static side-by-side promo banner (`PromoBanner`, `promoSlides.ts`)
 - `components/Analytics/` — Admin analytics dashboard (see below)
+- `components/products/` — `ProductGrid` (reusable grid used by CategoryView, DealsPage, BrandView)
 - `lib/ordersCache.ts` — Deduped fetch + in-memory cache for `/api/orders`
+- `lib/pricing.ts` — `computePrice(sellingPrice, purchasePrice)` — derives discount dynamically (no hardcoded %)
+- `components/PriceDisplay.tsx` — Shows selling price + optional crossed-out purchasePrice + savings badge
 
 ### Backend (`api/`)
-Each file is one Vercel serverless function. Sub-routed handlers exist to stay under the Hobby-plan 12-function limit.
+Each file is one Vercel serverless function. Sub-routed handlers exist to stay under the Hobby-plan **12-function limit** (currently using 11 of 12).
 
 | File | Routes served |
 | --- | --- |
 | `api/products/index.js` | `GET/POST/PUT/DELETE /api/products` |
 | `api/products/[id].js` | `GET /api/products/:id` |
-| `api/orders/index.js` | `GET /api/orders`, `POST /api/orders/create`, `PUT /api/orders/cancel`, `PATCH/DELETE /api/orders/manage?id=...` (consolidated dispatcher) |
+| `api/orders/index.js` | `GET /api/orders`, `POST /api/orders/create`, `PUT /api/orders/cancel`, `PATCH/DELETE /api/orders/manage?id=...` |
 | `api/users/index.js` | `POST /api/users/create`, profile + address sub-routes |
 | `api/cart/index.js` | `GET/POST/DELETE /api/cart` |
 | `api/wishlist/index.js` | `GET/POST/DELETE /api/wishlist` |
-| `api/categories/index.js` | `GET /api/categories` |
+| `api/categories/index.js` | `GET/POST/PUT/DELETE /api/categories` |
 | `api/address/index.js` | `GET/POST/PUT/DELETE /api/address` |
-| `api/reviews/index.js` | `GET/POST /api/reviews` |
-| `api/admin.js` | `GET /api/admin/analytics/{overview,revenue,orders,top-products,stock-alerts,recent-orders}` (consolidated analytics) |
+| `api/reviews/index.js` | `GET/POST/DELETE /api/reviews` |
+| `api/admin.js` | `GET /api/admin/analytics` — consolidated analytics |
+| `api/brands/index.js` | `GET/POST/PUT/DELETE /api/brands` |
 
 **Sub-route resolution:** Consolidated handlers (`api/orders/index.js`, `api/admin.js`) determine the action from either:
 - `req.url` path remainder (Express, local dev), or
@@ -70,33 +74,84 @@ Each file is one Vercel serverless function. Sub-routed handlers exist to stay u
 - `rateLimit.js` — `isRateLimited(req)` for write endpoints
 - `validator.js`, `response.js` — Input validation + standard JSON responses
 
+## Product Data Model
+```js
+{
+  _id, name, price, purchasePrice?,   // purchasePrice = MRP/crossed-out price (optional)
+  brandId?,                            // references brands._id (optional)
+  image, images[],                     // first image is primary
+  description, categoryId, section,   // section: 'live-sale' | 'denim' | 'tshirts' | 'kurta'
+  sizeStock: { '28':n, '30':n, '32':n, '34':n, '36':n },
+  stock,                               // computed sum of sizeStock values
+  highlights?,                         // { color, length, printsPattern, waistRise, shade, lengthInches }
+  createdAt, updatedAt?
+}
+```
+
+## Brand System
+Brands are a separate MongoDB collection (`brands`). They are simple name records.
+
+**Data model:**
+```js
+{ _id, name, createdAt, updatedAt? }
+```
+
+**Flow:**
+1. Admin creates brand names in the **Brands tab** of the admin panel (`/admin` → Brands tab)
+2. When adding/editing a product, admin selects a brand from a dropdown (optional — existing products are unbranded by default)
+3. On the store homepage, a **"Shop by Brand"** section appears between the Hero and the Special Offer section
+4. Clicking the banner navigates to `/brands` (all brands listing page)
+5. Clicking any brand navigates to `/brand/:brandId` (products filtered by that brand, using the shared `ProductGrid` component)
+
+**API:** `GET /api/brands` is public (no auth). `POST/PUT/DELETE` require admin Firebase token.
+
+## Pricing System
+- `purchasePrice` — the original/MRP price stored on the product (optional). Shown as a crossed-out price on the store.
+- `price` — the selling/actual price customers pay.
+- `src/lib/pricing.ts` — `computePrice(sellingPrice, purchasePrice)` calculates the discount % dynamically.
+- `src/components/PriceDisplay.tsx` — renders `price`, optional `purchasePrice` strikethrough, and a savings badge. Accepts `size` (`sm` | `lg`) and `showSavings` props.
+
+## Admin Panel (`/admin`)
+Admin emails are hardcoded in both `api/_lib/adminHelper.js` and `src/pages/Admin.tsx` (`ADMIN_EMAILS`).
+
+**Tabs:**
+| Tab | Description |
+| --- | --- |
+| Analytics | KPI cards, monthly revenue/orders charts (last 12 months), top products, stock alerts, recent orders |
+| Orders | View, update status, delete orders |
+| Products | Add/edit/delete products. Form includes: name, section, category, brand (dropdown), purchase price, selling price, size stock, images, description, highlights |
+| Categories | Add/edit/delete categories (name, image URL, section) |
+| Brands | Add/edit/delete brand names. These populate the brand dropdown in the product form |
+| Reviews | Per-product review listing with admin delete |
+
 ## Size-Based Stock System
-Products use a `sizeStock` map (`Record<string, number>`) keyed by `['28','30','32','34','36']`. The flat `stock` field is kept as the computed total (sum of `sizeStock` values).
+Products use a `sizeStock` map (`Record<string, number>`) keyed by `['28','30','32','34','36']`. The flat `stock` field is the computed total (sum of `sizeStock` values).
 
-- **Admin** (`src/pages/Admin.tsx`) — `SizeStockInput` sets per-size stock; product cards render a per-size grid. `SIZES` constant is the single source of truth.
-- **Store** (`src/pages/ProductView.tsx`) — Size buttons disabled + strikethrough + "OOS" label when `sizeStock[size] === 0`. Action buttons use `effectiveOutOfStock` (total OOS OR selected size OOS).
-- **Backend** (`api/products/index.js`) — POST/PUT accept `sizeStock`, compute total `stock` via `normaliseSizeStock` + `computeTotalStock`. GET projects `sizeStock`.
-- **Order create** (`api/orders/index.js` → `handleCreate`) — Pre-flight stock check uses `sizeStock[size]` when present. Atomic decrement with **compensation rollback** if any item's stock changed mid-flight (prevents oversells under concurrency).
-- **Order cancel** (`api/orders/index.js` → `handleCancel`) — Restores stock per size when `sizeStock` exists; otherwise restores total `stock`.
-- **Backward compat** — Products without `sizeStock` fall back to flat `stock` everywhere.
+- **Admin** (`src/pages/Admin.tsx`) — `SizeStockInput` sets per-size stock. `SIZES` constant is the single source of truth.
+- **Store** (`src/pages/ProductView.tsx`) — Size buttons disabled when `sizeStock[size] === 0`.
+- **Backend** (`api/products/index.js`) — POST/PUT accept `sizeStock`, compute total `stock`.
+- **Order create** — Pre-flight stock check with atomic decrement + compensation rollback (prevents oversells).
+- **Order cancel** — Restores stock per size when `sizeStock` exists.
 
-## Order Idempotency
-`POST /api/orders/create` accepts an optional `clientOrderId` (UUID generated on the client at checkout). The server checks for an existing order with the same `clientOrderId` before inserting; on a duplicate-key error, it returns the existing order. Prevents accidental double-charges from retries / double-clicks.
+## Homepage Sections (top to bottom)
+1. `HeroBanner` — full-width hero with CTA
+2. `BrandsSection` — "Shop by Brand" heading + clickable banner → `/brands`
+3. `LiveSaleSection` — "Special Offer" grid (products where `section === 'live-sale'`)
+4. `CategoriesSection`:
+   - Denim Collection grid
+   - `PromoBanner` (two side-by-side static images → deals pages)
+   - T-Shirt Collection grid (shown only when tshirt categories exist)
+   - Kurta Collection grid (shown only when kurta categories exist)
 
-## Admin Analytics Dashboard
-Default tab on `src/pages/Admin.tsx` (route `/admin`).
+## Analytics Dashboard
+Default tab on `src/pages/Admin.tsx`. Monthly data for last 12 months.
 
-- **Component tree**: `AnalyticsTab` orchestrates a single fetch to `/api/admin/analytics`, then passes slices to:
-  - `StatsCard` — KPI tiles (revenue, order count, AOV, etc.)
-  - `RevenueChart`, `OrdersChart` — Recharts area/bar charts
-  - `TopProducts` — top sellers leaderboard
-  - `StockAlerts` — low / out-of-stock products
-  - `RecentOrders` — latest orders feed
-- **Backend** (`api/admin.js`) — Runs all aggregations in `Promise.all`. Excludes orders in status `cancelled / canceled / refunded` from revenue. Uses `totalAmount` field on orders.
-- **Theme**: Dark with brass accent `#d4a32c`, mobile-first responsive grid.
-
-## Promo Banner Slider (`src/components/promo/`)
-Static slides defined in `promoSlides.ts`, banner images in `public/banners/`. Uses `aspect-[1944/809]` + `object-contain` to match source artwork. Drag tuned with `threshold 40px`, `velocity 300`, `dragElastic 0.6`, `dragMomentum false`. Arrows (`ArrowLeft` / `ArrowRight` from lucide) visible at all breakpoints.
+- **Component tree**: `AnalyticsTab` → single fetch to `/api/admin/analytics` → sliced into:
+  - `StatsCard` — KPI tiles (total revenue, orders, AOV, users)
+  - `RevenueChart` — Recharts area chart, monthly `YYYY-MM` labels
+  - `OrdersChart` — Recharts bar chart, monthly `YYYY-MM` labels
+  - `TopProducts`, `StockAlerts`, `RecentOrders`
+- **Backend** (`api/admin.js`) — All aggregations in `Promise.all`. Revenue excludes `cancelled/refunded` orders. Groups by `%Y-%m`, fills gaps with zeros using `eachMonth()`.
 
 ## Deployment
 
@@ -106,17 +161,19 @@ Static slides defined in `promoSlides.ts`, banner images in `public/banners/`. U
 
 ### Vercel (production)
 - **Build**: `npm run build` (Vite output to `dist/`)
-- **Functions**: 10 serverless functions total (out of 12 allowed on Hobby)
+- **Functions**: 11 serverless functions (out of 12 allowed on Hobby)
 - **`vercel.json` rewrites**:
   - `/api/admin/analytics/:path*` → `/api/admin?subpath=:path*`
   - `/api/orders/{create|cancel|manage}` → `/api/orders?subpath=:sub`
   - All other `/api/*` → matching file in `/api/`
   - Everything else → `/index.html` (SPA fallback)
 
-The same handler files run unchanged in both environments; sub-routing is the only environment-specific concern and is resolved inside each handler.
+The same handler files run unchanged in both environments; sub-routing is the only environment-specific concern.
 
 ## Recent Changes
-- **Consolidated `/api/orders`** — Merged `create.js`, `cancel.js`, `manage.js`, `index.js` into one dispatcher to free up Vercel function slots. Frontend URLs unchanged.
-- **Consolidated admin analytics** — Moved analytics into a single `api/admin.js` file; production routing handled by `vercel.json` rewrites.
-- **Promo slider polish** — Updated to user-supplied banners with correct aspect ratio, larger rounded corners, always-visible arrows, smoother drag.
-- **Admin Analytics Dashboard** — New default admin tab with KPIs, charts, top products, stock alerts, recent orders.
+- **Brands system** — New `api/brands/index.js` (11th serverless function). Admin Brands tab for CRUD. Brand dropdown in product form. Homepage `BrandsSection`, `/brands` listing page, `/brand/:brandId` product page.
+- **Purchase price / MRP** — Products now store `purchasePrice` (optional). Admin form has separate "Purchase Price / MRP" and "Selling Price" fields. Store shows crossed-out price + dynamic discount % when `purchasePrice > price`.
+- **Kurta Collection** — Added `kurta` as a product/category section. Appears in admin dropdowns and on the homepage CategoriesSection.
+- **Promo banner** — Replaced old slider with static side-by-side `PromoBanner` between Denim and T-Shirts sections.
+- **Monthly analytics** — Charts now show last 12 months (was: last 30 days). Data grouped by `YYYY-MM`.
+- **Admin Analytics Dashboard** — Default admin tab with KPIs, monthly charts, top products, stock alerts, recent orders.

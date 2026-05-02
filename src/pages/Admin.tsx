@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3 } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
 import AnalyticsTab from '../components/Analytics/AnalyticsTab';
 import Navbar from '../components/Navbar';
@@ -72,12 +72,22 @@ interface Product {
   section?: string;
   price: number;
   purchasePrice?: number;
+  brandId?: string;
   image?: string;
   images?: string[];
   description?: string;
   stock?: number;
   sizeStock?: Record<string, number>;
   highlights?: ProductHighlights | null;
+}
+
+interface Brand {
+  _id: string;
+  name: string;
+}
+
+interface BrandFormData {
+  name: string;
 }
 
 interface CategoryFormData {
@@ -193,6 +203,68 @@ function CategoryModal({
   );
 }
 
+function BrandModal({
+  title,
+  initialName,
+  submitLabel,
+  onSubmit,
+  onClose,
+}: {
+  title: string;
+  initialName: string;
+  submitLabel: string;
+  onSubmit: (name: string) => Promise<boolean>;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(initialName);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) { setError('Brand name is required.'); return; }
+    setSubmitting(true);
+    const ok = await onSubmit(trimmed);
+    setSubmitting(false);
+    if (!ok) setError('Something went wrong. That name may already exist.');
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+        <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">{title}</h3>
+      </div>
+      <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Brand Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+            placeholder="e.g. Levi's, Wrangler, Jack & Jones"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+            autoFocus
+          />
+        </div>
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+      </div>
+      <div className="px-6 pb-6 pt-3 flex gap-3 shrink-0 border-t border-white/10">
+        <button onClick={onClose} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors">
+          Cancel
+        </button>
+        <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.15em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-50">
+          {submitting ? 'Saving...' : submitLabel}
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
 interface ProductHighlights {
   color: string;
   length: string;
@@ -208,6 +280,7 @@ interface ProductFormData {
   categoryId: string;
   purchasePrice: string;
   price: string;
+  brandId: string;
   images: string[];
   description: string;
   sizeStock: Record<string, string>;
@@ -216,7 +289,8 @@ interface ProductFormData {
 
 const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
 const defaultHighlights: ProductHighlights = { color: '', length: '', printsPattern: '', waistRise: '', shade: '', lengthInches: '' };
-const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', purchasePrice: '', price: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
+const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', purchasePrice: '', price: '', brandId: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
+const defaultBrandFormData: BrandFormData = { name: '' };
 
 function ImageInput({
   images,
@@ -334,11 +408,16 @@ function ProductModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/categories')
       .then(r => r.json())
       .then(d => setCategories(d.categories || []))
+      .catch(() => {});
+    fetch('/api/brands')
+      .then(r => r.json())
+      .then(d => setBrands(d.brands || []))
       .catch(() => {});
   }, []);
 
@@ -411,6 +490,24 @@ function ProductModal({
             </div>
           </div>
         )}
+
+        {/* Brand */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Brand <span className="text-sv-mid/40 normal-case tracking-normal">(optional)</span></label>
+          <div className="relative">
+            <select
+              value={form.brandId}
+              onChange={(e) => setForm(p => ({ ...p, brandId: e.target.value }))}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
+            >
+              <option value="" className="bg-zinc-900 text-sv-mid">No brand / unbranded</option>
+              {brands.map((b) => (
+                <option key={b._id} value={b._id} className="bg-zinc-900 text-tb-white">{b.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sv-mid pointer-events-none" />
+          </div>
+        </div>
 
         {/* Purchase Price */}
         <div>
@@ -524,7 +621,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews' | 'brands'>('analytics');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -532,6 +629,9 @@ export default function Admin() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [showAddBrandModal, setShowAddBrandModal] = useState(false);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewAddressOrder, setViewAddressOrder] = useState<Order | null>(null);
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<Order | null>(null);
@@ -549,9 +649,60 @@ export default function Admin() {
   useEffect(() => { if (user && activeTab === 'products') { fetchProducts(); fetchCategories(); } }, [activeTab, user]);
   useEffect(() => { if (user && activeTab === 'categories') fetchCategories(); }, [activeTab, user]);
   useEffect(() => { if (user && activeTab === 'reviews') fetchProducts(); }, [activeTab, user]);
+  useEffect(() => { if (user && activeTab === 'brands') fetchBrands(); }, [activeTab, user]);
 
   // Reset drill-down when leaving the reviews tab
   useEffect(() => { if (activeTab !== 'reviews') { setReviewsProduct(null); setProductReviews([]); } }, [activeTab]);
+
+  const fetchBrands = async () => {
+    try {
+      const r = await fetch('/api/brands');
+      if (r.ok) { const d = await r.json(); setBrands(d.brands ?? []); }
+    } catch { console.error('Failed to fetch brands'); }
+  };
+
+  const addBrand = async (name: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch('/api/brands', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      });
+      const d = await r.json();
+      if (r.ok) { setBrands(prev => [...prev, d.brand].sort((a, b) => a.name.localeCompare(b.name))); setShowAddBrandModal(false); return true; }
+      return false;
+    } catch { return false; }
+  };
+
+  const updateBrand = async (id: string, name: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`/api/brands?id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      });
+      if (r.ok) {
+        setBrands(prev => prev.map(b => b._id === id ? { ...b, name } : b).sort((a, b) => a.name.localeCompare(b.name)));
+        setEditingBrand(null);
+        return true;
+      }
+      return false;
+    } catch { return false; }
+  };
+
+  const deleteBrand = async (id: string) => {
+    if (!user) return;
+    if (!confirm('Delete this brand? Products assigned to it will become unbranded.')) return;
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`/api/brands?id=${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) setBrands(prev => prev.filter(b => b._id !== id));
+    } catch { console.error('Failed to delete brand'); }
+  };
 
   const fetchReviewsForProduct = async (productId: string) => {
     setReviewsLoading(true);
@@ -669,6 +820,7 @@ export default function Admin() {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
       const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
+      const brandId = formData.brandId || undefined;
       const sizeStock = Object.fromEntries(
         SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
       );
@@ -681,7 +833,7 @@ export default function Admin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: formData.name, section: formData.section || 'denim',
-          categoryId: formData.categoryId, price, purchasePrice,
+          categoryId: formData.categoryId, price, purchasePrice, brandId,
           sizeStock, stock, images, description: formData.description, highlights,
         }),
       });
@@ -689,7 +841,7 @@ export default function Admin() {
       if (r.ok) {
         setProducts(prev => [{
           _id: d.product._id, name: formData.name, section: formData.section || 'denim',
-          categoryId: formData.categoryId, price, purchasePrice, stock, sizeStock,
+          categoryId: formData.categoryId, price, purchasePrice, brandId, stock, sizeStock,
           images, image: images[0], description: formData.description, highlights,
         }, ...prev]);
         setShowAddProductModal(false);
@@ -705,6 +857,7 @@ export default function Admin() {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
       const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
+      const brandId = formData.brandId || undefined;
       const sizeStock = Object.fromEntries(
         SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
       );
@@ -717,7 +870,7 @@ export default function Admin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: formData.name, section: formData.section || 'denim',
-          categoryId: formData.categoryId, price, purchasePrice,
+          categoryId: formData.categoryId, price, purchasePrice, brandId,
           sizeStock, stock, images, description: formData.description, highlights: highlightsPut,
         }),
       });
@@ -726,7 +879,7 @@ export default function Admin() {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
           ? {
               _id: editingProduct._id, name: formData.name, section: formData.section || 'denim',
-              categoryId: formData.categoryId, price, purchasePrice, stock, sizeStock,
+              categoryId: formData.categoryId, price, purchasePrice, brandId, stock, sizeStock,
               images, image: images[0], description: formData.description, highlights: highlightsPut,
             }
           : p
@@ -827,6 +980,7 @@ export default function Admin() {
     { key: 'orders' as const, label: 'Orders', Icon: Users },
     { key: 'products' as const, label: 'Products', Icon: Package },
     { key: 'categories' as const, label: 'Categories', Icon: Folder },
+    { key: 'brands' as const, label: 'Brands', Icon: Tag },
     { key: 'reviews' as const, label: 'Reviews', Icon: MessageSquare },
   ];
 
@@ -1232,6 +1386,61 @@ export default function Admin() {
                 </motion.div>
               )}
 
+              {/* ── BRANDS ── */}
+              {activeTab === 'brands' && (
+                <motion.div key="brands" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Brands</h2>
+                      <p className="font-condensed text-xs text-sv-mid mt-1">Brands appear as a dropdown when adding or editing products.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowAddBrandModal(true)}
+                      className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-tb-white text-void font-condensed font-bold text-xs sm:text-sm tracking-[0.15em] uppercase hover:bg-white transition-colors rounded-lg shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Brand</span>
+                    </button>
+                  </div>
+
+                  {brands.length === 0 ? (
+                    <EmptyState message="No brands yet. Add one to get started." />
+                  ) : (
+                    <div className="space-y-2">
+                      {brands.map((brand) => (
+                        <div
+                          key={brand._id}
+                          className="flex items-center justify-between px-5 py-4 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-all duration-200"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-9 h-9 rounded-full bg-brass/10 border border-brass/20 flex items-center justify-center shrink-0">
+                              <span className="font-display text-sm text-brass uppercase">{brand.name.charAt(0)}</span>
+                            </div>
+                            <span className="font-display text-base tracking-[0.1em] text-tb-white uppercase">{brand.name}</span>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              onClick={() => setEditingBrand(brand)}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-tb-white text-xs font-condensed hover:bg-white/10 transition-colors"
+                            >
+                              <Pencil className="w-3 h-3" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteBrand(brand._id)}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs font-condensed hover:bg-red-500/20 transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
               {/* ── REVIEWS ── */}
               {activeTab === 'reviews' && (
                 <motion.div key="reviews" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
@@ -1415,6 +1624,24 @@ export default function Admin() {
             </div>
           </ModalShell>
         )}
+        {showAddBrandModal && (
+          <BrandModal
+            title="Add Brand"
+            initialName=""
+            submitLabel="Create Brand"
+            onSubmit={(name) => addBrand(name)}
+            onClose={() => setShowAddBrandModal(false)}
+          />
+        )}
+        {editingBrand && (
+          <BrandModal
+            title="Edit Brand"
+            initialName={editingBrand.name}
+            submitLabel="Save Changes"
+            onSubmit={(name) => updateBrand(editingBrand._id, name)}
+            onClose={() => setEditingBrand(null)}
+          />
+        )}
         {showAddProductModal && (
           <ProductModal title="Add Product" onSubmit={addProduct} onClose={() => setShowAddProductModal(false)} />
         )}
@@ -1443,6 +1670,7 @@ export default function Admin() {
               categoryId: editingProduct.categoryId,
               purchasePrice: editingProduct.purchasePrice ? String(editingProduct.purchasePrice) : '',
               price: String(editingProduct.price),
+              brandId: editingProduct.brandId ?? '',
               images: (editingProduct as any).images?.length
                 ? (editingProduct as any).images
                 : editingProduct.image

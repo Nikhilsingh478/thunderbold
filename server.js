@@ -119,6 +119,16 @@ app.use('/api/reviews', async (req, res) => {
   }
 });
 
+app.use('/api/brands', async (req, res) => {
+  try {
+    const { default: handler } = await import('./api/brands/index.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in brands:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`API server running on http://localhost:${port}`);
   console.log('Serving API endpoints:');
@@ -130,4 +140,5 @@ app.listen(port, () => {
   console.log('  /api/categories');
   console.log('  /api/address');
   console.log('  /api/reviews');
+  console.log('  /api/brands');
 });
