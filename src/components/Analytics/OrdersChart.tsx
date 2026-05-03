@@ -19,14 +19,30 @@ interface OrdersChartProps {
 }
 
 function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
-  const [year, month, day] = value.split('-');
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-  return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    const [year, month] = value.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, 1));
+    return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
+  return value;
 }
 
 export default function OrdersChart({ data, range }: OrdersChartProps) {
   const total = useMemo(() => data.reduce((s, p) => s + p.count, 0), [data]);
   const monthly = range === 'month';
+  const chartData = useMemo(
+    () =>
+      data.map((point) => ({
+        ...point,
+        x: point.day || point.month || '',
+      })),
+    [data]
+  );
 
   return (
     <ChartCard
@@ -44,10 +60,10 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
       <div className="h-56 sm:h-64 md:h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {monthly ? (
-            <LineChart data={data} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="day"
+                dataKey="x"
                 tickFormatter={(v) => fmtLabel(String(v), range)}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
@@ -86,7 +102,7 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
               />
             </LineChart>
           ) : (
-            <BarChart data={data} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
               <defs>
                 <linearGradient id="orderBar" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#d4a32c" stopOpacity={0.95} />
@@ -95,7 +111,7 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
               </defs>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="day"
+                dataKey="x"
                 tickFormatter={(v) => fmtLabel(String(v), range)}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
