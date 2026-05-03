@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import PromoBanner from './promo/PromoBanner';
 
@@ -213,6 +213,10 @@ function ProductSection({
   );
 }
 
+const LazyProductSection = lazy(async () => ({
+  default: ProductSection,
+}));
+
 export default function CategoriesSection() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -307,15 +311,26 @@ export default function CategoriesSection() {
 
         {/* ── Kurta Collection ─────────────────────────────────────── */}
         {showKurta && (
-          <ProductSection
-            eyebrow="New Arrival"
-            heading="The Kurta Collection"
-            subtitle="Crafted tradition. Contemporary style."
-            products={products}
-            loading={loading}
-            navigate={navigate}
-            className="mt-20 md:mt-28"
-          />
+          <Suspense
+            fallback={
+              <div className="mt-20 md:mt-28">
+                <div className="mb-12 md:mb-20 text-center">
+                  <div className="h-4 w-40 mx-auto bg-white/5 rounded animate-pulse mb-6" />
+                  <div className="h-10 w-80 mx-auto bg-white/5 rounded animate-pulse" />
+                </div>
+              </div>
+            }
+          >
+            <LazyProductSection
+              eyebrow="New Arrival"
+              heading="The Kurta Collection"
+              subtitle="Crafted tradition. Contemporary style."
+              products={products}
+              loading={loading}
+              navigate={navigate}
+              className="mt-20 md:mt-28"
+            />
+          </Suspense>
         )}
 
       </div>
