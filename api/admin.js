@@ -106,10 +106,16 @@ async function getOverview(db, range) {
   const orders = db.collection("orders");
   const users = db.collection("users");
 
-  const [revAgg, orderCount, userCount] = await Promise.all([
+  const [revAgg, netRevAgg, orderCount, userCount] = await Promise.all([
     orders
       .aggregate([
         { $match: { createdAt: { $gte: range.from, $lte: range.to }, ...revenueOrderMatch } },
+        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+      ])
+      .toArray(),
+    orders
+      .aggregate([
+        { $match: { ...revenueOrderMatch } },
         { $group: { _id: null, total: { $sum: "$totalAmount" } } },
       ])
       .toArray(),
@@ -118,12 +124,13 @@ async function getOverview(db, range) {
   ]);
 
   const totalRevenue = revAgg[0]?.total || 0;
+  const netRevenue = netRevAgg[0]?.total || 0;
   const totalOrders = orderCount || 0;
   const aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   return {
     totalRevenue,
-    netRevenue: totalRevenue,
+    netRevenue,
     totalOrders,
     averageOrderValue: aov,
     totalUsers: userCount || 0,
