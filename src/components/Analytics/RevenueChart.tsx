@@ -28,7 +28,7 @@ const inrFull = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 });
 
-function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
+function fmtLabel(value: string) {
   const [year, month, day] = value.split('-');
   const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
   return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -58,12 +58,12 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
                 dataKey="day"
-                tickFormatter={(v) => fmtLabel(String(v), range)}
+                tickFormatter={(v) => fmtLabel(String(v))}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval={0}
-                minTickGap={18}
+                interval="preserveStartEnd"
+                minTickGap={24}
               />
               <YAxis
                 tickFormatter={(v) => '₹' + inrCompact.format(v)}
@@ -82,7 +82,7 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
                   fontSize: 12,
                   color: '#fff',
                 }}
-                labelFormatter={(m) => fmtLabel(String(m), range)}
+                labelFormatter={(m) => fmtLabel(String(m))}
                 formatter={(v: number) => [inrFull.format(Math.round(v)), 'Revenue']}
               />
               <Line
@@ -106,12 +106,12 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
                 dataKey="day"
-                tickFormatter={(v) => fmtLabel(String(v), range)}
+                tickFormatter={(v) => fmtLabel(String(v))}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval={0}
-                minTickGap={32}
+                interval="preserveStartEnd"
+                minTickGap={24}
               />
               <YAxis
                 tickFormatter={(v) => '₹' + inrCompact.format(v)}
@@ -129,7 +129,7 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
                   fontSize: 12,
                   color: '#fff',
                 }}
-                labelFormatter={(m) => fmtLabel(String(m), range)}
+                labelFormatter={(m) => fmtLabel(String(m))}
                 formatter={(v: number) => [inrFull.format(Math.round(v)), 'Revenue']}
               />
               <Area

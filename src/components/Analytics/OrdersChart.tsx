@@ -20,10 +20,6 @@ interface OrdersChartProps {
 
 function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
   const [year, month, day] = value.split('-');
-  if (range === 'month') {
-    const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day || '1')));
-    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-  }
   const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
   return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
@@ -56,8 +52,8 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval={0}
-                minTickGap={18}
+                interval="preserveStartEnd"
+                minTickGap={24}
               />
               <YAxis
                 allowDecimals={false}
