@@ -182,7 +182,7 @@ export default function CategoriesSection() {
         </div>
 
         {/* ── Promo Banner (between Denim and T-Shirts) ────────────── */}
-        <div className="mt-16 md:mt-24 -mx-6 md:-mx-16">
+        <div className="mt-0 -mx-6 md:-mx-16">
           <PromoBanner />
         </div>
 

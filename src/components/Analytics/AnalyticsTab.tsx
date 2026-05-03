@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { IndianRupee, ShoppingBag, TrendingUp, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, IndianRupee, ShoppingBag, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import StatsCard from './StatsCard';
 import RevenueChart from './RevenueChart';
@@ -61,10 +61,25 @@ export default function AnalyticsTab() {
   }, [user, range, selectedMonth]);
 
   useEffect(() => {
-    if (data?.selectedMonth && !selectedMonth) {
-      setSelectedMonth(data.selectedMonth);
+    if (range === 'month' && !selectedMonth) {
+      const now = new Date();
+      setSelectedMonth(`${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`);
     }
-  }, [data?.selectedMonth, selectedMonth]);
+  }, [range, selectedMonth]);
+
+  const monthLabel = useMemo(() => {
+    if (!selectedMonth) return 'Current month';
+    const [year, month] = selectedMonth.split('-');
+    const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+    return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  }, [selectedMonth]);
+
+  const shiftMonth = (delta: number) => {
+    const base = selectedMonth || `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`;
+    const [year, month] = base.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1 + delta, 1));
+    setSelectedMonth(`${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`);
+  };
 
   if (loading) {
     return (
@@ -139,25 +154,22 @@ export default function AnalyticsTab() {
         ))}
       </div>
       {range === 'month' && (
-        <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 12 }).map((_, i) => {
-            const date = new Date();
-            date.setUTCMonth(date.getUTCMonth() - i, 1);
-            const value = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
-            const label = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-            const active = selectedMonth === value;
-            return (
-              <button
-                key={value}
-                onClick={() => setSelectedMonth(value)}
-                className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] transition ${
-                  active ? 'border-brass bg-brass/10 text-brass' : 'border-white/10 text-sv-mid'
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between rounded-full border border-white/10 bg-white/[0.02] px-3 py-2">
+          <button
+            onClick={() => shiftMonth(-1)}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-sv-mid transition hover:border-brass hover:text-brass"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <p className="font-condensed text-xs uppercase tracking-[0.18em] text-brass">{monthLabel}</p>
+          <button
+            onClick={() => shiftMonth(1)}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-sv-mid transition hover:border-brass hover:text-brass"
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       )}
 

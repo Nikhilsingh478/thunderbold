@@ -9,9 +9,9 @@ export default function PromoBanner() {
   if (promoSlides.length === 0) return null;
 
   return (
-    <section aria-label="Promotional offers" className="px-0 py-0">
-      <div className="mx-auto max-w-[1000px]">
-        <div className="grid grid-cols-2 gap-0">
+    <section aria-label="Promotional offers" className="px-0 py-0 m-0">
+      <div className="mx-auto max-w-[1000px] p-0 m-0">
+        <div className="grid grid-cols-2 gap-0 p-0 m-0">
           {promoSlides.map((slide) => (
             <Link
               key={slide.id}

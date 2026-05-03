@@ -354,7 +354,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       range: { from: range.from.toISOString(), to: range.to.toISOString() },
-      selectedMonth: range.selectedMonth,
+      selectedMonth: range.selectedMonth || null,
       overview,
       revenueSeries: revenue,
       ordersSeries: ordersTs,
