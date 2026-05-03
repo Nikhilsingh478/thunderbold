@@ -20,6 +20,11 @@ export default function BrandsSection() {
           transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           className="mb-8 md:mb-12 text-center"
         >
+          <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-5 flex items-center justify-center gap-3">
+            <span className="hidden md:inline-block w-6 h-px bg-brass/50" />
+            Explore
+            <span className="hidden md:inline-block w-6 h-px bg-brass/50" />
+          </div>
           <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase leading-none">
             Shop by Brand
           </h2>
@@ -43,7 +48,7 @@ export default function BrandsSection() {
           className="group w-full block overflow-hidden rounded-sm border border-white/[0.08] hover:border-brass/40 transition-all duration-500 relative"
         >
           {/* Gradient background */}
-          <div className="relative h-[180px] md:h-[240px] bg-[#0d0d0d] flex items-center justify-center overflow-hidden">
+          <div className="relative h-[72px] md:h-[240px] bg-[#0d0d0d] flex items-center justify-center overflow-hidden">
 
             {/* Animated grain overlay */}
             <div className="absolute inset-0 opacity-[0.04] bg-noise pointer-events-none" />
@@ -65,6 +70,19 @@ export default function BrandsSection() {
             </div>
 
             <div className="relative z-10 flex flex-col items-center gap-4 md:gap-5 px-4 text-center">
+              <p className="hidden md:block font-condensed font-semibold text-[0.68rem] md:text-[0.74rem] tracking-[0.42em] uppercase text-brass">
+                Thunderbolt Curated
+              </p>
+              <h3 className="hidden md:block font-display text-2xl md:text-4xl tracking-[0.14em] metal-text uppercase leading-none">
+                Discover Our Brands
+              </h3>
+              <div className="hidden md:flex items-center gap-3 mt-1">
+                <div className="h-px w-6 bg-brass/50" />
+                <p className="font-condensed text-xs text-sv tracking-[0.18em] uppercase">
+                  Browse all collections
+                </p>
+                <div className="h-px w-6 bg-brass/50" />
+              </div>
               <div className="flex items-center gap-2 mt-1 px-5 py-2.5 border border-brass/40 rounded-full group-hover:bg-brass/10 group-hover:border-brass/70 transition-all duration-300">
                 <span className="font-condensed text-xs text-brass uppercase tracking-[0.2em]">
                   View All Brands

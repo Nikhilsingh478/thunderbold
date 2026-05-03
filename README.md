@@ -1367,6 +1367,19 @@ A running log of meaningful UI / UX changes shipped to the storefront. Backend, 
   - Slider ↔ details column gap is `gap-7 md:gap-12 lg:gap-24`.
   - Details column drops mobile vertical padding (`py-0 md:py-8`) so the "Premium Collection" eyebrow sits close to the slider.
 - **Description**: reduced to `text-[0.78rem]` with `leading-snug` so it reads as supporting copy rather than a hero block.
+
+### Brands banner + brand product grids
+- **Homepage banner** (`src/components/BrandsSection.tsx`):
+  - Desktop keeps the full cinematic copy block (`Explore`, `Thunderbolt Curated`, `Discover Our Brands`, `Browse all collections`, and the capsule CTA).
+  - Mobile keeps only the compact capsule CTA (`View All Brands`) and uses a much shorter banner height so the section stays lightweight.
+- **Brand/category product cards** (`src/components/products/ProductGrid.tsx`):
+  - Long product titles now clamp on mobile with tighter line-height to prevent stretched cards and uneven rows.
+  - Desktop still shows the full title treatment.
+
+### Analytics month view
+- The admin analytics tab supports `7d`, `30d`, and `month`.
+- Month mode is anchored to the selected calendar month and returns a daily series for that month.
+- Charts use the same readable day-style axis behavior as the 30-day view, so month mode no longer collapses labels or appears to lose the line.
 - **Trust badges relocated**: the `Cash on Delivery Available` / `1 Day Assured Refund` / `Easy Exchange and Returns` block was moved from above the action buttons to *below* the `Order Now` button. This keeps the primary CTAs above the fold on mobile and surfaces the reassurance copy immediately after the purchase decision.
 
 ---

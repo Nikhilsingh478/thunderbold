@@ -30,10 +30,6 @@ const inrFull = new Intl.NumberFormat('en-IN', {
 
 function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
   const [year, month, day] = value.split('-');
-  if (range === 'month') {
-    const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
-    return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
-  }
   const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
   return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
@@ -61,13 +57,13 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
             <LineChart data={data} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="month"
+                dataKey="day"
                 tickFormatter={(v) => fmtLabel(String(v), range)}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 interval={0}
-                minTickGap={28}
+                minTickGap={18}
               />
               <YAxis
                 tickFormatter={(v) => '₹' + inrCompact.format(v)}
@@ -75,7 +71,7 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
                 axisLine={false}
                 tickLine={false}
                 width={50}
-                domain={['dataMin - 1', 'dataMax + 1']}
+                domain={['dataMin', 'dataMax']}
               />
               <Tooltip
                 cursor={{ stroke: 'rgba(212,163,44,0.35)', strokeWidth: 1 }}
