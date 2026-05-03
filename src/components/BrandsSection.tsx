@@ -13,7 +13,6 @@ export default function BrandsSection() {
     <section className="pt-14 md:pt-20 pb-2 px-6 md:px-16">
       <div className="max-w-[1000px] mx-auto">
 
-        {/* Section heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -21,11 +20,6 @@ export default function BrandsSection() {
           transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           className="mb-8 md:mb-12 text-center"
         >
-          <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-5 flex items-center justify-center gap-3">
-            <span className="w-6 h-px bg-brass/50 inline-block" />
-            Explore
-            <span className="w-6 h-px bg-brass/50 inline-block" />
-          </div>
           <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase leading-none">
             Shop by Brand
           </h2>
@@ -70,23 +64,7 @@ export default function BrandsSection() {
               </span>
             </div>
 
-            {/* Main content */}
             <div className="relative z-10 flex flex-col items-center gap-4 md:gap-5 px-4 text-center">
-              <p className="font-condensed font-semibold text-[0.68rem] md:text-[0.74rem] tracking-[0.42em] uppercase text-brass">
-                Thunderbolt Curated
-              </p>
-              <h3 className="font-display text-2xl md:text-4xl tracking-[0.14em] metal-text uppercase leading-none">
-                Discover Our Brands
-              </h3>
-              <div className="flex items-center gap-3 mt-1">
-                <div className="h-px w-6 bg-brass/50" />
-                <p className="font-condensed text-xs text-sv tracking-[0.18em] uppercase">
-                  Browse all collections
-                </p>
-                <div className="h-px w-6 bg-brass/50" />
-              </div>
-
-              {/* CTA pill */}
               <div className="flex items-center gap-2 mt-1 px-5 py-2.5 border border-brass/40 rounded-full group-hover:bg-brass/10 group-hover:border-brass/70 transition-all duration-300">
                 <span className="font-condensed text-xs text-brass uppercase tracking-[0.2em]">
                   View All Brands

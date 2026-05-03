@@ -105,8 +105,8 @@ export default function ProductGrid({
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
             />
           </div>
-          <div className="mt-5 flex flex-col">
-            <h3 className="font-condensed text-lg tracking-[0.15em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300">
+          <div className="mt-4 flex flex-col">
+            <h3 className="font-condensed text-[0.95rem] sm:text-lg leading-tight sm:leading-snug tracking-[0.12em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 overflow-hidden">
               {prod.name}
             </h3>
             <div className="mt-1">
