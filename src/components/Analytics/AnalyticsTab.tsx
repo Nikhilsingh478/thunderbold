@@ -119,24 +119,24 @@ export default function AnalyticsTab() {
           index={0}
         />
         <StatsCard
+          label="Net Revenue"
+          value={overview.netRevenue}
+          icon={IndianRupee}
+          format="currency"
+          index={1}
+        />
+        <StatsCard
           label="Total Orders"
           value={overview.totalOrders}
           icon={ShoppingBag}
           format="number"
-          index={1}
+          index={2}
         />
         <StatsCard
           label="Avg Order Value"
           value={overview.averageOrderValue}
           icon={TrendingUp}
           format="currency"
-          index={2}
-        />
-        <StatsCard
-          label="Total Users"
-          value={overview.totalUsers}
-          icon={Users}
-          format="number"
           index={3}
         />
       </div>

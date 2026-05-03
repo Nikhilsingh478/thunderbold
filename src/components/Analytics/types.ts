@@ -1,5 +1,6 @@
 export interface AnalyticsOverview {
   totalRevenue: number;
+  netRevenue: number;
   totalOrders: number;
   averageOrderValue: number;
   totalUsers: number;

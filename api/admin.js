@@ -123,6 +123,7 @@ async function getOverview(db, range) {
 
   return {
     totalRevenue,
+    netRevenue: totalRevenue,
     totalOrders,
     averageOrderValue: aov,
     totalUsers: userCount || 0,

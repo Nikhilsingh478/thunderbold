@@ -30,6 +30,10 @@ function useCountUp(target: number, duration = 700) {
   const fromRef = useRef(0);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setValue(target);
+      return;
+    }
     fromRef.current = value;
     startRef.current = null;
     let raf = 0;
@@ -55,9 +59,9 @@ export default function StatsCard({ label, value, icon: Icon, format: mode = 'nu
   const animated = useCountUp(value);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.2, delay: index * 0.03, ease: [0.16, 1, 0.3, 1] }}
       className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 transition-colors duration-300 hover:border-brass/40"
     >
       <div className="flex items-start justify-between gap-3">

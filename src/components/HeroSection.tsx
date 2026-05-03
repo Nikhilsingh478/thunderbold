@@ -30,6 +30,7 @@ const HeroSection = () => {
   const parallaxYBg = useTransform(smoothMouseY, [-1, 1], [10, -10]);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const handleMouseMove = (e: MouseEvent) => {
       const { innerWidth, innerHeight } = window;
       if (innerWidth < 768) return; // Disable on mobile devices
@@ -39,8 +40,8 @@ const HeroSection = () => {
       mouseX.set(x);
       mouseY.set(y);
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [mouseX, mouseY]);
 
   return (
@@ -65,6 +66,7 @@ const HeroSection = () => {
             animate={{ scale: 1 }}
             transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             loading="eager"
+            fetchpriority="high"
           />
           <motion.img
             src={mobileHero}
