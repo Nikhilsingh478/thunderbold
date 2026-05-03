@@ -39,20 +39,20 @@
 
 ## 1. Project Overview
 
-**Thunderbolt** is an end-to-end e-commerce platform for a premium denim brand. It is built around a "cinematic" brand experience — smooth Framer Motion animations, a striking dark aesthetic, custom cursors, and condensed serif typography — while maintaining a robust, production-ready backend.
+**Thunderbolt** is an end-to-end premium fashion e-commerce platform. It combines a cinematic storefront, a scalable admin panel, MongoDB-backed commerce data, Firebase authentication, Cloudinary media delivery, and a modern analytics stack for store operators.
 
 ### Core Capabilities
 
 | Domain | What it does |
 |---|---|
-| **Catalog** | Live product catalog backed by MongoDB; products belong to categories; multiple images per product via Cloudinary CDN |
+| **Catalog** | Live product catalog backed by MongoDB; products belong to categories or section-based collections; multiple images per product via Cloudinary CDN |
 | **Stock** | Per-size stock tracking (`sizeStock` map) for waist sizes 28/30/32/34/36; size buttons auto-disable on OOS; atomic decrement/rollback on checkout |
 | **Auth** | Firebase email/password authentication; server-side token verification via Firebase Admin SDK |
 | **Cart** | localStorage-first (zero latency); background DB sync; quantity management; size-aware items |
 | **Wishlist** | Guest mode (localStorage); authenticated mode (MongoDB); toggle from any product card |
 | **Checkout** | Address capture; duplicate-order guard; atomic multi-item stock decrement with compensation rollback |
 | **Orders** | Full order history per user; admin sees all; status workflow; cancel with stock restoration |
-| **Admin** | Full CRUD for products (with per-size stock editor), categories, and orders; no separate dashboard app needed |
+| **Admin** | Full CRUD for products (with per-size stock editor), categories, brands, orders, analytics, and reviews; no separate dashboard app needed |
 | **Images** | Cloudinary CDN with auto-format (WebP/AVIF), auto-quality, and responsive widths applied at render time |
 
 ---
@@ -459,7 +459,20 @@ Site-wide footer with a fully responsive layout split between mobile and desktop
 Full-screen overlay triggered from the Navbar. Fetches all products once on open and filters client-side as the user types. Results show Cloudinary-optimized product images (500px), product name, price, and click-to-navigate.
 
 #### `CategoriesSection.tsx`
-Fetches categories from `/api/categories`. Renders an animated grid using Framer Motion `staggerChildren` on scroll entry. Images are Cloudinary-optimized at 500px. Each card navigates to `/category/:id`. The legacy "On the Horizon / Coming Soon" teaser strip that previously sat below the grid has been retired from the storefront — the markup remains commented in the source for easy reinstatement, but the section no longer renders. The `coming-soon` value is still a valid `section` on the backend so admin-tagged categories continue to work.
+Fetches categories from `/api/categories`. Renders an animated grid using Framer Motion `staggerChildren` on scroll entry. Images are Cloudinary-optimized at 500px. Each card navigates to `/category/:categoryId`.
+
+This section also includes the **Kurta collection**:
+- kurta products are fetched directly from products with `section === "kurta"`
+- the Kurta product section is lazy-loaded with `React.lazy` + `Suspense`
+- this reduces homepage payload while preserving the direct-product browsing experience
+
+The legacy "On the Horizon / Coming Soon" teaser strip has been retired from the storefront. The backend still supports `coming-soon` as a valid section for admin-tagged categories.
+
+#### `BrandsSection.tsx`
+Homepage brand discovery is anchored by a full-width CTA banner that routes to `/brands`.
+- desktop shows the full discovery copy
+- mobile uses a compact, lighter-height banner and a single CTA
+- the banner visually emphasizes brand browsing without overwhelming first paint
 
 #### `CustomCursor.tsx`
 Replaces the default browser cursor on desktop with a branded circular overlay. Tracks `mousemove` and scales on hover. Hidden on mobile (touch devices detected via `pointer: coarse`).
