@@ -425,8 +425,9 @@ function ProductModal({
 
   const handleSubmit = async () => {
     const validImages = form.images.map(s => s.trim()).filter(Boolean);
-    if (!form.name || !form.price || (!isLiveSale && !form.categoryId) || validImages.length === 0) {
-      setError(`Name, price, ${isLiveSale ? '' : 'category, '}and at least one image are required.`);
+    const requiresCategory = !isLiveSale && form.section !== 'kurta';
+    if (!form.name || !form.price || (requiresCategory && !form.categoryId) || validImages.length === 0) {
+      setError(`Name, price, ${requiresCategory ? 'category, ' : ''}and at least one image are required.`);
       return;
     }
     setSubmitting(true);
@@ -472,7 +473,7 @@ function ProductModal({
         </div>
 
         {/* Category — hidden for Live Sale */}
-        {!isLiveSale && (
+        {!isLiveSale && form.section !== 'kurta' && (
           <div>
             <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Category</label>
             <div className="relative">
@@ -828,12 +829,13 @@ export default function Admin() {
       const images = formData.images.map(s => s.trim()).filter(Boolean);
       const hasHighlights = Object.values(formData.highlights).some(v => v.trim() !== '');
       const highlights = hasHighlights ? formData.highlights : null;
+      const categoryId = formData.section === 'kurta' || formData.section === 'live-sale' ? '' : formData.categoryId;
       const r = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: formData.name, section: formData.section || 'denim',
-          categoryId: formData.categoryId, price, purchasePrice, brandId,
+          categoryId, price, purchasePrice, brandId,
           sizeStock, stock, images, description: formData.description, highlights,
         }),
       });
@@ -841,7 +843,7 @@ export default function Admin() {
       if (r.ok) {
         setProducts(prev => [{
           _id: d.product._id, name: formData.name, section: formData.section || 'denim',
-          categoryId: formData.categoryId, price, purchasePrice, brandId, stock, sizeStock,
+          categoryId, price, purchasePrice, brandId, stock, sizeStock,
           images, image: images[0], description: formData.description, highlights,
         }, ...prev]);
         setShowAddProductModal(false);
@@ -865,12 +867,13 @@ export default function Admin() {
       const images = formData.images.map(s => s.trim()).filter(Boolean);
       const hasHighlightsPut = Object.values(formData.highlights).some(v => v.trim() !== '');
       const highlightsPut = hasHighlightsPut ? formData.highlights : null;
+      const categoryId = formData.section === 'kurta' || formData.section === 'live-sale' ? '' : formData.categoryId;
       const r = await fetch(`/api/products?id=${editingProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: formData.name, section: formData.section || 'denim',
-          categoryId: formData.categoryId, price, purchasePrice, brandId,
+          categoryId, price, purchasePrice, brandId,
           sizeStock, stock, images, description: formData.description, highlights: highlightsPut,
         }),
       });
@@ -879,7 +882,7 @@ export default function Admin() {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
           ? {
               _id: editingProduct._id, name: formData.name, section: formData.section || 'denim',
-              categoryId: formData.categoryId, price, purchasePrice, brandId, stock, sizeStock,
+              categoryId, price, purchasePrice, brandId, stock, sizeStock,
               images, image: images[0], description: formData.description, highlights: highlightsPut,
             }
           : p
@@ -1273,7 +1276,9 @@ export default function Admin() {
                           </div>
                           <div className="p-3">
                             <p className="font-condensed text-xs text-sv-mid mb-0.5 truncate">
-                              {categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}
+                              {product.section === 'kurta'
+                                ? 'Kurta Collection'
+                                : categories.find(c => c._id === product.categoryId)?.name || 'Uncategorized'}
                             </p>
                             <h3 className="font-condensed font-medium text-tb-white text-sm mb-1 line-clamp-2 leading-snug">{product.name}</h3>
                             <div className="flex items-center justify-between mb-2">

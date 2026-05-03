@@ -6,6 +6,9 @@ import path from "path";
 export default defineConfig(() => ({
   build: {
     sourcemap: false,
+    rollupOptions: {
+      external: ['lucide-react/dist/esm/icons/wallet-minimal.js.map'],
+    },
   },
   server: {
     host: "0.0.0.0",
