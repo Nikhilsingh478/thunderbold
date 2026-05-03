@@ -59,6 +59,33 @@ function eachMonth(from, to) {
   return months;
 }
 
+function eachDay(from, to) {
+  const days = [];
+  const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+  const end = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), to.getUTCDate()));
+  while (cursor <= end) {
+    days.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return days;
+}
+
+function buildRange(mode = "month") {
+  const now = new Date();
+  const endOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+  if (mode === "7d") {
+    const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
+    return { from, to: endOfToday, mode };
+  }
+  if (mode === "30d") {
+    const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29));
+    return { from, to: endOfToday, mode };
+  }
+  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  return { from, to, mode: "month" };
+}
+
 async function getOverview(db, range) {
   const orders = db.collection("orders");
   const users = db.collection("users");
@@ -88,43 +115,77 @@ async function getOverview(db, range) {
 
 async function getRevenueOverTime(db, range) {
   const orders = db.collection("orders");
+  if (range.mode === "month") {
+    const rows = await orders
+      .aggregate([
+        { $match: { createdAt: { $gte: range.from, $lte: range.to }, ...revenueOrderMatch } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "UTC" } },
+            revenue: { $sum: "$totalAmount" },
+          },
+        },
+      ])
+      .toArray();
+    const map = new Map(rows.map((r) => [r._id, r.revenue]));
+    return eachMonth(range.from, range.to).map((month) => ({
+      month,
+      revenue: Math.round((map.get(month) || 0) * 100) / 100,
+    }));
+  }
   const rows = await orders
     .aggregate([
       { $match: { createdAt: { $gte: range.from, $lte: range.to }, ...revenueOrderMatch } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "UTC" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" } },
           revenue: { $sum: "$totalAmount" },
         },
       },
     ])
     .toArray();
-
   const map = new Map(rows.map((r) => [r._id, r.revenue]));
-  return eachMonth(range.from, range.to).map((month) => ({
-    month,
-    revenue: Math.round((map.get(month) || 0) * 100) / 100,
+  return eachDay(range.from, range.to).map((day) => ({
+    day,
+    revenue: Math.round((map.get(day) || 0) * 100) / 100,
   }));
 }
 
 async function getOrdersOverTime(db, range) {
   const orders = db.collection("orders");
+  if (range.mode === "month") {
+    const rows = await orders
+      .aggregate([
+        { $match: { createdAt: { $gte: range.from, $lte: range.to } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "UTC" } },
+            count: { $sum: 1 },
+          },
+        },
+      ])
+      .toArray();
+    const map = new Map(rows.map((r) => [r._id, r.count]));
+    return eachMonth(range.from, range.to).map((month) => ({
+      month,
+      count: map.get(month) || 0,
+    }));
+  }
   const rows = await orders
     .aggregate([
       { $match: { createdAt: { $gte: range.from, $lte: range.to } } },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "UTC" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "UTC" } },
           count: { $sum: 1 },
         },
       },
     ])
     .toArray();
-
   const map = new Map(rows.map((r) => [r._id, r.count]));
-  return eachMonth(range.from, range.to).map((month) => ({
-    month,
-    count: map.get(month) || 0,
+  return eachDay(range.from, range.to).map((day) => ({
+    day,
+    count: map.get(day) || 0,
   }));
 }
 
@@ -267,7 +328,8 @@ export default async function handler(req, res) {
   const auth = await checkAdminAuth(req, db);
   if (!auth.authorized) return res.status(auth.status).json({ error: auth.error });
 
-  const range = buildMonthRange();
+  const mode = req.query.range === "7d" || req.query.range === "30d" ? req.query.range : "month";
+  const range = buildRange(mode);
 
   try {
     const [overview, revenue, ordersTs, topProducts, stockAlerts, recentOrders] =

@@ -13,22 +13,26 @@ import type { OrdersPoint } from './types';
 
 interface OrdersChartProps {
   data: OrdersPoint[];
+  range: '7d' | '30d' | 'month';
 }
 
-function fmtMonth(m: string) {
-  // m is YYYY-MM
-  const [year, month] = m.split('-');
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
-  return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
+  const [year, month, day] = value.split('-');
+  if (range === 'month') {
+    const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+    return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+  }
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-export default function OrdersChart({ data }: OrdersChartProps) {
+export default function OrdersChart({ data, range }: OrdersChartProps) {
   const total = useMemo(() => data.reduce((s, p) => s + p.count, 0), [data]);
 
   return (
     <ChartCard
       title="Orders"
-      subtitle="Monthly"
+      subtitle={range === 'month' ? 'This month' : range === '30d' ? 'Last 30 days' : 'Last 7 days'}
       right={
         <div className="text-right">
           <p className="font-condensed text-[10px] uppercase tracking-[0.18em] text-sv-mid">Total</p>
@@ -49,8 +53,8 @@ export default function OrdersChart({ data }: OrdersChartProps) {
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
-              dataKey="month"
-              tickFormatter={fmtMonth}
+              dataKey={range === 'month' ? 'month' : 'day'}
+              tickFormatter={(v) => fmtLabel(String(v), range)}
               tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
@@ -73,7 +77,7 @@ export default function OrdersChart({ data }: OrdersChartProps) {
                 fontSize: 12,
                 color: '#fff',
               }}
-              labelFormatter={(m) => fmtMonth(String(m))}
+              labelFormatter={(m) => fmtLabel(String(m), range)}
               formatter={(v: number) => [v, 'Orders']}
             />
             <Bar dataKey="count" fill="url(#orderBar)" radius={[4, 4, 0, 0]} animationDuration={500} />

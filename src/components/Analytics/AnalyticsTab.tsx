@@ -19,6 +19,7 @@ import type { AnalyticsPayload } from './types';
 export default function AnalyticsTab() {
   const { user } = useAuth();
   const [data, setData] = useState<AnalyticsPayload | null>(null);
+  const [range, setRange] = useState<'7d' | '30d' | 'month'>('month');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +32,7 @@ export default function AnalyticsTab() {
       setError(null);
       try {
         const token = await user.getIdToken();
-        const r = await fetch('/api/admin/analytics', {
+        const r = await fetch(`/api/admin/analytics?range=${range}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!r.ok) {
@@ -54,7 +55,7 @@ export default function AnalyticsTab() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, range]);
 
   if (loading) {
     return (
@@ -115,10 +116,23 @@ export default function AnalyticsTab() {
           index={3}
         />
       </div>
+      <div className="flex gap-2">
+        {(['7d', '30d', 'month'] as const).map((item) => (
+          <button
+            key={item}
+            onClick={() => setRange(item)}
+            className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] transition ${
+              range === item ? 'border-brass bg-brass/10 text-brass' : 'border-white/10 text-sv-mid'
+            }`}
+          >
+            {item === '7d' ? 'Last 7 days' : item === '30d' ? 'Last 30 days' : 'This month'}
+          </button>
+        ))}
+      </div>
 
       {/* Charts */}
-      <RevenueChart data={revenueSeries} />
-      <OrdersChart data={ordersSeries} />
+      <RevenueChart data={revenueSeries} range={range} />
+      <OrdersChart data={ordersSeries} range={range} />
 
       {/* Top products + stock alerts side by side on large screens */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

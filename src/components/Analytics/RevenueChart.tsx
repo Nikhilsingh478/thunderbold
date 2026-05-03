@@ -13,6 +13,7 @@ import type { RevenuePoint } from './types';
 
 interface RevenueChartProps {
   data: RevenuePoint[];
+  range: '7d' | '30d' | 'month';
 }
 
 const inrCompact = new Intl.NumberFormat('en-IN', {
@@ -25,20 +26,23 @@ const inrFull = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 });
 
-function fmtMonth(m: string) {
-  // m is YYYY-MM
-  const [year, month] = m.split('-');
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
-  return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
+  const [year, month, day] = value.split('-');
+  if (range === 'month') {
+    const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+    return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+  }
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-export default function RevenueChart({ data }: RevenueChartProps) {
+export default function RevenueChart({ data, range }: RevenueChartProps) {
   const total = useMemo(() => data.reduce((s, p) => s + p.revenue, 0), [data]);
 
   return (
     <ChartCard
       title="Revenue"
-      subtitle="Monthly"
+      subtitle={range === 'month' ? 'This month' : range === '30d' ? 'Last 30 days' : 'Last 7 days'}
       right={
         <div className="text-right">
           <p className="font-condensed text-[10px] uppercase tracking-[0.18em] text-sv-mid">Total</p>
@@ -59,8 +63,8 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
-              dataKey="month"
-              tickFormatter={fmtMonth}
+              dataKey={range === 'month' ? 'month' : 'day'}
+              tickFormatter={(v) => fmtLabel(String(v), range)}
               tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
@@ -83,7 +87,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                 fontSize: 12,
                 color: '#fff',
               }}
-              labelFormatter={(m) => fmtMonth(String(m))}
+              labelFormatter={(m) => fmtLabel(String(m), range)}
               formatter={(v: number) => [inrFull.format(Math.round(v)), 'Revenue']}
             />
             <Area

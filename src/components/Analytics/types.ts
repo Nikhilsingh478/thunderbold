@@ -6,12 +6,14 @@ export interface AnalyticsOverview {
 }
 
 export interface RevenuePoint {
-  month: string;
+  month?: string;
+  day?: string;
   revenue: number;
 }
 
 export interface OrdersPoint {
-  month: string;
+  month?: string;
+  day?: string;
   count: number;
 }
 
