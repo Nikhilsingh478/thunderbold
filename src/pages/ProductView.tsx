@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart, Share2, ShoppingCart } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -31,6 +31,8 @@ export default function ProductView() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareMessage, setShareMessage] = useState('');
   
   const IMAGES: string[] = product?.images?.length
     ? product.images
@@ -130,6 +132,42 @@ export default function ProductView() {
       console.error('Error toggling wishlist:', error);
     } finally {
       setIsTogglingWishlist(false);
+    }
+  };
+
+  const handleShareProduct = async () => {
+    if (!product || isSharing) return;
+    const shareUrl = window.location.href;
+    const title = product.name || 'Thunderbolt product';
+    const text = `Check out ${title}`;
+    setIsSharing(true);
+    setShareMessage('');
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url: shareUrl });
+        setShareMessage('Shared');
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareMessage('Link copied');
+        return;
+      }
+      const input = document.createElement('input');
+      input.value = shareUrl;
+      input.setAttribute('readonly', 'true');
+      input.style.position = 'absolute';
+      input.style.left = '-9999px';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      setShareMessage('Link copied');
+    } catch {
+      setShareMessage('Share unavailable');
+    } finally {
+      setTimeout(() => setShareMessage(''), 2200);
+      setIsSharing(false);
     }
   };
 
@@ -432,6 +470,20 @@ export default function ProductView() {
                     <Heart size={20} className={!isTogglingWishlist && product && isInWishlist(product._id) ? 'fill-current' : ''} />
                   </button>
                 </div>
+
+                <button
+                  onClick={handleShareProduct}
+                  disabled={!product || isSharing}
+                  className="w-full py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 border border-white/10 text-tb-white hover:border-brass hover:text-brass bg-white/[0.02] disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:border-white/10 disabled:hover:text-white/25"
+                >
+                  <Share2 size={18} />
+                  {isSharing ? 'Sharing...' : 'Share Product'}
+                </button>
+                {shareMessage && (
+                  <p className="text-center font-condensed text-[0.7rem] tracking-[0.18em] uppercase text-brass">
+                    {shareMessage}
+                  </p>
+                )}
 
                 {/* Order CTA */}
                 <button
