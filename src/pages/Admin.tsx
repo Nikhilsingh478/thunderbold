@@ -84,10 +84,12 @@ interface Product {
 interface Brand {
   _id: string;
   name: string;
+  logoUrl?: string;
 }
 
 interface BrandFormData {
   name: string;
+  logoUrl: string;
 }
 
 interface CategoryFormData {
@@ -203,28 +205,32 @@ function CategoryModal({
   );
 }
 
+const defaultBrandFormData: BrandFormData = { name: '', logoUrl: '' };
+
 function BrandModal({
   title,
-  initialName,
+  initial,
   submitLabel,
   onSubmit,
   onClose,
 }: {
   title: string;
-  initialName: string;
+  initial?: BrandFormData | null;
   submitLabel: string;
-  onSubmit: (name: string) => Promise<boolean>;
+  onSubmit: (data: BrandFormData) => Promise<boolean>;
   onClose: () => void;
 }) {
-  const [name, setName] = useState(initialName);
+  const [form, setForm] = useState<BrandFormData>(initial ?? defaultBrandFormData);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) { setError('Brand name is required.'); return; }
+    const name = form.name.trim();
+    const logoUrl = form.logoUrl.trim();
+    if (!name) { setError('Brand name is required.'); return; }
+    if (!logoUrl) { setError('Brand logo URL is required.'); return; }
     setSubmitting(true);
-    const ok = await onSubmit(trimmed);
+    const ok = await onSubmit({ name, logoUrl });
     setSubmitting(false);
     if (!ok) setError('Something went wrong. That name may already exist.');
   };
@@ -239,12 +245,22 @@ function BrandModal({
           <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Brand Name</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
             placeholder="e.g. Levi's, Wrangler, Jack & Jones"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
             autoFocus
+          />
+        </div>
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Brand Logo URL</label>
+          <input
+            type="url"
+            value={form.logoUrl}
+            onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+            placeholder="https://res.cloudinary.com/..."
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
         {error && (
@@ -290,7 +306,6 @@ interface ProductFormData {
 const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
 const defaultHighlights: ProductHighlights = { color: '', length: '', printsPattern: '', waistRise: '', shade: '', lengthInches: '' };
 const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', purchasePrice: '', price: '', brandId: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
-const defaultBrandFormData: BrandFormData = { name: '' };
 
 function ImageInput({
   images,
@@ -662,14 +677,14 @@ export default function Admin() {
     } catch { console.error('Failed to fetch brands'); }
   };
 
-  const addBrand = async (name: string): Promise<boolean> => {
+  const addBrand = async (data: BrandFormData): Promise<boolean> => {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
       const r = await fetch('/api/brands', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(data),
       });
       const d = await r.json();
       if (r.ok) { setBrands(prev => [...prev, d.brand].sort((a, b) => a.name.localeCompare(b.name))); setShowAddBrandModal(false); return true; }
@@ -677,17 +692,17 @@ export default function Admin() {
     } catch { return false; }
   };
 
-  const updateBrand = async (id: string, name: string): Promise<boolean> => {
+  const updateBrand = async (id: string, data: BrandFormData): Promise<boolean> => {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
       const r = await fetch(`/api/brands?id=${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(data),
       });
       if (r.ok) {
-        setBrands(prev => prev.map(b => b._id === id ? { ...b, name } : b).sort((a, b) => a.name.localeCompare(b.name)));
+        setBrands(prev => prev.map(b => b._id === id ? { ...b, ...data } : b).sort((a, b) => a.name.localeCompare(b.name)));
         setEditingBrand(null);
         return true;
       }
@@ -1418,8 +1433,12 @@ export default function Admin() {
                           className="flex items-center justify-between px-5 py-4 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-all duration-200"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-9 h-9 rounded-full bg-brass/10 border border-brass/20 flex items-center justify-center shrink-0">
-                              <span className="font-display text-sm text-brass uppercase">{brand.name.charAt(0)}</span>
+                            <div className="w-9 h-9 rounded-full bg-brass/10 border border-brass/20 flex items-center justify-center overflow-hidden shrink-0">
+                              {brand.logoUrl ? (
+                                <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="font-display text-sm text-brass uppercase">{brand.name.charAt(0)}</span>
+                              )}
                             </div>
                             <span className="font-display text-base tracking-[0.1em] text-tb-white uppercase">{brand.name}</span>
                           </div>
@@ -1632,18 +1651,18 @@ export default function Admin() {
         {showAddBrandModal && (
           <BrandModal
             title="Add Brand"
-            initialName=""
+            initial={defaultBrandFormData}
             submitLabel="Create Brand"
-            onSubmit={(name) => addBrand(name)}
+            onSubmit={addBrand}
             onClose={() => setShowAddBrandModal(false)}
           />
         )}
         {editingBrand && (
           <BrandModal
             title="Edit Brand"
-            initialName={editingBrand.name}
+            initial={{ name: editingBrand.name, logoUrl: editingBrand.logoUrl || '' }}
             submitLabel="Save Changes"
-            onSubmit={(name) => updateBrand(editingBrand._id, name)}
+            onSubmit={(data) => updateBrand(editingBrand._id, data)}
             onClose={() => setEditingBrand(null)}
           />
         )}

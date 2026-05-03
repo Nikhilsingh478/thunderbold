@@ -10,6 +10,7 @@ import ScrollProgress from '../components/ScrollProgress';
 interface Brand {
   _id: string;
   name: string;
+  logoUrl?: string;
 }
 
 const containerVariants = {
@@ -109,11 +110,14 @@ export default function BrandsPage() {
                   className="group w-full flex items-center justify-between px-6 md:px-8 py-5 md:py-6 bg-white/[0.03] border border-white/[0.08] rounded-xl hover:border-brass/40 hover:bg-brass/[0.04] transition-all duration-300 text-left"
                 >
                   <div className="flex items-center gap-4">
-                    {/* Brand initial circle */}
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brass/10 border border-brass/20 flex items-center justify-center shrink-0 group-hover:bg-brass/20 transition-colors duration-300">
-                      <span className="font-display text-base md:text-lg text-brass tracking-widest uppercase">
-                        {brand.name.charAt(0)}
-                      </span>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brass/10 border border-brass/20 flex items-center justify-center overflow-hidden shrink-0 group-hover:bg-brass/20 transition-colors duration-300">
+                      {brand.logoUrl ? (
+                        <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="font-display text-base md:text-lg text-brass tracking-widest uppercase">
+                          {brand.name.charAt(0)}
+                        </span>
+                      )}
                     </div>
                     <h2 className="font-display text-lg md:text-2xl tracking-[0.12em] text-tb-white uppercase group-hover:text-brass transition-colors duration-300">
                       {brand.name}

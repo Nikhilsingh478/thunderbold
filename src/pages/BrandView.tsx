@@ -11,6 +11,7 @@ import ProductGrid, { type GridProduct } from '../components/products/ProductGri
 interface Brand {
   _id: string;
   name: string;
+  logoUrl?: string;
 }
 
 interface RawProduct extends GridProduct {
@@ -114,6 +115,11 @@ export default function BrandView() {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="mb-12 md:mb-20 text-center"
           >
+            {brand?.logoUrl ? (
+              <div className="mx-auto mb-5 w-20 h-20 rounded-full overflow-hidden border border-brass/20 bg-brass/10">
+                <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-cover" />
+              </div>
+            ) : null}
             <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-5 flex items-center justify-center gap-3">
               <span className="w-5 h-px bg-brass-dim inline-block" />
               Brand Collection
