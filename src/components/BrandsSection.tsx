@@ -13,30 +13,6 @@ export default function BrandsSection() {
     <section className="pt-14 md:pt-20 pb-2 px-6 md:px-16">
       <div className="max-w-[1000px] mx-auto">
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-8 md:mb-12 text-center"
-        >
-          <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-5 flex items-center justify-center gap-3">
-            <span className="hidden md:inline-block w-6 h-px bg-brass/50" />
-            Explore
-            <span className="hidden md:inline-block w-6 h-px bg-brass/50" />
-          </div>
-          <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase leading-none">
-            Shop by Brand
-          </h2>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
-            className="mx-auto mt-5 h-px w-20 bg-gradient-to-r from-transparent via-brass/60 to-transparent origin-center"
-          />
-        </motion.div>
-
         {/* Clickable brand banner */}
         <motion.button
           initial={{ opacity: 0, y: 24 }}
