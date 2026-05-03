@@ -24,14 +24,14 @@ export default function BrandsSection() {
           className="group w-full block overflow-hidden rounded-sm border border-white/[0.08] hover:border-brass/40 transition-all duration-500 relative"
         >
           {/* Gradient background */}
-          <div className="relative h-[72px] md:h-[240px] bg-[#0d0d0d] flex items-center justify-center overflow-hidden">
+          <div className="relative h-[72px] md:h-[240px] bg-gradient-to-r from-[#141414] via-[#1a1710] to-[#231d12] md:bg-[#0d0d0d] flex items-center justify-center overflow-hidden">
 
             {/* Animated grain overlay */}
             <div className="absolute inset-0 opacity-[0.04] bg-noise pointer-events-none" />
 
             {/* Decorative radial glow */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[500px] h-[200px] bg-brass/8 blur-[80px] rounded-full group-hover:bg-brass/14 transition-colors duration-700" />
+              <div className="w-[500px] h-[200px] bg-brass/14 blur-[80px] rounded-full group-hover:bg-brass/20 transition-colors duration-700" />
             </div>
 
             {/* Thin gold top and bottom lines */}
