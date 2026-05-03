@@ -52,6 +52,7 @@ export interface RecentOrder {
 
 export interface AnalyticsPayload {
   range: { from: string; to: string };
+  selectedMonth?: string;
   overview: AnalyticsOverview;
   revenueSeries: RevenuePoint[];
   ordersSeries: OrdersPoint[];

@@ -86,6 +86,16 @@ function buildRange(mode = "month") {
   return { from, to, mode: "month" };
 }
 
+function buildSelectedMonthRange(selectedMonth) {
+  const now = new Date();
+  const fallbackMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const month = /^\d{4}-\d{2}$/.test(selectedMonth || "") ? selectedMonth : fallbackMonth;
+  const [year, mon] = month.split("-");
+  const from = new Date(Date.UTC(Number(year), Number(mon) - 1, 1));
+  const to = new Date(Date.UTC(Number(year), Number(mon), 0, 23, 59, 59, 999));
+  return { from, to, mode: "month", selectedMonth: month };
+}
+
 async function getOverview(db, range) {
   const orders = db.collection("orders");
   const users = db.collection("users");
@@ -329,7 +339,7 @@ export default async function handler(req, res) {
   if (!auth.authorized) return res.status(auth.status).json({ error: auth.error });
 
   const mode = req.query.range === "7d" || req.query.range === "30d" ? req.query.range : "month";
-  const range = buildRange(mode);
+  const range = req.query.month ? buildSelectedMonthRange(String(req.query.month)) : buildRange(mode);
 
   try {
     const [overview, revenue, ordersTs, topProducts, stockAlerts, recentOrders] =
@@ -344,6 +354,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       range: { from: range.from.toISOString(), to: range.to.toISOString() },
+      selectedMonth: range.selectedMonth,
       overview,
       revenueSeries: revenue,
       ordersSeries: ordersTs,

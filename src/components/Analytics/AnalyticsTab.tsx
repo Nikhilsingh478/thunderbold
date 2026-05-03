@@ -20,6 +20,7 @@ export default function AnalyticsTab() {
   const { user } = useAuth();
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [range, setRange] = useState<'7d' | '30d' | 'month'>('month');
+  const [selectedMonth, setSelectedMonth] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +33,9 @@ export default function AnalyticsTab() {
       setError(null);
       try {
         const token = await user.getIdToken();
-        const r = await fetch(`/api/admin/analytics?range=${range}`, {
+        const params = new URLSearchParams({ range });
+        if (range === 'month' && selectedMonth) params.set('month', selectedMonth);
+        const r = await fetch(`/api/admin/analytics?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!r.ok) {
@@ -55,7 +58,13 @@ export default function AnalyticsTab() {
     return () => {
       cancelled = true;
     };
-  }, [user, range]);
+  }, [user, range, selectedMonth]);
+
+  useEffect(() => {
+    if (data?.selectedMonth && !selectedMonth) {
+      setSelectedMonth(data.selectedMonth);
+    }
+  }, [data?.selectedMonth, selectedMonth]);
 
   if (loading) {
     return (
@@ -129,6 +138,28 @@ export default function AnalyticsTab() {
           </button>
         ))}
       </div>
+      {range === 'month' && (
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: 12 }).map((_, i) => {
+            const date = new Date();
+            date.setUTCMonth(date.getUTCMonth() - i, 1);
+            const value = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+            const label = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+            const active = selectedMonth === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setSelectedMonth(value)}
+                className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] transition ${
+                  active ? 'border-brass bg-brass/10 text-brass' : 'border-white/10 text-sv-mid'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Charts */}
       <RevenueChart data={revenueSeries} range={range} />
