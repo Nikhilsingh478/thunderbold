@@ -32,17 +32,14 @@ function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
   return value;
 }
 
+function getChartKey(point: OrdersPoint) {
+  return point.day || point.month || '';
+}
+
 export default function OrdersChart({ data, range }: OrdersChartProps) {
   const total = useMemo(() => data.reduce((s, p) => s + p.count, 0), [data]);
   const monthly = range === 'month';
-  const chartData = useMemo(
-    () =>
-      data.map((point) => ({
-        ...point,
-        x: point.day || point.month || '',
-      })),
-    [data]
-  );
+  const chartData = useMemo(() => data.map((point) => ({ ...point, key: getChartKey(point) })), [data]);
 
   return (
     <ChartCard
@@ -63,12 +60,12 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
             <LineChart data={chartData} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="x"
+                dataKey="key"
                 tickFormatter={(v) => fmtLabel(String(v), range)}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval="preserveStartEnd"
+                interval={0}
                 minTickGap={24}
               />
               <YAxis
@@ -111,7 +108,7 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
               </defs>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="x"
+                dataKey="key"
                 tickFormatter={(v) => fmtLabel(String(v), range)}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}

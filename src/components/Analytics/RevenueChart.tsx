@@ -42,17 +42,14 @@ function fmtLabel(value: string) {
   return value;
 }
 
+function getChartKey(point: RevenuePoint) {
+  return point.day || point.month || '';
+}
+
 export default function RevenueChart({ data, range }: RevenueChartProps) {
   const total = useMemo(() => data.reduce((s, p) => s + p.revenue, 0), [data]);
   const monthly = range === 'month';
-  const chartData = useMemo(
-    () =>
-      data.map((point) => ({
-        ...point,
-        x: point.day || point.month || '',
-      })),
-    [data]
-  );
+  const chartData = useMemo(() => data.map((point) => ({ ...point, key: getChartKey(point) })), [data]);
 
   return (
     <ChartCard
@@ -73,12 +70,12 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
             <LineChart data={chartData} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="x"
+                dataKey="key"
                 tickFormatter={(v) => fmtLabel(String(v))}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval="preserveStartEnd"
+                interval={0}
                 minTickGap={24}
               />
               <YAxis
@@ -121,12 +118,12 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
               </defs>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
-                dataKey="x"
+                dataKey="key"
                 tickFormatter={(v) => fmtLabel(String(v))}
                 tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval="preserveStartEnd"
+                interval={0}
                 minTickGap={24}
               />
               <YAxis
