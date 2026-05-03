@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -49,6 +49,16 @@ export default function BrandsPage() {
 
       <main className="flex-1 pt-[108px] md:pt-[116px] pb-24 px-6 md:px-16">
         <div className="max-w-[800px] mx-auto">
+          <motion.button
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 font-condensed text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-brass transition-colors duration-200 mb-10 md:mb-14"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back
+          </motion.button>
 
           {/* Header */}
           <motion.div
