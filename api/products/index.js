@@ -101,7 +101,7 @@ export default async function handler(req, res) {
         const { name, price, purchasePrice, description, categoryId, sizeStock, highlights, brandId } = req.body;
         const section = req.body.section || 'denim';
         const images = normaliseImages(req.body);
-        const needsCategory = section !== 'live-sale';
+        const needsCategory = section !== 'live-sale' && section !== 'kurta';
 
         if (!name || !price || images.length === 0 || (needsCategory && !categoryId)) {
           return res.status(400).json({
@@ -151,7 +151,7 @@ export default async function handler(req, res) {
         const { name, price, purchasePrice, description, categoryId, sizeStock, highlights, brandId: putBrandId } = req.body;
         const putSection = req.body.section || 'denim';
         const images = normaliseImages(req.body);
-        const putNeedsCategory = putSection !== 'live-sale';
+        const putNeedsCategory = putSection !== 'live-sale' && putSection !== 'kurta';
 
         if (!name || !price || images.length === 0 || (putNeedsCategory && !categoryId)) {
           return res.status(400).json({

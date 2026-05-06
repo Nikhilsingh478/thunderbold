@@ -21,22 +21,26 @@ export default function BrandsSection() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
           onClick={() => navigate('/brands')}
           aria-label="Browse all brands"
-          className="group w-full block overflow-hidden rounded-sm border border-white/[0.08] hover:border-brass/40 transition-all duration-500 relative"
+          className="group w-full block overflow-hidden rounded-sm border border-amber-700/30 hover:border-amber-500/60 transition-all duration-500 relative"
         >
           {/* Gradient background */}
-          <div className="relative h-[72px] md:h-[240px] bg-gradient-to-r from-[#141414] via-[#1a1710] to-[#231d12] md:bg-[#0d0d0d] flex items-center justify-center overflow-hidden">
+          <div className="relative h-[80px] md:h-[260px] bg-gradient-to-br from-[#2a2006] via-[#1e1804] to-[#0d0b02] flex items-center justify-center overflow-hidden">
 
             {/* Animated grain overlay */}
-            <div className="absolute inset-0 opacity-[0.04] bg-noise pointer-events-none" />
+            <div className="absolute inset-0 opacity-[0.06] bg-noise pointer-events-none" />
 
-            {/* Decorative radial glow */}
+            {/* Strong radial glow — centre */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[500px] h-[200px] bg-brass/14 blur-[80px] rounded-full group-hover:bg-brass/20 transition-colors duration-700" />
+              <div className="w-[700px] h-[260px] bg-amber-500/25 blur-[90px] rounded-full group-hover:bg-amber-400/35 transition-colors duration-700" />
             </div>
 
-            {/* Thin gold top and bottom lines */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brass/40 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brass/40 to-transparent" />
+            {/* Secondary warm accent glow */}
+            <div className="absolute left-1/4 top-1/2 -translate-y-1/2 w-[300px] h-[160px] bg-yellow-600/20 blur-[60px] rounded-full pointer-events-none" />
+            <div className="absolute right-1/4 top-1/2 -translate-y-1/2 w-[300px] h-[160px] bg-orange-700/15 blur-[60px] rounded-full pointer-events-none" />
+
+            {/* Thin gold top and bottom lines — brighter */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
 
             {/* Decorative large letter initials */}
             <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
