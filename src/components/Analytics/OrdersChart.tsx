@@ -20,14 +20,13 @@ interface OrdersChartProps {
 
 function fmtLabel(value: string, range: '7d' | '30d' | 'month') {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const [year, month, day] = value.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    const day = Number(value.split('-')[2]);
+    return String(day);
   }
   if (/^\d{4}-\d{2}$/.test(value)) {
     const [year, month] = value.split('-').map(Number);
     const date = new Date(Date.UTC(year, month - 1, 1));
-    return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
   }
   return value;
 }
