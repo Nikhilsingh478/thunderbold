@@ -54,7 +54,7 @@ export default function OrdersChart({ data, range }: OrdersChartProps) {
         </div>
       }
     >
-      <div className="h-56 sm:h-64 md:h-72 w-full">
+      <div className="h-48 sm:h-56 md:h-64 w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           {monthly ? (
             <LineChart data={chartData} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>

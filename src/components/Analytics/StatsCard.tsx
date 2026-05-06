@@ -62,7 +62,7 @@ export default function StatsCard({ label, value, icon: Icon, format: mode = 'nu
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.03, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 transition-colors duration-300 hover:border-brass/40"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 md:p-6 transition-colors duration-300 hover:border-brass/40"
     >
       <div className="flex items-start justify-between gap-3">
         <p className="font-condensed text-[11px] sm:text-xs uppercase tracking-[0.2em] text-sv-mid">
@@ -72,7 +72,7 @@ export default function StatsCard({ label, value, icon: Icon, format: mode = 'nu
           <Icon className="h-4 w-4" strokeWidth={1.75} />
         </div>
       </div>
-      <p className="mt-4 sm:mt-6 font-display text-3xl sm:text-4xl tracking-[0.04em] text-tb-white tabular-nums">
+      <p className="mt-3 sm:mt-5 font-display text-2xl sm:text-3xl md:text-4xl tracking-[0.04em] text-tb-white tabular-nums leading-none break-all">
         {format(animated, mode)}
       </p>
       {/* Soft brass underline accent */}

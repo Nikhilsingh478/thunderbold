@@ -167,6 +167,15 @@ function ProductSection({
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
           {Array.from({ length: SKELETON_COUNT }).map((_, i) => <CategorySkeleton key={i} />)}
         </div>
+      ) : products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 border border-white/[0.06] rounded-sm">
+          <p className="font-condensed text-sm uppercase tracking-[0.22em] text-sv-mid">
+            Coming Soon
+          </p>
+          <p className="font-condensed text-xs tracking-[0.14em] text-sv-dim mt-2">
+            New arrivals being added
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
           {products.map((product, index) => {
@@ -259,7 +268,7 @@ export default function CategoriesSection() {
   );
 
   const showTshirts = loading || tshirtCategories.length > 0;
-  const showKurta = loading || products.length > 0;
+  const showKurta = true;
 
   return (
     <section className="min-h-screen pt-12 md:pt-20 pb-24 px-6 md:px-16" id="categories">

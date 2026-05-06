@@ -140,13 +140,13 @@ export default function AnalyticsTab() {
           index={3}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(['7d', '30d', 'month'] as const).map((item) => (
           <button
             key={item}
             onClick={() => setRange(item)}
-            className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] transition ${
-              range === item ? 'border-brass bg-brass/10 text-brass' : 'border-white/10 text-sv-mid'
+            className={`rounded-full border px-3 py-1.5 text-[11px] sm:text-xs uppercase tracking-[0.16em] transition whitespace-nowrap ${
+              range === item ? 'border-brass bg-brass/10 text-brass' : 'border-white/10 text-sv-mid hover:text-tb-white'
             }`}
           >
             {item === '7d' ? 'Last 7 days' : item === '30d' ? 'Last 30 days' : 'This month'}

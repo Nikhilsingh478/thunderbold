@@ -64,7 +64,7 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
         </div>
       }
     >
-      <div className="h-56 sm:h-64 md:h-72 w-full">
+      <div className="h-48 sm:h-56 md:h-64 w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           {monthly ? (
             <LineChart data={chartData} margin={{ top: 10, right: 12, left: -8, bottom: 0 }}>
@@ -80,10 +80,10 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
               />
               <YAxis
                 tickFormatter={(v) => '₹' + inrCompact.format(v)}
-                tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
+                tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
-                width={50}
+                width={42}
                 domain={['dataMin', 'dataMax']}
               />
               <Tooltip
@@ -128,10 +128,10 @@ export default function RevenueChart({ data, range }: RevenueChartProps) {
               />
               <YAxis
                 tickFormatter={(v) => '₹' + inrCompact.format(v)}
-                tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 11 }}
+                tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
-                width={50}
+                width={42}
               />
               <Tooltip
                 cursor={{ stroke: 'rgba(212,163,44,0.35)', strokeWidth: 1 }}
