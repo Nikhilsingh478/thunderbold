@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "XFM_sIrZXfL4gHFIdDJ0L"
@@ -24,3 +23,9 @@ id = "nP7HRwgO4THvc9KtlZcvg"
 uri = "file://public/banners/_bg-2.png"
 type = "image"
 title = "denim banner background b"
+
+[[outputs]]
+id = "akox_9JARq_j_K14Vr1fT"
+uri = "file://DOCS.md"
+type = "text"
+title = "Thunderbolt — Hyperdetailed Technical Documentation"
