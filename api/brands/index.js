@@ -48,8 +48,9 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case "GET": {
+        // No projection — return all fields including logoUrl
         const brands = await col
-          .find({}, { projection: { name: 1, createdAt: 1 } })
+          .find({})
           .sort({ name: 1 })
           .toArray();
         return res.status(200).json({ brands, count: brands.length });
@@ -63,6 +64,8 @@ export default async function handler(req, res) {
             .json({ error: auth.error });
 
         const name = (req.body?.name || "").trim();
+        const logoUrl = (req.body?.logoUrl || "").trim();
+
         if (!name)
           return res.status(400).json({ error: "Brand name is required" });
 
@@ -70,7 +73,7 @@ export default async function handler(req, res) {
         if (existing)
           return res.status(409).json({ error: "A brand with this name already exists" });
 
-        const doc = { name, createdAt: new Date() };
+        const doc = { name, logoUrl, createdAt: new Date() };
         const result = await col.insertOne(doc);
         return res
           .status(201)
@@ -87,12 +90,14 @@ export default async function handler(req, res) {
             .json({ error: auth.error });
 
         const name = (req.body?.name || "").trim();
+        const logoUrl = (req.body?.logoUrl || "").trim();
+
         if (!name)
           return res.status(400).json({ error: "Brand name is required" });
 
         const result = await col.findOneAndUpdate(
           { _id: parseId(id) },
-          { $set: { name, updatedAt: new Date() } },
+          { $set: { name, logoUrl, updatedAt: new Date() } },
           { returnDocument: "after" }
         );
         const updated = result?.value ?? result;
