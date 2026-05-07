@@ -2,32 +2,61 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover enables edge-to-edge on notched/dynamic-island phones -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ── PWA / Web App Meta ────────────────────────────────────────────── -->
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Thunderbolt" />
+    <meta name="application-name" content="Thunderbolt" />
+    <meta name="msapplication-TileColor" content="#0a0a0a" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+
+    <!-- ── Icons ─────────────────────────────────────────────────────────── -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.png" />
+
+    <!-- ── Fonts ──────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Preload fonts to avoid render blocking -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Inter:wght@300;400;500&family=Barlow:wght@300;400&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Inter:wght@300;400;500&family=Barlow:wght@300;400&display=swap" media="print" onload="this.media='all'" />
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Inter:wght@300;400;500&family=Barlow:wght@300;400&display=swap" />
     </noscript>
-    
+
+    <!-- ── SEO & Social ──────────────────────────────────────────────────── -->
     <title>THUNDERBOLT — Built for the Bold</title>
     <meta name="description" content="THUNDERBOLT — Premium Indian denim. Crafted with the spirit of ancient masters. Built for the Bold." />
-    <meta name="author" content="Lovable" />
+    <meta name="author" content="Thunderbolt" />
 
-    <!-- Open Graph Metadata for Social Previews (WhatsApp, Instagram, Twitter) -->
     <meta property="og:title" content="THUNDERBOLT — Premium Denim" />
     <meta property="og:description" content="Explore our latest collection of premium fits: Bootcut, Straight, Monk, Baggy, and Distressed. Built for the bold." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://thunderboltjeans.vercel.app/favicon.svg" />
+    <meta property="og:image" content="https://thunderboltjeans.vercel.app/icons/icon-512x512.png" />
     <meta property="og:url" content="https://thunderboltjeans.vercel.app/" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="THUNDERBOLT — Premium Denim" />
     <meta name="twitter:description" content="Explore our latest collection of premium fits. Built for the bold." />
-    <meta name="twitter:image" content="https://thunderboltjeans.vercel.app/favicon.svg" />
+    <meta name="twitter:image" content="https://thunderboltjeans.vercel.app/icons/icon-512x512.png" />
+
+    <!-- ── Safe-area padding for notched phones (CSS custom properties) ──── -->
+    <style>
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sar: env(safe-area-inset-right);
+        --sab: env(safe-area-inset-bottom);
+        --sal: env(safe-area-inset-left);
+      }
+    </style>
   </head>
 
   <body>
