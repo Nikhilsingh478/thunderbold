@@ -16,7 +16,18 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-const SIZES = ['28', '30', '32', '34', '36'];
+const JEANS_SIZES = ['28', '30', '32', '34', '36'];
+const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+// Canonical order: jeans first, then apparel — used to sort sizeStock keys
+const SIZE_ORDER = [...JEANS_SIZES, ...APPAREL_SIZES];
+
+/** Derives the ordered size list from the product's actual sizeStock keys */
+function getSizesFromProduct(sizeStock?: Record<string, number>): string[] {
+  if (!sizeStock) return JEANS_SIZES;
+  const keys = Object.keys(sizeStock);
+  const ordered = SIZE_ORDER.filter(s => keys.includes(s));
+  return ordered.length > 0 ? ordered : JEANS_SIZES;
+}
 
 export default function ProductView() {
   const { productId } = useParams();
@@ -351,7 +362,7 @@ export default function ProductView() {
                   <button className="text-sv-mid hover:text-brass transition-colors underline underline-offset-4 decoration-white/20">Size Guide</button>
                 </div>
                 <div className="grid grid-cols-5 gap-2 sm:gap-4 md:flex md:flex-wrap">
-                  {SIZES.map(size => {
+                  {getSizesFromProduct(product?.sizeStock).map(size => {
                     const oos = isSizeOos(size);
                     return (
                       <button

@@ -18,15 +18,27 @@ async function checkAdminAuth(req, db) {
   }
 }
 
-const VALID_SIZES = ['28', '30', '32', '34', '36'];
+const JEANS_SIZES = ['28', '30', '32', '34', '36'];
+const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+const ALL_VALID_SIZES = new Set([...JEANS_SIZES, ...APPAREL_SIZES]);
 
 function normaliseSizeStock(sizeStock) {
   if (!sizeStock || typeof sizeStock !== 'object') {
-    return Object.fromEntries(VALID_SIZES.map(s => [s, 0]));
+    return Object.fromEntries(JEANS_SIZES.map(s => [s, 0]));
   }
-  return Object.fromEntries(
-    VALID_SIZES.map(s => [s, Math.max(0, parseInt(sizeStock[s] ?? 0, 10) || 0)])
-  );
+  // Keep only known size keys that were actually provided, in their natural order.
+  // This preserves jeans sizing for denim products and apparel sizing for tshirts/kurtas.
+  const result = {};
+  for (const key of Object.keys(sizeStock)) {
+    if (ALL_VALID_SIZES.has(key)) {
+      result[key] = Math.max(0, parseInt(sizeStock[key] ?? 0, 10) || 0);
+    }
+  }
+  // If nothing valid was found, fall back to jeans (backward compat).
+  if (Object.keys(result).length === 0) {
+    return Object.fromEntries(JEANS_SIZES.map(s => [s, 0]));
+  }
+  return result;
 }
 
 function computeTotalStock(sizeStock) {

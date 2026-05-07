@@ -1,0 +1,373 @@
+You are NOT allowed to partially implement this task.
+
+Before writing ANY code:
+
+1. Audit the ENTIRE frontend + backend architecture related to:
+
+   * homepage
+   * promo banners
+   * brands system
+   * kurta section
+   * t-shirt products
+   * product card rendering
+   * admin product creation
+   * size handling
+   * category rendering
+   * product schemas
+   * MongoDB persistence
+   * store rendering logic
+   * responsive/mobile layouts
+
+2. Identify ALL affected files BEFORE editing anything.
+
+3. Then create a step-by-step implementation plan.
+
+4. THEN implement the fixes carefully without breaking any working functionality.
+
+VERY IMPORTANT:
+Do NOT do shallow fixes.
+Do NOT hardcode temporary hacks.
+Do NOT create duplicate rendering systems.
+Do NOT break existing APIs.
+Do NOT damage the jeans sizing system.
+Do NOT remove any current working features.
+Do NOT leave TODO placeholders.
+
+The implementation must be production-grade, scalable, maintainable, and responsive.
+
+==================================================
+TASKS TO IMPLEMENT
+==================
+
+---
+
+1. BRANDS BANNER / BRANDS POSTER FIXES
+
+---
+
+The brands banner section on mobile currently looks too tall and padded.
+
+I need ALL of these changes:
+
+* Reduce the HEIGHT of the brands banner significantly on mobile.
+* Make it visually thinner/slimmer vertically.
+* Increase usable WIDTH visually.
+* Remove ALL unnecessary left/right padding.
+* Make the banner nearly edge-to-edge on mobile.
+* Ensure there is effectively ZERO horizontal padding.
+* Desktop layout should remain visually clean and unaffected.
+* Ensure the banner remains responsive on all screen sizes.
+* Preserve existing functionality and links/buttons.
+
+IMPORTANT:
+Do NOT just shrink text.
+Actually optimize the container spacing, padding, margins, and layout structure properly.
+
+---
+
+2. REMOVE EXCESSIVE EMPTY SPACING BELOW PROMO BANNERS
+
+---
+
+There are two promo banners:
+
+* ₹999 banner
+* ₹699 banner
+
+Below these banners there is excessive vertical empty spacing.
+
+I need you to:
+
+* identify EXACTLY where this spacing is coming from
+* remove unnecessary margins/padding/gaps
+* tighten the section spacing professionally
+* maintain visual breathing room
+* ensure mobile layout looks compact and premium
+
+IMPORTANT:
+Do NOT accidentally collapse spacing between unrelated sections.
+Do NOT damage desktop spacing.
+Optimize both mobile and desktop carefully.
+
+---
+
+3. BRAND LOGO SYSTEM IS BROKEN
+
+---
+
+IMPORTANT:
+Do a COMPLETE backend + frontend audit.
+
+Current issue:
+
+* Admin uploads/adds brand logo URL
+* Logo does not appear properly on store side
+* After refresh the logo data disappears
+* Data persistence is broken
+
+You MUST verify ALL of these:
+
+BACKEND:
+
+* GET brand API returns logoUrl
+* POST brand API stores logoUrl
+* PUT/PATCH update API updates logoUrl
+* MongoDB schema includes logoUrl properly
+* No projection is stripping fields
+* No validation is silently removing logoUrl
+
+FRONTEND:
+
+* Admin form sends logoUrl correctly
+* Store receives logoUrl correctly
+* Brand cards render images correctly
+* Refresh persists correctly
+* State management does not wipe data
+* No hydration/render issues
+
+AFTER FIX:
+
+* Existing brands should render properly
+* New brands should persist permanently
+* Refresh should NOT remove logos
+* Store + admin must stay synchronized
+
+Also:
+Add image preview support in admin panel for brand logo URLs if possible.
+
+---
+
+4. KURTA SECTION PRODUCT CARD FIX
+
+---
+
+This is VERY IMPORTANT.
+
+Currently:
+
+* Kurta products are rendered differently
+* Price appears centered awkwardly
+* Product cards look inconsistent compared to rest of store
+
+Root issue:
+Kurta section is directly rendering products instead of using the standardized category product grid system.
+
+I want you to:
+
+* completely replace the custom Kurta rendering system
+* make Kurta products render EXACTLY like products inside normal categories
+
+The Kurta section MUST use:
+
+* same ProductGrid
+* same ProductCard
+* same layout
+* same wishlist button
+* same hover effects
+* same image behavior
+* same PriceDisplay
+* same left-aligned typography
+* same discount rendering
+* same responsive behavior
+
+IMPORTANT:
+Do NOT duplicate ProductCard code.
+Reuse existing shared architecture properly.
+
+Also:
+
+* If no Kurta products exist, show a clean “Coming Soon” or empty state.
+* Ensure mobile responsiveness is perfect.
+
+---
+
+5. T-SHIRT + KURTA SIZE SYSTEM FIX
+
+---
+
+This is a CORE LOGIC CHANGE.
+
+Currently:
+All products use jeans sizing:
+28, 30, 32, 34, 36
+
+This is WRONG for:
+
+* T-Shirts
+* Kurtas
+
+I need dynamic size systems based on product type.
+
+==================================================
+REQUIRED SIZE RULES
+===================
+
+T-Shirts:
+S, M, L, XL, XXL
+
+Kurtas:
+S, M, L, XL, XXL
+
+Jeans:
+KEEP EXISTING SYSTEM EXACTLY AS IT IS:
+28, 30, 32, 34, 36
+
+==================================================
+IMPLEMENTATION REQUIREMENTS
+===========================
+
+When admin selects product type/category:
+
+* automatically load appropriate size presets
+
+DO NOT hardcode only in frontend.
+
+You MUST verify:
+
+* database schema compatibility
+* admin form logic
+* product validation
+* product edit flow
+* product update flow
+* cart functionality
+* order functionality
+* inventory handling
+* variant handling
+* filters/search if applicable
+
+IMPORTANT:
+Old jeans products must remain unaffected.
+Existing jeans sizing must continue working perfectly.
+
+---
+
+6. KURTA PRODUCT CREATION BUG
+
+---
+
+There is/was an issue where:
+Kurta products required categoryId and failed creation.
+
+You MUST verify:
+
+* Kurta products can be created successfully
+* categoryId validation logic is correct
+* special-case logic is safe
+* backend validation does not incorrectly reject products
+
+Do NOT create insecure bypasses.
+Implement proper conditional validation.
+
+---
+
+7. MOBILE RESPONSIVENESS AUDIT
+
+---
+
+After ALL changes:
+Perform a full mobile responsiveness audit.
+
+Check:
+
+* homepage
+* brands section
+* promo section
+* kurta section
+* product grids
+* analytics dashboard
+* buttons
+* charts
+* spacing
+* typography
+* overflow
+* alignment
+
+Fix:
+
+* wrapping issues
+* overflow bugs
+* cramped layouts
+* inconsistent spacing
+
+Target:
+Premium modern ecommerce mobile UX.
+
+---
+
+8. SECURITY + STABILITY REQUIREMENTS
+
+---
+
+DO NOT:
+
+* break authentication
+* break admin login
+* break Firebase auth
+* reintroduce insecure JWT decode fallback
+* expose secrets
+* break APIs
+* introduce console errors
+* introduce hydration warnings
+* create duplicate state systems
+
+Code quality requirements:
+
+* reusable
+* modular
+* maintainable
+* scalable
+* production-ready
+* senior-level architecture
+
+---
+
+9. FINAL VERIFICATION (MANDATORY)
+
+---
+
+Before finishing:
+You MUST test and verify ALL of these manually:
+
+BRANDS:
+
+* create brand
+* update brand
+* refresh admin
+* refresh store
+* verify logo persists
+
+KURTA:
+
+* create kurta
+* render kurta
+* verify ProductGrid styling
+
+SIZES:
+
+* create t-shirt
+* verify S/M/L sizing
+* create jeans
+* verify 28/30 sizing still works
+* edit products
+* verify persistence
+
+RESPONSIVE:
+
+* mobile homepage
+* mobile banners
+* mobile spacing
+* mobile grids
+
+Then provide:
+
+1. list of all modified files
+2. exact root causes found
+3. exact fixes implemented
+4. any migrations required
+5. any old data limitations
+6. any manual steps needed
+
+DO NOT stop after partial implementation.
+DO NOT skip hidden dependencies.
+DO NOT assume frontend-only fixes are enough.
+Audit everything deeply first.

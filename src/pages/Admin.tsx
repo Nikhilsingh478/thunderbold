@@ -56,7 +56,23 @@ interface AdminReview {
   updatedAt?: string;
 }
 
-const SIZES = ['28', '30', '32', '34', '36'] as const;
+const JEANS_SIZES = ['28', '30', '32', '34', '36'] as const;
+const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'] as const;
+
+/** Returns the correct size set for a given product section */
+function getSizesForSection(section: string): string[] {
+  return (section === 'tshirts' || section === 'kurta')
+    ? [...APPAREL_SIZES]
+    : [...JEANS_SIZES];
+}
+
+/** Returns ordered sizes from a product's existing sizeStock (for edit mode) */
+const SIZE_ORDER = [...JEANS_SIZES, ...APPAREL_SIZES] as string[];
+function getSizesFromStock(sizeStock: Record<string, number>): string[] {
+  const keys = Object.keys(sizeStock);
+  const ordered = SIZE_ORDER.filter(s => keys.includes(s));
+  return ordered.length > 0 ? ordered : [...JEANS_SIZES];
+}
 
 const SECTIONS = [
   { value: 'live-sale', label: 'Live Sale Section' },
@@ -303,7 +319,8 @@ interface ProductFormData {
   highlights: ProductHighlights;
 }
 
-const makeDefaultSizeStock = () => Object.fromEntries(SIZES.map(s => [s, '0']));
+const makeDefaultSizeStock = (sizes: string[] = [...JEANS_SIZES]) =>
+  Object.fromEntries(sizes.map(s => [s, '0']));
 const defaultHighlights: ProductHighlights = { color: '', length: '', printsPattern: '', waistRise: '', shade: '', lengthInches: '' };
 const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', purchasePrice: '', price: '', brandId: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
 
@@ -373,16 +390,18 @@ function ImageInput({
 
 function SizeStockInput({
   sizeStock,
+  sizes,
   onChange,
 }: {
   sizeStock: Record<string, string>;
+  sizes: string[];
   onChange: (ss: Record<string, string>) => void;
 }) {
-  const total = SIZES.reduce((sum, s) => sum + (parseInt(sizeStock[s] ?? '0') || 0), 0);
+  const total = sizes.reduce((sum, s) => sum + (parseInt(sizeStock[s] ?? '0') || 0), 0);
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-5 gap-2">
-        {SIZES.map(size => {
+        {sizes.map(size => {
           const qty = parseInt(sizeStock[size] ?? '0') || 0;
           return (
             <div key={size} className="flex flex-col gap-1.5 items-center">
@@ -476,7 +495,17 @@ function ProductModal({
           <div className="relative">
             <select
               value={form.section}
-              onChange={(e) => setForm(p => ({ ...p, section: e.target.value }))}
+              onChange={(e) => {
+                const newSection = e.target.value;
+                const newSizes = getSizesForSection(newSection);
+                const currentSizes = getSizesForSection(form.section);
+                const sizeSetChanged = newSizes.join(',') !== currentSizes.join(',');
+                setForm(p => ({
+                  ...p,
+                  section: newSection,
+                  ...(sizeSetChanged ? { sizeStock: makeDefaultSizeStock(newSizes) } : {}),
+                }));
+              }}
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm focus:outline-none focus:border-white/30 transition-colors appearance-none"
             >
               {SECTIONS.map((s) => (
@@ -558,6 +587,7 @@ function ProductModal({
           </label>
           <SizeStockInput
             sizeStock={form.sizeStock}
+            sizes={getSizesForSection(form.section)}
             onChange={(ss) => setForm(p => ({ ...p, sizeStock: ss }))}
           />
         </div>
@@ -837,8 +867,9 @@ export default function Admin() {
       const price = parseFloat(formData.price);
       const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
       const brandId = formData.brandId || undefined;
+      const sizes = getSizesForSection(formData.section);
       const sizeStock = Object.fromEntries(
-        SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
+        sizes.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
       );
       const stock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
       const images = formData.images.map(s => s.trim()).filter(Boolean);
@@ -875,8 +906,9 @@ export default function Admin() {
       const price = parseFloat(formData.price);
       const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
       const brandId = formData.brandId || undefined;
+      const sizes = getSizesForSection(formData.section);
       const sizeStock = Object.fromEntries(
-        SIZES.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
+        sizes.map(s => [s, Math.max(0, parseInt(formData.sizeStock[s] ?? '0') || 0)])
       );
       const stock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
       const images = formData.images.map(s => s.trim()).filter(Boolean);
@@ -1312,7 +1344,7 @@ export default function Admin() {
                             </div>
                             {product.sizeStock && (
                               <div className="grid grid-cols-5 gap-1 mb-2">
-                                {SIZES.map(size => {
+                                {getSizesForSection(product.section || 'denim').map(size => {
                                   const qty = product.sizeStock![size] ?? 0;
                                   return (
                                     <div key={size} className={`text-center rounded py-0.5 border ${qty === 0 ? 'border-red-500/20 bg-red-500/5' : 'border-white/8 bg-white/3'}`}>
@@ -1702,8 +1734,11 @@ export default function Admin() {
                   : [''],
               description: editingProduct.description ?? '',
               sizeStock: editingProduct.sizeStock
-                ? Object.fromEntries(SIZES.map(s => [s, String(editingProduct.sizeStock![s] ?? 0)]))
-                : makeDefaultSizeStock(),
+                ? (() => {
+                    const sizes = getSizesFromStock(editingProduct.sizeStock!);
+                    return Object.fromEntries(sizes.map(s => [s, String(editingProduct.sizeStock![s] ?? 0)]));
+                  })()
+                : makeDefaultSizeStock(getSizesForSection(editingProduct.section || 'denim')),
               highlights: editingProduct.highlights
                 ? { ...defaultHighlights, ...editingProduct.highlights }
                 : defaultHighlights,
