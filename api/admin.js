@@ -30,6 +30,12 @@ const revenueOrderMatch = {
 };
 
 /**
+ * Statuses that count as fully completed/delivered.
+ * Profit is only recognised on delivered orders.
+ */
+const PROFIT_STATUSES = ["delivered", "completed"];
+
+/**
  * Build a 12-month window ending on the current month.
  * Returns { from, to } as Date objects (UTC month boundaries).
  */
@@ -330,6 +336,90 @@ async function getRecentOrders(db, limit = 5) {
   }));
 }
 
+/**
+ * Calculates profit metrics using MongoDB's aggregation pipeline.
+ *
+ * Profit per item = (order item price − product purchasePrice) × quantity.
+ * Only "delivered" / "completed" orders are counted.
+ * Items whose product no longer has a purchasePrice are excluded from calculation.
+ *
+ * @param {object} db   - MongoDB database instance
+ * @param {object} range - { from, to } date range for the period profit
+ */
+async function getProfitMetrics(db, range) {
+  const orders = db.collection("orders");
+
+  const deliveredMatch = { status: { $in: PROFIT_STATUSES } };
+
+  /**
+   * Pipeline:
+   * 1. Match delivered orders (optionally within a date range)
+   * 2. Unwind order items
+   * 3. Lookup purchasePrice from the products collection
+   * 4. Filter items where purchasePrice is known
+   * 5. Calculate profit: (sellingPrice − purchasePrice) × qty
+   * 6. Sum to get total profit
+   */
+  const buildPipeline = (extraMatch = {}) => [
+    { $match: { ...deliveredMatch, ...extraMatch } },
+    { $unwind: "$products" },
+    {
+      $lookup: {
+        from: "products",
+        let: {
+          pid: {
+            $convert: {
+              input: "$products.productId",
+              to: "objectId",
+              onError: null,
+              onNull: null,
+            },
+          },
+        },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$_id", "$$pid"] } } },
+          { $project: { purchasePrice: 1 } },
+        ],
+        as: "productDoc",
+      },
+    },
+    {
+      $addFields: {
+        costPrice: {
+          $ifNull: [{ $arrayElemAt: ["$productDoc.purchasePrice", 0] }, null],
+        },
+      },
+    },
+    // Only count items where cost price is known
+    { $match: { costPrice: { $ne: null } } },
+    {
+      $group: {
+        _id: null,
+        profit: {
+          $sum: {
+            $multiply: [
+              { $subtract: ["$products.price", "$costPrice"] },
+              { $ifNull: ["$products.quantity", 1] },
+            ],
+          },
+        },
+      },
+    },
+  ];
+
+  const [periodResult, lifetimeResult] = await Promise.all([
+    orders
+      .aggregate(buildPipeline({ createdAt: { $gte: range.from, $lte: range.to } }))
+      .toArray(),
+    orders.aggregate(buildPipeline()).toArray(),
+  ]);
+
+  return {
+    totalProfit: Math.round((periodResult[0]?.profit || 0) * 100) / 100,
+    netProfit: Math.round((lifetimeResult[0]?.profit || 0) * 100) / 100,
+  };
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -356,7 +446,7 @@ export default async function handler(req, res) {
   const range = req.query.month ? buildSelectedMonthRange(String(req.query.month)) : buildRange(mode);
 
   try {
-    const [overview, revenue, ordersTs, topProducts, stockAlerts, recentOrders] =
+    const [overview, revenue, ordersTs, topProducts, stockAlerts, recentOrders, profitMetrics] =
       await Promise.all([
         getOverview(db, range),
         getRevenueOverTime(db, range),
@@ -364,12 +454,13 @@ export default async function handler(req, res) {
         getTopProducts(db, range),
         getStockAlerts(db),
         getRecentOrders(db),
+        getProfitMetrics(db, range),
       ]);
 
     return res.status(200).json({
       range: { from: range.from.toISOString(), to: range.to.toISOString() },
       selectedMonth: range.selectedMonth || null,
-      overview,
+      overview: { ...overview, ...profitMetrics },
       revenueSeries: revenue,
       ordersSeries: ordersTs,
       topProducts,

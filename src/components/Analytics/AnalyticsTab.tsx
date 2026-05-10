@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, IndianRupee, ShoppingBag, TrendingUp, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, IndianRupee, ShoppingBag, TrendingUp, Users, Wallet, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import StatsCard from './StatsCard';
 import RevenueChart from './RevenueChart';
@@ -109,7 +109,7 @@ export default function AnalyticsTab() {
       transition={{ duration: 0.25 }}
       className="space-y-5 sm:space-y-6"
     >
-      {/* KPI cards */}
+      {/* KPI cards — row 1: revenue & orders */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatsCard
           label="Total Revenue"
@@ -138,6 +138,24 @@ export default function AnalyticsTab() {
           icon={TrendingUp}
           format="currency"
           index={3}
+        />
+      </div>
+
+      {/* KPI cards — row 2: profit metrics */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <StatsCard
+          label="Period Profit"
+          value={overview.totalProfit ?? 0}
+          icon={Wallet}
+          format="currency"
+          index={0}
+        />
+        <StatsCard
+          label="Net Profit (All Time)"
+          value={overview.netProfit ?? 0}
+          icon={BarChart3}
+          format="currency"
+          index={1}
         />
       </div>
       <div className="flex flex-wrap gap-2">

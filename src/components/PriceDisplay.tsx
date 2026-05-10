@@ -2,13 +2,14 @@ import { computePrice } from '../lib/pricing';
 
 interface PriceDisplayProps {
   price: number | string | undefined;
-  purchasePrice?: number | string | undefined;
+  /** MRP / original price — shown crossed-out when higher than price. */
+  mrp?: number | string | undefined;
   size?: 'sm' | 'md' | 'lg';
   showSavings?: boolean;
 }
 
-export default function PriceDisplay({ price, purchasePrice, size = 'md', showSavings = false }: PriceDisplayProps) {
-  const { sellingPrice, purchasePrice: origPrice, discountPct, savings, hasDiscount } = computePrice(price, purchasePrice);
+export default function PriceDisplay({ price, mrp, size = 'md', showSavings = false }: PriceDisplayProps) {
+  const { sellingPrice, mrp: origPrice, discountPct, savings, hasDiscount } = computePrice(price, mrp);
 
   if (!sellingPrice) return null;
 

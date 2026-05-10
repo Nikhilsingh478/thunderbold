@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
 import AnalyticsTab from '../components/Analytics/AnalyticsTab';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
+import { printInvoice } from '../utils/printInvoice';
 
 const ADMIN_EMAILS = [
   "adminthunderbolt@gmail.com",
@@ -87,6 +87,9 @@ interface Product {
   categoryId: string;
   section?: string;
   price: number;
+  /** MRP / customer-facing crossed-out price. */
+  mrp?: number;
+  /** Internal cost price — admin-only, never shown to customers. */
   purchasePrice?: number;
   brandId?: string;
   image?: string;
@@ -310,6 +313,9 @@ interface ProductFormData {
   name: string;
   section: string;
   categoryId: string;
+  /** MRP / customer-facing crossed-out price. */
+  mrp: string;
+  /** Internal cost price — used for profit calculation, never shown to customers. */
   purchasePrice: string;
   price: string;
   brandId: string;
@@ -322,7 +328,7 @@ interface ProductFormData {
 const makeDefaultSizeStock = (sizes: string[] = [...JEANS_SIZES]) =>
   Object.fromEntries(sizes.map(s => [s, '0']));
 const defaultHighlights: ProductHighlights = { color: '', length: '', printsPattern: '', waistRise: '', shade: '', lengthInches: '' };
-const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', purchasePrice: '', price: '', brandId: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
+const defaultFormData: ProductFormData = { name: '', section: 'denim', categoryId: '', mrp: '', purchasePrice: '', price: '', brandId: '', images: [''], description: '', sizeStock: makeDefaultSizeStock(), highlights: defaultHighlights };
 
 function ImageInput({
   images,
@@ -554,17 +560,17 @@ function ProductModal({
           </div>
         </div>
 
-        {/* Purchase Price */}
+        {/* MRP */}
         <div>
-          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Purchase Price / MRP (₹)</label>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">MRP (₹)</label>
           <input
             type="number"
-            value={form.purchasePrice}
-            onChange={(e) => setForm(p => ({ ...p, purchasePrice: e.target.value }))}
+            value={form.mrp}
+            onChange={(e) => setForm(p => ({ ...p, mrp: e.target.value }))}
             placeholder="0 — leave blank if no crossed-out price"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
           />
-          <p className="font-condensed text-[0.62rem] text-sv-mid/50 mt-1">Shown as crossed-out price on the store. Optional.</p>
+          <p className="font-condensed text-[0.62rem] text-sv-mid/50 mt-1">Shown as crossed-out price on the store. Should be ≥ selling price.</p>
         </div>
 
         {/* Selling Price */}
@@ -578,6 +584,22 @@ function ProductModal({
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
           />
           <p className="font-condensed text-[0.62rem] text-sv-mid/50 mt-1">The price customers actually pay.</p>
+        </div>
+
+        {/* Purchase Price / Cost — admin-only, never shown to customers */}
+        <div>
+          <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+            Purchase Price / Cost (₹)
+            <span className="ml-2 text-[0.55rem] bg-white/10 text-sv-dim px-1.5 py-0.5 rounded uppercase tracking-widest">Admin only</span>
+          </label>
+          <input
+            type="number"
+            value={form.purchasePrice}
+            onChange={(e) => setForm(p => ({ ...p, purchasePrice: e.target.value }))}
+            placeholder="0 — your cost price (for profit tracking)"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+          />
+          <p className="font-condensed text-[0.62rem] text-sv-mid/50 mt-1">Internal only — used for profit calculations. Never visible to customers.</p>
         </div>
 
         {/* Size-based Stock */}
@@ -865,6 +887,7 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
+      const mrp = formData.mrp ? parseFloat(formData.mrp) : undefined;
       const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
       const brandId = formData.brandId || undefined;
       const sizes = getSizesForSection(formData.section);
@@ -881,7 +904,7 @@ export default function Admin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: formData.name, section: formData.section || 'denim',
-          categoryId, price, purchasePrice, brandId,
+          categoryId, price, mrp, purchasePrice, brandId,
           sizeStock, stock, images, description: formData.description, highlights,
         }),
       });
@@ -889,7 +912,7 @@ export default function Admin() {
       if (r.ok) {
         setProducts(prev => [{
           _id: d.product._id, name: formData.name, section: formData.section || 'denim',
-          categoryId, price, purchasePrice, brandId, stock, sizeStock,
+          categoryId, price, mrp, purchasePrice, brandId, stock, sizeStock,
           images, image: images[0], description: formData.description, highlights,
         }, ...prev]);
         setShowAddProductModal(false);
@@ -904,6 +927,7 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const price = parseFloat(formData.price);
+      const mrp = formData.mrp ? parseFloat(formData.mrp) : undefined;
       const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined;
       const brandId = formData.brandId || undefined;
       const sizes = getSizesForSection(formData.section);
@@ -920,7 +944,7 @@ export default function Admin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: formData.name, section: formData.section || 'denim',
-          categoryId, price, purchasePrice, brandId,
+          categoryId, price, mrp, purchasePrice, brandId,
           sizeStock, stock, images, description: formData.description, highlights: highlightsPut,
         }),
       });
@@ -929,7 +953,7 @@ export default function Admin() {
         setProducts(prev => prev.map(p => p._id === editingProduct._id
           ? {
               _id: editingProduct._id, name: formData.name, section: formData.section || 'denim',
-              categoryId, price, purchasePrice, brandId, stock, sizeStock,
+              categoryId, price, mrp, purchasePrice, brandId, stock, sizeStock,
               images, image: images[0], description: formData.description, highlights: highlightsPut,
             }
           : p
@@ -1173,13 +1197,22 @@ export default function Admin() {
                                 </select>
                                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                               </div>
-                              <button
-                                onClick={() => setConfirmDeleteOrder(order)}
-                                className="p-2 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0"
-                                title="Delete order"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => printInvoice(order)}
+                                  className="p-2 rounded-lg text-sv-mid hover:text-brass hover:bg-brass/10 transition-colors shrink-0"
+                                  title="Print packing slip"
+                                >
+                                  <Printer className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteOrder(order)}
+                                  className="p-2 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0"
+                                  title="Delete order"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1271,15 +1304,24 @@ export default function Admin() {
                                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                                   </div>
                                 </td>
-                                {/* Delete */}
+                                {/* Print + Delete */}
                                 <td className="px-4 py-4">
-                                  <button
-                                    onClick={() => setConfirmDeleteOrder(order)}
-                                    className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                                    title="Delete order"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => printInvoice(order)}
+                                      className="p-1.5 rounded-lg text-sv-mid hover:text-brass hover:bg-brass/10 transition-colors"
+                                      title="Print packing slip"
+                                    >
+                                      <Printer className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmDeleteOrder(order)}
+                                      className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                                      title="Delete order"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -1610,8 +1652,6 @@ export default function Admin() {
         </div>
       </main>
 
-      <Footer />
-
       <AnimatePresence>
         {confirmDeleteOrder && (
           <ModalShell onClose={() => setConfirmDeleteOrder(null)}>
@@ -1724,7 +1764,23 @@ export default function Admin() {
               name: editingProduct.name,
               section: editingProduct.section || 'denim',
               categoryId: editingProduct.categoryId,
-              purchasePrice: editingProduct.purchasePrice ? String(editingProduct.purchasePrice) : '',
+              /**
+               * Backward compat: old products stored MRP in `purchasePrice`.
+               * If the new `mrp` field exists, use it. Otherwise fall back to
+               * the old `purchasePrice` value so the admin sees the correct
+               * crossed-out price when editing legacy products.
+               */
+              mrp: editingProduct.mrp
+                ? String(editingProduct.mrp)
+                : (editingProduct.purchasePrice && !editingProduct.mrp ? String(editingProduct.purchasePrice) : ''),
+              /**
+               * Internal cost: only populate if both `mrp` and `purchasePrice`
+               * are present (meaning product has the new schema). Old products
+               * that only have `purchasePrice` have that value mapped to `mrp` above.
+               */
+              purchasePrice: editingProduct.mrp && editingProduct.purchasePrice
+                ? String(editingProduct.purchasePrice)
+                : '',
               price: String(editingProduct.price),
               brandId: editingProduct.brandId ?? '',
               images: (editingProduct as any).images?.length

@@ -18,6 +18,20 @@ async function checkAdminAuth(req, db) {
   }
 }
 
+/** Silently attempt admin auth — used for GET to conditionally include internal fields. */
+async function tryAdminAuth(req, db) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) return false;
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = await verifyFirebaseToken(token);
+    if (!decoded?.email) return false;
+    return await isAdmin(decoded.email, db);
+  } catch {
+    return false;
+  }
+}
+
 const JEANS_SIZES = ['28', '30', '32', '34', '36'];
 const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const ALL_VALID_SIZES = new Set([...JEANS_SIZES, ...APPAREL_SIZES]);
@@ -26,15 +40,12 @@ function normaliseSizeStock(sizeStock) {
   if (!sizeStock || typeof sizeStock !== 'object') {
     return Object.fromEntries(JEANS_SIZES.map(s => [s, 0]));
   }
-  // Keep only known size keys that were actually provided, in their natural order.
-  // This preserves jeans sizing for denim products and apparel sizing for tshirts/kurtas.
   const result = {};
   for (const key of Object.keys(sizeStock)) {
     if (ALL_VALID_SIZES.has(key)) {
       result[key] = Math.max(0, parseInt(sizeStock[key] ?? 0, 10) || 0);
     }
   }
-  // If nothing valid was found, fall back to jeans (backward compat).
   if (Object.keys(result).length === 0) {
     return Object.fromEntries(JEANS_SIZES.map(s => [s, 0]));
   }
@@ -81,7 +92,11 @@ export default async function handler(req, res) {
     switch (req.method) {
 
       case 'GET': {
+        const isAdminRequest = await tryAdminAuth(req, database);
+
         const filter = {};
+
+        // Price cap filter (deals pages)
         const rawMax = req.query?.maxPrice;
         if (rawMax !== undefined) {
           const maxPrice = Number(rawMax);
@@ -90,16 +105,38 @@ export default async function handler(req, res) {
           }
         }
 
-        const products = await col.find(
+        // Section filter — allows /api/products?section=denim to restrict to one section
+        const rawSection = req.query?.section;
+        if (rawSection && typeof rawSection === 'string' && rawSection.trim()) {
+          filter.section = rawSection.trim();
+        }
+
+        // Fetch with all stored pricing fields; strip internal fields below
+        const raw = await col.find(
           filter,
           {
             projection: {
-              name: 1, price: 1, purchasePrice: 1, image: 1, images: 1,
-              description: 1, categoryId: 1, section: 1, stock: 1,
-              sizeStock: 1, highlights: 1, createdAt: 1, brandId: 1,
+              name: 1, price: 1, mrp: 1, purchasePrice: 1,
+              image: 1, images: 1, description: 1, categoryId: 1,
+              section: 1, stock: 1, sizeStock: 1, highlights: 1,
+              createdAt: 1, brandId: 1,
             },
           }
         ).sort({ createdAt: -1 }).toArray();
+
+        /**
+         * Normalise pricing for response:
+         * - mrp: customer-facing crossed-out price.
+         *   For legacy products that stored MRP in purchasePrice (before this refactor),
+         *   fall back to that value so the storefront still shows the crossed-out price.
+         * - purchasePrice (internal cost): only returned for admin requests.
+         *   Never exposed to public consumers.
+         */
+        const products = raw.map(({ purchasePrice: costPrice, mrp, ...rest }) => ({
+          ...rest,
+          mrp: mrp ?? costPrice ?? null,
+          ...(isAdminRequest ? { purchasePrice: costPrice ?? null } : {}),
+        }));
 
         return res.status(200).json({ products, count: products.length, source: 'database' });
       }
@@ -110,7 +147,7 @@ export default async function handler(req, res) {
           return res.status(auth.error === 'Unauthorized' ? 401 : 403).json({ error: auth.error });
         }
 
-        const { name, price, purchasePrice, description, categoryId, sizeStock, highlights, brandId } = req.body;
+        const { name, price, mrp, purchasePrice, description, categoryId, sizeStock, highlights, brandId } = req.body;
         const section = req.body.section || 'denim';
         const images = normaliseImages(req.body);
         const needsCategory = section !== 'live-sale' && section !== 'kurta';
@@ -131,7 +168,10 @@ export default async function handler(req, res) {
         const product = {
           name,
           price,
-          ...(purchasePrice && purchasePrice > 0 ? { purchasePrice: Number(purchasePrice) } : {}),
+          // mrp = customer-facing crossed-out / original price
+          ...(mrp && Number(mrp) > 0 ? { mrp: Number(mrp) } : {}),
+          // purchasePrice = internal cost price (admin-only, never shown to customers)
+          ...(purchasePrice && Number(purchasePrice) > 0 ? { purchasePrice: Number(purchasePrice) } : {}),
           ...(brandId ? { brandId: String(brandId) } : {}),
           image: images[0],
           images,
@@ -160,7 +200,7 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'Missing product ID' });
 
-        const { name, price, purchasePrice, description, categoryId, sizeStock, highlights, brandId: putBrandId } = req.body;
+        const { name, price, mrp, purchasePrice, description, categoryId, sizeStock, highlights, brandId: putBrandId } = req.body;
         const putSection = req.body.section || 'denim';
         const images = normaliseImages(req.body);
         const putNeedsCategory = putSection !== 'live-sale' && putSection !== 'kurta';
@@ -189,16 +229,27 @@ export default async function handler(req, res) {
           updatedAt: new Date(),
         };
 
-        if (purchasePrice && Number(purchasePrice) > 0) {
-          setFields.purchasePrice = Number(purchasePrice);
-        }
-        if (putBrandId) {
-          setFields.brandId = String(putBrandId);
+        const unsetFields = {};
+
+        // mrp — set if provided, unset if cleared
+        if (mrp && Number(mrp) > 0) {
+          setFields.mrp = Number(mrp);
+        } else {
+          unsetFields.mrp = '';
         }
 
-        const unsetFields = {};
-        if (!purchasePrice || Number(purchasePrice) <= 0) unsetFields.purchasePrice = '';
-        if (!putBrandId) unsetFields.brandId = '';
+        // purchasePrice (cost) — set if provided, unset if cleared
+        if (purchasePrice && Number(purchasePrice) > 0) {
+          setFields.purchasePrice = Number(purchasePrice);
+        } else {
+          unsetFields.purchasePrice = '';
+        }
+
+        if (putBrandId) {
+          setFields.brandId = String(putBrandId);
+        } else {
+          unsetFields.brandId = '';
+        }
 
         const updateDoc = { $set: setFields };
         if (Object.keys(unsetFields).length > 0) updateDoc.$unset = unsetFields;

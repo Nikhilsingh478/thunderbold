@@ -43,7 +43,7 @@ export default function DealsPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/products?maxPrice=${config.maxPrice}`)
+    fetch(`/api/products?maxPrice=${config.maxPrice}&section=denim`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`Request failed (${r.status})`);
         return r.json();

@@ -1,0 +1,635 @@
+Okay, listen carefully and FULLY audit the entire Thunderbolt codebase before making ANY changes. Do NOT rush implementation. First understand the existing architecture, frontend/backend flow, database schema, analytics aggregation logic, filtering system, admin layouts, reusable components, route structure, and API patterns.
+
+This is a PRODUCTION ecommerce platform, not a demo project.
+
+I want all implementations to be:
+
+* scalable
+* maintainable
+* modular
+* production-grade
+* cleanly architected
+* non-cluttered
+* future-proof
+
+VERY IMPORTANT:
+Do NOT introduce:
+
+* hacks
+* temporary fixes
+* duplicate logic
+* messy conditionals
+* spaghetti code
+* unnecessary dependencies
+* bloated components
+* tightly coupled logic
+
+Reuse the current architecture and patterns wherever possible.
+
+==================================================
+PRE-IMPLEMENTATION AUDIT (MANDATORY)
+====================================
+
+Before writing code:
+
+1. Audit current product schema
+2. Audit analytics aggregation logic
+3. Audit promo banner filtering flow
+4. Audit admin layout structure
+5. Audit frontend pricing rendering
+6. Audit order data structure
+7. Audit existing reusable UI components
+8. Audit route-based layout handling
+9. Audit API payload structures
+10. Audit responsive behavior
+
+Understand:
+
+* how products are categorized
+* how prices are currently stored
+* how analytics are calculated
+* how admin layouts are rendered
+* how orders are structured
+* how frontend filtering currently works
+
+DO NOT start implementing blindly.
+
+==================================================
+TASK 1 — PROMO BANNER FILTERING FIX
+===================================
+
+CURRENT ISSUE:
+In the store frontend there are promo banners such as:
+
+* Under ₹999
+* Under ₹699
+
+Currently, clicking these banners shows unrelated products like kurtas along with jeans/denim products.
+
+This is WRONG.
+
+---
+
+## REQUIRED BEHAVIOR
+
+When users click:
+
+* Under ₹999
+* Under ₹699
+
+ONLY denim/jeans products should appear.
+
+NO unrelated categories should appear.
+
+---
+
+## IMPLEMENTATION REQUIREMENTS
+
+Use the EXISTING denim category/section properly.
+
+Filtering logic should:
+
+* filter by denim category
+  AND
+* filter by matching price range
+
+Examples:
+
+UNDER ₹999:
+
+* only denim products
+* selling price <= 999
+
+UNDER ₹699:
+
+* only denim products
+* selling price <= 699
+
+---
+
+## IMPORTANT ENGINEERING REQUIREMENTS
+
+DO NOT:
+
+* hardcode product IDs
+* duplicate product collections
+* create separate duplicate pages
+* create messy conditional filtering
+
+DO:
+
+* extend existing filtering architecture properly
+* keep filtering dynamic
+* make it scalable for future products
+* ensure newly added denim products automatically appear correctly
+
+---
+
+## VERIFY ALL OF THESE
+
+* only denim products appear
+* no kurtas or unrelated products appear
+* routing still works properly
+* responsive layout remains intact
+* no empty-state bugs
+* no filter conflicts
+* no console errors
+
+==================================================
+TASK 2 — REMOVE FOOTER FROM ADMIN PANEL
+=======================================
+
+CURRENT ISSUE:
+The public website footer is also rendering inside the admin panel.
+
+This should NOT happen.
+
+---
+
+## REQUIRED BEHAVIOR
+
+* Public storefront footer should appear ONLY on customer-facing pages
+* Footer should NOT render anywhere inside admin routes/pages
+
+---
+
+## IMPLEMENTATION REQUIREMENTS
+
+Audit:
+
+* shared layout wrappers
+* route layouts
+* nested layouts
+* conditional rendering structure
+
+Implement this PROPERLY.
+
+DO NOT:
+
+* hide footer using CSS hacks
+* scatter route conditions everywhere
+* create messy layout duplication
+
+DO:
+
+* separate admin/store layouts cleanly
+* keep architecture maintainable
+* keep layout rendering predictable
+
+---
+
+## VERIFY ALL OF THESE
+
+* storefront footer still works correctly
+* admin panel has NO footer
+* spacing/layout remains clean
+* no layout shifts
+* no responsive issues
+
+==================================================
+TASK 3 — PRODUCT PRICE SYSTEM REFACTOR
+======================================
+
+CURRENT ISSUE:
+There is currently a field named:
+“Purchase Price / MRP”
+
+This structure is wrong and unclear.
+
+We now need PROPERLY separated pricing fields.
+
+==================================================
+NEW REQUIRED STRUCTURE
+======================
+
+Products must now support THREE separate fields:
+
+1. MRP
+2. Purchase Price
+3. Selling Price
+
+==================================================
+FIELD DEFINITIONS
+=================
+
+---
+
+1. MRP
+
+---
+
+Purpose:
+
+* customer-facing original/cut price
+* used for discount display
+
+Frontend Example:
+₹999   ~~₹1499~~
+
+Requirements:
+
+* rename current “Purchase Price / MRP” field to ONLY “MRP”
+* should display on storefront
+* should appear crossed/struck-through
+* should generally be >= selling price
+
+---
+
+2. Purchase Price
+
+---
+
+Purpose:
+
+* INTERNAL admin-only field
+* used ONLY for profit calculations
+* NEVER visible to customers
+
+VERY IMPORTANT:
+Purchase price must NOT:
+
+* appear in frontend product cards
+* appear in storefront APIs unnecessarily
+* leak to public-facing payloads
+
+This field is business/internal only.
+
+---
+
+3. Selling Price
+
+---
+
+Requirements:
+
+* keep existing selling price functionality intact
+* continue using it as the actual selling/customer price
+
+==================================================
+DATABASE / BACKEND REQUIREMENTS
+===============================
+
+Audit current schema carefully first.
+
+Implement:
+
+* proper schema updates
+* proper typing/interfaces
+* proper validation
+* backward compatibility
+* safe migration handling
+
+VERY IMPORTANT:
+Existing products must NOT break after deployment.
+
+Handle:
+
+* null values
+* legacy products
+* fallback handling
+* safe defaults
+
+==================================================
+ADMIN PANEL REQUIREMENTS
+========================
+
+Update BOTH:
+
+* create product flow
+* edit product flow
+
+Admin forms must now support:
+
+* MRP
+* Purchase Price
+* Selling Price
+
+==================================================
+VALIDATION REQUIREMENTS
+=======================
+
+Add proper validation:
+
+* selling price should not exceed MRP
+* purchase price should ideally not exceed selling price
+
+Add:
+
+* proper validation messages
+* frontend validation
+* backend validation
+
+==================================================
+FRONTEND REQUIREMENTS
+=====================
+
+Storefront should ONLY show:
+
+* Selling Price
+* MRP (crossed out)
+
+NEVER expose:
+
+* purchase price
+
+==================================================
+TASK 4 — ANALYTICS PROFIT FUNCTIONALITY
+=======================================
+
+Add TWO completely new analytics metrics/cards:
+
+1. Total Profit
+2. Net Profit
+
+==================================================
+PROFIT DEFINITIONS
+==================
+
+---
+
+1. TOTAL PROFIT
+
+---
+
+Definition:
+
+* Profit generated during CURRENT MONTH ONLY
+
+---
+
+2. NET PROFIT
+
+---
+
+Definition:
+
+* Lifetime accumulated profit across all valid completed orders
+
+==================================================
+PROFIT CALCULATION LOGIC
+========================
+
+Per-item profit:
+Selling Price - Purchase Price
+
+Order profit:
+Sum of all item profits × quantities
+
+==================================================
+IMPORTANT ORDER FILTERING RULES
+===============================
+
+ONLY count:
+
+* delivered/completed orders
+
+DO NOT count:
+
+* pending
+* cancelled
+* refunded
+* failed
+* unpaid
+* processing
+* incomplete orders
+
+Because profit/revenue should only finalize after successful delivery.
+
+==================================================
+BACKEND REQUIREMENTS
+====================
+
+Audit current analytics aggregation system first.
+
+Requirements:
+
+* extend existing aggregation cleanly
+* avoid duplicate queries
+* optimize calculations properly
+* avoid recalculating inefficiently
+* use proper aggregation pipelines/optimized querying
+
+Handle:
+
+* quantity multiplication
+* missing purchase prices
+* legacy products
+* partial edge cases
+
+==================================================
+FRONTEND REQUIREMENTS
+=====================
+
+Add TWO new analytics cards:
+
+* Total Profit
+* Net Profit
+
+UI must:
+
+* match existing dashboard style
+* match spacing
+* match typography
+* match hover behavior
+* match animations
+* match responsiveness
+* maintain visual hierarchy
+
+DO NOT:
+
+* clutter dashboard
+* hardcode fake values
+* break mobile responsiveness
+
+==================================================
+TASK 5 — ORDER PRINT / PDF / SHIPPING LABEL SYSTEM
+==================================================
+
+This is a NEW major feature.
+
+==================================================
+REQUIRED FEATURE
+================
+
+Inside the admin panel Orders tab:
+
+Every order should have:
+
+* Print button
+  or
+* Generate Invoice button
+  or
+* Print Label button
+
+(Choose the cleanest naming convention.)
+
+==================================================
+FEATURE GOAL
+============
+
+When admin clicks the button:
+
+* a PROFESSIONAL printable document/PDF should be generated
+
+The output should resemble:
+
+* Amazon packing slips
+* Flipkart shipping labels
+* courier invoice sheets
+* ecommerce shipment print pages
+
+==================================================
+REQUIRED DOCUMENT CONTENT
+=========================
+
+---
+
+## ORDER DETAILS
+
+* Order ID
+* Order date
+* Payment method
+* Payment status
+* Order status
+
+---
+
+## CUSTOMER DETAILS
+
+* Customer name
+* Phone number
+* Shipping address
+* City
+* State
+* Pincode
+
+---
+
+## PRODUCT DETAILS
+
+* Product names
+* Variants/sizes
+* Quantity
+* Individual prices
+
+---
+
+## SUMMARY
+
+* subtotal
+* discounts
+* final total
+* payment summary
+
+==================================================
+OPTIONAL PROFESSIONAL ENHANCEMENTS
+==================================
+
+If architecture allows cleanly:
+
+* Thunderbolt branding/logo
+* barcode/QR for order ID
+* professional typography
+* clean tables
+* packing-slip style formatting
+
+==================================================
+PDF / PRINT REQUIREMENTS
+========================
+
+The generated document must:
+
+* print cleanly on A4 paper
+* have proper spacing
+* avoid overflow issues
+* avoid ugly browser print styling
+* be professionally formatted
+* support download + print flow cleanly
+
+==================================================
+TECHNICAL REQUIREMENTS
+======================
+
+* use a reliable PDF generation strategy
+* keep implementation modular
+* separate template rendering from business logic
+* avoid tightly coupled code
+* ensure future scalability
+
+==================================================
+EXPECTED UX FLOW
+================
+
+Orders Tab →
+Select Order →
+Click Print/Generate →
+Preview PDF →
+Download/Print
+
+==================================================
+GENERAL ENGINEERING REQUIREMENTS
+================================
+
+DO NOT:
+
+* break existing APIs
+* break product rendering
+* break analytics
+* break order flows
+* break mobile responsiveness
+* introduce unnecessary dependencies
+* leak internal business fields publicly
+
+DO:
+
+* use reusable components
+* maintain clean folder structure
+* maintain proper separation of concerns
+* keep naming clean and meaningful
+* use proper TypeScript typing if TypeScript exists
+* maintain production-grade code quality
+
+==================================================
+TESTING & VALIDATION (MANDATORY)
+================================
+
+Before finishing, FULLY test all flows.
+
+Verify:
+
+* old products still work
+* product editing works
+* product creation works
+* promo banner filtering works
+* analytics calculations are correct
+* only delivered orders count toward profit
+* purchase price remains hidden from frontend
+* footer removed from admin only
+* PDF generation works correctly
+* responsive behavior still works
+* no console errors
+* no broken routes
+* no layout issues
+* no API regressions
+
+==================================================
+FINAL DELIVERABLES REQUIRED
+===========================
+
+After implementation provide:
+
+1. Complete summary of ALL files changed
+2. All database/schema changes
+3. All migration details
+4. New dependencies added and WHY
+5. API changes made
+6. Validation rules added
+7. Edge cases handled
+8. Deployment considerations
+9. Remaining limitations if any
+10. Recommended future improvements
+
+Take your time.
+Do this properly.
+Do NOT rush implementation.
+Prioritize clean architecture and long-term maintainability.

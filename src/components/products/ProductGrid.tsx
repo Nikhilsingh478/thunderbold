@@ -9,7 +9,8 @@ export interface GridProduct {
   _id: string;
   name: string;
   price: number;
-  purchasePrice?: number;
+  /** MRP / original price — shown crossed-out when higher than price. */
+  mrp?: number;
   image?: string;
   images?: string[];
 }
@@ -24,9 +25,9 @@ interface ProductGridProps {
 }
 
 /**
- * Reusable product grid used by CategoryView and DealsPage.
+ * Reusable product grid used by CategoryView, DealsPage, BrandView, etc.
  * Renders the canonical Thunderbolt product card (image, wishlist heart,
- * name, PriceDisplay) with the same animations and skeletons everywhere.
+ * name, PriceDisplay) with consistent animations and skeletons everywhere.
  */
 export default function ProductGrid({
   products,
@@ -110,7 +111,7 @@ export default function ProductGrid({
               {prod.name}
             </h3>
             <div className="mt-1">
-              <PriceDisplay price={prod.price} purchasePrice={prod.purchasePrice} size="sm" />
+              <PriceDisplay price={prod.price} mrp={prod.mrp} size="sm" />
             </div>
           </div>
         </motion.div>

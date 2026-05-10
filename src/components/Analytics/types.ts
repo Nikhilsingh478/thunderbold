@@ -4,6 +4,10 @@ export interface AnalyticsOverview {
   totalOrders: number;
   averageOrderValue: number;
   totalUsers: number;
+  /** Profit generated in the selected period (delivered orders only). */
+  totalProfit: number;
+  /** Lifetime accumulated profit across all delivered orders. */
+  netProfit: number;
 }
 
 export interface RevenuePoint {
