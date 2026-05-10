@@ -1,179 +1,428 @@
-# Thunderbolt — Replit Project
+# Thunderbolt — Project Documentation
 
 ## Overview
-A full-stack e-commerce storefront called **Thunderbolt** (denim/apparel). React + Vite frontend with a Node.js/Express API backend. Uses Firebase for authentication and MongoDB Atlas for products, orders, users, reviews, cart, wishlist, addresses, categories, and brands. Designed to run identically in local development (Replit) and production (Vercel serverless).
 
-## Architecture
+Thunderbolt is a production-grade premium denim e-commerce storefront built for a real retail brand. It features a full-stack architecture with a React 18 + Vite frontend, Node.js/Express API backend, Firebase Authentication, and MongoDB Atlas database. The platform supports product browsing, cart, wishlist, checkout, order management, brand pages, deals pages, and a full admin panel with analytics.
 
-- **Frontend**: React 18, Vite (port 5000), Tailwind CSS, shadcn/ui, React Router v6, TanStack Query, Framer Motion, Recharts
-- **Backend**: Node.js/Express server (`server.js`) on port 3001, proxied through Vite under the `/api` prefix
-- **Auth**: Firebase Authentication (email/password) with Firebase Admin token verification on the server
-- **Database**: MongoDB Atlas (database name: `thunderbold`)
-- **API handlers**: Located in `/api/` — same files run as Express routes locally and as Vercel serverless functions in production
-- **Shared helpers**: `/api/_lib/` (mongo client, firebase admin, admin email helper, rate limiting, validators, response utils)
+---
 
-## Running the App
-The app is started with `npm run dev`, which concurrently runs:
-- `node server.js` (Express API on port 3001)
-- `vite` (frontend dev server on port 5000)
+## Tech Stack
 
-The Vite proxy forwards `/api/*` to the Express server.
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Routing | React Router v6 |
+| State / Data | TanStack Query (React Query) |
+| Animations | Framer Motion |
+| Charts | Recharts |
+| Authentication | Firebase Authentication (email/password) |
+| Database | MongoDB Atlas |
+| Backend | Node.js + Express (local dev), Vercel Serverless Functions (production) |
+| Icons | Lucide React |
+| Build | Vite (frontend), ESBuild (backend via Vite) |
 
-## Environment Variables Required
-Set these as Replit secrets:
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-- `MONGO_URI` — MongoDB Atlas connection string
+---
 
-Without `MONGO_URI`, all data endpoints return `500 Database unavailable` (expected, by design — no silent fallbacks).
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Browser                           │
+│  React 18 SPA (Vite, port 5000)                     │
+│  - React Router v6 (client-side routing)            │
+│  - TanStack Query (server state / caching)          │
+│  - Framer Motion (animations)                       │
+│  - Firebase Auth SDK (client-side auth)             │
+└───────────────────────┬─────────────────────────────┘
+                        │ /api/* (proxied by Vite dev server)
+┌───────────────────────▼─────────────────────────────┐
+│                Express API (port 3001)               │
+│  api/*.js — same files run in Vercel as functions   │
+│  - Firebase Admin (token verification)              │
+│  - MongoDB Atlas (getDb() shared client)            │
+└─────────────────────────────────────────────────────┘
+```
+
+### Running the App
+
+```bash
+npm run dev
+```
+
+This runs two processes concurrently:
+- `node server.js` — Express API on port 3001
+- `vite` — Frontend dev server on port 5000, proxying `/api/*` to Express
+
+---
+
+## Environment Variables
+
+Set these as Replit secrets (never commit to source):
+
+| Variable | Purpose |
+|---|---|
+| `MONGO_URI` | MongoDB Atlas connection string |
+| `VITE_FIREBASE_API_KEY` | Firebase project API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase App ID |
+
+Without `MONGO_URI`, all data endpoints explicitly return `500 Database unavailable` — no silent fallbacks by design.
+
+---
 
 ## Project Structure
 
 ### Frontend (`src/`)
-- `App.tsx` — Root with providers (Auth, Cart, Wishlist, QueryClient)
-- `AppContent.tsx` — Router, modal management, delayed login prompt
-- `context/` — `AuthContext`, `CartContext`, `WishlistContext`
-- `pages/` — `Index`, `About`, `CategoryView`, `ProductView`, `Cart`, `Wishlist`, `Checkout`, `Orders`, `Admin`, `Profile`, `NotFound`, `BrandsPage`, `BrandView`, `DealsPage`
-- `components/` — UI (shadcn/ui base + custom: `Navbar`, `Footer`, `HeroBanner`, `BrandsSection`, `LiveSaleSection`, `CategoriesSection`, etc.)
-- `components/promo/` — Static side-by-side promo banner (`PromoBanner`, `promoSlides.ts`)
-- `components/Analytics/` — Admin analytics dashboard (see below)
-- `components/products/` — `ProductGrid` (reusable grid used by CategoryView, DealsPage, BrandView)
-- `lib/ordersCache.ts` — Deduped fetch + in-memory cache for `/api/orders`
-- `lib/pricing.ts` — `computePrice(sellingPrice, purchasePrice)` — derives discount dynamically (no hardcoded %)
-- `components/PriceDisplay.tsx` — Shows selling price + optional crossed-out purchasePrice + savings badge
+
+```
+src/
+├── App.tsx                    — Root with providers (Auth, Cart, Wishlist, QueryClient)
+├── AppContent.tsx             — Router, SplashScreen, PageLoader, modal management
+├── context/
+│   ├── AuthContext.tsx        — Firebase auth state
+│   ├── CartContext.tsx        — Cart state (localStorage synced)
+│   └── WishlistContext.tsx    — Wishlist state
+├── pages/
+│   ├── Index.tsx              — Homepage
+│   ├── About.tsx
+│   ├── CategoryView.tsx       — Category product listing
+│   ├── ProductView.tsx        — Product detail page
+│   ├── Cart.tsx
+│   ├── Wishlist.tsx
+│   ├── Checkout.tsx
+│   ├── Orders.tsx             — Customer order history
+│   ├── Admin.tsx              — Full admin panel
+│   ├── Profile.tsx
+│   ├── BrandsPage.tsx         — All brands listing
+│   ├── BrandView.tsx          — Brand-filtered product listing
+│   ├── DealsPage.tsx          — Denim-only price-filtered deals
+│   └── NotFound.tsx
+├── components/
+│   ├── SplashScreen.tsx       — Cinematic branded intro (once per session)
+│   ├── Navbar.tsx
+│   ├── Footer.tsx             — Customer-facing pages only (not admin)
+│   ├── HeroBanner.tsx
+│   ├── BrandsSection.tsx
+│   ├── LiveSaleSection.tsx
+│   ├── CategoriesSection.tsx
+│   ├── PriceDisplay.tsx       — Unified price renderer (selling + MRP strikethrough)
+│   ├── Analytics/
+│   │   ├── AnalyticsTab.tsx   — Admin analytics dashboard
+│   │   ├── StatsCard.tsx      — KPI tile
+│   │   ├── RevenueChart.tsx   — Monthly revenue area chart
+│   │   ├── OrdersChart.tsx    — Monthly orders bar chart
+│   │   ├── TopProducts.tsx
+│   │   ├── StockAlerts.tsx
+│   │   ├── RecentOrders.tsx
+│   │   └── types.ts           — Shared TypeScript interfaces
+│   └── products/
+│       └── ProductGrid.tsx    — Reusable product card grid
+├── lib/
+│   ├── pricing.ts             — computePrice(sellingPrice, mrp) → PriceInfo
+│   ├── cloudinary.ts          — Image URL optimization helpers
+│   ├── ordersCache.ts         — Deduped fetch + in-memory cache for /api/orders
+│   ├── requireAuth.ts         — Action deferral until authenticated
+│   └── modalController.ts     — Event-based login modal controller
+└── utils/
+    └── printInvoice.ts        — Packing slip print utility (opens browser print)
+```
 
 ### Backend (`api/`)
-Each file is one Vercel serverless function. Sub-routed handlers exist to stay under the Hobby-plan **12-function limit** (currently using 11 of 12).
 
-| File | Routes served |
-| --- | --- |
+Each file is a Vercel serverless function (also mounted as Express routes locally via `server.js`).
+
+| File | Routes |
+|---|---|
 | `api/products/index.js` | `GET/POST/PUT/DELETE /api/products` |
 | `api/products/[id].js` | `GET /api/products/:id` |
-| `api/orders/index.js` | `GET /api/orders`, `POST /api/orders/create`, `PUT /api/orders/cancel`, `PATCH/DELETE /api/orders/manage?id=...` |
+| `api/orders/index.js` | `GET /api/orders`, `POST /api/orders/create`, `PUT /api/orders/cancel`, `PATCH/DELETE /api/orders/manage` |
 | `api/users/index.js` | `POST /api/users/create`, profile + address sub-routes |
 | `api/cart/index.js` | `GET/POST/DELETE /api/cart` |
 | `api/wishlist/index.js` | `GET/POST/DELETE /api/wishlist` |
 | `api/categories/index.js` | `GET/POST/PUT/DELETE /api/categories` |
 | `api/address/index.js` | `GET/POST/PUT/DELETE /api/address` |
 | `api/reviews/index.js` | `GET/POST/DELETE /api/reviews` |
-| `api/admin.js` | `GET /api/admin/analytics` — consolidated analytics |
+| `api/admin.js` | `GET /api/admin/analytics` — consolidated analytics + profit metrics |
 | `api/brands/index.js` | `GET/POST/PUT/DELETE /api/brands` |
 
-**Sub-route resolution:** Consolidated handlers (`api/orders/index.js`, `api/admin.js`) determine the action from either:
-- `req.url` path remainder (Express, local dev), or
-- `req.query.subpath` (Vercel, set by `vercel.json` rewrites in production)
+### Shared Backend Helpers (`api/_lib/`)
 
-### Shared backend (`api/_lib/`)
-- `mongodb.js` — Cached MongoClient (`getDb()` returns `thunderbold` database)
-- `firebaseAdmin.js` — `verifyFirebaseToken(idToken)`
-- `adminHelper.js` — `isAdmin(email, db)` — checks against hardcoded `ADMIN_EMAILS` list
-- `rateLimit.js` — `isRateLimited(req)` for write endpoints
-- `validator.js`, `response.js` — Input validation + standard JSON responses
+| File | Purpose |
+|---|---|
+| `mongodb.js` | Cached MongoClient — `getDb()` returns the `thunderbold` database |
+| `firebaseAdmin.js` | `verifyFirebaseToken(idToken)` — decodes and validates Firebase JWT |
+| `adminHelper.js` | `isAdmin(email, db)` — checks hardcoded `ADMIN_EMAILS` list |
+| `rateLimit.js` | `isRateLimited(req)` — in-memory rate limiting for write endpoints |
+| `validator.js` | Input validation utilities |
+| `response.js` | Standard JSON response helpers |
+
+---
+
+## Database
+
+**MongoDB Atlas** — database name: `thunderbold`
+
+### Collections
+
+| Collection | Description |
+|---|---|
+| `products` | Product catalog |
+| `orders` | Customer orders |
+| `users` | User profiles |
+| `cart` | Per-user cart items |
+| `wishlist` | Per-user wishlisted products |
+| `categories` | Category records |
+| `brands` | Brand name records |
+| `addresses` | Saved delivery addresses |
+| `reviews` | Per-product customer reviews |
+
+---
 
 ## Product Data Model
+
 ```js
 {
-  _id, name, price, purchasePrice?,   // purchasePrice = MRP/crossed-out price (optional)
-  brandId?,                            // references brands._id (optional)
-  image, images[],                     // first image is primary
-  description, categoryId, section,   // section: 'live-sale' | 'denim' | 'tshirts' | 'kurta'
-  sizeStock: { '28':n, '30':n, '32':n, '34':n, '36':n },
-  stock,                               // computed sum of sizeStock values
-  highlights?,                         // { color, length, printsPattern, waistRise, shade, lengthInches }
-  createdAt, updatedAt?
+  _id,
+  name,
+  price,           // Selling price — what the customer pays
+  mrp?,            // MRP / original price — shown crossed-out on the storefront (optional)
+  purchasePrice?,  // Internal cost price — admin-only, used for profit analytics (never sent to customers)
+  brandId?,        // References brands._id (optional)
+  image,           // Primary display image URL
+  images[],        // All images (first is primary)
+  description,
+  categoryId,
+  section,         // 'live-sale' | 'denim' | 'tshirts' | 'kurta'
+  sizeStock: { '28':n, '30':n, '32':n, '34':n, '36':n },  // Per-size inventory
+  stock,           // Computed total (sum of sizeStock values)
+  highlights?,     // { color, length, printsPattern, waistRise, shade, lengthInches }
+  createdAt,
+  updatedAt?
 }
 ```
 
-## Brand System
-Brands are a separate MongoDB collection (`brands`). They are simple name records.
-
-**Data model:**
-```js
-{ _id, name, createdAt, updatedAt? }
-```
-
-**Flow:**
-1. Admin creates brand names in the **Brands tab** of the admin panel (`/admin` → Brands tab)
-2. When adding/editing a product, admin selects a brand from a dropdown (optional — existing products are unbranded by default)
-3. On the store homepage, a **"Shop by Brand"** section appears between the Hero and the Special Offer section
-4. Clicking the banner navigates to `/brands` (all brands listing page)
-5. Clicking any brand navigates to `/brand/:brandId` (products filtered by that brand, using the shared `ProductGrid` component)
-
-**API:** `GET /api/brands` is public (no auth). `POST/PUT/DELETE` require admin Firebase token.
+---
 
 ## Pricing System
-- `purchasePrice` — the original/MRP price stored on the product (optional). Shown as a crossed-out price on the store.
-- `price` — the selling/actual price customers pay.
-- `src/lib/pricing.ts` — `computePrice(sellingPrice, purchasePrice)` calculates the discount % dynamically.
-- `src/components/PriceDisplay.tsx` — renders `price`, optional `purchasePrice` strikethrough, and a savings badge. Accepts `size` (`sm` | `lg`) and `showSavings` props.
 
-## Admin Panel (`/admin`)
-Admin emails are hardcoded in both `api/_lib/adminHelper.js` and `src/pages/Admin.tsx` (`ADMIN_EMAILS`).
+Three separate fields serve distinct purposes:
 
-**Tabs:**
+| Field | Visibility | Purpose |
+|---|---|---|
+| `price` | Public (customers + admin) | Actual selling price — what the customer pays |
+| `mrp` | Public (customers + admin) | Original/MRP price — shown crossed-out to indicate a discount |
+| `purchasePrice` | Admin only — never in public API responses | Internal cost price — used for profit calculations in analytics |
+
+### Frontend Rendering
+
+`src/lib/pricing.ts` — `computePrice(sellingPrice, mrp)` derives the discount percentage dynamically (no hardcoded %):
+
+```ts
+computePrice(price, mrp) → {
+  sellingPrice,   // cleaned selling price
+  mrp,            // original/MRP price
+  discountPct,    // % off, derived dynamically
+  savings,        // absolute savings (MRP - selling)
+  hasDiscount     // true when MRP > selling price
+}
+```
+
+`src/components/PriceDisplay.tsx` renders: selling price + optional crossed-out MRP + savings badge. Used on every product card and the product detail page.
+
+### Backward Compatibility
+
+Existing products that stored MRP in the old `purchasePrice` field are handled gracefully by the API:
+
+```js
+// GET /api/products — normalises for backward compat
+mrp: doc.mrp ?? doc.purchasePrice ?? null
+```
+
+Old products continue to show their crossed-out price without any data migration.
+
+### Admin Panel Fields
+
+The product create/edit form (Admin → Products tab) has three distinct fields:
+1. **MRP (₹)** — customer-facing original price
+2. **Selling Price (₹)** — the actual checkout price
+3. **Purchase Price / Cost (₹)** — internal cost, marked "Admin only", never exposed publicly
+
+---
+
+## Analytics System
+
+### Overview
+
+Single endpoint: `GET /api/admin/analytics` — returns all metrics in one payload via `Promise.all` across multiple MongoDB aggregation pipelines.
+
+### KPI Cards
+
+| Card | Definition |
+|---|---|
+| Total Revenue | Sum of `totalAmount` for all non-cancelled orders in the period |
+| Net Revenue | Same, lifetime |
+| Total Orders | Count of all orders in the period |
+| Avg Order Value | Total Revenue ÷ Total Orders |
+| Period Profit | Profit from delivered orders in the current period |
+| Net Profit (All Time) | Lifetime profit from all delivered/completed orders |
+
+### Profit Calculation
+
+Only **delivered** and **completed** orders are counted toward profit.
+
+Per-item profit: `(order item selling price − product purchasePrice) × quantity`
+
+The calculation uses a MongoDB aggregation pipeline with `$lookup` to join order items to their products' `purchasePrice`. Items from products without a `purchasePrice` set are excluded gracefully — no errors, no zero-padding.
+
+```
+orders (delivered/completed)
+  → $unwind products[]
+  → $lookup products.purchasePrice
+  → $filter (exclude items with no purchasePrice)
+  → $group: sum((sellingPrice - cost) × qty)
+```
+
+Both **period profit** (current date range) and **lifetime profit** run in parallel via `Promise.all`.
+
+### Monthly Charts
+
+Revenue and order volume are charted for the last 12 months (`YYYY-MM` labels). Months with zero activity are filled in automatically so the chart always shows a complete 12-month window.
+
+---
+
+## Promo Banner Filtering
+
+The deals pages (`/deals/under-999`, `/deals/under-699`) filter products by **both price cap AND denim section**:
+
+```
+GET /api/products?maxPrice=999&section=denim
+```
+
+This ensures only denim/jeans products appear — no kurtas or t-shirts — regardless of price. Newly added denim products automatically appear on the correct deals page without any manual configuration.
+
+---
+
+## Admin Panel
+
+Route: `/admin` — admin-email-restricted, requires Firebase token with an email in `ADMIN_EMAILS`.
+
+### Tabs
+
 | Tab | Description |
-| --- | --- |
-| Analytics | KPI cards, monthly revenue/orders charts (last 12 months), top products, stock alerts, recent orders |
-| Orders | View, update status, delete orders |
-| Products | Add/edit/delete products. Form includes: name, section, category, brand (dropdown), purchase price, selling price, size stock, images, description, highlights |
-| Categories | Add/edit/delete categories (name, image URL, section) |
-| Brands | Add/edit/delete brand names. These populate the brand dropdown in the product form |
+|---|---|
+| Analytics | KPI cards (revenue, orders, profit), monthly charts, top products, stock alerts, recent orders |
+| Orders | View all orders, update status, print packing slip, delete |
+| Products | Create/edit/delete products. Form includes: name, section, category, brand, MRP, selling price, purchase price/cost (admin-only), size stock, images, description, highlights |
+| Categories | Create/edit/delete categories |
+| Brands | Create/edit/delete brand names |
 | Reviews | Per-product review listing with admin delete |
 
+The admin panel has **no footer** — the storefront footer only renders on customer-facing pages.
+
+---
+
+## Order Print / Packing Slip
+
+`src/utils/printInvoice.ts` — `printInvoice(order)` opens a new browser window with a professionally formatted HTML packing slip and automatically triggers `window.print()`.
+
+The packing slip includes:
+- Thunderbolt brand header
+- Order ID + date + payment method + status badge
+- Ship-to address block
+- Itemized product table (name, size, quantity, unit price, line total)
+- Subtotal + shipping + total summary
+- Customer name + print timestamp footer
+
+The print button (printer icon) appears next to the delete button on every order row — both mobile cards and desktop table — in the admin Orders tab.
+
+---
+
+## Splash Screen
+
+`src/components/SplashScreen.tsx` — renders once per browser session (controlled via `sessionStorage`).
+
+- Full-screen dark background (`#0a0a0a`)
+- Lightning bolt icon animates in (scale + opacity, spring easing)
+- Amber glow pulses behind the bolt
+- "THUNDERBOLT" brand text expands in with letter-spacing animation
+- "PREMIUM DENIM" tagline fades in
+- Amber sweep bar progresses across the bottom
+- Smooth fade-out after 2 seconds
+- Zero impact on route rendering — overlays the app, does not block Suspense
+
+---
+
+## Brand System
+
+Brands are stored in the `brands` MongoDB collection.
+
+**Flow:**
+1. Admin creates brand names in the Brands tab (`/admin` → Brands)
+2. When adding/editing a product, admin selects a brand from a dropdown (optional)
+3. Homepage shows a "Shop by Brand" `BrandsSection`
+4. Clicking navigates to `/brands` (all brands) or `/brand/:brandId` (filtered products)
+
+---
+
 ## Size-Based Stock System
-Products use a `sizeStock` map (`Record<string, number>`) keyed by `['28','30','32','34','36']`. The flat `stock` field is the computed total (sum of `sizeStock` values).
 
-- **Admin** (`src/pages/Admin.tsx`) — `SizeStockInput` sets per-size stock. `SIZES` constant is the single source of truth.
-- **Store** (`src/pages/ProductView.tsx`) — Size buttons disabled when `sizeStock[size] === 0`.
-- **Backend** (`api/products/index.js`) — POST/PUT accept `sizeStock`, compute total `stock`.
-- **Order create** — Pre-flight stock check with atomic decrement + compensation rollback (prevents oversells).
-- **Order cancel** — Restores stock per size when `sizeStock` exists.
+Products use a `sizeStock` map keyed by `['28','30','32','34','36']` for jeans (or `['S','M','L','XL','XXL']` for apparel). The flat `stock` field is the computed total.
 
-## Homepage Sections (top to bottom)
-1. `HeroBanner` — full-width hero with CTA
-2. `BrandsSection` — "Shop by Brand" heading + clickable banner → `/brands`
-3. `LiveSaleSection` — "Special Offer" grid (products where `section === 'live-sale'`)
-4. `CategoriesSection`:
-   - Denim Collection grid
-   - `PromoBanner` (two side-by-side static images → deals pages)
-   - T-Shirt Collection grid (shown only when tshirt categories exist)
-   - Kurta Collection grid (shown only when kurta categories exist)
+- **Ordering**: Pre-flight stock check with atomic decrement + compensation rollback (prevents oversells)
+- **Cancellation**: Restores stock per size when `sizeStock` exists on the product
 
-## Analytics Dashboard
-Default tab on `src/pages/Admin.tsx`. Monthly data for last 12 months.
-
-- **Component tree**: `AnalyticsTab` → single fetch to `/api/admin/analytics` → sliced into:
-  - `StatsCard` — KPI tiles (total revenue, orders, AOV, users)
-  - `RevenueChart` — Recharts area chart, monthly `YYYY-MM` labels
-  - `OrdersChart` — Recharts bar chart, monthly `YYYY-MM` labels
-  - `TopProducts`, `StockAlerts`, `RecentOrders`
-- **Backend** (`api/admin.js`) — All aggregations in `Promise.all`. Revenue excludes `cancelled/refunded` orders. Groups by `%Y-%m`, fills gaps with zeros using `eachMonth()`.
+---
 
 ## Deployment
 
 ### Local / Replit (development)
-- Workflow `Start application` runs `npm run dev` (Vite on :5000, Express on :3001)
-- Vite proxies `/api/*` to Express
+
+```bash
+npm run dev        # Concurrently: node server.js (3001) + vite (5000)
+```
+
+Vite proxies `/api/*` → Express.
 
 ### Vercel (production)
-- **Build**: `npm run build` (Vite output to `dist/`)
-- **Functions**: 11 serverless functions (out of 12 allowed on Hobby)
-- **`vercel.json` rewrites**:
-  - `/api/admin/analytics/:path*` → `/api/admin?subpath=:path*`
-  - `/api/orders/{create|cancel|manage}` → `/api/orders?subpath=:sub`
-  - All other `/api/*` → matching file in `/api/`
-  - Everything else → `/index.html` (SPA fallback)
 
-The same handler files run unchanged in both environments; sub-routing is the only environment-specific concern.
+- **Build command**: `npm run build` (Vite output to `dist/`)
+- **Functions**: 11 serverless functions out of 12 allowed on Hobby plan
+- **`vercel.json` rewrites**: Sub-route consolidated handlers use `?subpath=` query param (Vercel) vs URL path remainder (Express)
 
-## Recent Changes
-- **Brands system** — New `api/brands/index.js` (11th serverless function). Admin Brands tab for CRUD. Brand dropdown in product form. Homepage `BrandsSection`, `/brands` listing page, `/brand/:brandId` product page.
-- **Purchase price / MRP** — Products now store `purchasePrice` (optional). Admin form has separate "Purchase Price / MRP" and "Selling Price" fields. Store shows crossed-out price + dynamic discount % when `purchasePrice > price`.
-- **Kurta Collection** — Added `kurta` as a product/category section. Appears in admin dropdowns and on the homepage CategoriesSection.
-- **Promo banner** — Replaced old slider with static side-by-side `PromoBanner` between Denim and T-Shirts sections.
-- **Monthly analytics** — Charts now show last 12 months (was: last 30 days). Data grouped by `YYYY-MM`.
-- **Admin Analytics Dashboard** — Default admin tab with KPIs, monthly charts, top products, stock alerts, recent orders.
+The same handler files run unchanged in both environments.
+
+---
+
+## API Security Notes
+
+- All write endpoints require a valid Firebase ID token (`Authorization: Bearer <token>`)
+- Admin endpoints additionally check `isAdmin(email, db)` against the hardcoded `ADMIN_EMAILS` list
+- `purchasePrice` (internal cost) is **never included** in public `GET /api/products` responses — it is only returned when the request is authenticated as an admin
+- Rate limiting is applied to all write endpoints via `api/_lib/rateLimit.js`
+
+---
+
+## Edge Cases Handled
+
+| Case | Handling |
+|---|---|
+| Old products with `purchasePrice` as MRP | API normalises: `mrp: doc.mrp ?? doc.purchasePrice ?? null` — no migration needed |
+| Products with no `purchasePrice` (cost) | Excluded from profit calculations gracefully — no errors |
+| Out-of-stock sizes | Size buttons disabled on ProductView; atomic stock checks on order create |
+| Order cancellation | Restores `sizeStock` per size (if available) and total `stock` |
+| Missing `brandId` on products | Optional — backwards compatible, unbranded products still work |
+| Deals page with mixed categories | Section filter (`?section=denim`) ensures only denim products appear |
+
+---
+
+## User Preferences
+
+- No emojis in code or comments unless user explicitly requests
+- No Footer inside Admin panel
+- Admin emails are hardcoded in `api/_lib/adminHelper.js` and `src/pages/Admin.tsx`
+- Database name is `thunderbold` (not `thunderbolt`) — this is intentional
+- Pricing: `mrp` = crossed-out display price; `purchasePrice` = internal cost (admin-only)
+- All data endpoints must fail explicitly with `500 Database unavailable` when MongoDB is unavailable — no silent fallbacks

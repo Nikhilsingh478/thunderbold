@@ -6,8 +6,10 @@ import LoginModal from "./components/auth/LoginModal";
 import { executeStoredAction } from "./lib/requireAuth";
 import { modalController, ModalControlEvent } from "./lib/modalController";
 import { useEffect, useState, lazy, Suspense } from "react";
+import { motion } from "framer-motion";
 
 import AnnouncementBar from "./components/AnnouncementBar";
+import SplashScreen from "./components/SplashScreen";
 
 // Eagerly loaded (small / always needed on first paint)
 import Index from "./pages/Index.tsx";
@@ -27,10 +29,42 @@ const DealsPage = lazy(() => import("./pages/DealsPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const BrandView = lazy(() => import("./pages/BrandView"));
 
+/**
+ * Branded page loader — shown while lazy-loaded route chunks are fetching.
+ * Minimal and fast: a white bolt icon with a sliding shimmer bar.
+ */
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-void">
-      <div className="animate-spin rounded-full h-8 w-8 border-2 border-white/10 border-t-white/60" />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center gap-5"
+      style={{ backgroundColor: '#0a0a0a' }}
+    >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0.7, 0.4, 0.7] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M13.2 2.5L4.8 13.2C4.6 13.5 4.8 14 5.2 14H11L9.8 21.2C9.7 21.8 10.5 22.1 10.9 21.6L19.2 10.8C19.4 10.5 19.2 10 18.8 10H13L14.2 2.8C14.3 2.2 13.6 1.9 13.2 2.5Z"
+            fill="white"
+          />
+        </svg>
+      </motion.div>
+
+      {/* Shimmer bar */}
+      <div className="w-20 h-px bg-white/8 relative overflow-hidden rounded-full">
+        <motion.div
+          className="absolute inset-y-0 w-10 rounded-full"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)',
+          }}
+          animate={{ x: [-40, 40] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
     </div>
   );
 }
@@ -86,6 +120,9 @@ const AppContent = () => {
 
   return (
     <>
+      {/* Cinematic branded splash — shown once per session, overlays the app */}
+      <SplashScreen />
+
       <AnnouncementBar />
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
