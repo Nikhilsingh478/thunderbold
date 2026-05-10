@@ -10,7 +10,7 @@ Thunderbolt is a production-grade premium denim e-commerce storefront built for 
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Frontend | React 18, TypeScript, Vite 5, Tailwind CSS, shadcn/ui |
 | Routing | React Router v6 |
 | State / Data | TanStack Query (React Query) |
 | Animations | Framer Motion |
@@ -18,8 +18,9 @@ Thunderbolt is a production-grade premium denim e-commerce storefront built for 
 | Authentication | Firebase Authentication (email/password) |
 | Database | MongoDB Atlas |
 | Backend | Node.js + Express (local dev), Vercel Serverless Functions (production) |
+| PWA | vite-plugin-pwa v1.x + Workbox generateSW strategy |
 | Icons | Lucide React |
-| Build | Vite (frontend), ESBuild (backend via Vite) |
+| Build | Vite (frontend) |
 
 ---
 

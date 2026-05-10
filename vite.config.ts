@@ -28,16 +28,26 @@ export default defineConfig(() => ({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      /**
+       * generateSW — Workbox fully generates the service worker.
+       * Simpler and more reliable than injectManifest for this use case.
+       */
+      strategies: 'generateSW',
+      registerType: 'prompt',   // Prompt strategy: we control when to update (no forced reload)
+      injectRegister: null,     // We register manually in main.tsx via virtual:pwa-register
 
-      // Only enable service worker in production builds.
-      // In dev mode it interferes with Vite HMR and the API proxy.
+      /**
+       * Service worker only in production.
+       * In dev mode it conflicts with Vite HMR and the API proxy.
+       */
       devOptions: {
         enabled: false,
       },
 
-      // Files in /public to include in the precache manifest
+      /**
+       * Files in /public to include in the precache manifest.
+       * Only lightweight assets — product images are handled via runtimeCaching.
+       */
       includeAssets: [
         'favicon.svg',
         'robots.txt',
@@ -46,17 +56,113 @@ export default defineConfig(() => ({
       ],
 
       manifest: {
+        /**
+         * App identity — required for PWABuilder and Play Store TWA.
+         * `id` must be stable across deployments.
+         */
+        id: '/',
         name: 'Thunderbolt',
         short_name: 'Thunderbolt',
         description: 'Premium Indian Denim — Built for the Bold',
         start_url: '/',
         scope: '/',
+
+        /**
+         * Display hierarchy:
+         * 1. window-controls-overlay — desktop installed, title-bar-area API
+         * 2. standalone — mobile / desktop installed (no browser chrome)
+         * 3. minimal-ui — fallback (back/refresh bar visible)
+         */
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+
         orientation: 'portrait-primary',
         theme_color: '#0a0a0a',
         background_color: '#0a0a0a',
+
         lang: 'en-IN',
+        dir: 'ltr',
         categories: ['shopping'],
+
+        /**
+         * App shortcuts — appear on long-press of the home screen icon
+         * (Android) or right-click in taskbar (desktop).
+         */
+        shortcuts: [
+          {
+            name: 'My Cart',
+            short_name: 'Cart',
+            description: 'View your shopping cart',
+            url: '/cart',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' }],
+          },
+          {
+            name: 'My Wishlist',
+            short_name: 'Wishlist',
+            description: 'View your saved items',
+            url: '/wishlist',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' }],
+          },
+          {
+            name: 'My Orders',
+            short_name: 'Orders',
+            description: 'Track your orders',
+            url: '/orders',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' }],
+          },
+          {
+            name: 'Deals',
+            short_name: 'Deals',
+            description: 'Shop denim under ₹999',
+            url: '/deals/under-999',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' }],
+          },
+        ],
+
+        /**
+         * Screenshots — shown in browser install dialogs and PWABuilder.
+         * narrow = mobile portrait, wide = desktop/tablet landscape.
+         */
+        screenshots: [
+          {
+            src: '/screenshots/mobile.svg',
+            sizes: '540x960',
+            type: 'image/svg+xml',
+            form_factor: 'narrow',
+            label: 'Thunderbolt — Premium Denim Storefront',
+          },
+          {
+            src: '/screenshots/desktop.svg',
+            sizes: '1280x800',
+            type: 'image/svg+xml',
+            form_factor: 'wide',
+            label: 'Thunderbolt — Product Collection',
+          },
+        ],
+
+        /**
+         * Share target — allows other apps to share URLs / product links
+         * into Thunderbolt via the OS share sheet.
+         * When triggered, the app opens at /?share_url=... (handled in Index.tsx).
+         */
+        share_target: {
+          action: '/',
+          method: 'GET',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+          },
+        },
+
+        /**
+         * Launch handler — reuse the existing app window when launched again
+         * instead of opening a second tab. Critical for installed PWA feel.
+         */
+        launch_handler: {
+          client_mode: 'navigate-existing',
+        },
+
         icons: [
           { src: '/icons/icon-72x72.png',            sizes: '72x72',   type: 'image/png' },
           { src: '/icons/icon-96x96.png',            sizes: '96x96',   type: 'image/png' },
@@ -68,33 +174,58 @@ export default defineConfig(() => ({
           { src: '/icons/icon-512x512.png',          sizes: '512x512', type: 'image/png', purpose: 'any' },
           { src: '/icons/icon-512x512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
+      } as Record<string, unknown>,
 
       workbox: {
-        // Precache JS/CSS/HTML/fonts/small images.
-        // Large images (banners, hang-tags, etc.) are excluded here and
-        // served via runtimeCaching CacheFirst instead.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        // Exclude any webp larger than 2 MB from precache —
-        // they'll be picked up by runtimeCaching CacheFirst.
-        globIgnores: ['**/hangtag*.webp', '**/banners/**'],
+        /**
+         * Precache JS/CSS/HTML/fonts and small raster assets.
+         * Large media files (banners, product images) are served via runtimeCaching.
+         */
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2}'],
+        globIgnores: [
+          '**/banners/**',
+          '**/screenshots/**',
+          // Exclude large icon sizes from precache — runtimeCaching handles them
+        ],
 
-        // SPA: serve index.html for all navigation requests...
+        /**
+         * SPA navigation fallback — serve index.html for all navigation requests
+         * except API calls (those must always go to the network).
+         */
         navigateFallback: '/index.html',
-        // ...except API routes — those must always hit the network
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [
+          /^\/api\//,    // Never intercept API requests
+          /^\/sw\.js$/,  // Don't intercept the service worker itself
+        ],
+
+        /**
+         * Clean up outdated caches from old SW versions on activation.
+         * Prevents stale data after deployments.
+         */
+        cleanupOutdatedCaches: true,
+
+        /**
+         * Skip waiting — newly installed SW activates immediately after install.
+         * Combined with 'prompt' registerType, users see an update prompt
+         * and can choose when to apply it (non-disruptive for checkout flows).
+         */
+        skipWaiting: false,
+        clientsClaim: false,
 
         runtimeCaching: [
           {
-            // ── CRITICAL: Never cache any API response ──────────────────────
-            // This covers authenticated routes (cart, orders, admin, checkout,
-            // wishlist) and public routes (products, brands, categories).
-            // Stale API data causes incorrect stock counts, auth failures, etc.
+            /**
+             * CRITICAL — Never cache any API response.
+             * Auth, cart, orders, admin, checkout must always hit the network.
+             * Stale API data causes incorrect stock counts and auth failures.
+             */
             urlPattern: /^\/api\/.*/i,
             handler: 'NetworkOnly',
           },
           {
-            // Google Fonts CSS — fast CDN, stale-while-revalidate is safe
+            /**
+             * Google Fonts CSS — safe to serve stale while revalidating in background.
+             */
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -103,7 +234,9 @@ export default defineConfig(() => ({
             },
           },
           {
-            // Google Fonts binary files — immutable, 1-year cache
+            /**
+             * Google Fonts binary files — immutable, safe to cache for 1 year.
+             */
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -116,7 +249,10 @@ export default defineConfig(() => ({
             },
           },
           {
-            // Cloudinary product images — cache for 30 days
+            /**
+             * Cloudinary product images — content-addressed URLs, safe to cache
+             * for 30 days with a 120-entry LRU cap.
+             */
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -129,7 +265,10 @@ export default defineConfig(() => ({
             },
           },
           {
-            // Local static images (banners, icons, placeholders)
+            /**
+             * Local static images (banners, icons, placeholders).
+             * 30-day CacheFirst with a 60-entry limit.
+             */
             urlPattern: /\.(?:png|jpg|jpeg|webp|svg|gif|ico)$/i,
             handler: 'CacheFirst',
             options: {

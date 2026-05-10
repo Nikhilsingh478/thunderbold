@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 
 import AnnouncementBar from "./components/AnnouncementBar";
 import SplashScreen from "./components/SplashScreen";
+import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
 
 // Eagerly loaded (small / always needed on first paint)
 import Index from "./pages/Index.tsx";
@@ -151,6 +152,9 @@ const AppContent = () => {
         onClose={handleLoginModalClose}
         isDelayedPrompt={modalSource === 'delayedPrompt'}
       />
+
+      {/* PWA lifecycle toasts — update available + offline ready */}
+      <PWAUpdatePrompt />
     </>
   );
 };
