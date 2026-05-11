@@ -125,16 +125,16 @@ export default defineConfig(() => ({
          */
         screenshots: [
           {
-            src: '/screenshots/mobile.svg',
+            src: '/screenshots/mobile.png',
             sizes: '540x960',
-            type: 'image/svg+xml',
+            type: 'image/png',
             form_factor: 'narrow',
             label: 'Thunderbolt — Premium Denim Storefront',
           },
           {
-            src: '/screenshots/desktop.svg',
+            src: '/screenshots/desktop.png',
             sizes: '1280x800',
-            type: 'image/svg+xml',
+            type: 'image/png',
             form_factor: 'wide',
             label: 'Thunderbolt — Product Collection',
           },
