@@ -163,6 +163,21 @@ export default defineConfig(() => ({
           client_mode: 'navigate-existing',
         },
 
+        prefer_related_applications: false,
+        related_applications: [
+          {
+            relation: ['delegate_permission/common.handle_all_urls'],
+            platform: 'play',
+            id: 'app.vercel.thunderbold.twa',
+            fingerprints: [
+              {
+                type: 'sha256_cert',
+                value: 'CE:03:95:CB:D2:48:45:60:23:C4:8A:91:0D:30:CC:04:2B:B4:1E:26:FD:D2:DB:7A:60:30:0B:85:5D:68:D3:04',
+              },
+            ],
+          },
+        ],
+
         icons: [
           { src: '/icons/icon-72x72.png',            sizes: '72x72',   type: 'image/png' },
           { src: '/icons/icon-96x96.png',            sizes: '96x96',   type: 'image/png' },
