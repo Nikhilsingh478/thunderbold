@@ -6,6 +6,7 @@ A full-stack, installable Progressive Web App built for a real retail brand. Rea
 
 ## Table of Contents
 
+
 1. [Tech Stack](#tech-stack)
 2. [Architecture Overview](#architecture-overview)
 3. [Environment Setup](#environment-setup)
