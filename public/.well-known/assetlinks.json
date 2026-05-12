@@ -4,7 +4,8 @@
     "namespace": "android_app",
     "package_name": "app.vercel.thunderbold.twa",
     "sha256_cert_fingerprints": [
-      "CE:03:95:CB:D2:48:45:60:23:C4:8A:91:0D:30:CC:04:2B:B4:1E:26:FD:D2:DB:7A:60:30:0B:85:5D:68:D3:04"
+      "CE:03:95:CB:D2:48:45:60:23:C4:8A:91:0D:30:CC:04:2B:B4:1E:26:FD:D2:DB:7A:60:30:0B:85:5D:68:D3:04",
+      "FE:64:87:1C:71:28:0B:93:A2:6A:C6:BF:39:4F:54:B1:21:0E:FA:B2:E0:C8:20:95:DD:12:0C:A3:52:8D:F6:BA"
     ]
   }
 }]
