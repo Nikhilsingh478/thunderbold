@@ -1,0 +1,233 @@
+Okay, listen carefully and properly audit the CURRENT Android/TWA installed-app behavior because there are STILL two major UX issues remaining.
+
+The core PWA functionality is mostly working now, but the installed Android app experience still does NOT feel fully native/professional yet.
+
+This is now a FINAL UX + TWA polish/debugging pass.
+
+==================================================
+CURRENT ISSUES
+==============
+
+ISSUE 1 — UGLY SPLASH SCREEN / ICON BACKGROUND MISMATCH
+
+Currently the opening splash screen looks bad because:
+
+* the app icon background and splash background DO NOT blend together properly
+* the icon square/container is visibly separate
+* the icon background color is different from the splash background
+* this creates an ugly boxed/square appearance
+
+This breaks the premium native-app feel.
+
+---
+
+## REQUIRED FIX
+
+The splash screen background and icon background must visually blend seamlessly.
+
+Requirements:
+
+* match the splash background color properly with the icon background
+* remove the visible “separate square” feeling
+* make the launch feel smooth, premium, cinematic, and native-like
+* ensure Android splash rendering looks clean on real devices
+
+IMPORTANT:
+Do NOT redesign the Thunderbolt icon/logo itself.
+
+ONLY:
+
+* improve background harmony
+* improve adaptive icon rendering
+* improve splash background integration
+* improve visual blending
+
+---
+
+## ANDROID ADAPTIVE ICON REQUIREMENTS
+
+Audit:
+
+* adaptive icon layers
+* maskable icon behavior
+* monochrome icon support if needed
+* icon padding/safe zones
+* Android 12+ splash rendering
+
+Verify:
+
+* no ugly square crop
+* no mismatched background colors
+* no sharp visual cutoff around the icon
+
+---
+
+## VISUAL GOAL
+
+The installed app should feel:
+
+* premium
+* polished
+* cohesive
+* native
+* modern
+* smooth
+
+==================================================
+ISSUE 2 — BROWSER UI STILL APPEARING
+====================================
+
+IMPORTANT:
+Even after:
+
+* adding related_applications
+* adding SHA-256 fingerprint
+* adding TWA package linkage
+
+the installed Android app STILL sometimes shows browser-like UI/chrome elements instead of a fully standalone native-feeling fullscreen experience.
+
+This means something in the TWA/PWA standalone setup is STILL incomplete or misconfigured.
+
+==================================================
+REQUIRED AUDIT
+==============
+
+Audit ALL of these carefully:
+
+---
+
+## MANIFEST DISPLAY SETTINGS
+
+Verify:
+
+* display
+* display_override
+* scope
+* start_url
+* id
+
+Ensure:
+
+* standalone mode is actually respected
+* browser chrome is removed
+* installed mode behaves correctly
+
+==================================================
+TWA / DIGITAL ASSET LINKS AUDIT
+===============================
+
+Verify:
+
+* assetlinks.json accessibility
+* SHA-256 fingerprint correctness
+* package name correctness
+* relation correctness
+* TWA verification success
+
+IMPORTANT:
+Verify REAL deployment behavior.
+
+Ensure:
+https://<domain>/.well-known/assetlinks.json
+works publicly.
+
+==================================================
+ANDROID INSTALL MODE VERIFICATION
+=================================
+
+Verify:
+
+* installed app launches in standalone/fullscreen mode
+* browser address bar does NOT appear
+* browser tabs do NOT appear
+* Chrome UI does NOT appear unexpectedly
+
+==================================================
+POSSIBLE ROOT CAUSES TO AUDIT
+=============================
+
+Investigate:
+
+* manifest scope mismatch
+* start_url mismatch
+* standalone mode fallback
+* TWA verification failure
+* assetlinks mismatch
+* Android package mismatch
+* browser fallback behavior
+* display_override ordering issues
+* incorrect package signing fingerprint
+* stale installed app cache
+* old installed package conflicts
+
+==================================================
+VERY IMPORTANT
+==============
+
+DO NOT blindly tweak values randomly.
+
+Actually verify:
+
+* why browser UI is appearing
+* whether TWA verification is succeeding
+* whether standalone mode is being respected
+
+==================================================
+EXPECTED FINAL RESULT
+=====================
+
+The installed Thunderbolt Android app should:
+
+* open fullscreen
+* hide browser chrome completely
+* feel like a real native ecommerce app
+* have a smooth branded splash screen
+* have visually seamless icon/background blending
+* feel polished and premium
+
+==================================================
+TESTING REQUIREMENTS
+====================
+
+You MUST test:
+
+* Android installed app mode
+* splash rendering
+* fullscreen behavior
+* standalone mode
+* TWA verification behavior
+* Digital Asset Links verification
+* Android 12+ splash behavior
+
+==================================================
+DOCUMENTATION UPDATE
+====================
+
+Update README/PWA documentation again with:
+
+* TWA setup explanation
+* Digital Asset Links setup
+* assetlinks.json explanation
+* adaptive icon explanation
+* splash screen rendering behavior
+* standalone mode explanation
+* troubleshooting steps for browser UI appearing
+
+==================================================
+FINAL REQUIRED DELIVERABLES
+===========================
+
+After completion provide:
+
+1. Exact root cause of browser UI appearing
+2. Exact splash/icon mismatch root cause
+3. Exact fixes implemented
+4. Whether TWA verification is now working correctly
+5. Whether standalone mode is now guaranteed
+6. All files modified
+7. Any remaining Android limitations
+8. Recommended next steps for Play Store publishing
+
+Take your time.
+Do this properly.
+This is the FINAL Android/TWA/native-app polish pass.

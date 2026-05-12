@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.thunderbold.twa",
+    "sha256_cert_fingerprints": [
+      "CE:03:95:CB:D2:48:45:60:23:C4:8A:91:0D:30:CC:04:2B:B4:1E:26:FD:D2:DB:7A:60:30:0B:85:5D:68:D3:04"
+    ]
+  }
+}]
