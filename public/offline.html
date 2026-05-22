@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Thunderbolt — You're Offline</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a0a;
+        color: #ffffff;
+        font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .bolt {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #D4AA30;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+        color: rgba(255,255,255,0.45);
+        max-width: 280px;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+      }
+
+      button {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.7);
+        padding: 0.85rem 2rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+
+      button:hover {
+        border-color: #D4AA30;
+        color: #D4AA30;
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="bolt" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.2 2.5L4.8 13.2C4.6 13.5 4.8 14 5.2 14H11L9.8 21.2C9.7 21.8 10.5 22.1 10.9 21.6L19.2 10.8C19.4 10.5 19.2 10 18.8 10H13L14.2 2.8C14.3 2.2 13.6 1.9 13.2 2.5Z" fill="#D4AA30"/>
+    </svg>
+
+    <h1>You're Offline</h1>
+    <p>Check your connection and try again. Your cart and wishlist are saved locally.</p>
+
+    <button onclick="window.location.reload()">Try Again</button>
+  </body>
+</html>

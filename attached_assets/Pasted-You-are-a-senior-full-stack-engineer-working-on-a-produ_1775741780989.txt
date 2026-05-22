@@ -1,0 +1,269 @@
+You are a senior full-stack engineer working on a production-grade e-commerce platform called "Thunderbolt Brand World" (React + Vite + TypeScript frontend, Node.js + serverless/Express backend, MongoDB Atlas, Firebase Authentication).
+
+Your task is to implement the **FINAL SECURITY + RELIABILITY HARDENING PASS**.
+
+⚠️ IMPORTANT:
+
+* Do NOT break existing functionality
+* Do NOT rewrite architecture
+* Only improve and secure
+* Maintain backward compatibility
+
+---
+
+# 🚨 PRIORITY 1: BULLETPROOF ORDER IDEMPOTENCY (CRITICAL)
+
+## Problem:
+
+Current idempotency (clientOrderId) is NOT fully safe under race conditions.
+
+## Task:
+
+Enforce true uniqueness at database level.
+
+### Steps:
+
+1. Create a UNIQUE index on orders collection:
+
+```js
+db.orders.createIndex({ clientOrderId: 1 }, { unique: true });
+```
+
+2. Update `/api/orders/create.js`:
+
+* Wrap order creation in try/catch
+* If duplicate key error occurs (E11000):
+  → fetch and return existing order instead of failing
+
+Example:
+
+```js
+try {
+  await db.orders.insertOne(orderData);
+} catch (error) {
+  if (error.code === 11000) {
+    const existing = await db.orders.findOne({ clientOrderId });
+    return existing;
+  }
+  throw error;
+}
+```
+
+---
+
+# 🚨 PRIORITY 2: ROLE-BASED ADMIN AUTH (SECURITY)
+
+## Problem:
+
+Admin is currently determined by:
+
+```js
+user.email === ADMIN_EMAIL
+```
+
+## Task:
+
+Move to database-driven roles.
+
+### Steps:
+
+1. Update `users` collection schema:
+
+```json
+{
+  "email": "string",
+  "role": "user | admin"
+}
+```
+
+2. On user creation (`/api/users`):
+
+* Default role = "user"
+
+3. Create helper:
+
+```js
+async function isAdmin(email) {
+  const user = await db.users.findOne({ email });
+  return user?.role === "admin";
+}
+```
+
+4. Replace ALL admin checks:
+
+* Use DB role instead of env email
+
+5. (Optional fallback)
+
+* If no role found, fallback to ADMIN_EMAIL
+
+---
+
+# 🚨 PRIORITY 3: RATE LIMITING (BASIC PROTECTION)
+
+## Problem:
+
+Endpoints can be spammed.
+
+## Task:
+
+Add lightweight rate limiting middleware.
+
+### Scope:
+
+* `/api/orders/create`
+* `/api/cart`
+* `/api/wishlist`
+
+### Implementation:
+
+* Track requests per IP
+* Limit: 10 requests/minute
+
+Example:
+
+```js
+const rateLimitMap = new Map();
+```
+
+* Block if exceeded
+
+⚠️ Keep simple (no external service)
+
+---
+
+# 🚨 PRIORITY 4: SECURITY HEADERS (IMPORTANT)
+
+## Task:
+
+Add HTTP security headers.
+
+### Steps:
+
+1. Install:
+
+```bash
+npm install helmet
+```
+
+2. In Express server:
+
+```js
+import helmet from "helmet";
+app.use(helmet());
+```
+
+---
+
+# 🚨 PRIORITY 5: STRICT INPUT VALIDATION
+
+## Task:
+
+Ensure ALL API endpoints validate input.
+
+### Must validate:
+
+* product creation/update
+* order creation
+* address input
+* cart updates
+
+### Use:
+
+* Zod OR manual validation
+
+### Rules:
+
+* no empty fields
+* correct types
+* sanitize strings
+
+---
+
+# 🚨 PRIORITY 6: RESPONSE OPTIMIZATION
+
+## Task:
+
+Reduce payload sizes.
+
+### Steps:
+
+* Use MongoDB projections:
+
+```js
+db.products.find({}, { projection: { name: 1, price: 1, image: 1 } })
+```
+
+* Remove unused fields in responses
+
+---
+
+# 🚨 PRIORITY 7: ERROR HANDLING STANDARDIZATION
+
+## Task:
+
+Ensure consistent API responses.
+
+### Format:
+
+```json
+{
+  "success": false,
+  "error": "Message"
+}
+```
+
+* No raw stack traces
+* Clear messages
+
+---
+
+# 🚨 PRIORITY 8: FRONTEND HARDENING
+
+## Task:
+
+### 1. Disable multiple clicks everywhere:
+
+* order button
+* add to cart
+* wishlist toggle
+
+---
+
+### 2. Add fallback UI:
+
+* loading states
+* empty states
+* error states
+
+---
+
+### 3. API retry wrapper:
+
+* retry failed requests (2 times)
+
+---
+
+# ⚠️ CONSTRAINTS
+
+* DO NOT change API routes
+* DO NOT break database structure
+* DO NOT remove features
+* Keep UX unchanged (only improve reliability)
+
+---
+
+# ✅ FINAL EXPECTATION
+
+After implementation:
+
+✔ Orders are 100% duplicate-safe
+✔ Admin access is role-based and secure
+✔ APIs cannot be spammed easily
+✔ Inputs are validated
+✔ Responses are optimized
+✔ App is stable under real users
+
+---
+
+This is the FINAL production hardening pass. Implement cleanly and carefully.

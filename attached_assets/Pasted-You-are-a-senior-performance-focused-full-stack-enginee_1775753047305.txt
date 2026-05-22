@@ -1,0 +1,254 @@
+You are a senior performance-focused full-stack engineer working on a production e-commerce platform ("Thunderbolt Brand World") built with React (Vite + TypeScript), Node.js (serverless/Express), MongoDB Atlas, and Firebase Authentication.
+
+Your task is to **FIX SLOW INITIAL UI RENDERING AND IMPROVE PERCEIVED PERFORMANCE** without breaking any existing functionality.
+
+---
+
+# 🚨 PROBLEM STATEMENT
+
+Current issue:
+
+* Navbar loads instantly
+* Rest of UI (homepage content) takes ~3–4 seconds to appear
+* Feels slow and laggy
+
+This is NOT acceptable for production UX.
+
+---
+
+# 🎯 GOAL
+
+Make the app feel:
+
+* ⚡ instant on load
+* ⚡ smooth and responsive
+* ⚡ no blank screen or delay
+* ⚡ content appears progressively (not all at once)
+
+---
+
+# ⚠️ STRICT RULES
+
+* DO NOT break existing features
+* DO NOT change APIs
+* DO NOT change database structure
+* DO NOT remove animations entirely (only optimize)
+* DO NOT introduce complex libraries
+* DO NOT over-refactor
+
+---
+
+# 🔥 PRIORITY 1: FIX RENDERING FLOW (CRITICAL)
+
+## Problem:
+
+UI is waiting for API data before rendering.
+
+## Task:
+
+Render UI IMMEDIATELY, then hydrate with data.
+
+### Steps:
+
+1. In homepage (`Index.tsx` or equivalent):
+
+   * DO NOT block render with API calls
+   * Render layout first with empty state
+
+2. Ensure data fetching is inside `useEffect`:
+
+```ts
+useEffect(() => {
+  fetchData();
+}, []);
+```
+
+3. UI should render BEFORE data arrives
+
+---
+
+# 🔥 PRIORITY 2: ADD SKELETON LOADERS (BIGGEST IMPACT)
+
+## Problem:
+
+User sees empty space → feels slow
+
+## Task:
+
+Add skeleton UI placeholders
+
+### Where:
+
+* product grid
+* category section
+* homepage sections
+
+### Behavior:
+
+* show skeleton immediately
+* replace with real data when loaded
+
+### Example:
+
+* fake product cards (grey boxes)
+* shimmer effect (optional)
+
+---
+
+# 🔥 PRIORITY 3: PARALLELIZE API CALLS
+
+## Problem:
+
+Sequential API calls slow everything
+
+## Fix:
+
+Replace:
+
+```js
+await fetchProducts();
+await fetchCategories();
+```
+
+With:
+
+```js
+await Promise.all([
+  fetchProducts(),
+  fetchCategories()
+]);
+```
+
+---
+
+# 🔥 PRIORITY 4: REDUCE INITIAL LOAD WORK
+
+## Task:
+
+1. Split homepage loading:
+
+   * Load ABOVE-THE-FOLD content first
+   * Delay below sections slightly
+
+2. Example:
+
+* show hero + categories first
+* load products after small delay
+
+---
+
+# 🔥 PRIORITY 5: OPTIMIZE IMAGES (CRITICAL FOR UX)
+
+## Tasks:
+
+1. Ensure ALL images:
+
+```html
+loading="lazy"
+decoding="async"
+```
+
+2. Avoid rendering huge images in small containers
+
+3. Add placeholder:
+
+* skeleton OR blur placeholder
+
+---
+
+# 🔥 PRIORITY 6: CONTROL ANIMATIONS (FRAMER MOTION)
+
+## Problem:
+
+Heavy animations slow first render
+
+## Fix:
+
+* Reduce animation complexity on initial load
+
+* Use only:
+
+  * opacity
+  * transform
+
+* Avoid:
+
+  * layout animations on load
+  * large stagger delays
+
+* Optionally:
+
+  * delay animations until after content loads
+
+---
+
+# 🔥 PRIORITY 7: PREVENT MAIN THREAD BLOCKING
+
+## Tasks:
+
+* Avoid heavy computations inside render
+
+* Use `useMemo` for:
+
+  * filtered products
+  * derived data
+
+* Move logic outside render when possible
+
+---
+
+# 🔥 PRIORITY 8: ENSURE PROPER CODE SPLITTING
+
+## Verify:
+
+Lazy load these pages:
+
+* Admin
+* Checkout
+* ProductView
+* Orders
+* Profile
+
+Ensure:
+
+* fallback UI exists (spinner/skeleton)
+* no blank screen
+
+---
+
+# 🔥 PRIORITY 9: IMPROVE PERCEIVED SPEED
+
+## UX Improvements:
+
+* Show something immediately (never blank)
+* Use loading indicators instead of waiting
+* Keep layout stable (no jumping)
+
+---
+
+# 🔥 PRIORITY 10: CLEANUP
+
+* Remove unnecessary console.logs
+* Avoid duplicate API calls
+* Ensure TanStack Query caching is working
+
+---
+
+# ✅ FINAL EXPECTATION
+
+After this:
+
+✔ Navbar + layout appear instantly
+✔ Skeleton UI appears immediately
+✔ Content loads progressively (not delayed)
+✔ No blank screen
+✔ No laggy feeling
+✔ No broken features
+
+---
+
+This is a **perceived performance optimization pass**, not just technical optimization.
+
+Focus on making the app FEEL fast.
+
+Implement carefully and conservatively.

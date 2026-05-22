@@ -1,0 +1,62 @@
+
+﻿
+index-DvHt3pWC.js:1701 === LOADING CATEGORIES FROM API ===
+index-DvHt3pWC.js:1526 Loading wishlist from localStorage: 
+Array(0)
+index-DvHt3pWC.js:1526 Loading cart from localStorage ONLY: 
+Array(0)
+index-DvHt3pWC.js:1526 Cart reducer action: SET_LOADING
+index-DvHt3pWC.js:1526 Action payload: true
+index-DvHt3pWC.js:1526 Cart reducer action: SET_CART
+index-DvHt3pWC.js:1526 Action payload: 
+Array(0)
+index-DvHt3pWC.js:1526 Setting cart items: 
+Array(0)
+index-DvHt3pWC.js:1526 Cart reducer action: SET_LOADING
+index-DvHt3pWC.js:1526 Action payload: false
+index-DvHt3pWC.js:1526 Syncing local wishlist to DB: 
+Array(0)
+index-DvHt3pWC.js:1526 Loading cart from localStorage ONLY: 
+Array(0)
+index-DvHt3pWC.js:1526 Cart reducer action: SET_LOADING
+index-DvHt3pWC.js:1526 Action payload: true
+index-DvHt3pWC.js:1526 Cart reducer action: SET_CART
+index-DvHt3pWC.js:1526 Action payload: 
+Array(0)
+index-DvHt3pWC.js:1526 Setting cart items: 
+Array(0)
+index-DvHt3pWC.js:1526 Cart reducer action: SET_LOADING
+index-DvHt3pWC.js:1526 Action payload: false
+index-DvHt3pWC.js:1701 CATEGORIES API RESPONSE: 
+Object
+index-DvHt3pWC.js:1526 Load wishlist response: 200
+index-DvHt3pWC.js:1526 Loaded wishlist from DB: 
+Array(0)
+index-DvHt3pWC.js:1701 === CATEGORY FILTER DEBUG ===
+index-DvHt3pWC.js:1701 CATEGORY ID FROM URL: 69d672644b0dda92f96b0013
+index-DvHt3pWC.js:1701 FILTERED PRODUCTS COUNT: 1
+index-DvHt3pWC.js:1701 FILTERED PRODUCTS: 
+Array(1)
+index-DvHt3pWC.js:1701 === LOADING CATEGORIES FROM API ===
+index-DvHt3pWC.js:1701 CATEGORIES API RESPONSE: 
+Object
+index-DvHt3pWC.js:1701 PRODUCT FETCH: Fetching from API...
+index-DvHt3pWC.js:1701 PRODUCT FETCH: API success, products: 2
+installHook.js:1 TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at index-DvHt3pWC.js:1701:48971
+    at Array.filter (<anonymous>)
+    at index-DvHt3pWC.js:1701:48902
+    at ju (index-DvHt3pWC.js:40:24263)
+    at ji (index-DvHt3pWC.js:40:42318)
+    at index-DvHt3pWC.js:40:40661
+    at E (index-DvHt3pWC.js:25:1537)
+    at MessagePort.M (index-DvHt3pWC.js:25:1899)
+index-DvHt3pWC.js:38 Uncaught TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at index-DvHt3pWC.js:1701:48971
+    at Array.filter (<anonymous>)
+    at index-DvHt3pWC.js:1701:48902
+    at ju (index-DvHt3pWC.js:40:24263)
+    at ji (index-DvHt3pWC.js:40:42318)
+    at index-DvHt3pWC.js:40:40661
+    at E (index-DvHt3pWC.js:25:1537)
+    at MessagePort.M (index-DvHt3pWC.js:25:1899)

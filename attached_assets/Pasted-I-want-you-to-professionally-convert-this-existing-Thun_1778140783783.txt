@@ -1,0 +1,189 @@
+I want you to professionally convert this existing Thunderbolt e-commerce platform into a proper Progressive Web App (PWA) suitable for eventual Play Store deployment through Trusted Web Activity (TWA) / PWABuilder.
+
+IMPORTANT:
+Do NOT rewrite the project.
+Do NOT convert to React Native.
+Do NOT break existing functionality.
+This is an enhancement layer over the existing Vite + React + Firebase + Vercel architecture.
+
+The current stack:
+- React 18
+- TypeScript
+- Vite
+- TailwindCSS
+- Firebase Authentication
+- MongoDB Atlas
+- Express API
+- Vercel deployment
+- Fully responsive frontend
+
+The goal:
+Make the website installable, app-like, mobile-optimized, and production-ready for Android Play Store wrapping later.
+
+==================================================
+PHASE 1 — PWA FOUNDATION
+==================================================
+
+Implement proper PWA support using:
+vite-plugin-pwa
+
+Requirements:
+- clean scalable implementation
+- no redundant code
+- maintainable architecture
+- no broken existing routes
+- no hydration issues
+- no broken Firebase auth
+- no broken API calls
+
+==================================================
+PHASE 2 — WEB APP MANIFEST
+==================================================
+
+Create a professional manifest.json with:
+
+- app name: Thunderbolt
+- short name: Thunderbolt
+- theme color matching current brand
+- background color matching current dark aesthetic
+- display: standalone
+- orientation: portrait-primary
+- start_url: "/"
+- scope: "/"
+
+Add:
+- proper app icons
+- maskable icons
+- Android-compatible metadata
+
+Generate required icon sizes:
+- 72x72
+- 96x96
+- 128x128
+- 144x144
+- 152x152
+- 192x192
+- 384x384
+- 512x512
+
+Ensure icons visually match Thunderbolt branding.
+
+==================================================
+PHASE 3 — SERVICE WORKER
+==================================================
+
+Implement production-grade service worker configuration.
+
+Requirements:
+- cache static assets safely
+- cache frontend build assets
+- cache fonts and images intelligently
+- avoid aggressive API caching
+- NEVER cache sensitive authenticated responses
+- NEVER cache admin API responses
+- avoid stale order/cart data
+
+Implement:
+- offline fallback page
+- graceful offline handling
+- proper cache invalidation on deployment
+
+DO NOT:
+- attempt offline checkout
+- attempt offline order placement
+- attempt offline authentication sync
+
+==================================================
+PHASE 4 — MOBILE APP EXPERIENCE
+==================================================
+
+Improve mobile app feel without breaking desktop UX.
+
+Requirements:
+- smooth install experience
+- splash screen support
+- proper viewport handling
+- remove unnecessary browser feeling
+- ensure safe-area support for modern phones
+- ensure touch interactions feel natural
+- verify scrolling performance
+
+Optimize:
+- mobile animations
+- image loading
+- lazy loading
+- first paint performance
+
+==================================================
+PHASE 5 — INSTALL EXPERIENCE
+==================================================
+
+Implement:
+- Add to Home Screen support
+- install prompt handling
+- optional custom install button
+
+Ensure:
+- no annoying popup spam
+- proper install eligibility detection
+
+==================================================
+PHASE 6 — FIREBASE PUSH NOTIFICATIONS PREPARATION
+==================================================
+
+Prepare architecture for future Firebase Cloud Messaging integration.
+
+DO NOT fully implement notification logic yet.
+
+Only:
+- structure service worker correctly
+- ensure future compatibility
+- avoid architectural conflicts later
+
+==================================================
+PHASE 7 — TESTING & VALIDATION
+==================================================
+
+Verify:
+- Lighthouse PWA audit passes
+- mobile responsiveness intact
+- Firebase auth still works
+- admin panel still works
+- checkout still works
+- cart persistence still works
+- routing works after refresh
+- Vercel deployment compatibility
+- no console errors
+- no duplicate service worker registrations
+
+==================================================
+PHASE 8 — PLAY STORE PREPARATION
+==================================================
+
+Prepare the project for future TWA/PWABuilder packaging.
+
+Document:
+- what is already ready
+- what remains before Play Store submission
+- any remaining blockers
+
+==================================================
+IMPORTANT ENGINEERING REQUIREMENTS
+==================================================
+
+- maintain clean architecture
+- avoid clutter
+- avoid hacks
+- avoid duplicate logic
+- preserve current theme/aesthetic
+- fully responsive
+- production-grade implementation
+- scalable structure
+- no unnecessary dependencies
+- no breaking changes
+- no fake/demo code
+- no placeholder implementations
+
+Take your time.
+Audit the existing project structure carefully before implementing anything.
+Do not rush.

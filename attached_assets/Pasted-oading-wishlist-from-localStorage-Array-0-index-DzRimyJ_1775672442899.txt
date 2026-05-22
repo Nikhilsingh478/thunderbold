@@ -1,0 +1,90 @@
+oading wishlist from localStorage: 
+Array(0)
+index-DzRimyJ2.js:1526 Loading cart from localStorage ONLY: 
+Array(0)
+index-DzRimyJ2.js:1526 Cart reducer action: SET_LOADING
+index-DzRimyJ2.js:1526 Action payload: true
+index-DzRimyJ2.js:1526 Cart reducer action: SET_CART
+index-DzRimyJ2.js:1526 Action payload: 
+Array(0)
+index-DzRimyJ2.js:1526 Setting cart items: 
+Array(0)
+index-DzRimyJ2.js:1526 Cart reducer action: SET_LOADING
+index-DzRimyJ2.js:1526 Action payload: false
+index-DzRimyJ2.js:1526 Syncing local wishlist to DB: 
+Array(0)
+index-DzRimyJ2.js:1526 Loading cart from localStorage ONLY: 
+Array(0)
+index-DzRimyJ2.js:1526 Cart reducer action: SET_LOADING
+index-DzRimyJ2.js:1526 Action payload: true
+index-DzRimyJ2.js:1526 Cart reducer action: SET_CART
+index-DzRimyJ2.js:1526 Action payload: 
+Array(0)
+index-DzRimyJ2.js:1526 Setting cart items: 
+Array(0)
+index-DzRimyJ2.js:1526 Cart reducer action: SET_LOADING
+index-DzRimyJ2.js:1526 Action payload: false
+index-DzRimyJ2.js:1526 Load wishlist response: 200
+index-DzRimyJ2.js:1526 Loaded wishlist from DB: 
+Array(0)
+length
+: 
+0
+[[Prototype]]
+: 
+Array(0)
+index-DzRimyJ2.js:1681 ADMIN FETCH PRODUCTS RESPONSE: 
+Object
+count
+: 
+5
+products
+: 
+(5) [{…}, {…}, {…}, {…}, {…}]
+source
+: 
+"database"
+[[Prototype]]
+: 
+Object
+index-DzRimyJ2.js:1681 ADMIN PRODUCTS STATE: 
+Array(5)
+0
+: 
+{_id: '69d672d5d7ec90b2241f926a', name: 'checking new one ', price: 2000, image: 'https://assets.myntassets.com/w_360,q_50,,dpr_2,fl…Y/7/xsCXyEcZ_4ce3c09561364546b6e098fed84e2c00.jpg', description: 'checkingggggggggggggggggggggggggggggggggggggggggggg', …}
+1
+: 
+{_id: '69d64305b3cc1f84cd2d9d4a', name: 'distressed', price: 2000, image: 'https://static.cilory.com/771009-thickbox_default/…ns-faded-blue-washed-denim-bootcut-jeans.jpg.webp', description: 'checkinggggggggggg 4', …}
+2
+: 
+{_id: '69d63fa3d8811d430af1965c', name: 'check 3 ', price: 2000, image: 'https://static.aceomni.cmsaceturtle.com/prod/produ…ni/Wrangler/Monobrand/WWJN001245/WWJN001245_2.jpg', description: 'checkingggggggg 3 ', …}
+3
+: 
+{_id: '69d637821aedf43ec16c8d57', name: 'test 2 ', price: 2000, image: 'https://chasehaul.com/cdn/shop/files/1_de15ed05-d5…3aa-9612-f4546d078aff.jpg?v=1755608874&width=2048', description: 'check 2 ', …}
+4
+: 
+{_id: '69d63216483cff4cb1c684fa', name: 'test', price: 2000, image: 'https://jimmyluxury.in/cdn/shop/files/IMG_4964_bba…a37-8555-fd369f068d2c.jpg?v=1763808494&width=2048', description: 'testing', …}
+length
+: 
+5
+[[Prototype]]
+: 
+Array(0)
+index-DzRimyJ2.js:1681 DELETE REQUEST ID: 69d63fa3d8811d430af1965c
+index-DzRimyJ2.js:1681 DELETE STATUS: 405
+index-DzRimyJ2.js:1681 DELETE DATA: 
+Object
+error
+: 
+"DELETE must use /api/products/[id]"
+[[Prototype]]
+: 
+Object
+installHook.js:1 DELETE FAILED HARD: 
+Object
+error
+: 
+"DELETE must use /api/products/[id]"
+[[Prototype]]
+: 
+Object

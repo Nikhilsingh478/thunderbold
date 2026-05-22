@@ -1,0 +1,227 @@
+You are implementing a **Homepage Promo Slider + Deals Filtering System** for an existing e-commerce project called **Thunderbolt**.
+
+⚠️ CRITICAL RULES:
+
+* DO NOT break any existing functionality
+* This is an additive UI + routing feature
+* DO NOT introduce unnecessary database collections
+* Keep code modular, reusable, and scalable
+* Follow clean architecture and avoid duplication
+
+---
+
+# 🎯 FEATURE OVERVIEW
+
+You need to implement:
+
+1. A **manual promo slider** (homepage, above footer)
+2. Two **deal banners**:
+
+   * "Under ₹999"
+   * "Under ₹699"
+3. Clicking a banner → opens a filtered product listing page
+
+---
+
+# 🧱 PART 1: PROMO SLIDER (FRONTEND)
+
+## Placement:
+
+* Homepage
+* Positioned **above footer**
+
+---
+
+## Behavior:
+
+* Manual slider ONLY (NO auto-slide)
+* Support:
+
+  * swipe (mobile)
+  * arrow navigation (desktop)
+* Smooth animation (use existing animation stack: Framer Motion if available)
+
+---
+
+## Slides (STATIC — NO DATABASE)
+
+Define slides in a config file or component:
+
+```js id="promo_config"
+const promoSlides = [
+  {
+    id: "under-999",
+    title: "Under ₹999",
+    image: "/banners/under-999.jpg",
+    route: "/deals/under-999"
+  },
+  {
+    id: "under-699",
+    title: "Under ₹699",
+    image: "/banners/under-699.jpg",
+    route: "/deals/under-699"
+  }
+];
+```
+
+---
+
+## Component Structure:
+
+Create reusable component:
+
+```txt id="structure"
+components/
+  PromoSlider.jsx
+  PromoSlide.jsx
+```
+
+---
+
+## UI Requirements:
+
+* Full-width horizontal banner
+* Maintain aspect ratio consistency (same for both images)
+* Overlay text already part of image (do NOT dynamically render text)
+* Add subtle hover effect (scale or glow)
+* Cursor pointer
+
+---
+
+# 🧭 PART 2: ROUTING
+
+Create routes:
+
+```txt id="routes"
+/deals/under-999
+/deals/under-699
+```
+
+---
+
+# 🧠 PART 3: DEALS PAGE (IMPORTANT LOGIC)
+
+## Goal:
+
+Show products filtered by price
+
+---
+
+## API Usage (DO NOT MODIFY CORE API STRUCTURE UNNECESSARILY)
+
+Extend existing products API with query:
+
+```txt id="api"
+GET /api/products?maxPrice=999
+GET /api/products?maxPrice=699
+```
+
+---
+
+## Backend (if needed):
+
+Add optional filter:
+
+```js id="backend_filter"
+if (req.query.maxPrice) {
+  query.price = { $lte: Number(req.query.maxPrice) };
+}
+```
+
+👉 Do NOT modify existing logic beyond this
+
+---
+
+# 🧾 FRONTEND DEALS PAGE
+
+Create reusable page:
+
+```txt id="pages"
+pages/
+  DealsPage.jsx
+```
+
+---
+
+## Behavior:
+
+* Read route param (999 or 699)
+* Fetch products using:
+
+```js id="fetch"
+fetch(`/api/products?maxPrice=${value}`)
+```
+
+---
+
+## UI:
+
+* Use EXISTING product grid (DO NOT recreate)
+* Add heading:
+
+```txt id="heading"
+"Jeans Under ₹999"
+"Jeans Under ₹699"
+```
+
+---
+
+# ⚠️ IMPORTANT CONSTRAINTS
+
+## ❌ DO NOT:
+
+* Create new database collections
+* Add discount logic
+* Add cron jobs or timers
+* Duplicate product UI
+* Hardcode product lists
+
+---
+
+## ✅ DO:
+
+* Reuse existing product card component
+* Reuse existing layout
+* Keep logic centralized
+
+---
+
+# 🧪 EDGE CASES
+
+Handle:
+
+1. No products found → show empty state
+2. API failure → graceful error UI
+3. Slow loading → show loader
+4. Mobile responsiveness → slider must work properly
+
+---
+
+# 🎨 UX REQUIREMENTS
+
+* Smooth animations (no jank)
+* Clean spacing (match Thunderbolt theme)
+* Dark + premium feel consistent with site
+* Lightning aesthetic subtly respected
+
+---
+
+# 🧠 PERFORMANCE
+
+* Lazy load banner images
+* Avoid unnecessary re-renders
+* Keep slider lightweight
+
+---
+
+# 🚨 FINAL CONSTRAINT
+
+This feature must:
+
+* integrate seamlessly into homepage
+* not affect existing pages
+* not introduce regressions
+
+---
+
+If anything is unclear, ask BEFORE implementing.

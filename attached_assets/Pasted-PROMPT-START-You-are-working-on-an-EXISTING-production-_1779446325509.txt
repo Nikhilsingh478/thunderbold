@@ -1,0 +1,375 @@
+PROMPT START
+
+You are working on an EXISTING production ecommerce project named Thunderbolt.
+
+Your job is to implement a dynamic editorial outfit slider system + outfit product collection integration WITHOUT breaking any existing functionality.
+
+IMPORTANT:
+This store is already working in production.
+You MUST preserve all current functionality, routes, collections, auth, cart logic, product logic, checkout flow, admin functionality, and existing serverless architecture.
+
+This is NOT a redesign task.
+This is a careful feature integration task.
+
+━━━━━━━━━━━━━━━━━━━━
+CRITICAL ENGINEERING CONSTRAINTS
+━━━━━━━━━━━━━━━━━━━━
+
+VERY IMPORTANT:
+This project has a hard limit of MAXIMUM 12 serverless functions.
+
+DO NOT:
+
+* create unnecessary APIs
+* create redundant CRUD endpoints
+* create isolated slider services
+* create separate backend architectures
+* duplicate product-fetching logic
+* create bloated admin handlers
+
+INSTEAD:
+
+* reuse existing database models
+* extend existing schemas
+* extend existing admin flows
+* reuse existing product APIs
+* reuse existing fetch utilities
+* integrate into current architecture cleanly
+
+Write scalable, maintainable, senior-level code.
+
+NO clutter.
+NO hacks.
+NO duplicated business logic.
+NO unnecessary abstractions.
+
+━━━━━━━━━━━━━━━━━━━━
+FEATURE OVERVIEW
+━━━━━━━━━━━━━━━━━━━━
+
+We are implementing TWO connected systems:
+
+1. OUTFIT COLLECTION SECTION
+2. DYNAMIC THUNDERBOLT SLIDER
+
+These systems must work together.
+
+━━━━━━━━━━━━━━━━━━━━
+PART 1 — CREATE NEW STORE SECTION
+━━━━━━━━━━━━━━━━━━━━
+
+Create a new collection/section in the ecommerce store.
+
+Suggested names:
+
+* OUTFITS
+* COMPLETE LOOKS
+* THUNDER LOOKS
+* STYLE SETS
+
+Use whichever naming best matches the existing store aesthetic.
+
+━━━━━━━━━━━━━━━━━━━━
+STORE PLACEMENT
+━━━━━━━━━━━━━━━━━━━━
+
+Add this new section:
+AFTER the existing "Kurta Collection" section.
+
+DO NOT modify or break the Kurta section.
+
+━━━━━━━━━━━━━━━━━━━━
+SECTION BEHAVIOR
+━━━━━━━━━━━━━━━━━━━━
+
+This new section behaves similarly to the existing collection/product grid sections.
+
+IMPORTANT DIFFERENCE:
+This section has NO categories/subcategories.
+
+It should directly display product cards.
+
+Example:
+
+OUTFITS SECTION
+
+* Product Card
+* Product Card
+* Product Card
+* Product Card
+
+NO nested categories.
+
+━━━━━━━━━━━━━━━━━━━━
+ADMIN PANEL CHANGES — PRODUCTS
+━━━━━━━━━━━━━━━━━━━━
+
+When admin creates/edits a product, update the product form so admin can assign products to this new Outfit collection/section.
+
+Example:
+Add/update a field like:
+
+Collection / Section:
+
+* Kurtas
+* Shirts
+* Hoodies
+* Outfits ← NEW
+
+Admin should be able to directly place products into the Outfit section.
+
+DO NOT break existing collection/category logic.
+
+DO NOT refactor unrelated product systems.
+
+━━━━━━━━━━━━━━━━━━━━
+PART 2 — DYNAMIC THUNDERBOLT SLIDER
+━━━━━━━━━━━━━━━━━━━━
+
+We already have an existing ThunderboltHero slider component created in React + Tailwind.
+
+You must integrate and convert it into a dynamic admin-controlled system.
+
+━━━━━━━━━━━━━━━━━━━━
+SLIDER PLACEMENT
+━━━━━━━━━━━━━━━━━━━━
+
+Place the slider:
+DIRECTLY BELOW the existing promo banner section.
+
+The slider background MUST remain:
+#0A0A0A
+
+Do NOT wrap the slider in padded containers.
+
+It should remain edge-to-edge full-width.
+
+━━━━━━━━━━━━━━━━━━━━
+SLIDER ADMIN TAB
+━━━━━━━━━━━━━━━━━━━━
+
+Create a NEW admin panel tab/section named:
+
+Slider
+
+OR
+
+Thunderbolt Slider
+
+This tab manages the slider dynamically.
+
+━━━━━━━━━━━━━━━━━━━━
+SLIDER STRUCTURE
+━━━━━━━━━━━━━━━━━━━━
+
+The slider contains EXACTLY 4 slides.
+
+Each slide should contain:
+
+1. Image URL input
+2. Background heading input
+3. Product mapping selector
+
+━━━━━━━━━━━━━━━━━━━━
+SLIDE INPUT DETAILS
+━━━━━━━━━━━━━━━━━━━━
+
+Each slide card in admin should allow:
+
+━━━━━━━━━
+
+1. IMAGE INPUT
+   ━━━━━━━━━
+
+Admin can paste/edit image URL.
+
+This image becomes the outfit image shown in the frontend slider.
+
+━━━━━━━━━
+2. BACKGROUND HEADING INPUT
+━━━━━━━━━
+
+Admin can edit heading text.
+
+Examples:
+
+* SHARP
+* REBEL
+* NOIR
+* WILD
+
+This heading dynamically replaces the giant background typography in the slider.
+
+━━━━━━━━━
+3. MAP PRODUCT BUTTON
+━━━━━━━━━
+
+Each slide card MUST include:
+
+"Map Outfit Product"
+
+When clicked:
+
+* show searchable dropdown/modal
+* ONLY products from Outfit section should appear
+* admin selects ONE product
+* mapping is saved
+
+IMPORTANT:
+ONLY Outfit-section products are eligible.
+
+Do NOT show all store products.
+
+━━━━━━━━━━━━━━━━━━━━
+FRONTEND SLIDER BEHAVIOR
+━━━━━━━━━━━━━━━━━━━━
+
+Each slide dynamically displays:
+
+* uploaded image
+* heading text
+* mapped product
+
+━━━━━━━━━━━━━━━━━━━━
+CTA BUTTON CHANGE
+━━━━━━━━━━━━━━━━━━━━
+
+Replace existing:
+"SHOP NOW"
+
+With something more fashion/editorial themed.
+
+Preferred examples:
+
+* SHOP THIS LOOK
+* BUY THIS OUTFIT
+* GET THE LOOK
+* WEAR THE FIT
+
+Choose the best stylistic option matching the store branding.
+
+━━━━━━━━━━━━━━━━━━━━
+CTA BUTTON LOGIC
+━━━━━━━━━━━━━━━━━━━━
+
+THIS IS CRITICAL.
+
+When customer clicks CTA button on a slide:
+
+They MUST be redirected directly to:
+the mapped outfit product page.
+
+Example:
+
+Slide 1:
+
+* Image = Black streetwear outfit
+* Heading = REBEL
+* Mapped Product = Oversized Black Kurta Set
+
+Clicking:
+"SHOP THIS LOOK"
+
+Should open:
+that exact mapped product page.
+
+━━━━━━━━━━━━━━━━━━━━
+DATA ARCHITECTURE
+━━━━━━━━━━━━━━━━━━━━
+
+DO NOT hardcode slider data.
+
+Persist slider configuration properly.
+
+Use the existing project architecture.
+
+Prefer:
+
+* extending existing CMS/config collections
+* extending existing admin schemas
+* existing storage patterns
+
+Avoid creating unnecessary new systems.
+
+━━━━━━━━━━━━━━━━━━━━
+PERFORMANCE REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━
+
+The slider must remain performant.
+
+DO NOT:
+
+* preload huge unnecessary assets
+* add excessive re-renders
+* introduce animation lag
+* create hydration issues
+* create memory leaks
+
+Maintain responsive behavior.
+
+Maintain current cinematic animation system.
+
+━━━━━━━━━━━━━━━━━━━━
+DO NOT MODIFY
+━━━━━━━━━━━━━━━━━━━━
+
+Do NOT:
+
+* break existing store pages
+* modify checkout flow
+* modify auth
+* modify cart logic
+* rewrite routing
+* rewrite Tailwind config
+* replace architecture
+* create duplicate product systems
+* introduce unstable libraries
+
+━━━━━━━━━━━━━━━━━━━━
+CODE QUALITY EXPECTATIONS
+━━━━━━━━━━━━━━━━━━━━
+
+Write code like a senior production engineer.
+
+Requirements:
+
+* modular
+* maintainable
+* scalable
+* typed properly
+* reusable
+* readable
+* minimal
+* clean folder structure
+* no duplicated logic
+* no dead code
+* no clutter
+
+━━━━━━━━━━━━━━━━━━━━
+FINAL QA REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━
+
+After implementation verify ALL of the following:
+
+✓ Existing store functionality still works
+✓ Existing collections still work
+✓ Existing admin panel still works
+✓ Outfit section appears after Kurta section
+✓ Outfit products display correctly
+✓ Admin can assign products to Outfit section
+✓ Slider appears below promo banner
+✓ Slider images update dynamically
+✓ Background headings update dynamically
+✓ CTA button redirects correctly
+✓ Only Outfit products appear in mapping selector
+✓ Mobile responsiveness still works
+✓ No TypeScript errors
+✓ No console errors
+✓ No hydration issues
+✓ No broken routes
+✓ No serverless function overflow
+
+If anything breaks:
+fix integration cleanly WITHOUT rewriting unrelated systems.
+
+PROMPT END

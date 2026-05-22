@@ -1,0 +1,142 @@
+Your app logo
+Thunderbolt Report card page for Thunderbolt
+thunderbold.vercel.app/manifest.webmanifest
+
+Premium Indian Denim — Built for the Bold
+
+Share score
+Last tested seconds ago 
+
+retest site
+Package For Stores
+
+Download Test Package
+
+Available stores:
+
+WindowsiOSAndroid
+Action Items
+
+0
+
+0
+
+4
+
+9
+Manifest
+PWABuilder has analyzed your Web Manifest and your manifest is ready for packaging! We have identified recommended and optional fields that you can include to make your PWA better. Use our Manifest Editor to edit and update those fields.
+
+Edit Your Manifest
+Manifest Documentation
+
+arrow
+
+Service Worker
+PWABuilder has analyzed your Service Worker, and has identified additional features you can add to make your app feel more robust.
+
+valid result indicator
+Has Service Worker
+
+valid result indicator
+Has Logic
+
+
+Periodic Sync
+
+
+Background Sync
+
+
+Push Notifications
+
+valid result indicator
+Offline Support
+
+Generate Service Worker
+Service Worker Documentation
+
+
+App Capabilities
+PWABuilder has analyzed your PWA and has identified some app capabilities that could enhance your PWA
+
+valid result indicator
+Shortcuts
+
+
+File Handlers
+
+valid result indicator
+Launch Handler
+
+
+Protocol Handlers
+
+valid result indicator
+Share Target
+
+
+Widgets
+
+
+Edge Side Panel
+
+valid result indicator
+Window Controls Overlay
+
+
+Tabbed Display
+
+
+Note Taking
+
+App Capabilities documentation
+
+arrow
+WhatPwaCanDo.today
+
+arrow     Action Items
+
+Specify whether you want users to use your PWA or your native app.
+
+O
+
+4
+
++ 9
+
+>
+
+Specify your native app ID by adding related_applications to your manifest.
+
+>
+
+Let users know what ages your app is designed for by adding an IARC rating to your manifest.
+
+A
+
+Enable your PWA to navigate to additional domains or subdomains by adding scope_extensions to your manifest.
+
+>
+
+Let users open files with your PWA by adding file_handlers to your manifest.
+
+>  Let your app handle protocols like mailto: or sms:, or custom protocols like web+mypwa:, by adding protocol_handlers to your manifest.
+
++
+
+Let users add your app as a widget.
+
+Make your app pinnable to the sidebar by adding edge_side_panel to your manifest.
+
+Let users open multiple tabs within your PWA by adding tabbed to your manifest's display_override.
+
+Register as a notes app to integrate with the OS's note-taking capabilities.  Let users open multiple tabs within your PWA by adding tabbed to your manifest's display_override.
+
+Register as a notes app to integrate with the OS's note-taking capabilities.
+
+Show data to your users instantly by adding periodic background sync to your service worker.
+
+Make your app resilient to poor network connections by adding Background Sync to your service worker.
+
+Re-engage users with timely notifications by adding push notifications to your service worker.  

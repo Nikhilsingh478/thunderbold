@@ -1,0 +1,215 @@
+You are a senior full-stack engineer working on a production e-commerce platform (React + Vite + TypeScript frontend, Node.js backend, MongoDB, Firebase Auth).
+
+Cloudinary has already been set up with folders:
+
+* thunderbolt/products
+* thunderbolt/categories
+
+The Cloudinary cloud name is already available in the environment.
+
+Your task is to **integrate Cloudinary image optimization and usage into the frontend WITHOUT breaking any existing functionality**.
+
+⚠️ IMPORTANT:
+
+* DO NOT change database structure
+* DO NOT change API routes
+* DO NOT implement upload APIs
+* ONLY enhance how images are USED and DISPLAYED
+* Existing image URL input system must remain intact
+
+---
+
+# 🎯 GOAL
+
+Ensure that ALL images displayed in the app:
+
+* are automatically optimized
+* load fast
+* do not cause layout shifts
+* feel smooth and premium
+
+---
+
+# 🚨 PRIORITY 1: AUTO-OPTIMIZE CLOUDINARY URLs
+
+## Problem:
+
+Currently raw Cloudinary URLs may be used.
+
+## Task:
+
+Create a utility function to transform ALL Cloudinary URLs before rendering.
+
+---
+
+## Step 1: Create utility file
+
+`src/lib/cloudinary.ts`
+
+---
+
+## Step 2: Add function
+
+```ts
+export function optimizeCloudinaryUrl(
+  url: string,
+  width: number = 800
+): string {
+  if (!url || !url.includes("res.cloudinary.com")) return url;
+
+  return url.replace(
+    "/upload/",
+    `/upload/f_auto,q_auto,w_${width}/`
+  );
+}
+```
+
+---
+
+## Step 3: Usage
+
+Replace ALL image usages:
+
+```tsx
+<img src={product.image} />
+```
+
+WITH:
+
+```tsx
+<img src={optimizeCloudinaryUrl(product.image, 800)} />
+```
+
+---
+
+# 🚨 PRIORITY 2: RESPONSIVE IMAGE SIZES
+
+## Task:
+
+Use different sizes based on usage:
+
+* Product cards → 400–600px
+* Product detail page → 800–1200px
+* Category thumbnails → 300–500px
+
+---
+
+## Example:
+
+```tsx
+<img src={optimizeCloudinaryUrl(product.image, 500)} />
+```
+
+---
+
+# 🚨 PRIORITY 3: ADD IMAGE LOADING BEST PRACTICES
+
+## Ensure ALL images include:
+
+```tsx
+loading="lazy"
+decoding="async"
+```
+
+---
+
+## Example:
+
+```tsx
+<img
+  src={optimizeCloudinaryUrl(product.image, 500)}
+  loading="lazy"
+  decoding="async"
+/>
+```
+
+---
+
+# 🚨 PRIORITY 4: PREVENT LAYOUT SHIFT (VERY IMPORTANT)
+
+## Task:
+
+Ensure images do NOT cause jumping
+
+---
+
+## Steps:
+
+* Add fixed aspect ratio container OR fixed height
+* Example:
+
+```tsx
+<div className="aspect-[3/4] w-full overflow-hidden">
+  <img
+    className="w-full h-full object-cover"
+    ...
+  />
+</div>
+```
+
+---
+
+# 🚨 PRIORITY 5: ADD FALLBACK HANDLING
+
+## Task:
+
+Prevent broken images
+
+---
+
+## Example:
+
+```tsx
+<img
+  src={optimizeCloudinaryUrl(product.image)}
+  onError={(e) => {
+    (e.target as HTMLImageElement).src = "/fallback.jpg";
+  }}
+/>
+```
+
+---
+
+# 🚨 PRIORITY 6: APPLY EVERYWHERE
+
+Apply optimization to ALL:
+
+* Product cards
+* ProductView page
+* Category cards
+* Cart items
+* Wishlist items
+* Admin preview images
+
+---
+
+# 🚨 PRIORITY 7: DO NOT BREAK EXISTING SYSTEM
+
+* Admin still pastes raw URLs
+* Backend still stores raw URLs
+* Only frontend transforms URLs dynamically
+
+---
+
+# 🚨 PRIORITY 8: CLEAN IMPLEMENTATION
+
+* Do NOT duplicate logic
+* Use utility function everywhere
+* Keep code readable
+
+---
+
+# ✅ FINAL EXPECTATION
+
+After implementation:
+
+✔ All images load faster
+✔ Images are auto-optimized via Cloudinary
+✔ No layout shifts
+✔ No broken images
+✔ Existing system unchanged
+✔ UI feels smoother and faster
+
+---
+
+This is a performance enhancement layer, not a system rewrite. Implement carefully.

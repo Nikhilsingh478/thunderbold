@@ -1,0 +1,173 @@
+I am building a production-grade e-commerce web application with the following stack:
+
+* Firebase Authentication (Google + Email/Password login)
+* MongoDB (primary database)
+* Custom backend (Node.js/Express)
+* Modern frontend (React or similar)
+
+CURRENT SYSTEM BEHAVIOR:
+
+* Users authenticate using Firebase Auth.
+* After login, I receive `uid` and `email` from Firebase.
+* There is NO dedicated user profile page or dashboard.
+* I do NOT collect user details at signup/login.
+* User details are collected ONLY during checkout via a form.
+
+CURRENT CHECKOUT FORM FIELDS:
+
+* Full Name (required)
+* Phone Number (required)
+* Address Line 1 (required)
+* Address Line 2 (optional)
+* City (required)
+* State (required)
+* Pincode (required)
+* Landmark (optional)
+
+CURRENT PROBLEM:
+
+* User data is not structured or reused efficiently.
+* No persistent user profile in MongoDB.
+* No auto-fill for returning users.
+* Orders may not be properly linked to users.
+
+GOAL:
+Design and implement a scalable, production-ready user + order data system using MongoDB, while keeping the current low-friction UX (no forced profile creation before checkout).
+
+IMPORTANT CONSTRAINT:
+
+* Firebase Auth is ONLY for authentication.
+* MongoDB is the ONLY database for user data, addresses, and orders.
+* Use Firebase `uid` as the unique identifier to link auth with database.
+
+REQUIREMENTS:
+
+1. USER COLLECTION DESIGN (MongoDB)
+
+* Create a `users` collection.
+* Each document must include:
+
+  * firebaseUid (string, unique, indexed)
+  * name
+  * email
+  * phone
+  * addresses (array of address objects)
+  * createdAt
+  * updatedAt
+
+ADDRESS OBJECT STRUCTURE:
+{
+fullName,
+phone,
+addressLine1,
+addressLine2,
+city,
+state,
+pincode,
+landmark,
+isDefault: Boolean
+}
+
+2. ORDER COLLECTION DESIGN
+
+* Create an `orders` collection.
+* Each order must include:
+
+  * userId (firebaseUid)
+  * products (array)
+  * totalAmount
+  * orderStatus
+  * addressSnapshot (full address object at time of order)
+  * createdAt
+  * updatedAt
+
+IMPORTANT:
+
+* Always store addressSnapshot inside orders (do NOT rely only on user profile data).
+
+3. CHECKOUT FLOW LOGIC (CRITICAL)
+   When user places an order:
+
+STEP 1:
+
+* Extract firebaseUid from authenticated user
+
+STEP 2:
+
+* Save order in `orders` collection
+
+STEP 3:
+
+* Upsert user in `users` collection:
+
+  * If user exists → update name/phone and add address if new
+  * If user does not exist → create new user document
+
+Use MongoDB upsert pattern:
+
+* Match by firebaseUid
+* Use $set and $addToSet for addresses
+* Avoid duplicate address entries if possible
+
+4. AUTO-FILL FUNCTIONALITY
+
+* On checkout page load:
+
+  * Fetch user from MongoDB using firebaseUid
+  * If exists:
+
+    * Pre-fill form fields with default or last-used address
+  * If not:
+
+    * Keep form empty (current behavior)
+
+5. BACKEND API REQUIREMENTS
+   Design clean endpoints:
+
+* GET /api/users/:firebaseUid → fetch user data
+* POST /api/orders → create order + handle user upsert
+* (Optional) PATCH /api/users/:firebaseUid → update user data
+
+Ensure:
+
+* Proper validation
+* Error handling
+* No redundant DB writes
+
+6. PERFORMANCE REQUIREMENTS
+
+* Add index on firebaseUid in users collection
+* Minimize database reads on checkout
+* Avoid duplicate writes on every render
+* Use efficient queries (lean, projections if needed)
+
+7. UX CONSTRAINTS (VERY IMPORTANT)
+
+* DO NOT force users to fill profile before checkout
+* DO NOT introduce unnecessary steps
+* Keep checkout fast and minimal
+* Maintain current flow but enhance backend intelligence
+
+8. EDGE CASES TO HANDLE
+
+* First-time user placing order
+* Returning user with existing address
+* User updating address during checkout
+* Duplicate address prevention
+* Missing or partial data
+
+9. OPTIONAL (IF EASY)
+
+* Support multiple saved addresses
+* “Save this address for future” checkbox
+* Default address selection logic
+
+EXPECTED OUTPUT:
+
+* MongoDB schema design (Mongoose or plain)
+* Backend route implementations (Node.js/Express)
+* Frontend logic for auto-fill and submission
+* Clear explanation of data flow from login → checkout → order storage
+
+IMPORTANT:
+This is a real production system. Focus on clean architecture, scalability, and performance. Avoid overengineering and unnecessary complexity.

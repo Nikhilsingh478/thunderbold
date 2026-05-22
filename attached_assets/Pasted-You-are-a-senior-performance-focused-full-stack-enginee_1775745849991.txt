@@ -1,0 +1,291 @@
+You are a senior performance-focused full-stack engineer working on a production e-commerce app ("Thunderbolt Brand World") built with React (Vite + TypeScript), Node.js (serverless/Express), MongoDB Atlas, and Firebase Auth.
+
+Your task is to perform a **SAFE PERFORMANCE OPTIMIZATION PASS**.
+
+⚠️ CRITICAL GOAL:
+
+* Make the app **smooth, fast, responsive, non-jittery**
+* Improve perceived and real performance
+* DO NOT break anything
+* DO NOT refactor architecture
+* DO NOT introduce risky complexity
+
+This is NOT aggressive optimization. This is **smart, safe optimization using best practices**.
+
+---
+
+# 🎯 CORE PRINCIPLES
+
+* Optimize ONLY where it gives real benefit
+* Avoid premature optimization
+* Prioritize UX smoothness over micro-optimizations
+* Keep code clean and maintainable
+* No breaking changes
+
+---
+
+# ⚡ FRONTEND PERFORMANCE (HIGH PRIORITY)
+
+## 1. PREVENT UNNECESSARY RE-RENDERS
+
+### Tasks:
+
+* Wrap heavy components with `React.memo` where props are stable:
+
+  * ProductCard
+  * Category cards
+  * Cart items
+  * Wishlist items
+
+* Use `useCallback` for:
+
+  * event handlers passed to children
+  * add/remove cart functions
+  * wishlist toggles
+
+* Use `useMemo` for:
+
+  * derived values (totals, filtered lists)
+
+⚠️ Do NOT overuse — only where it matters
+
+---
+
+## 2. SMOOTH UI INTERACTIONS
+
+### Tasks:
+
+* Remove layout shifts:
+
+  * Ensure all images have fixed dimensions or aspect ratio
+  * Prevent content jumping during load
+
+* Add `will-change` CSS ONLY where animations exist
+
+* Avoid heavy box-shadow / blur during animations
+
+---
+
+## 3. IMAGE PERFORMANCE (WITHOUT CLOUDINARY)
+
+### Tasks:
+
+* Ensure all images use:
+
+```html
+loading="lazy"
+decoding="async"
+```
+
+* Use proper sizing:
+
+  * Avoid rendering huge images in small containers
+
+* Add fallback skeleton or placeholder while loading
+
+---
+
+## 4. CODE SPLITTING (VERIFY + IMPROVE)
+
+Ensure lazy loading is correctly applied to:
+
+* Admin
+* Checkout
+* ProductView
+* Orders
+* Profile
+
+### Improve:
+
+* Add lightweight loading fallback (spinner or skeleton)
+* Avoid blank screen
+
+---
+
+## 5. SEARCH OPTIMIZATION
+
+Already debounced — verify:
+
+* debounce is ~300ms
+* no unnecessary state updates
+* filtering is efficient
+
+---
+
+## 6. REDUCE MAIN THREAD BLOCKING
+
+### Tasks:
+
+* Avoid heavy loops in render
+* Move expensive logic outside render or memoize it
+* Avoid large synchronous operations
+
+---
+
+## 7. ANIMATION PERFORMANCE (FRAMER MOTION)
+
+### Tasks:
+
+* Ensure animations use:
+
+  * `transform` and `opacity` only
+
+* Avoid:
+
+  * layout thrashing
+  * animating width/height frequently
+
+* Reduce animation duration if sluggish
+
+---
+
+# ⚡ NETWORK + API OPTIMIZATION
+
+## 1. PARALLEL API CALLS
+
+### Replace sequential calls with:
+
+```js
+await Promise.all([...])
+```
+
+Where possible (products + categories, etc.)
+
+---
+
+## 2. REQUEST DEDUPLICATION
+
+Ensure:
+
+* Same API isn’t called multiple times unnecessarily
+* Use TanStack Query caching properly
+
+---
+
+## 3. RESPONSE SIZE REDUCTION
+
+* Use projections in MongoDB
+* Only send required fields
+
+---
+
+## 4. RETRY + TIMEOUT
+
+Already implemented — verify:
+
+* max 2 retries
+* no infinite loops
+
+---
+
+# ⚡ BACKEND PERFORMANCE
+
+## 1. DB QUERY OPTIMIZATION
+
+Verify indexes exist:
+
+```js
+orders: userId, createdAt
+products: categoryId
+cart: userId
+wishlist: userId
+```
+
+---
+
+## 2. AVOID REDUNDANT DB CALLS
+
+* Do not fetch same data multiple times
+* Reuse results within request scope
+
+---
+
+## 3. FAST RESPONSE HANDLING
+
+* Return early when possible
+* Avoid unnecessary processing
+
+---
+
+# ⚡ UX SMOOTHNESS (VERY IMPORTANT)
+
+## 1. LOADING STATES
+
+Ensure EVERY async action has:
+
+* loading state
+* no freezing UI
+
+---
+
+## 2. BUTTON FEEDBACK
+
+* Disable buttons during actions
+* Show spinner or text change
+
+---
+
+## 3. SKELETON LOADERS
+
+Where appropriate:
+
+* product grid
+* cart
+* orders
+
+Avoid blank screens
+
+---
+
+## 4. ERROR HANDLING
+
+* Show clean toast messages
+* No UI freezes on failure
+
+---
+
+# ⚡ FINAL POLISH
+
+## 1. REMOVE CONSOLE LOGS
+
+* Remove unnecessary logs in production
+
+---
+
+## 2. MINIMIZE RE-PAINTS
+
+* Avoid unnecessary DOM updates
+
+---
+
+## 3. CHECK MOBILE PERFORMANCE
+
+* Ensure smooth scroll
+* No laggy animations
+
+---
+
+# ⚠️ STRICT RULES
+
+* DO NOT break existing features
+* DO NOT change APIs
+* DO NOT rewrite components unnecessarily
+* DO NOT introduce complex libraries
+* DO NOT over-optimize
+
+---
+
+# ✅ FINAL EXPECTATION
+
+After this pass:
+
+✔ App feels fast and smooth
+✔ No laggy interactions
+✔ No UI jitter
+✔ Minimal unnecessary re-renders
+✔ Optimized API usage
+✔ Clean and stable performance
+
+---
+
+This is a **final polish pass for production UX quality**. Implement carefully and conservatively.

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960" viewBox="0 0 540 960">
+  <defs>
+    <linearGradient id="hero" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c1c1c"/>
+      <stop offset="100%" stop-color="#141414"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="540" height="960" fill="#0a0a0a"/>
+
+  <!-- Announcement bar -->
+  <rect width="540" height="28" fill="#0d0d0d"/>
+  <text x="270" y="18" font-family="Arial Narrow,Arial" font-size="9" fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="3">DELIVERY AT YOUR DOORSTEP WITHIN 45 MINUTES</text>
+
+  <!-- Navbar -->
+  <rect y="28" width="540" height="52" fill="#0a0a0a"/>
+  <text x="270" y="63" font-family="Arial" font-weight="900" font-size="20" fill="white" text-anchor="middle" letter-spacing="5">THUNDERBOLT</text>
+
+  <!-- Hero banner -->
+  <rect y="80" width="540" height="280" fill="url(#hero)"/>
+  <text x="270" y="190" font-family="Arial" font-weight="900" font-size="28" fill="white" text-anchor="middle" letter-spacing="3">GET AN EXTRA</text>
+  <text x="270" y="245" font-family="Arial" font-weight="900" font-size="52" fill="#D97706" text-anchor="middle">40% OFF</text>
+  <text x="270" y="285" font-family="Arial" font-weight="700" font-size="16" fill="rgba(255,255,255,0.6)" text-anchor="middle" letter-spacing="3">LIVE NOW!</text>
+  <!-- CTA button -->
+  <rect x="165" y="308" width="210" height="36" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="270" y="332" font-family="Arial" font-weight="600" font-size="10" fill="rgba(255,255,255,0.7)" text-anchor="middle" letter-spacing="4">SHOP NOW</text>
+
+  <!-- Section heading -->
+  <text x="270" y="410" font-family="Arial" font-weight="900" font-size="15" fill="white" text-anchor="middle" letter-spacing="3">SPECIAL OFFER</text>
+
+  <!-- Product grid row 1 -->
+  <!-- Card A -->
+  <rect x="16" y="424" width="236" height="290" fill="url(#card)" rx="2"/>
+  <rect x="16" y="424" width="236" height="220" fill="#141414" rx="2"/>
+  <text x="134" y="548" font-family="Arial" font-size="11" fill="rgba(255,255,255,0.12)" text-anchor="middle">IMAGE</text>
+  <text x="134" y="668" font-family="Arial" font-weight="700" font-size="11" fill="white" text-anchor="middle">Slim Fit Jeans</text>
+  <text x="134" y="688" font-family="Arial" font-size="11" fill="#D97706" text-anchor="middle">₹ 1,299</text>
+  <text x="134" y="704" font-family="Arial" font-size="9" fill="rgba(255,255,255,0.25)" text-anchor="middle">₹ 1,999</text>
+
+  <!-- Card B -->
+  <rect x="288" y="424" width="236" height="290" fill="url(#card)" rx="2"/>
+  <rect x="288" y="424" width="236" height="220" fill="#141414" rx="2"/>
+  <text x="406" y="548" font-family="Arial" font-size="11" fill="rgba(255,255,255,0.12)" text-anchor="middle">IMAGE</text>
+  <text x="406" y="668" font-family="Arial" font-weight="700" font-size="11" fill="white" text-anchor="middle">Bootcut Jeans</text>
+  <text x="406" y="688" font-family="Arial" font-size="11" fill="#D97706" text-anchor="middle">₹ 999</text>
+  <text x="406" y="704" font-family="Arial" font-size="9" fill="rgba(255,255,255,0.25)" text-anchor="middle">₹ 1,499</text>
+
+  <!-- Bottom nav hint -->
+  <rect y="920" width="540" height="40" fill="#0d0d0d"/>
+  <rect x="240" y="932" width="60" height="2" fill="rgba(255,255,255,0.2)" rx="1"/>
+</svg>

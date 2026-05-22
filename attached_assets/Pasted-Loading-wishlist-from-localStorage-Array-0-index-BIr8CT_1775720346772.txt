@@ -1,0 +1,43 @@
+Loading wishlist from localStorage: Array(0)
+index-BIr8CTcB.js:1526 Loading cart from localStorage ONLY: Array(0)
+index-BIr8CTcB.js:1526 Cart reducer action: SET_LOADING
+index-BIr8CTcB.js:1526 Action payload: true
+index-BIr8CTcB.js:1526 Cart reducer action: SET_CART
+index-BIr8CTcB.js:1526 Action payload: Array(0)
+index-BIr8CTcB.js:1526 Setting cart items: Array(0)
+index-BIr8CTcB.js:1526 Cart reducer action: SET_LOADING
+index-BIr8CTcB.js:1526 Action payload: false
+index-BIr8CTcB.js:1526 Syncing local wishlist to DB: Array(0)
+index-BIr8CTcB.js:1526 Loading cart from localStorage ONLY: Array(0)
+index-BIr8CTcB.js:1526 Cart reducer action: SET_LOADING
+index-BIr8CTcB.js:1526 Action payload: true
+index-BIr8CTcB.js:1526 Cart reducer action: SET_CART
+index-BIr8CTcB.js:1526 Action payload: Array(0)
+index-BIr8CTcB.js:1526 Setting cart items: Array(0)
+index-BIr8CTcB.js:1526 Cart reducer action: SET_LOADING
+index-BIr8CTcB.js:1526 Action payload: false
+index-BIr8CTcB.js:1526 Load wishlist response: 200
+index-BIr8CTcB.js:1526 Loaded wishlist from DB: Array(0)
+installHook.js:1 TypeError: Cannot read properties of undefined (reading 'map')
+    at index-BIr8CTcB.js:1701:174463
+    at Array.map (<anonymous>)
+    at aB (index-BIr8CTcB.js:1701:173576)
+    at Xp (index-BIr8CTcB.js:38:16998)
+    at Zf (index-BIr8CTcB.js:40:3139)
+    at i1 (index-BIr8CTcB.js:40:44737)
+    at n1 (index-BIr8CTcB.js:40:39727)
+    at eP (index-BIr8CTcB.js:40:39655)
+    at $c (index-BIr8CTcB.js:40:39508)
+    at uh (index-BIr8CTcB.js:40:35875)
+overrideMethod @ installHook.js:1Understand this error
+index-BIr8CTcB.js:40 Uncaught TypeError: Cannot read properties of undefined (reading 'map')
+    at index-BIr8CTcB.js:1701:174463
+    at Array.map (<anonymous>)
+    at aB (index-BIr8CTcB.js:1701:173576)
+    at Xp (index-BIr8CTcB.js:38:16998)
+    at Zf (index-BIr8CTcB.js:40:3139)
+    at i1 (index-BIr8CTcB.js:40:44737)
+    at n1 (index-BIr8CTcB.js:40:39727)
+    at eP (index-BIr8CTcB.js:40:39655)
+    at $c (index-BIr8CTcB.js:40:39508)
+    at uh (index-BIr8CTcB.js:40:35875)

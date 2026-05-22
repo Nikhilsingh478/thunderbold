@@ -1,0 +1,277 @@
+You are implementing a **complete product review system** for an existing full-stack e-commerce platform called **Thunderbolt**.
+
+⚠️ CRITICAL RULES:
+
+* DO NOT break any existing functionality (orders, products, auth, admin panel, etc.)
+* This is an **additive feature only**
+* Must support BOTH:
+
+  * existing users with already delivered orders
+  * future users
+* Follow clean, production-grade practices (no hacks, no shortcuts)
+
+---
+
+# 🧠 CORE BUSINESS LOGIC (VERY IMPORTANT)
+
+A user can ONLY review a product IF:
+
+1. The user has placed an order containing that product
+2. The order status is **"delivered"**
+
+👉 If BOTH conditions are satisfied → user can review
+👉 Otherwise → user CANNOT review
+
+---
+
+# 🧱 DATABASE DESIGN
+
+Create a new collection: `reviews`
+
+Schema:
+
+```js
+{
+  _id: ObjectId,
+  userId: string (user email or uid),
+  productId: string,
+  orderId: string, // to ensure authenticity
+  rating: number (1–5),
+  comment: string,
+  isDeleted: boolean (default: false),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+---
+
+# 🔐 BACKEND LOGIC
+
+## 1. Create Review
+
+Endpoint:
+POST /api/reviews
+
+Validation:
+
+* Verify user is authenticated
+* Verify:
+
+  * user has an order with this product
+  * AND order.status === "delivered"
+* Prevent duplicate reviews:
+
+  * one user → one review per product
+
+If review exists → return error OR allow update instead
+
+---
+
+## 2. Update Review
+
+PUT /api/reviews/:id
+
+Rules:
+
+* Only review owner can update
+* Allow editing:
+
+  * rating
+  * comment
+
+---
+
+## 3. Delete Review (User)
+
+DELETE /api/reviews/:id
+
+* Soft delete only:
+
+```js
+isDeleted: true
+```
+
+---
+
+## 4. Get Reviews (Public - Product Page)
+
+GET /api/reviews?productId=xxx
+
+* Return only:
+
+```js
+isDeleted: false
+```
+
+* Sort by latest
+
+---
+
+## 5. Admin Delete Review
+
+Endpoint:
+DELETE /api/admin/reviews/:id
+
+* Admin only
+* Soft delete
+
+---
+
+# 🧠 EXISTING USERS SUPPORT (IMPORTANT)
+
+* Users who already have delivered orders (before this feature was added)
+  MUST be able to review
+
+👉 Do NOT rely on new flags
+👉 Use existing `orders` collection and check status dynamically
+
+---
+
+# 🎨 FRONTEND IMPLEMENTATION
+
+## 📦 Orders Page (User Side)
+
+For each product inside an order:
+
+IF:
+
+```js
+order.status === "delivered"
+```
+
+👉 Show button:
+"Review Product"
+
+---
+
+## 🪟 Review Modal (Popup)
+
+On click → open modal
+
+### UI Elements:
+
+1. ⚡ Rating System (CUSTOM)
+
+* 5 lightning icons (NOT stars)
+* Default: empty icons
+* On hover → preview fill
+* On click → lock selection
+* Smooth animation (Framer Motion or CSS transitions)
+
+Example:
+⚡⚡⚡⚡⚡ (filled based on selection)
+
+---
+
+2. Text Input
+
+* textarea
+* placeholder: "Write your review..."
+
+---
+
+3. Submit Button
+
+---
+
+## ✏️ Edit/Delete Review (User)
+
+If user already reviewed:
+
+* Show:
+
+  * Edit button
+  * Delete button
+
+Edit → opens modal with pre-filled data
+Delete → soft delete
+
+---
+
+# 🧑‍💼 ADMIN PANEL
+
+## Add new tab:
+
+"Reviews"
+
+---
+
+## Layout:
+
+### Step 1: Product List
+
+* Show:
+
+  * product image
+  * product name
+
+---
+
+### Step 2: On product click
+
+Show all reviews for that product:
+
+Each review card:
+
+* user email
+* rating (⚡ icons)
+* comment
+* date
+
+---
+
+### Admin Action:
+
+* Delete button (soft delete)
+
+---
+
+# ⚠️ EDGE CASES (HANDLE ALL)
+
+* User tries to review without purchase → block
+* User tries before delivery → block
+* Duplicate reviews → prevent
+* Deleted reviews → never show publicly
+* Existing delivered orders → MUST work
+* Empty comment → allow or validate (optional)
+* Rating must be 1–5 only
+
+---
+
+# 🎯 UX REQUIREMENTS
+
+* Smooth, premium animations
+* No laggy UI
+* Modal transitions clean
+* Lightning rating interaction must feel high-quality
+
+---
+
+# 🧪 TEST CASES
+
+Ensure:
+
+1. Old user (delivered order before feature) → can review ✅
+2. New user → can review after delivery ✅
+3. Undelivered order → no review button ❌
+4. Review edit works ✅
+5. Review delete works (soft) ✅
+6. Admin delete works ✅
+7. Product page shows only active reviews ✅
+
+---
+
+# 🚨 FINAL CONSTRAINT
+
+This system must integrate seamlessly with:
+
+* existing orders system
+* existing auth system
+* existing admin panel
+
+DO NOT rewrite or break anything existing.
+
+---
+
+If anything is unclear, ask BEFORE implementing.

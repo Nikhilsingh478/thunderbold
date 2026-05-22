@@ -1,0 +1,61 @@
+{
+  "headers": [
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        { "key": "Content-Type",  "value": "application/json" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Content-Type",          "value": "application/javascript; charset=utf-8" },
+        { "key": "Cache-Control",         "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/workbox-:hash.js",
+      "headers": [
+        { "key": "Content-Type",  "value": "application/javascript; charset=utf-8" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/icons/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/screenshots/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/admin/analytics/:path*",
+      "destination": "/api/admin?subpath=:path*"
+    },
+    {
+      "source": "/api/admin/analytics",
+      "destination": "/api/admin"
+    },
+    {
+      "source": "/api/orders/:sub(create|cancel|manage)",
+      "destination": "/api/orders?subpath=:sub"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
