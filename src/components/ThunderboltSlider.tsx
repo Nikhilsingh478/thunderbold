@@ -150,7 +150,7 @@ export default function ThunderboltSlider() {
             key={`${activeIndex}`}
             className="tb-heading-anim"
             style={{
-              fontFamily: "'Anton', sans-serif",
+              fontFamily: "'Bebas Neue', sans-serif",
               fontSize: isMobile ? 'clamp(96px, 38vw, 220px)' : 'clamp(120px, 28vw, 380px)',
               fontWeight: 900,
               color: 'white',
@@ -190,9 +190,6 @@ export default function ThunderboltSlider() {
         <div className="absolute left-4 sm:left-10 bottom-4 sm:bottom-20 max-w-[70%] sm:max-w-md" style={{ zIndex: 60 }}>
           <p className="mb-2 sm:mb-3 text-xs sm:text-[22px] font-bold uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em' }}>
             THUNDER LOOKS
-          </p>
-          <p className="hidden sm:block text-xs sm:text-sm mb-4 sm:mb-5" style={{ color: 'white', opacity: 0.85, lineHeight: 1.6 }}>
-            The boldest fits, crafted for the fearless. Sharp silhouettes, premium cuts — experience the power of Thunderbolt.
           </p>
           <div className="flex items-center gap-3">
             <button
