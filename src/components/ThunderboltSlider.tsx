@@ -188,7 +188,7 @@ export default function ThunderboltSlider() {
 
         {/* Bottom-left: label + nav */}
         <div className="absolute left-4 sm:left-10 bottom-4 sm:bottom-20 max-w-[70%] sm:max-w-md" style={{ zIndex: 60 }}>
-          <p className="mb-2 sm:mb-3 text-xs sm:text-[22px] font-bold uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em' }}>
+          <p className="mb-2 sm:mb-3 text-xs sm:text-[22px] uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em', fontFamily: "'Bebas Neue', sans-serif" }}>
             THUNDER LOOKS
           </p>
           <div className="flex items-center gap-3">
