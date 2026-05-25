@@ -7,7 +7,6 @@ import BrandsSection from '../components/BrandsSection';
 import LiveSaleSection from '../components/LiveSaleSection';
 import Footer from '../components/Footer';
 import CategoriesSection from '../components/CategoriesSection';
-import ThunderboltSlider from '../components/ThunderboltSlider';
 
 function MobileSearchBar() {
   const openSearch = () => window.dispatchEvent(new CustomEvent('open-search-overlay'));
@@ -46,7 +45,6 @@ const Index = () => (
       <BrandsSection />
       <LiveSaleSection />
       <CategoriesSection />
-      <ThunderboltSlider />
     </main>
     <Footer />
   </div>

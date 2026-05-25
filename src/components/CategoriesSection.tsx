@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import PromoBanner from './promo/PromoBanner';
 import ProductGrid, { type GridProduct } from './products/ProductGrid';
+import ThunderboltSlider from './ThunderboltSlider';
 
 const SKELETON_COUNT = 3;
 
@@ -196,6 +197,11 @@ export default function CategoriesSection() {
         {/* ── Promo Banner (between Denim and T-Shirts) ────────────── */}
         <div className="mt-10 md:mt-16 -mx-6 md:-mx-16">
           <PromoBanner />
+        </div>
+
+        {/* ── Outfit Slider (between promo banners and T-Shirts) ───── */}
+        <div className="-mx-6 md:-mx-16">
+          <ThunderboltSlider />
         </div>
 
         {/* ── T-Shirt Collection ───────────────────────────────────── */}

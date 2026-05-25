@@ -43,6 +43,7 @@ interface Order {
   createdAt: string;
   address?: OrderAddress;
   paymentMethod?: string;
+  giftMessage?: string;
 }
 
 interface AdminReview {
@@ -2012,6 +2013,14 @@ export default function Admin() {
                   <p className="text-tb-white text-sm">{value}</p>
                 </div>
               ) : null)}
+              {viewAddressOrder.giftMessage && (
+                <div className="pt-2 border-t border-white/[0.08]">
+                  <p className="font-condensed text-xs text-brass/80 uppercase tracking-wider mb-1.5">Gift / Order Message</p>
+                  <p className="text-tb-white text-sm leading-relaxed whitespace-pre-wrap bg-white/[0.03] border border-white/[0.07] px-3 py-2.5 rounded">
+                    {viewAddressOrder.giftMessage}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="px-6 pb-6 pt-3 shrink-0 border-t border-white/10">
               <button

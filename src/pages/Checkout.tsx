@@ -13,6 +13,7 @@ import ProductSummary from '../components/checkout/ProductSummary';
 import OrderConfirmation from '../components/checkout/OrderConfirmation';
 
 const STORAGE_KEY = 'user_address';
+const GIFT_MSG_MAX = 300;
 
 function loadSavedAddress(): AddressData | null {
   try {
@@ -27,17 +28,10 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items, clearCartData } = useCart();
-  
-  // Get cart items from location state or use current cart
-  // Handle both single product and cart checkout
+
   const singleProductData = location.state?.productName ? [location.state] : null;
   const cartItems = location.state?.cartItems || singleProductData || items;
-  
-  // Debug: Log the data to identify NaN source
-  console.log("CHECKOUT DEBUG: cartItems:", cartItems);
-  console.log("CHECKOUT DEBUG: location.state:", location.state);
-  
-  // Calculate total amount with proper price parsing
+
   const totalAmount = (cartItems?.reduce((total, item) => {
     let price: number;
     if (typeof item.price === 'string') {
@@ -49,15 +43,13 @@ export default function Checkout() {
     }
     return total + (price * (item.quantity || 0));
   }, 0) || 0);
-  
-  console.log("CHECKOUT DEBUG: totalAmount:", totalAmount);
-  
+
   const [submitting, setSubmitting] = useState(false);
   const [savedAddress, setSavedAddress] = useState<AddressData | null>(loadSavedAddress);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submittedAddress, setSubmittedAddress] = useState<AddressData | null>(null);
+  const [giftMessage, setGiftMessage] = useState('');
 
-  // Try to load default address from user profile (overrides localStorage)
   useEffect(() => {
     if (!user) return;
     const fetchDefaultAddress = async () => {
@@ -95,8 +87,7 @@ export default function Checkout() {
     fetchDefaultAddress();
   }, [user]);
 
-  useEffect(() => { 
-    // Scroll to top first, then to address form after a short delay
+  useEffect(() => {
     window.scrollTo(0, 0);
     setTimeout(() => {
       const addressForm = document.getElementById('address-form');
@@ -106,7 +97,6 @@ export default function Checkout() {
     }, 800);
   }, []);
 
-  // If no cart items, redirect back
   useEffect(() => {
     if (!cartItems || cartItems.length === 0) navigate('/cart', { replace: true });
   }, [cartItems, navigate]);
@@ -118,13 +108,12 @@ export default function Checkout() {
       return;
     }
 
-    if (submitting) return; // Prevent double-submit
+    if (submitting) return;
 
     setSubmitting(true);
     setSubmittedAddress(address);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
 
-    // Generate a unique idempotency key for this submission attempt
     const clientOrderId = crypto.randomUUID();
 
     try {
@@ -139,7 +128,9 @@ export default function Checkout() {
         ...(item.bottomwearSize ? { bottomwearSize: item.bottomwearSize } : {}),
       }));
 
-      const orderData = {
+      const trimmedMessage = giftMessage.trim().slice(0, GIFT_MSG_MAX);
+
+      const orderData: Record<string, unknown> = {
         products: orderProducts,
         address: {
           fullName: address.fullName,
@@ -155,9 +146,12 @@ export default function Checkout() {
         clientOrderId,
       };
 
+      if (trimmedMessage) {
+        orderData.giftMessage = trimmedMessage;
+      }
+
       const token = await user.getIdToken();
 
-      // Retry wrapper — up to 2 retries on network failure
       let response: Response | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
@@ -200,7 +194,6 @@ export default function Checkout() {
         return;
       }
 
-      // Clear cart after successful order only if it was a cart checkout
       if (location.state?.cartItems) {
         await clearCartData();
       }
@@ -210,7 +203,7 @@ export default function Checkout() {
       setSubmitting(false);
 
     } catch (error) {
-      console.error("CHECKOUT: Unexpected error:", error);
+      console.error('CHECKOUT: Unexpected error:', error);
       toast.error('Something went wrong. Please try again.');
       setSubmitting(false);
     }
@@ -243,7 +236,7 @@ export default function Checkout() {
               <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase mb-6">
                 Delivery Address
               </h2>
-              <AddressForm 
+              <AddressForm
                 onSubmit={handleSubmit}
                 submitting={submitting}
                 savedAddress={savedAddress}
@@ -252,18 +245,53 @@ export default function Checkout() {
 
             {/* Order Summary */}
             <div>
-              <ProductSummary 
+              <ProductSummary
                 items={cartItems}
                 totalAmount={totalAmount}
               />
             </div>
           </div>
+
+          {/* Gift / Order Message — optional, standalone section below the grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-8 border border-white/[0.08] bg-white/[0.02] p-5 md:p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div>
+                <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-tb-white">
+                  Gift / Order Message
+                  <span className="ml-2 font-condensed text-[0.6rem] tracking-[0.14em] text-sv-dim normal-case">
+                    Optional
+                  </span>
+                </p>
+                <p className="font-body text-[0.75rem] text-sv-dim mt-0.5">
+                  Add a personal note for the recipient or any special instructions.
+                </p>
+              </div>
+            </div>
+            <div className="relative">
+              <textarea
+                value={giftMessage}
+                onChange={e => setGiftMessage(e.target.value.slice(0, GIFT_MSG_MAX))}
+                placeholder="Write a message for the recipient (optional)"
+                rows={3}
+                className="w-full bg-surface border border-white/[0.08] focus:border-brass/40 px-4 py-3 font-body text-[0.9rem] text-tb-white placeholder:text-sv-dim/50 outline-none transition-colors duration-300 resize-none"
+              />
+              <span className={`absolute bottom-3 right-3 font-condensed text-[0.62rem] tracking-wide tabular-nums transition-colors duration-200 ${
+                giftMessage.length >= GIFT_MSG_MAX ? 'text-red-400/70' : 'text-sv-dim/60'
+              }`}>
+                {giftMessage.length}/{GIFT_MSG_MAX}
+              </span>
+            </div>
+          </motion.div>
         </div>
       </main>
-      
+
       <Footer />
 
-      {/* Order Confirmation Modal */}
       {showConfirmation && submittedAddress && (
         <OrderConfirmation
           address={submittedAddress}

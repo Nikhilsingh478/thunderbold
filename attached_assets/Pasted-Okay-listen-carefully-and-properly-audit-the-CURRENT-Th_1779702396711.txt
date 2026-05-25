@@ -1,0 +1,337 @@
+Okay, listen carefully and properly audit the CURRENT Thunderbolt frontend/mobile UX before making ANY changes. Do NOT rush implementation. First understand the current navbar rendering flow, auth/profile loading logic, outfit slider implementation, mobile touch interactions, checkout flow, admin order rendering flow, and invoice/packing-slip generation system.
+
+This is a production ecommerce app, not a demo project.
+
+VERY IMPORTANT:
+All implementations must be:
+
+* smooth
+* scalable
+* maintainable
+* cleanly architected
+* non-glitchy
+* mobile optimized
+* native-app-feeling
+* production-grade
+
+DO NOT:
+
+* introduce hacks
+* use ugly timeouts
+* create layout shifts
+* create flickering UI
+* add bloated logic
+* create messy conditional rendering
+* break responsiveness
+* create touch glitches
+
+==================================================
+TASK 1 — FIX NAVBAR / PROFILE ICON LOADING SHIFT
+================================================
+
+CURRENT ISSUE:
+On initial load:
+
+* profile icon takes 1–2 seconds to appear
+* navbar links render inconsistently
+* some nav items appear first
+* remaining nav items appear later
+
+This creates:
+
+* layout shifting
+* ugly flickering
+* non-native feel
+* unstable navbar rendering
+
+---
+
+## REQUIRED FIX
+
+Audit:
+
+* auth state loading
+* navbar hydration flow
+* conditional rendering logic
+* async user/profile fetch timing
+
+Implement proper loading architecture so:
+
+* navbar structure remains stable immediately
+* profile icon placeholder/skeleton reserves layout space
+* nav items do not jump/reflow later
+* all navbar elements appear smoothly together
+
+VERY IMPORTANT:
+Do NOT:
+
+* hide navbar entirely
+* use ugly flashing loaders
+* delay whole page rendering unnecessarily
+
+DO:
+
+* use stable placeholders/skeletons
+* preserve exact spacing during loading
+* eliminate layout shifts
+* make navbar feel native and instant
+
+==================================================
+TASK 2 — OUTFIT SLIDER UX REWORK
+================================
+
+CURRENT REQUIREMENTS:
+Remove arrow buttons completely from outfit slider.
+
+Instead:
+
+* implement proper touch/swipe interaction
+* support:
+
+  * left-to-right swipe
+  * right-to-left swipe
+* smooth finger sliding interaction
+* mobile-native carousel feel
+
+---
+
+## IMPORTANT REQUIREMENTS
+
+The slider must:
+
+* feel smooth
+* feel premium
+* not glitch
+* not snap weirdly
+* not lag
+* not accidentally trigger clicks
+* work properly on both app and website
+
+Audit:
+
+* current slider implementation
+* touch event handling
+* drag/swipe thresholds
+* momentum/snapping behavior
+
+Implement:
+
+* proper touch gesture support
+* smooth drag interaction
+* polished snapping behavior
+
+---
+
+## LAYOUT CHANGES
+
+Move the outfit slider section upward.
+
+NEW POSITION:
+Place it BETWEEN:
+
+* Under ₹999 / ₹699 promo banners
+  AND
+* T-shirt collection section
+
+Also:
+
+* remove awkward unnecessary top spacing above the slider
+* tighten layout spacing professionally
+* maintain clean visual hierarchy
+
+==================================================
+TASK 3 — DISABLE MOBILE ZOOM
+============================
+
+IMPORTANT:
+For mobile/app environments:
+disable browser zooming completely.
+
+Goal:
+Create a more native-app-like experience.
+
+Requirements:
+
+* prevent pinch zoom
+* prevent double-tap zoom
+* maintain usability/accessibility reasonably
+
+Audit:
+
+* viewport meta configuration
+* mobile scaling behavior
+* touch-action interactions
+
+Implement cleanly WITHOUT breaking:
+
+* inputs
+* checkout
+* scrolling
+* gestures
+
+==================================================
+TASK 4 — OPTIONAL GIFT MESSAGE FEATURE
+======================================
+
+Upgrade checkout/order workflow.
+
+==================================================
+REQUIRED FEATURE
+================
+
+Before placing an order:
+ask user:
+
+“Do you want to add a message for the gift/order?”
+
+==================================================
+IMPORTANT REQUIREMENTS
+======================
+
+This field MUST be:
+
+* OPTIONAL
+* skippable
+* non-blocking
+
+Users should be able to:
+
+* leave it empty
+* skip completely
+* or add a custom message
+
+DO NOT:
+
+* force input
+* make it mandatory
+* block checkout
+
+==================================================
+FRONTEND REQUIREMENTS
+=====================
+
+Add:
+
+* clean textarea/input
+* elegant UI
+* proper spacing
+* mobile-friendly interaction
+* optional indicator
+
+Placeholder example:
+“Write a message for the recipient (optional)”
+
+==================================================
+BACKEND REQUIREMENTS
+====================
+
+Store the message properly with the order.
+
+Audit:
+
+* current order schema
+* checkout payload
+* order creation flow
+
+Implement:
+
+* clean schema update
+* backward compatibility
+* proper validation/sanitization
+
+==================================================
+ADMIN PANEL REQUIREMENTS
+========================
+
+Admin MUST be able to view the message clearly.
+
+You may:
+
+* show it inside order details
+* add it inside “View Address”
+* or create a dedicated section
+
+Choose the cleanest UX approach.
+
+IMPORTANT:
+
+* message should be clearly visible
+* formatted properly
+* not clutter the admin UI
+
+==================================================
+INVOICE / PRINT FUNCTIONALITY UPDATE
+====================================
+
+Update the billing/packing-slip/invoice print system.
+
+If order contains a gift message:
+
+* print it properly in invoice/packing slip
+* format it professionally
+* separate it cleanly from address/order metadata
+
+If no message exists:
+
+* do not show empty sections
+
+==================================================
+ENGINEERING REQUIREMENTS
+========================
+
+DO:
+
+* keep code modular
+* maintain clean architecture
+* use reusable components
+* maintain responsive layouts
+* preserve current app performance
+
+DO NOT:
+
+* break checkout flow
+* break admin orders
+* break invoice generation
+* introduce layout instability
+* create messy state management
+
+==================================================
+TESTING & VALIDATION (MANDATORY)
+================================
+
+Before finishing verify:
+
+* navbar no longer flickers/shifts
+* profile icon placeholder works correctly
+* outfit slider swipe works smoothly
+* arrows fully removed
+* slider repositioned correctly
+* awkward spacing removed
+* mobile zoom disabled correctly
+* checkout still works
+* gift message remains optional
+* admin can view messages properly
+* invoice printing includes message properly
+* no mobile touch glitches
+* no console errors
+* no responsiveness issues
+
+==================================================
+FINAL REQUIRED DELIVERABLES
+===========================
+
+After implementation provide:
+
+1. All files modified
+2. Root cause of navbar flicker
+3. Swipe implementation approach used
+4. How zoom disabling was implemented
+5. Order schema changes made
+6. Invoice changes made
+7. Edge cases handled
+8. Responsive/mobile testing performed
+9. Any limitations remaining
+
+Take your time.
+Do this properly.
+Prioritize premium mobile UX, native-app feel, smooth rendering, and clean maintainable architecture.

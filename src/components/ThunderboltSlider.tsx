@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface SlideData {
@@ -56,7 +56,6 @@ function roleStyle(role: Role, isMobile: boolean): React.CSSProperties {
   }
 }
 
-/** Placeholder shown when a slide has no image configured yet. */
 function SlideImagePlaceholder() {
   return (
     <div className="w-full h-full flex items-center justify-center bg-white/[0.03] border border-white/[0.06]">
@@ -67,8 +66,8 @@ function SlideImagePlaceholder() {
 
 /**
  * ThunderboltSlider — dynamic editorial carousel.
- * Config is loaded from /api/slider (GET, public).
- * CTA "SHOP THIS LOOK" navigates to the mapped product page.
+ * Navigation: touch/pointer swipe (horizontal drag ≥ 50 px triggers advance).
+ * Arrows removed — swipe only for native-app feel.
  */
 export default function ThunderboltSlider() {
   const navigate = useNavigate();
@@ -77,7 +76,11 @@ export default function ThunderboltSlider() {
   const [isMobile, setIsMobile] = useState(false);
   const animatingRef = useRef(false);
 
-  // Fetch slider config once on mount
+  // Pointer / swipe tracking
+  const dragStartX = useRef(0);
+  const dragDeltaX = useRef(0);
+  const isDragging = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
     fetch('/api/slider')
@@ -105,25 +108,54 @@ export default function ThunderboltSlider() {
     window.setTimeout(() => { animatingRef.current = false; }, DURATION);
   };
 
-  // Don't render at all if all 4 slides have no image and no heading (unconfigured)
+  // Pointer event handlers — works for both mouse and touch via pointer events API
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartX.current = e.clientX;
+    dragDeltaX.current = 0;
+    isDragging.current = false;
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const delta = e.clientX - dragStartX.current;
+    dragDeltaX.current = delta;
+    // Mark as drag once horizontal movement exceeds 8px
+    if (Math.abs(delta) > 8) {
+      isDragging.current = true;
+    }
+  };
+
+  const handlePointerUp = () => {
+    const delta = dragDeltaX.current;
+    if (Math.abs(delta) > 50) {
+      go(delta < 0 ? 'next' : 'prev');
+    }
+    // Reset dragging flag after click handlers have had a chance to check it
+    requestAnimationFrame(() => { isDragging.current = false; });
+  };
+
   if (slides !== null) {
     const hasContent = slides.some(s => s.imageUrl || s.heading);
     if (!hasContent) return null;
   }
 
-  // Loading state — show nothing to avoid layout shift
   if (slides === null) return null;
 
   const active = slides[activeIndex];
 
   const handleCta = () => {
+    if (isDragging.current) return;
     if (active.productId) navigate(`/product/${active.productId}`);
   };
 
   return (
     <section
-      className="relative w-full overflow-hidden"
-      style={{ backgroundColor: '#0A0A0A', fontFamily: "'Inter', sans-serif" }}
+      className="relative w-full overflow-hidden select-none"
+      style={{ backgroundColor: '#0A0A0A', fontFamily: "'Inter', sans-serif", touchAction: 'pan-y' }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
       <style>{`
         @keyframes tb-heading-split-in {
@@ -186,30 +218,36 @@ export default function ThunderboltSlider() {
           );
         })}
 
-        {/* Bottom-left: label + nav */}
+        {/* Bottom-left: label + swipe hint dots */}
         <div className="absolute left-4 sm:left-10 bottom-4 sm:bottom-20 max-w-[70%] sm:max-w-md" style={{ zIndex: 60 }}>
-          <p className="mb-2 sm:mb-3 text-xs sm:text-[22px] uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em', fontFamily: "'Bebas Neue', sans-serif" }}>
+          <p className="mb-3 sm:mb-4 text-xs sm:text-[22px] uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em', fontFamily: "'Bebas Neue', sans-serif" }}>
             THUNDER LOOKS
           </p>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label="Previous slide"
-              onClick={() => go('prev')}
-              className="w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:bg-white/20 cursor-pointer"
-              style={{ backgroundColor: 'transparent', border: '2px solid white', color: 'white' }}
-            >
-              <ArrowLeft size={isMobile ? 18 : 26} strokeWidth={2.25} />
-            </button>
-            <button
-              type="button"
-              aria-label="Next slide"
-              onClick={() => go('next')}
-              className="w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:bg-white/20 cursor-pointer"
-              style={{ backgroundColor: 'transparent', border: '2px solid white', color: 'white' }}
-            >
-              <ArrowRight size={isMobile ? 18 : 26} strokeWidth={2.25} />
-            </button>
+          {/* Dot indicators */}
+          <div className="flex items-center gap-2">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to slide ${i + 1}`}
+                onClick={() => {
+                  if (animatingRef.current) return;
+                  animatingRef.current = true;
+                  setActiveIndex(i);
+                  window.setTimeout(() => { animatingRef.current = false; }, DURATION);
+                }}
+                style={{
+                  width: i === activeIndex ? 24 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  background: i === activeIndex ? 'white' : 'rgba(255,255,255,0.3)',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  transition: `width ${DURATION}ms cubic-bezier(0.4,0,0.2,1), background ${DURATION}ms`,
+                }}
+              />
+            ))}
           </div>
         </div>
 

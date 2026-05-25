@@ -83,7 +83,7 @@ async function handleCreate(req, res) {
   const productsCollection = db.collection("products");
 
   const body = await parseBody(req);
-  const { products, address, paymentMethod, clientOrderId } = body;
+  const { products, address, paymentMethod, clientOrderId, giftMessage } = body;
 
   // Idempotency check
   if (clientOrderId) {
@@ -169,6 +169,11 @@ async function handleCreate(req, res) {
     }
   }
 
+  // Sanitize optional gift message — strip HTML tags, trim, limit to 300 chars
+  const sanitizedGiftMessage = typeof giftMessage === "string"
+    ? giftMessage.replace(/<[^>]*>/g, "").trim().slice(0, 300)
+    : "";
+
   // Create order
   const order = {
     userId,
@@ -179,6 +184,7 @@ async function handleCreate(req, res) {
     createdAt: new Date(),
     totalAmount: products.reduce((sum, p) => sum + p.price * p.quantity, 0),
     ...(clientOrderId ? { clientOrderId } : {}),
+    ...(sanitizedGiftMessage ? { giftMessage: sanitizedGiftMessage } : {}),
   };
 
   let result;

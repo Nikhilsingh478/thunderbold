@@ -26,6 +26,7 @@ export interface PrintableOrder {
   status?: string;
   totalAmount?: number;
   createdAt?: string;
+  giftMessage?: string;
 }
 
 function formatDate(iso?: string): string {
@@ -86,6 +87,17 @@ export function printInvoice(order: PrintableOrder): void {
     [addr.city, addr.state, addr.pincode].filter(Boolean).join(', '),
   ].filter(Boolean);
 
+  // Gift message block — only rendered when present
+  const giftMessageBlock = order.giftMessage
+    ? `
+    <div style="margin-bottom:24px;border:1px solid #fde68a;border-radius:8px;padding:16px 18px;background:#fffbeb;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#92400e;margin-bottom:8px;">
+        Gift / Order Message
+      </p>
+      <p style="font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap;margin:0;">${order.giftMessage}</p>
+    </div>`
+    : '';
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,7 +118,6 @@ export function printInvoice(order: PrintableOrder): void {
       margin: 0 auto;
       padding: 36px 40px;
     }
-    /* Header */
     .header {
       display: flex;
       justify-content: space-between;
@@ -123,9 +134,7 @@ export function printInvoice(order: PrintableOrder): void {
       color: #111827;
     }
     .brand span { color: #d97706; }
-    .doc-title {
-      text-align: right;
-    }
+    .doc-title { text-align: right; }
     .doc-title h2 {
       font-size: 16px;
       font-weight: 700;
@@ -140,7 +149,6 @@ export function printInvoice(order: PrintableOrder): void {
       letter-spacing: 0.04em;
       margin-top: 2px;
     }
-    /* Meta grid */
     .meta-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -179,7 +187,6 @@ export function printInvoice(order: PrintableOrder): void {
       background: ${statusColor};
       margin-top: 4px;
     }
-    /* Items table */
     .section-title {
       font-size: 11px;
       font-weight: 700;
@@ -209,7 +216,6 @@ export function printInvoice(order: PrintableOrder): void {
     thead th:last-child, thead th:nth-child(3), thead th:nth-child(4) { text-align: right; }
     thead th:nth-child(2) { text-align: center; }
     thead th:nth-child(3) { text-align: center; }
-    /* Summary */
     .summary {
       display: flex;
       justify-content: flex-end;
@@ -238,7 +244,6 @@ export function printInvoice(order: PrintableOrder): void {
     }
     .summary-row label { color: #6b7280; }
     .summary-row.total label { color: #d1d5db; }
-    /* Footer */
     .footer {
       border-top: 1px solid #e5e7eb;
       padding-top: 20px;
@@ -246,10 +251,7 @@ export function printInvoice(order: PrintableOrder): void {
       justify-content: space-between;
       align-items: flex-end;
     }
-    .footer p {
-      font-size: 11px;
-      color: #9ca3af;
-    }
+    .footer p { font-size: 11px; color: #9ca3af; }
     .footer strong { color: #374151; }
     @media print {
       body { background: #fff; }
@@ -260,7 +262,6 @@ export function printInvoice(order: PrintableOrder): void {
 </head>
 <body>
   <div class="page">
-    <!-- Header -->
     <div class="header">
       <div class="brand">THUNDER<span>BOLT</span></div>
       <div class="doc-title">
@@ -269,9 +270,7 @@ export function printInvoice(order: PrintableOrder): void {
       </div>
     </div>
 
-    <!-- Meta info grid -->
     <div class="meta-grid">
-      <!-- Order details -->
       <div class="meta-box">
         <h3>Order Details</h3>
         <p><strong>Order ID:</strong> ${orderId}</p>
@@ -280,7 +279,6 @@ export function printInvoice(order: PrintableOrder): void {
         <p><strong>Status:</strong></p>
         <span class="status-badge">${status}</span>
       </div>
-      <!-- Ship to -->
       <div class="meta-box">
         <h3>Ship To</h3>
         ${addressLines.map(l => `<p>${l}</p>`).join('')}
@@ -288,7 +286,8 @@ export function printInvoice(order: PrintableOrder): void {
       </div>
     </div>
 
-    <!-- Items -->
+    ${giftMessageBlock}
+
     <p class="section-title">Items Ordered</p>
     <table>
       <thead>
@@ -305,7 +304,6 @@ export function printInvoice(order: PrintableOrder): void {
       </tbody>
     </table>
 
-    <!-- Summary -->
     <div class="summary">
       <div class="summary-box">
         <div class="summary-row">
@@ -323,7 +321,6 @@ export function printInvoice(order: PrintableOrder): void {
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="footer">
       <p>Thank you for your order!<br /><strong>Thunderbolt</strong> — Premium Denim Brand</p>
       <p style="text-align:right;">

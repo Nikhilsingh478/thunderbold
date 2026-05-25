@@ -26,7 +26,7 @@ export const promoSlides: PromoSlide[] = [
   {
     id: 'under-699',
     title: 'Jeans Under ₹699',
-    image: '/banners/under-699.webp',
+    image: '/under699new.webp',
     route: '/deals/under-699',
   },
 ];

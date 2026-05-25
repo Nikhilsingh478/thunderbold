@@ -17,8 +17,19 @@ function getInitials(name: string) {
     .join('');
 }
 
+/** Stable-width skeleton placeholder shown while Firebase auth resolves.
+ *  Matches the exact dimensions of the profile circle so no layout shift occurs. */
+function AuthSkeleton({ size = 32 }: { size?: number }) {
+  return (
+    <div
+      className="rounded-full bg-white/[0.06] animate-pulse flex-shrink-0"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const { getTotalItems } = useCart();
   const { getWishlistCount } = useWishlist();
   const navigate = useNavigate();
@@ -63,14 +74,12 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Listen for mobile search trigger from below-navbar search bar
   useEffect(() => {
     const handler = () => setIsSearchOpen(true);
     window.addEventListener('open-search-overlay', handler);
     return () => window.removeEventListener('open-search-overlay', handler);
   }, []);
 
-  // Close user menu on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
@@ -81,7 +90,6 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userMenuOpen]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
@@ -151,10 +159,10 @@ const Navbar = () => {
           </motion.span>
         </Link>
 
-        {/* Desktop nav — search bar first, then links, then icons */}
+        {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
 
-          {/* Search Bar — first position */}
+          {/* Search Bar */}
           <motion.button
             variants={itemVariants}
             onClick={() => setIsSearchOpen(true)}
@@ -210,9 +218,11 @@ const Navbar = () => {
             </Link>
           </motion.div>
 
-          {/* Desktop Auth */}
+          {/* Desktop Auth — stable-width container prevents layout shift */}
           <motion.div variants={itemVariants} className="relative" ref={userMenuRef}>
-            {user ? (
+            {authLoading ? (
+              <AuthSkeleton size={32} />
+            ) : user ? (
               <>
                 <button
                   onClick={() => setUserMenuOpen(v => !v)}
@@ -303,7 +313,10 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {user ? (
+          {/* Mobile auth — skeleton while loading to prevent shift */}
+          {authLoading ? (
+            <AuthSkeleton size={32} />
+          ) : user ? (
             <Link
               to="/profile"
               className="w-8 h-8 rounded-full bg-brass/20 border border-brass/40 flex items-center justify-center hover:border-brass/70 transition-colors"
@@ -362,7 +375,7 @@ const Navbar = () => {
                 </motion.div>
               ))}
 
-              {user && (
+              {!authLoading && user && (
                 <>
                   <motion.div initial="closed" animate="open" exit="closed" variants={linkVariants} custom={links.length}>
                     <Link
@@ -393,7 +406,7 @@ const Navbar = () => {
                 </>
               )}
 
-              {!user && (
+              {!authLoading && !user && (
                 <motion.div initial="closed" animate="open" exit="closed" variants={linkVariants} custom={links.length}>
                   <button
                     onClick={() => { setIsOpen(false); handleLogin(); }}
