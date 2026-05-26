@@ -200,7 +200,7 @@ export default function CategoriesSection() {
         </div>
 
         {/* ── Outfit Slider (between promo banners and T-Shirts) ───── */}
-        <div className="-mx-6 md:-mx-16">
+        <div className="-mx-6 md:-mx-16 -mt-4 md:mt-0">
           <ThunderboltSlider />
         </div>
 

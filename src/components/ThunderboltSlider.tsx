@@ -151,7 +151,7 @@ export default function ThunderboltSlider() {
   return (
     <section
       className="relative w-full overflow-hidden select-none"
-      style={{ backgroundColor: '#0A0A0A', fontFamily: "'Inter', sans-serif", touchAction: 'pan-y' }}
+      style={{ backgroundColor: 'transparent', fontFamily: "'Inter', sans-serif", touchAction: 'pan-y' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -183,7 +183,7 @@ export default function ThunderboltSlider() {
             className="tb-heading-anim"
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: isMobile ? 'clamp(96px, 38vw, 220px)' : 'clamp(120px, 28vw, 380px)',
+              fontSize: isMobile ? 'clamp(64px, 24vw, 150px)' : 'clamp(90px, 18vw, 260px)',
               fontWeight: 900,
               color: 'white',
               lineHeight: 1,
@@ -262,8 +262,8 @@ export default function ThunderboltSlider() {
             fontFamily: "'Anton', sans-serif",
             fontSize: 'clamp(18px, 4vw, 56px)',
             fontWeight: 400,
-            color: 'white',
-            opacity: active.productId ? 0.95 : 0.4,
+            color: '#ffffff',
+            opacity: active.productId ? 1 : 0.4,
             letterSpacing: '-0.02em',
             lineHeight: 1,
             textTransform: 'uppercase',
