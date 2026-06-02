@@ -322,7 +322,7 @@ export function printInvoice(order: PrintableOrder): void {
     </div>
 
     <div class="footer">
-      <p>Thank you for your order!<br /><strong>Thunderbolt</strong> — Premium Denim Brand</p>
+      <p>Thank you for your order!<br /><strong>Thunderbold</strong> — Curated Fashion Store</p>
       <p style="text-align:right;">
         Customer: <strong>${addr.fullName ?? order.userId ?? '—'}</strong><br />
         Printed on: ${formatDate(new Date().toISOString())}

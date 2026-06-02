@@ -127,7 +127,7 @@ export default function Policies() {
               Policies
             </h1>
             <p className="font-body font-light text-[0.95rem] leading-relaxed text-white/50 max-w-[520px]">
-              Thunderbolt is committed to transparency, security, and a trustworthy experience.
+              Thunderbold is committed to transparency, security, and a trustworthy experience.
               Review the policies that govern how we operate and protect you.
             </p>
           </motion.div>
@@ -154,16 +154,16 @@ export default function Policies() {
               <p className="font-body text-[0.85rem] text-white/40 mt-0.5">
                 Reach out at{' '}
                 <a
-                  href="mailto:support@thunderboltdenim.com"
+                  href="mailto:support@thunderbolddenim.com"
                   className="text-brass hover:text-brass-bright transition-colors duration-200 underline underline-offset-2 decoration-brass/30"
                 >
-                  support@thunderboltdenim.com
+                  support@thunderbolddenim.com
                 </a>
               </p>
             </div>
             <div className="shrink-0">
               <span className="font-condensed text-[0.6rem] tracking-[0.18em] uppercase text-white/20">
-                Thunderbolt Denim · 2026
+                Thunderbold · 2026
               </span>
             </div>
           </motion.div>

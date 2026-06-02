@@ -125,7 +125,7 @@ export default function LoginModal({ isOpen, onClose, isDelayedPrompt = false }:
                   {isDelayedPrompt 
                     ? 'Unlock exclusive access to premium collections' 
                     : emailForm.isSignUp 
-                      ? 'Create your Thunderbolt account' 
+                      ? 'Create your Thunderbold account' 
                       : 'Sign in to continue your journey'
                   }
                 </p>

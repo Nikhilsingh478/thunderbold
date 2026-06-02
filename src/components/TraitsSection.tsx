@@ -36,16 +36,16 @@ const TraitsSection = () => (
           {/* Center content */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full gap-3">
             <span className="font-display metal-text tracking-[0.14em]" style={{ fontSize: 'clamp(1.8rem, 4vw, 3.2rem)' }}>
-              THUNDER<span className="brass-text">⚡</span>BOLT
+              THUNDER<span className="brass-text">⚡</span>BOLD
             </span>
             <span className="font-condensed text-[0.58rem] tracking-[0.34em] uppercase text-sv-dim">
-              Built for the Bold
+              Style Within Reach
             </span>
           </div>
 
           {/* Chips */}
           <div className="absolute top-5 left-5 font-condensed font-semibold text-[0.56rem] tracking-[0.20em] uppercase text-sv-mid px-3 py-1.5" style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(10,10,10,0.8)' }}>
-            Thunderbolt Premium
+            Thunderbold Premium
           </div>
           <div className="absolute top-5 right-5 font-condensed font-semibold text-[0.56rem] tracking-[0.20em] uppercase text-sv px-3 py-1.5" style={{ border: '1px solid #383838', background: 'rgba(10,10,10,0.8)' }}>
             Series No. 1
@@ -66,7 +66,7 @@ const TraitsSection = () => (
               EVERY<br />DETAIL IS<br />YOUR <span className="brass-text">ARMOR</span>
             </h2>
             <p className="font-body font-light text-sv-mid max-w-[520px] md:max-w-[440px] mb-12 md:mb-10" style={{ fontSize: '1.05rem', lineHeight: 1.82 }}>
-              Where others cut corners, Thunderbolt doubles down. Each pair carries the hallmarks of obsessive craft — built for those who demand more.
+              Where others cut corners, Thunderbold doubles down on curation. Each piece we carry is chosen for those who demand more from their everyday wardrobe.
             </p>
           </motion.div>
 

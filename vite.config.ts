@@ -61,9 +61,9 @@ export default defineConfig(() => ({
          * `id` must be stable across deployments.
          */
         id: '/',
-        name: 'Thunderbolt',
-        short_name: 'Thunderbolt',
-        description: 'Premium Indian Denim — Built for the Bold',
+        name: 'Thunderbold',
+        short_name: 'Thunderbold',
+        description: 'Curated streetwear & fashion — handpicked denim, t-shirts, shirts and kurtas for modern India.',
         start_url: '/',
         scope: '/',
 
@@ -129,20 +129,20 @@ export default defineConfig(() => ({
             sizes: '540x960',
             type: 'image/png',
             form_factor: 'narrow',
-            label: 'Thunderbolt — Premium Denim Storefront',
+            label: 'Thunderbold — Curated Fashion Storefront',
           },
           {
             src: '/screenshots/desktop.png',
             sizes: '1280x800',
             type: 'image/png',
             form_factor: 'wide',
-            label: 'Thunderbolt — Product Collection',
+            label: 'Thunderbold — Product Collection',
           },
         ],
 
         /**
          * Share target — allows other apps to share URLs / product links
-         * into Thunderbolt via the OS share sheet.
+         * into Thunderbold via the OS share sheet.
          * When triggered, the app opens at /?share_url=... (handled in Index.tsx).
          */
         share_target: {

@@ -939,7 +939,7 @@ export default function Profile() {
                     Delete Account
                   </h2>
                   <p className="font-body text-[0.85rem] text-white/45 leading-relaxed">
-                    This will permanently delete your Thunderbolt account, all saved addresses, and your order history. This action cannot be reversed.
+                    This will permanently delete your Thunderbold account, all saved addresses, and your order history. This action cannot be reversed.
                   </p>
                 </div>
               </div>

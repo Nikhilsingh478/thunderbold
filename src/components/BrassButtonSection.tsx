@@ -25,7 +25,7 @@ const BrassButtonSection = () => {
       <motion.div className="absolute inset-0" style={{ scale, opacity: imgOpacity }}>
         <img
           src={brassButton}
-          alt="Thunderbolt brass button — Original Denim Supply"
+          alt="Thunderbold premium denim button detail"
           width="1920"
           height="1080"
           className="w-full h-full object-cover object-center"

@@ -54,7 +54,7 @@ export default function BrandsSection() {
             {/* Desktop: full layout */}
             <p className="hidden md:block font-condensed font-semibold text-[0.74rem] tracking-[0.42em] uppercase"
               style={{ color: 'rgba(0,0,0,0.55)' }}>
-              Thunderbolt Curated
+              Thunderbold Curated
             </p>
             <h3 className="hidden md:block font-display text-2xl md:text-4xl tracking-[0.14em] uppercase leading-none"
               style={{ color: 'rgba(0,0,0,0.82)' }}>

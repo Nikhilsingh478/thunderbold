@@ -171,7 +171,7 @@ export default function ProductView() {
   const handleShareProduct = async () => {
     if (!product || isSharing) return;
     const shareUrl = window.location.href;
-    const title = product.name || 'Thunderbolt product';
+    const title = product.name || 'Thunderbold product';
     const text = `Check out ${title}`;
     setIsSharing(true);
     setShareMessage('');
@@ -323,7 +323,7 @@ export default function ProductView() {
                 Premium Collection
               </div>
               <h1 className="font-display text-2xl sm:text-4xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em] metal-text uppercase mb-3 sm:mb-4 leading-tight sm:leading-none">
-                {product?.name || 'Thunderbolt Jeans'}
+                {product?.name || 'Thunderbold Jeans'}
               </h1>
               <div className="mb-4">
                 {product?.price

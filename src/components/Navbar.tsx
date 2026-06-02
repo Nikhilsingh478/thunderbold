@@ -428,7 +428,7 @@ const Navbar = () => {
             >
               <div className="w-px h-12 bg-gradient-to-b from-brass-bright/50 to-transparent" />
               <span className="font-condensed text-[0.6rem] tracking-[0.4em] text-sv-mid uppercase">
-                Thunderbolt Brand World
+                Thunderbold Brand World
               </span>
             </motion.div>
           </motion.div>

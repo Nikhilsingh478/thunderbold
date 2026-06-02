@@ -89,7 +89,7 @@ const Legacy = () => (
         Connect on WhatsApp
       </a>
       <a 
-        href="https://wa.me/919561172681?text=Hi%2C%20I%E2%80%99m%20interested%20in%20partnering%20with%20Thunderbolt.%20Can%20you%20share%20details%20about%20retail%20collaboration%3F" 
+        href="https://wa.me/919561172681?text=Hi%2C%20I%E2%80%99m%20interested%20in%20partnering%20with%20Thunderbold.%20Can%20you%20share%20details%20about%20retail%20collaboration%3F" 
         target="_blank" 
         rel="noopener noreferrer"
         className="inline-flex items-center gap-4 font-condensed font-semibold text-[0.72rem] tracking-[0.18em] uppercase text-tb-white px-8 md:px-12 py-4 md:py-5 hover:border-brass/60 hover:text-brass-bright transition-colors cursor-pointer w-full md:w-auto justify-center" 

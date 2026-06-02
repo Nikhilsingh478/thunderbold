@@ -29,7 +29,7 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'Authentication & Account Security',
-        text: 'Thunderbolt uses Firebase Authentication — a secure, industry-standard service by Google — to manage your login and sessions. Your credentials are handled directly by Firebase and are never stored on our servers in plain text. All authentication sessions are encrypted and securely managed.',
+        text: 'Thunderbold uses Firebase Authentication — a secure, industry-standard service by Google — to manage your login and sessions. Your credentials are handled directly by Firebase and are never stored on our servers in plain text. All authentication sessions are encrypted and securely managed.',
       },
       {
         heading: 'How We Use Your Data',
@@ -37,7 +37,7 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'Third-Party Infrastructure',
-        text: 'To operate Thunderbolt securely and reliably, we use trusted third-party infrastructure providers including Google Firebase (authentication), MongoDB Atlas (database), and Cloudinary (media delivery). These services process data strictly to support platform operations and are bound by their own privacy and security standards.',
+        text: 'To operate Thunderbold securely and reliably, we use trusted third-party infrastructure providers including Google Firebase (authentication), MongoDB Atlas (database), and Cloudinary (media delivery). These services process data strictly to support platform operations and are bound by their own privacy and security standards.',
       },
       {
         heading: 'Data Security',
@@ -45,11 +45,11 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'Your Rights & Account Deletion',
-        text: 'You have the right to access, correct, or delete any personal data we hold. This includes the right to permanently delete your Thunderbolt account and all associated data at any time — directly from the Profile section of the app. Deletion requests are processed immediately upon confirmation. For other data requests, we respond within 7 business days.',
+        text: 'You have the right to access, correct, or delete any personal data we hold. This includes the right to permanently delete your Thunderbold account and all associated data at any time — directly from the Profile section of the app. Deletion requests are processed immediately upon confirmation. For other data requests, we respond within 7 business days.',
       },
       {
         heading: 'Contact for Privacy Queries',
-        text: 'For any privacy-related questions or requests, write to us at support@thunderboltdenim.com and we\'ll respond promptly.',
+        text: 'For any privacy-related questions or requests, write to us at support@thunderbolddenim.com and we\'ll respond promptly.',
         highlight: true,
       },
     ],
@@ -61,7 +61,7 @@ export const policyData: PolicyData[] = [
     sections: [
       {
         heading: 'Acceptance of Terms',
-        text: 'By accessing and placing an order through Thunderbolt, you confirm that you are in agreement with and bound by these terms. If you do not agree, please refrain from using our services.',
+        text: 'By accessing and placing an order through Thunderbold, you confirm that you are in agreement with and bound by these terms. If you do not agree, please refrain from using our services.',
       },
       {
         heading: 'Product Accuracy',
@@ -88,7 +88,7 @@ export const policyData: PolicyData[] = [
     sections: [
       {
         heading: 'Order Confirmation',
-        text: 'Every order placed on Thunderbolt goes through a manual verification step. Our team will reach out to you via a confirmation call before your order is processed. This gives you one final opportunity to review or amend your order.',
+        text: 'Every order placed on Thunderbold goes through a manual verification step. Our team will reach out to you via a confirmation call before your order is processed. This gives you one final opportunity to review or amend your order.',
       },
       {
         heading: 'Cancellation Before Confirmation',
@@ -105,7 +105,7 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'How to Raise a Request',
-        text: 'Contact us at support@thunderboltdenim.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
+        text: 'Contact us at support@thunderbolddenim.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
         highlight: true,
       },
     ],

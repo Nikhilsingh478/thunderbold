@@ -74,7 +74,7 @@ function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void 
 
         {/* Footer CTA */}
         <div className="px-7 py-4 border-t border-white/[0.08] bg-white/[0.02] flex items-center justify-between">
-          <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-white/30">Thunderbolt Denim · 2026</span>
+          <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-white/30">Thunderbold · 2026</span>
           <button
             onClick={onClose}
             className="font-condensed text-[0.7rem] tracking-[0.18em] uppercase text-brass hover:text-white transition-colors duration-200 flex items-center gap-1.5"
@@ -142,7 +142,7 @@ const SupportList = () => (
     ))}
     <li>
       <a
-        href="mailto:support@thunderboltdenim.com"
+        href="mailto:support@thunderbolddenim.com"
         className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
       >
         <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
@@ -173,10 +173,10 @@ const ContactBlock = () => (
     <div className="flex items-center gap-2.5">
       <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
       <a
-        href="mailto:support@thunderboltdenim.com"
+        href="mailto:support@thunderbolddenim.com"
         className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
       >
-        support@thunderboltdenim.com
+        support@thunderbolddenim.com
       </a>
     </div>
     <div className="flex items-center gap-2.5">
@@ -194,10 +194,10 @@ const ContactBlock = () => (
 const BrandBlock = () => (
   <div>
     <span className="font-display text-2xl tracking-[0.20em] text-white block mb-3">
-      THUNDER<span className="brass-text">⚡</span>BOLT
+      THUNDER<span className="brass-text">⚡</span>BOLD
     </span>
     <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-white/45 leading-relaxed max-w-[220px]">
-      Original Denim Supply.<br />Built for the Bold.
+      Curated Fashion & Streetwear.<br />Style Within Reach.
     </p>
 
     {/* Socials */}
@@ -351,17 +351,17 @@ export default function Footer() {
           {/* Bottom bar */}
           <div className="border-t border-white/[0.07] py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-white/30">
-              © 2026 Thunderbolt. All rights reserved.
+              © 2026 Thunderbold. All rights reserved.
             </span>
             <span className="font-condensed text-[0.62rem] tracking-[0.14em] uppercase text-white/20">
-              Original Denim Supply · Built for the Bold
+              Curated Fashion · Style Within Reach
             </span>
           </div>
 
         </div>
       </footer>
 
-      {/* THUNDERBOLT — Cinematic brand identity mark */}
+      {/* THUNDERBOLD — Cinematic brand identity mark */}
       <div
         className="relative overflow-hidden select-none pointer-events-none py-4 md:py-6"
         aria-hidden="true"
@@ -371,7 +371,7 @@ export default function Footer() {
           className="font-display text-center uppercase leading-none tracking-[0.04em] text-white/[0.045]"
           style={{ fontSize: 'clamp(4rem, 18vw, 18rem)' }}
         >
-          Thunderbolt
+          Thunderbold
         </p>
       </div>
 

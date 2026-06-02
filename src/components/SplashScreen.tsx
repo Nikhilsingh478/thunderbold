@@ -90,7 +90,7 @@ export default function SplashScreen() {
             animate={{ opacity: 1, letterSpacing: '0.32em' }}
             transition={{ delay: 0.18, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           >
-            THUNDERBOLT
+            THUNDERBOLD
           </motion.p>
 
           {/* Tagline */}
@@ -101,7 +101,7 @@ export default function SplashScreen() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
           >
-            PREMIUM DENIM
+            CURATED FASHION
           </motion.p>
 
           {/* Progress sweep bar — full-width amber gradient at bottom */}

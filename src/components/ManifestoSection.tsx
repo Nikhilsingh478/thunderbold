@@ -24,7 +24,7 @@ const ManifestoSection = () => {
         <motion.div {...reveal} className="relative overflow-hidden w-full h-[55vw] min-h-[260px] md:order-2 md:h-auto md:min-h-[580px]">
           <motion.img
             src={jeansProduct}
-            alt="Thunderbolt deep navy indigo jeans"
+            alt="Thunderbold deep navy indigo jeans"
             width="1024"
             height="842"
             className="w-full h-[115%] object-cover md:absolute md:inset-0 md:w-full md:h-full md:object-[center_top]"
@@ -61,15 +61,15 @@ const ManifestoSection = () => {
             FORGED<br />FOR THE<br /><span className="brass-text">BOLD</span>
           </h2>
           <div className="font-body font-light text-sv-mid max-w-[440px] md:max-w-[420px] mt-7 md:mt-6 space-y-4" style={{ fontSize: '1.04rem', lineHeight: 1.82 }}>
-            <p>We build premium denim for those who expect more from their everyday wear. Thunderbolt jeans are engineered to handle daily use while maintaining a clean, modern look.</p>
-            <p>Constructed with advanced stretch fabric, they move with you and retain their shape over time. The right balance of immediate fit and long-term durability.</p>
-            <p>No shortcuts. No compromises. Just reliable, well-built jeans designed for work, travel, and everyday wear.</p>
+            <p>We curate premium denim for those who expect more from their everyday wear. Every piece in our collection is handpicked to handle daily use while maintaining a clean, modern look.</p>
+            <p>Stretch fabric that moves with you, retains its shape, and holds its colour. The right balance of everyday fit and long-term quality.</p>
+            <p>No manufactured hype. No inflated pricing. Just well-made denim, honestly sourced and curated for people who actually wear their clothes.</p>
           </div>
 
           {/* Quote card */}
           <div className="bg-surface border-l-2 border-brass/40 pl-5 md:pl-6 py-4 md:py-5 mt-8">
             <blockquote className="font-serif font-light text-tb-white mb-3 tracking-wide" style={{ fontSize: 'clamp(0.95rem, 1.8vw, 1.12rem)', lineHeight: 1.62 }}>
-              &ldquo;Engineered to handle daily wear while keeping a sharp, modern look.&rdquo;
+              &ldquo;Handpicked to handle daily wear while keeping a sharp, modern look.&rdquo;
             </blockquote>
             <cite className="font-condensed not-italic font-semibold text-[0.64rem] md:text-[0.66rem] tracking-[0.22em] uppercase text-brass block">
               — Premium Stretch Denim

@@ -47,7 +47,7 @@ const NotFound = () => {
           </h2>
           
           <p className="font-serif font-light text-sv text-base md:text-lg mb-12 leading-relaxed tracking-wide">
-            The seam you're looking for seems to have frayed. This page doesn't exist in the Thunderbolt collection.
+            The seam you're looking for seems to have frayed. This page doesn't exist in the Thunderbold collection.
           </p>
           
           <button

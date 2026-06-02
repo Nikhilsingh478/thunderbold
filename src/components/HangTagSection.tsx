@@ -33,7 +33,7 @@ const HangTagSection = () => (
           >
             <img
               src={hangTag}
-              alt="Thunderbolt Advantage hang tag"
+              alt="Thunderbold quality hang tag"
               width="668"
               height="1536"
               className="w-full drop-shadow-2xl"
@@ -58,7 +58,7 @@ const HangTagSection = () => (
           <motion.div {...reveal} className="text-center md:text-left mb-12 md:mb-8">
             <div className="font-condensed font-semibold uppercase text-sv-mid flex items-center justify-center md:justify-start gap-3 mb-6" style={{ fontSize: '0.66rem', letterSpacing: '0.38em' }}>
               <span className="w-4 h-px bg-brass-dim inline-block" />
-              The Thunderbolt Advantage
+              The Thunderbold Standard
               <span className="w-4 h-px bg-brass-dim inline-block md:hidden" />
             </div>
             <h2 className="font-display text-tb-white" style={{ fontSize: 'clamp(2.8rem, 10vw, 5.2rem)', lineHeight: 0.92 }}>
