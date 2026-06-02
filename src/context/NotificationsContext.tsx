@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { requestAndRegisterToken } from '../lib/firebaseMessaging';
+import { requestAndRegisterToken, initMessaging } from '../lib/firebaseMessaging';
+import { onMessage } from 'firebase/messaging';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'notifPromptShown';
 
@@ -53,7 +55,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     const sendToken = async (token: string) => {
       try {
         const idToken = await user.getIdToken();
-        await fetch('/api/users/fcm-token', {
+        const response = await fetch('/api/users/fcm-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -61,7 +63,16 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           },
           body: JSON.stringify({ token }),
         });
-      } catch {}
+        
+        if (response.ok) {
+          console.log('[FCM] Token stored in database successfully.');
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          console.error('[FCM] Backend failed to store token:', errData.error || response.statusText);
+        }
+      } catch (err) {
+        console.error('[FCM] Error storing token on backend:', err);
+      }
     };
 
     await requestAndRegisterToken(sendToken);
@@ -70,6 +81,60 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY, 'true');
     } catch {}
     setShouldPromptState(false);
+  }, [user]);
+
+  // Auto-register/refresh FCM token on login/startup if permission is already granted
+  useEffect(() => {
+    if (user && browserSupported() && Notification.permission === 'granted') {
+      console.log('[FCM] Notification permission is already granted. Auto-registering/refreshing token...');
+      registerToken();
+    }
+  }, [user, registerToken]);
+
+  // Listen for foreground notifications
+  useEffect(() => {
+    if (!user) return;
+
+    let unsubscribe: (() => void) | null = null;
+
+    const setupForegroundListener = async () => {
+      try {
+        const messaging = await initMessaging();
+        if (!messaging) return;
+
+        console.log('[FCM] Registering foreground notification listener.');
+        unsubscribe = onMessage(messaging, (payload) => {
+          console.log('[FCM] Foreground notification received:', payload);
+          const { title, body } = payload.notification || {};
+          const toastTitle = title || 'Thunderbold';
+          const toastBody = body || '';
+          const data = payload.data || {};
+
+          // Trigger a premium custom toast notification
+          toast(toastTitle, {
+            description: toastBody,
+            duration: 8000,
+            action: data.orderId ? {
+              label: 'View Order',
+              onClick: () => {
+                window.location.href = `/orders?orderId=${data.orderId}`;
+              }
+            } : undefined,
+          });
+        });
+      } catch (err) {
+        console.error('[FCM] Error setting up foreground message listener:', err);
+      }
+    };
+
+    setupForegroundListener();
+
+    return () => {
+      if (unsubscribe) {
+        console.log('[FCM] Unsubscribing foreground notification listener.');
+        unsubscribe();
+      }
+    };
   }, [user]);
 
   return (

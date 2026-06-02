@@ -13,7 +13,7 @@ import { getDb } from '../_lib/mongodb.js';
 import { verifyFirebaseToken } from '../_lib/firebaseAdmin.js';
 import { getAdminMessaging } from '../_lib/firebaseAdmin.js';
 import { isAdmin } from '../_lib/adminHelper.js';
-import { sendMulticast } from '../_lib/fcm.js';
+import { sendMulticast, sendToUser } from '../_lib/fcm.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
   const sub = (req.query && req.query.subpath) || (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '').split('/').pop() || '';
 
-  if (sub !== 'broadcast') {
+  if (sub !== 'broadcast' && sub !== 'test-send') {
     return res.status(404).json({ error: 'Not found' });
   }
 
@@ -53,11 +53,34 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  if (sub === 'test-send') {
+    const userEmail = decoded.email;
+    if (!userEmail) {
+      return res.status(400).json({ error: 'User email not found in token' });
+    }
+    
+    console.log(`[notifications/test-send] Triggering test send for user: ${userEmail}`);
+    try {
+      const result = await sendToUser(db, userEmail, {
+        title: 'Test Notification ⚡',
+        body: 'FCM delivery from Thunderbolt Denim is operational!',
+        data: { type: 'test_send' }
+      });
+      console.log(`[notifications/test-send] Result for ${userEmail}:`, result);
+      return res.status(200).json(result);
+    } catch (err) {
+      console.error(`[notifications/test-send] Error sending to ${userEmail}:`, err.message);
+      return res.status(500).json({ error: 'Failed to send test notification: ' + err.message });
+    }
+  }
+
+  // Admin broadcast checks
   if (!(await isAdmin(decoded.email, db))) {
     return res.status(403).json({ error: 'Admin access required' });
   }
 
   const messaging = getAdminMessaging();
+
   if (!messaging) {
     return res.status(503).json({ error: 'Messaging service unavailable' });
   }
