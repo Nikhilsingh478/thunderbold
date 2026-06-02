@@ -1,1313 +1,678 @@
-# Thunderbolt — Hyperdetailed Technical Documentation
+# Thunderbold — Master Technical Documentation
+
+> Production-grade e-commerce PWA for curated Indian streetwear & fashion.
+> Stack: React 18 + Vite · Express · MongoDB Atlas · Firebase Auth · Cloudinary · Workbox PWA
 
 ---
 
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
-2. [Technology Stack](#2-technology-stack)
-3. [Environment Variables & Secrets](#3-environment-variables--secrets)
-4. [Repository Structure](#4-repository-structure)
-5. [Running the App](#5-running-the-app)
-6. [Frontend Architecture](#6-frontend-architecture)
-   - 6.1 [Entry Point & Provider Tree](#61-entry-point--provider-tree)
-   - 6.2 [Routing & Code Splitting](#62-routing--code-splitting)
-   - 6.3 [AuthContext](#63-authcontext)
-   - 6.4 [CartContext](#64-cartcontext)
-   - 6.5 [WishlistContext](#65-wishlistcontext)
-   - 6.6 [Pages](#66-pages)
-   - 6.7 [Components](#67-components)
-   - 6.8 [Pricing System](#68-pricing-system)
-   - 6.9 [Size System](#69-size-system)
-   - 6.10 [Orders Cache](#610-orders-cache)
-7. [Backend Architecture](#7-backend-architecture)
-   - 7.1 [Express Server (server.js)](#71-express-server-serverjs)
-   - 7.2 [Shared Helpers (api/_lib/)](#72-shared-helpers-api_lib)
-   - 7.3 [API Handler Reference](#73-api-handler-reference)
-8. [Data Models (MongoDB)](#8-data-models-mongodb)
-9. [Authentication Flow](#9-authentication-flow)
-10. [Order Lifecycle](#10-order-lifecycle)
-11. [Admin Panel](#11-admin-panel)
-12. [Analytics Dashboard](#12-analytics-dashboard)
-13. [Brand System](#13-brand-system)
-14. [Homepage Layout](#14-homepage-layout)
+2. [Repository Structure](#2-repository-structure)
+3. [Environment & Secrets](#3-environment--secrets)
+4. [Frontend Architecture](#4-frontend-architecture)
+5. [Backend Architecture](#5-backend-architecture)
+6. [Authentication System](#6-authentication-system)
+7. [Data Layer — API Reference](#7-data-layer--api-reference)
+8. [Order Management System](#8-order-management-system)
+9. [Cart & Wishlist](#9-cart--wishlist)
+10. [Review System](#10-review-system)
+11. [Admin Panel & Analytics](#11-admin-panel--analytics)
+12. [PWA Configuration](#12-pwa-configuration)
+13. [Performance Architecture](#13-performance-architecture)
+14. [Security Model](#14-security-model)
 15. [Deployment](#15-deployment)
-16. [Security Notes](#16-security-notes)
-17. [Known Constraints & Design Decisions](#17-known-constraints--design-decisions)
+16. [Future Roadmap](#16-future-roadmap)
 
 ---
 
 ## 1. Project Overview
 
-**Thunderbolt** is a full-stack e-commerce storefront for a denim and apparel brand. It is built as a single-page React application backed by a Node.js/Express API, with Firebase Authentication for identity and MongoDB Atlas as the primary database.
+**Thunderbold** is a mobile-first Progressive Web App (PWA) for a curated Indian fashion brand selling denim, shirts, t-shirts, kurtas, and outfits. It is designed to feel like a native Android app — installable, offline-capable, and fast on low-bandwidth connections.
 
-The codebase is designed to run identically in two environments:
+### Key Characteristics
 
-| Environment | Frontend server | API server | How API is reached |
-|---|---|---|---|
-| **Replit / local dev** | Vite on port 5000 | Express on port 3001 | Vite proxy forwards `/api/*` to Express |
-| **Vercel (production)** | Static HTML/JS build served by Vercel CDN | Serverless functions (one file = one function) | Vercel routes `/api/*` directly to the matching file |
-
-The same handler files in `/api/` run in both environments without modification. The only environment-specific logic is sub-route resolution inside consolidated handlers (explained in section 7.3).
-
----
-
-## 2. Technology Stack
-
-### Frontend
-| Dependency | Version / Role |
-|---|---|
-| React | 18 — UI library |
-| Vite | 5 — dev server + build tool (port 5000) |
-| TypeScript | Full type coverage across all `.tsx` / `.ts` files |
-| Tailwind CSS | Utility-first styling, custom design tokens |
-| shadcn/ui | Accessible component primitives (Dialog, Toast, etc.) |
-| React Router v6 | Client-side routing, `<Suspense>` boundaries |
-| TanStack Query | Server state management, `staleTime: 60s`, `retry: 1` |
-| Framer Motion | Page/component animations |
-| Recharts | Admin analytics charts (area + bar) |
-| Embla Carousel | Product image slider on product detail page |
-| Sonner | Toast notifications |
-| Lucide React | Icon set |
-
-### Backend
-| Dependency | Role |
-|---|---|
-| Node.js (ESM) | Runtime; all files use `import`/`export` syntax |
-| Express 4 | Local dev HTTP server (port 3001) |
-| `mongodb` (driver) | Direct MongoDB Atlas connection — no ORM |
-| `firebase-admin` | Server-side Firebase ID token verification |
-| `firebase/auth` (client SDK) | Client-side sign-in flows |
-
-### Infrastructure
-| Service | Role |
-|---|---|
-| MongoDB Atlas | Primary database (`thunderbold` database name) |
-| Firebase Authentication | User identity (email/password + Google OAuth) |
-| Vercel | Production hosting + serverless functions |
-| Replit | Development environment |
+| Attribute          | Value                                                       |
+|--------------------|-------------------------------------------------------------|
+| Brand              | Thunderbold                                                 |
+| Domain             | thunderbolddenim.com                                        |
+| Support email      | support@thunderbolddenim.com                                |
+| Instagram          | @thunderbold.shop                                           |
+| Target market      | India (INR pricing, 6-digit pincodes, 10-digit phones)      |
+| Payment model      | Cash on Delivery (COD) only — no payment gateway            |
+| Product sections   | denim · shirts · t-shirts · kurtas · outfits · live-sale    |
+| PWA install        | Yes — Play Store TWA-ready, desktop window-controls-overlay |
 
 ---
 
-## 3. Environment Variables & Secrets
-
-All secrets are stored as Replit Secrets (never committed to the repository).
-
-### Required for the backend to function
-
-| Variable | Where used | What happens if missing |
-|---|---|---|
-| `MONGO_URI` | `api/_lib/mongodb.js` — `new MongoClient(...)` | All data endpoints throw `500 Database unavailable` immediately. No silent fallback. |
-| `FIREBASE_SERVICE_ACCOUNT` | `api/_lib/firebaseAdmin.js` — `cert(JSON.parse(...))` | All authenticated endpoints throw `503`. All write/admin routes are blocked. |
-
-### Required for the frontend to function
-
-| Variable | Where used |
-|---|---|
-| `VITE_FIREBASE_API_KEY` | `src/lib/firebase.ts` — `initializeApp` |
-| `VITE_FIREBASE_AUTH_DOMAIN` | `src/lib/firebase.ts` |
-| `VITE_FIREBASE_PROJECT_ID` | `src/lib/firebase.ts` |
-| `VITE_FIREBASE_STORAGE_BUCKET` | `src/lib/firebase.ts` |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `src/lib/firebase.ts` |
-| `VITE_FIREBASE_APP_ID` | `src/lib/firebase.ts` |
-
-`VITE_` prefix means Vite inlines these into the compiled JS bundle. They are public-facing values (Firebase client config) and safe to expose in a browser.
-
----
-
-## 4. Repository Structure
+## 2. Repository Structure
 
 ```
-thunderbolt/
-├── server.js                     # Express server — mounts all API handlers
-├── vite.config.ts                # Vite config with /api proxy to :3001
-├── vercel.json                   # Production rewrites for Vercel serverless
-├── package.json
-│
-├── api/                          # API handlers (Express routes + Vercel functions)
-│   ├── admin.js                  # GET /api/admin/analytics
-│   ├── address/index.js          # GET/POST/PUT/DELETE /api/address
-│   ├── brands/index.js           # GET/POST/PUT/DELETE /api/brands
-│   ├── cart/index.js             # GET/POST/DELETE /api/cart
-│   ├── categories/index.js       # GET/POST/PUT/DELETE /api/categories
-│   ├── orders/index.js           # GET + POST/create + PUT/cancel + PATCH|DELETE/manage
-│   ├── products/
-│   │   ├── index.js              # GET/POST/PUT/DELETE /api/products
-│   │   └── [id].js              # GET /api/products/:id
-│   ├── reviews/index.js          # GET/POST/DELETE /api/reviews
-│   ├── users/index.js            # POST /api/users/create + profile/address sub-routes
-│   └── wishlist/index.js         # GET/POST/DELETE /api/wishlist
-│   └── _lib/                     # Shared backend utilities
-│       ├── adminHelper.js        # isAdmin(email, db)
-│       ├── firebaseAdmin.js      # verifyFirebaseToken(token)
-│       ├── mongodb.js            # getDb() — cached MongoClient
-│       ├── rateLimit.js          # isRateLimited(req) — in-memory IP limiter
-│       ├── response.js           # Standard JSON response shape helpers
-│       └── validator.js          # validatePhone, validatePincode, validateAddress
-│
-└── src/                          # React frontend
-    ├── App.tsx                   # Root — provider tree
-    ├── AppContent.tsx            # Router, modal controller, lazy-loaded pages
-    ├── context/
-    │   ├── AuthContext.tsx        # Firebase auth state + DB sync
-    │   ├── CartContext.tsx        # Cart state — localStorage + /api/cart sync
-    │   └── WishlistContext.tsx   # Wishlist state — localStorage + /api/wishlist sync
-    ├── pages/
-    │   ├── Index.tsx             # Homepage
-    │   ├── About.tsx
-    │   ├── Admin.tsx             # Full admin panel (1,700+ lines)
-    │   ├── BrandView.tsx         # /brand/:brandId — filtered product grid
-    │   ├── BrandsPage.tsx        # /brands — all brands listing
-    │   ├── Cart.tsx
-    │   ├── CategoryView.tsx      # /category/:categoryId
-    │   ├── Checkout.tsx
-    │   ├── DealsPage.tsx         # /deals/:dealKey
-    │   ├── NotFound.tsx
-    │   ├── Orders.tsx
-    │   ├── ProductView.tsx       # /product/:productId — detail page
-    │   ├── Profile.tsx
-    │   └── Wishlist.tsx
-    ├── components/
-    │   ├── Analytics/
-    │   │   └── AnalyticsTab.tsx  # Admin analytics dashboard component
-    │   ├── auth/
-    │   │   └── LoginModal.tsx
-    │   ├── products/
-    │   │   └── ProductGrid.tsx   # Reusable product grid
-    │   ├── promo/
-    │   │   ├── PromoBanner.tsx   # Side-by-side static promo images
-    │   │   └── promoSlides.ts    # Promo image config
-    │   ├── reviews/
-    │   │   ├── LightningRating.tsx
-    │   │   └── ProductReviewsSection.tsx
-    │   ├── AnnouncementBar.tsx
-    │   ├── BrandsSection.tsx
-    │   ├── CategoriesSection.tsx
-    │   ├── CustomCursor.tsx
-    │   ├── Footer.tsx
-    │   ├── HeroBanner.tsx
-    │   ├── LiveSaleSection.tsx
-    │   ├── Navbar.tsx
-    │   ├── PriceDisplay.tsx      # Price + crossed-out MRP + discount badge
-    │   └── ScrollProgress.tsx
-    └── lib/
-        ├── cloudinary.ts         # optimizeCloudinaryUrl() + IMG_SIZES presets
-        ├── firebase.ts           # Firebase client app init
-        ├── modalController.ts    # PubSub for login modal open/close events
-        ├── ordersCache.ts        # In-memory orders cache + idle prefetch
-        ├── pricing.ts            # computePrice() — dynamic discount calculation
-        ├── products.ts           # fetchProductById()
-        ├── requireAuth.ts        # requireAuth() HOF — deferred action pattern
-        └── storage.ts            # localStorage helpers for cart/wishlist
+thunderbold/
+├── api/                        # Express/Vercel serverless handlers
+│   ├── _lib/                   # Shared utilities
+│   │   ├── mongodb.js          # Connection pool + index bootstrap
+│   │   ├── firebaseAdmin.js    # Token verification (server-side)
+│   │   ├── adminHelper.js      # Admin role resolution
+│   │   ├── rateLimit.js        # In-memory IP rate limiter
+│   │   ├── response.js         # Standardised response helpers
+│   │   └── validator.js        # Address / order / phone validators
+│   ├── orders/index.js         # Orders CRUD + stock management
+│   ├── users/index.js          # User profile + address book
+│   ├── products/index.js       # Product catalogue (public read, admin write)
+│   ├── products/[id].js        # Single product by MongoDB ObjectId
+│   ├── cart/index.js           # Per-user cart (server-synced)
+│   ├── wishlist/index.js       # Per-user wishlist
+│   ├── reviews/index.js        # Verified-purchase review system
+│   ├── categories/index.js     # Category management
+│   ├── brands/index.js         # Brand management
+│   ├── address/index.js        # Address management
+│   ├── slider.js               # Homepage banner slider data
+│   └── admin.js                # Analytics dashboard endpoint
+├── src/
+│   ├── AppContent.tsx          # BrowserRouter + route definitions
+│   ├── App.tsx                 # Root provider tree
+│   ├── main.tsx                # Vite entry point + PWA SW registration
+│   ├── context/
+│   │   ├── AuthContext.tsx     # Firebase auth state + DB sync
+│   │   ├── CartContext.tsx     # Cart state with server sync
+│   │   └── WishlistContext.tsx # Wishlist state with server sync
+│   ├── lib/
+│   │   ├── firebase.ts         # Firebase client SDK initialisation
+│   │   ├── storage.ts          # LocalStorage cart/wishlist fallback
+│   │   ├── ordersCache.ts      # Background prefetch + TanStack cache warm
+│   │   ├── requireAuth.ts      # Pending action gating behind auth
+│   │   └── modalController.ts  # Event bus for login modal
+│   ├── pages/                  # Route-level page components
+│   ├── components/             # Shared UI components
+│   └── utils/                  # Formatting and helper utilities
+├── public/
+│   ├── icons/                  # PWA icon set (72px → 512px + maskable)
+│   ├── screenshots/            # PWA install screenshots (narrow + wide)
+│   ├── offline.html            # Custom offline fallback page
+│   ├── sitemap.xml             # Static sitemap for search indexing
+│   └── robots.txt              # Crawler rules
+├── server.js                   # Express server (port 3001) — dev + production
+├── vite.config.ts              # Vite + VitePWA plugin + /api proxy config
+├── index.html                  # Entry HTML (SEO meta, JSON-LD schema)
+├── tailwind.config.ts          # Tailwind + custom design tokens
+└── package.json
 ```
 
 ---
 
-## 5. Running the App
+## 3. Environment & Secrets
 
-```bash
-npm run dev
-```
+All secrets are managed as environment variables. **Never commit these values.**
 
-This runs two processes concurrently (via `concurrently`):
+| Variable                            | Used By                        | Description                                     |
+|-------------------------------------|--------------------------------|-------------------------------------------------|
+| `MONGO_URI`                         | `api/_lib/mongodb.js`          | MongoDB Atlas connection string                 |
+| `FIREBASE_SERVICE_ACCOUNT`          | `api/_lib/firebaseAdmin.js`    | Stringified Firebase service account JSON       |
+| `VITE_FIREBASE_API_KEY`             | `src/lib/firebase.ts`          | Firebase public API key                         |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | `src/lib/firebase.ts`          | Firebase auth domain                            |
+| `VITE_FIREBASE_PROJECT_ID`          | `src/lib/firebase.ts`          | Firebase project ID                             |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | `src/lib/firebase.ts`          | Firebase storage bucket                         |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `src/lib/firebase.ts`          | Firebase messaging sender ID                    |
+| `VITE_FIREBASE_APP_ID`              | `src/lib/firebase.ts`          | Firebase app ID                                 |
 
-1. `node server.js` — starts Express on port 3001
-2. `vite` — starts Vite dev server on port 5000
-
-Vite's `server.proxy` config forwards all requests matching `/api/*` to `http://localhost:3001`. The frontend always uses relative URLs like `/api/products`, so they route correctly in both environments.
-
-**Workflow name in Replit:** `Start application`
-
-After any change to a file inside `api/` or `server.js`, the Express server must be restarted (restart the workflow) because Node does not hot-reload backend files.
-
-Vite hot-reloads all frontend changes automatically without a restart.
+> `VITE_*` variables are embedded into the frontend bundle at build time by Vite. Firebase client SDK keys are designed to be public.
+>
+> `FIREBASE_SERVICE_ACCOUNT` and `MONGO_URI` are server-only secrets and must **never** carry the `VITE_` prefix.
 
 ---
 
-## 6. Frontend Architecture
+## 4. Frontend Architecture
 
-### 6.1 Entry Point & Provider Tree
+### 4.1 Tech Stack
 
-`src/main.tsx` renders `<App />`.
+| Library           | Role                                                    |
+|-------------------|---------------------------------------------------------|
+| React 18          | UI rendering                                            |
+| Vite + SWC        | Build toolchain (SWC is faster than Babel)              |
+| Tailwind CSS 3    | Utility-first styling                                   |
+| TanStack Query 5  | Server state, caching, background refetch               |
+| React Router DOM 6| Client-side routing                                     |
+| Framer Motion     | Animations and page transitions                         |
+| Lucide React      | Icon set                                                |
+| Sonner            | Toast notifications                                     |
+| vite-plugin-pwa   | Workbox service worker generation                       |
 
-`src/App.tsx` wraps the entire app in a strict provider hierarchy — each outer context must be available to all inner ones:
+### 4.2 Provider Tree
 
 ```
-AuthProvider                  ← Firebase user state
-  CartProvider                ← needs useAuth() for DB sync
-    WishlistProvider          ← needs useAuth() for DB sync
-      QueryClientProvider     ← TanStack Query (staleTime: 60s, retry: 1)
-        TooltipProvider       ← shadcn/ui tooltip context
-          AppContent          ← router + modal controller
+<QueryClientProvider>          ← TanStack Query global client
+  <AuthProvider>               ← Firebase auth state + DB sync on login
+    <CartProvider>             ← Cart state (server-synced + localStorage)
+      <WishlistProvider>       ← Wishlist state (server-synced + localStorage)
+        <BrowserRouter>
+          <AppContent />       ← Routes + login modal + splash screen
+        </BrowserRouter>
+      </WishlistProvider>
+    </CartProvider>
+  </AuthProvider>
+</QueryClientProvider>
 ```
 
-`QueryClient` is instantiated once at the module level (outside the component) so it is not recreated on re-render.
-
-### 6.2 Routing & Code Splitting
-
-`src/AppContent.tsx` owns the `<BrowserRouter>` and all `<Routes>`.
-
-**Eagerly loaded pages** (small, needed on first paint):
-- `Index`, `NotFound`, `About`, `CategoryView`
-
-**Lazy loaded pages** (large; each compiles to its own JS chunk):
-- `ProductView`, `Checkout`, `Cart`, `Wishlist`, `Admin`, `Orders`, `Profile`, `DealsPage`, `BrandsPage`, `BrandView`
-
-All lazy routes are wrapped in a single `<Suspense fallback={<PageLoader />}>`. `PageLoader` renders a centered spinner on the `bg-void` background.
-
-**Route table:**
-
-| Path | Component | Notes |
-|---|---|---|
-| `/` | `Index` | Homepage |
-| `/about` | `About` | |
-| `/category/:categoryId` | `CategoryView` | |
-| `/deals/:dealKey` | `DealsPage` | |
-| `/product/:productId` | `ProductView` | |
-| `/cart` | `Cart` | |
-| `/wishlist` | `Wishlist` | |
-| `/orders` | `Orders` | Requires auth |
-| `/checkout` | `Checkout` | Requires auth |
-| `/brands` | `BrandsPage` | |
-| `/brand/:brandId` | `BrandView` | |
-| `/admin` | `Admin` | Requires admin email |
-| `/profile` | `Profile` | Requires auth |
-| `*` | `NotFound` | Catch-all |
-
-**Delayed login prompt:** If the user is not signed in, a `setTimeout` of 10 seconds fires `modalController.openModal('delayedPrompt')`, which opens the `<LoginModal>` with an informational (non-blocking) message. This only shows once per browser session (stored in `sessionStorage`).
-
-**Login modal sources:** The modal tracks its open source (`requireAuth` | `delayedPrompt` | `manual`) to render the correct heading/copy inside `LoginModal`.
-
-### 6.3 AuthContext
-
-**File:** `src/context/AuthContext.tsx`
-
-Wraps Firebase Authentication. Exposes:
-
-| Method/Value | Type | Description |
-|---|---|---|
-| `user` | `User \| null` | Current Firebase user (null while loading or signed out) |
-| `loading` | `boolean` | True during initial `onAuthStateChanged` resolution |
-| `loginWithGoogle()` | `() => Promise<User>` | `signInWithPopup` + DB sync |
-| `loginWithEmail(email, password)` | `() => Promise<User>` | `signInWithEmailAndPassword` + DB sync |
-| `signupWithEmail(email, password)` | `() => Promise<User>` | `createUserWithEmailAndPassword` + DB sync |
-| `logout()` | `() => Promise<void>` | `firebaseSignOut` |
-
-**DB sync on login:** Every successful sign-in calls `POST /api/users` with `{ uid, email, name }`. This upserts the user document in MongoDB. Failure is non-fatal (logged to console only).
-
-**Orders cache lifecycle:**
-- On sign-in: `schedulePrefetchOrders(user)` fires during browser idle time to warm the orders cache before the user navigates to `/orders`.
-- On sign-out: `clearOrdersCache()` wipes the in-memory cache so stale data is never shown.
-
-### 6.4 CartContext
-
-**File:** `src/context/CartContext.tsx`
-
-Cart state is stored in `localStorage` (key: `'cart'`) and optionally synced to `/api/cart` for logged-in users. The cart is keyed by `productId + size` — the same product in different sizes is treated as separate line items.
-
-**State shape:**
-```ts
-{
-  items: CartItem[];   // { productId, name, price, image, size, quantity }
-  loading: boolean;
-  error: string | null;
-}
-```
-
-**Reducer actions:** `SET_LOADING`, `SET_ERROR`, `SET_CART`, `ADD_ITEM`, `REMOVE_ITEM`, `UPDATE_QUANTITY`, `CLEAR_CART`.
-
-**Key behaviours:**
-- `addToCart()` increments quantity if the same `productId + size` already exists.
-- `removeFromCart(productId, size)` — keyed by both productId and size.
-- `syncToDb()` — fire-and-forget `POST /api/cart`. Failures are silent (`.catch(() => {})`).
-- Cart is loaded from `localStorage` first (instant), then synced to DB on user state change.
-- Listens to `add-to-cart-from-wishlist` window event (dispatched by `WishlistContext.moveToCart()`).
-
-**Exposed methods:**
-```ts
-addToCart(item, quantity?)
-removeFromCart(productId, size)
-updateQuantity(productId, size, quantity)
-clearCartData()
-getTotalItems() → number
-getTotalPrice() → number
-isInCart(productId, size) → boolean
-getItemQuantity(productId, size) → number
-```
-
-### 6.5 WishlistContext
-
-**File:** `src/context/WishlistContext.tsx`
-
-Wishlist is **per product** (not per product+size). A product is either wishlisted or not.
-
-**Persistence strategy:**
-- **Guest users:** stored in `localStorage` via `storage.ts` helpers.
-- **Logged-in users:** fetched from and saved to `/api/wishlist` via Firebase token.
-- **On login:** local wishlist is merged with the DB wishlist, saved back, then cleared from `localStorage`.
-
-**Exposed methods:**
-```ts
-addToWishlist(item: WishlistItem)
-removeFromWishlist(productId)
-toggleWishlist(item)              // add if absent, remove if present
-clearWishlistData()
-isInWishlist(productId) → boolean
-getWishlistCount() → number
-moveToCart(productId)             // dispatches 'add-to-cart-from-wishlist' event, then removes
-```
-
-`moveToCart()` dispatches a window `CustomEvent` with `size: 'M'` as a default size (since wishlist items have no size). CartContext listens for this event.
-
-### 6.6 Pages
-
-#### ProductView (`/product/:productId`)
-The most complex store-facing page.
-
-**Image gallery:** Embla Carousel with loop + center alignment. Desktop shows thumbnail strip below; mobile shows dot indicators with the active dot expanding to a wider pill.
-
-**Size selector:** Dynamic — reads sizes from the product's actual `sizeStock` keys using `getSizesFromProduct()`. Jeans products show `28 / 30 / 32 / 34 / 36`; apparel products show `S / M / L / XL / XXL`. Out-of-stock sizes are disabled with a strikethrough label and `OOS` sublabel.
-
-**Stock logic:**
-- `isOutOfStock` — total `stock === 0`
-- `isLowStock` — `0 < stock <= 5`
-- `isSizeOos(size)` — `sizeStock[size] <= 0`
-- `effectiveOutOfStock` — true if total OOS **or** the selected size is OOS. This controls all button disabled states.
-
-**Action buttons:**
-- `Add to Cart` — requires a size to be selected and the item not effectively OOS.
-- Wishlist heart — toggles wishlist regardless of size selection.
-- Share — uses `navigator.share` on mobile; falls back to `navigator.clipboard.writeText`; falls back to `document.execCommand('copy')`.
-- `Buy Now` — calls `requireAuth()` which redirects to `/checkout` via router state if the user is signed in, or opens the login modal first.
-
-**Product Highlights:** An optional grid showing structured metadata fields: Color, Length, Prints & Pattern, Waist Rise, Shade, Length in Inches. Only rendered when at least one field has a non-empty value.
-
-**Description:** Clamped to 4 lines with a "Read More" toggle if the description is longer than 200 characters.
-
-#### Admin (`/admin`)
-See full section [11. Admin Panel](#11-admin-panel).
-
-### 6.7 Components
-
-#### `PriceDisplay`
-**File:** `src/components/PriceDisplay.tsx`
-
-Props:
-```ts
-price: number | string | undefined        // selling price
-purchasePrice?: number | string           // MRP (crossed out)
-size?: 'sm' | 'md' | 'lg'               // controls font size
-showSavings?: boolean                     // shows "You save ₹X" line
-```
-
-Internally calls `computePrice()`. Renders:
-- Selling price in large bold condensed font (₹ with Indian locale formatting)
-- If `hasDiscount`: crossed-out MRP + a red `X% off` badge
-- If `hasDiscount && showSavings`: green "You save ₹X" line below
-
-#### `ProductGrid`
-**File:** `src/components/products/ProductGrid.tsx`
-
-Reusable grid used by `CategoryView`, `DealsPage`, and `BrandView`. Accepts an array of products and renders them in a responsive CSS grid. Each card uses `PriceDisplay`.
-
-#### `BrandsSection`
-**File:** `src/components/BrandsSection.tsx`
-
-Full-width edge-to-edge banner on the homepage. Shows brand logos/names, links to `/brands`. Zero horizontal padding so it bleeds to the screen edge on mobile.
-
-#### `CategoriesSection`
-**File:** `src/components/CategoriesSection.tsx`
-
-Renders the multi-section collection grid:
-1. Denim Collection grid
-2. `PromoBanner` (two side-by-side static images)
-3. T-Shirt Collection grid (only when tshirt categories exist)
-4. Kurta Collection grid — always visible; shows an empty state prompt when no kurta products exist yet.
-
-#### `AnalyticsTab`
-**File:** `src/components/Analytics/AnalyticsTab.tsx`
-
-See section [12. Analytics Dashboard](#12-analytics-dashboard).
-
-### 6.8 Pricing System
-
-**File:** `src/lib/pricing.ts`
-
-```ts
-function computePrice(sellingPrice, purchasePrice?): PriceInfo
-```
-
-**Rules:**
-- Both inputs accept `number | string | undefined`. Strings are cleaned with `replace(/[^0-9.]/g, '')`.
-- Both values are rounded to the nearest integer (no decimal prices in the UI).
-- `hasDiscount` is only true when `purchasePrice > sellingPrice`.
-- `discountPct = Math.round((savings / purchasePrice) * 100)`
-- If `sellingPrice` is 0 or invalid, returns a zero-value struct with `hasDiscount: false`.
-
-**Return type:**
-```ts
-interface PriceInfo {
-  sellingPrice: number;
-  purchasePrice: number;   // equals sellingPrice when no discount
-  discountPct: number;     // 0 when no discount
-  savings: number;         // 0 when no discount
-  hasDiscount: boolean;
-}
-```
-
-No discount percentages are hardcoded anywhere in the codebase. The admin sets both prices; the discount derives automatically.
-
-### 6.9 Size System
-
-Thunderbolt supports two distinct size sets. The correct set is determined by product section.
-
-| Section | Sizes |
-|---|---|
-| `denim` | `28`, `30`, `32`, `34`, `36` |
-| `live-sale` | `28`, `30`, `32`, `34`, `36` |
-| `tshirts` | `S`, `M`, `L`, `XL`, `XXL` |
-| `kurta` | `S`, `M`, `L`, `XL`, `XXL` |
-
-**Frontend (`src/pages/Admin.tsx`):**
-```ts
-const JEANS_SIZES = ['28', '30', '32', '34', '36']
-const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL']
-
-// Returns the right set for a section string:
-getSizesForSection(section: string): string[]
-
-// For edit mode — reads what's stored on the product itself:
-getSizesFromStock(sizeStock: Record<string, number>): string[]
-```
-
-`getSizesFromStock` filters `SIZE_ORDER = [...JEANS_SIZES, ...APPAREL_SIZES]` to only the keys present in the product document. This ensures the correct canonical order even when editing old products.
-
-When the Section dropdown changes between jeans-type and apparel-type sections, `sizeStock` resets to all-zeros for the new size set. Switching within the same type (e.g., `denim` → `live-sale`) preserves existing stock values.
-
-**Frontend (`src/pages/ProductView.tsx`):**
-```ts
-getSizesFromProduct(sizeStock?: Record<string, number>): string[]
-```
-Reads the product's stored `sizeStock` keys and returns them in canonical `SIZE_ORDER`. No section knowledge needed on the product page — it's entirely key-driven.
-
-**Backend (`api/products/index.js`):**
-```js
-const JEANS_SIZES = ['28', '30', '32', '34', '36']
-const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL']
-const ALL_VALID_SIZES = new Set([...JEANS_SIZES, ...APPAREL_SIZES])
-
-function normaliseSizeStock(sizeStock)
-```
-`normaliseSizeStock` accepts whatever keys are sent in the request body and keeps only those that appear in `ALL_VALID_SIZES`. It does NOT force every product into jeans sizes. Backward compatibility: if no valid keys are found at all, it falls back to all-zero jeans sizes.
-
-`stock` (the flat total) is always recomputed as the sum of all `sizeStock` values by `computeTotalStock()`.
-
-### 6.10 Orders Cache
-
-**File:** `src/lib/ordersCache.ts`
-
-An in-memory module-level cache (not React state, not localStorage) for the `/api/orders` response.
-
-**Cache entries:**
-```ts
-{ uid: string; orders: Order[]; fetchedAt: number }
-```
-
-**Freshness:** Cache is considered fresh for 60 seconds (`FRESH_MS = 60_000`).
-
-**Key functions:**
-```ts
-getCachedOrders(uid)          // returns orders if fresh, null if stale/missing
-getStaleOrders(uid)           // returns orders regardless of freshness (instant render)
-setCachedOrders(uid, orders)  // writes to cache with current timestamp
-clearOrdersCache()            // wipes cache and in-flight promise
-prefetchOrders(user)          // fetches /api/orders, caches result. Deduplicates concurrent calls.
-schedulePrefetchOrders(user)  // fires prefetchOrders during browser idle time
-```
-
-**Deduplication:** `prefetchOrders` stores its `Promise` in `inFlight`. Any concurrent call returns the same promise. This prevents duplicate network requests during rapid navigation.
-
-**Idle scheduling:** `schedulePrefetchOrders` uses `requestIdleCallback` (with a 2s timeout) when available, falls back to `setTimeout(800ms)` for Safari compatibility.
-
-The Orders page uses `getStaleOrders()` for an instant first render, then re-fetches in the background.
+### 4.3 Routing
+
+Routes are defined in `src/AppContent.tsx`. Heavy pages are wrapped with `React.lazy()` to enable code splitting — each becomes its own JS chunk, loaded on demand.
+
+| Path                    | Component       | Strategy |
+|-------------------------|-----------------|----------|
+| `/`                     | `Index`         | Eager    |
+| `/about`                | `About`         | Eager    |
+| `/category/:id`         | `CategoryView`  | Eager    |
+| `/product/:id`          | `ProductView`   | Lazy     |
+| `/cart`                 | `Cart`          | Lazy     |
+| `/checkout`             | `Checkout`      | Lazy     |
+| `/orders`               | `Orders`        | Lazy     |
+| `/wishlist`             | `Wishlist`      | Lazy     |
+| `/profile`              | `Profile`       | Lazy     |
+| `/admin`                | `Admin`         | Lazy     |
+| `/deals/:slug`          | `DealsPage`     | Lazy     |
+| `/brands`               | `BrandsPage`    | Lazy     |
+| `/brands/:id`           | `BrandView`     | Lazy     |
+| `/policies/:slug`       | `Policies`      | Lazy     |
+| `*`                     | `NotFound`      | Eager    |
+
+A branded `<PageLoader />` (bolt icon + shimmer bar on `#0a0a0a`) is shown via `<Suspense>` during lazy chunk loads.
+
+### 4.4 State Management
+
+**Server state** is managed entirely by TanStack Query (`useQuery` / `useMutation`). This handles caching, deduplication, background refetching, and loading/error states for products, orders, and user profile data.
+
+**Client state** for cart and wishlist uses React `useReducer` inside context providers. Both:
+- Read from `localStorage` immediately on mount (zero-latency initial render for returning users)
+- Sync to MongoDB once the user authenticates
+- Fall back to localStorage-only for anonymous users
+
+**Auth state** wraps Firebase's `onAuthStateChanged` in `AuthContext`. On every login (any method), the user record is upserted in MongoDB via `POST /api/users`.
+
+### 4.5 Login Modal System
+
+A custom event bus (`src/lib/modalController.ts`) lets any component trigger the login modal without prop drilling. Three trigger sources:
+
+| Source          | Condition                                                       |
+|-----------------|-----------------------------------------------------------------|
+| `requireAuth`   | User action (add to cart / wishlist) while unauthenticated      |
+| `delayedPrompt` | 10 seconds after page load for unauthenticated visitors (once per session) |
+| `manual`        | User clicks a sign-in button directly                           |
+
+After login, any stored pending action is automatically re-executed via `executeStoredAction()` in `src/lib/requireAuth.ts`.
 
 ---
 
-## 7. Backend Architecture
+## 5. Backend Architecture
 
-### 7.1 Express Server (`server.js`)
+### 5.1 Server
 
-The Express server is the local development equivalent of Vercel's function routing. It dynamically imports each handler file and mounts it at the appropriate path.
+`server.js` runs an Express application on **port 3001**. Each API route dynamically imports its handler module on the first request (avoids ESM circular dependency issues and keeps the startup fast).
 
-```js
-import express from 'express'
-const app = express()
-const port = 3001
+During development, Vite's dev server on **port 5000** proxies all `/api/*` requests to `localhost:3001`. Frontend code always uses relative `/api/...` URLs — no environment-specific URL configuration required.
 
-// Security headers (manual — no helmet dependency)
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('X-Frame-Options', 'DENY')
-  res.setHeader('X-XSS-Protection', '1; mode=block')
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
-  next()
-})
-
-app.use(express.json())
-
-// Each handler is dynamically imported — this allows handler files
-// to be changed without modifying server.js
-app.use('/api/products/:id', async (req, res) => {
-  const { default: handler } = await import('./api/products/[id].js')
-  await handler(req, res)
-})
-// ... (same pattern for all 11 routes)
+```
+Browser / Vite dev server (:5000)
+          ↓  /api/* (proxied)
+    Express server (:3001)
+          ↓  dynamic import
+    api/<resource>/index.js
+          ↓
+    MongoDB Atlas  ←→  Firebase Admin SDK
 ```
 
-**Route order matters:** `/api/products/:id` is mounted before `/api/products` to prevent Express matching the ID route as a products collection request.
+In production (Vercel), each file in `api/` becomes a serverless function and the Vite proxy is not used. The consolidated handler pattern (one file per resource, sub-routes resolved via URL/query parsing) was designed specifically to stay within Vercel Hobby's 12-function limit.
 
-### 7.2 Shared Helpers (`api/_lib/`)
+### 5.2 Shared Library Modules
 
-#### `mongodb.js` — Database connection
+**`api/_lib/mongodb.js`**
+- Singleton pool cached in `global.mongo` to survive serverless cold starts
+- Pool: `maxPoolSize: 10`, `minPoolSize: 2`, `serverSelectionTimeoutMS: 5000`
+- Database name: `thunderbold`
+- Bootstraps all required indexes asynchronously on first connection (non-blocking)
 
-```js
-export async function getDb(): Promise<Db>
-```
+**`api/_lib/firebaseAdmin.js`**
+- Initialises Firebase Admin SDK from `FIREBASE_SERVICE_ACCOUNT` (JSON string)
+- `verifyFirebaseToken(token)` — cryptographic token verification with revocation checking
+- **No insecure fallback**: throws `401` on invalid token, `503` if SDK is unconfigured
 
-Uses a module-level `global.mongo` cache (compatible with both Express long-running process and Vercel serverless warm instances).
+**`api/_lib/adminHelper.js`**
+- `isAdmin(email, db)` — two-step resolution:
+  1. DB lookup: `users.role === 'admin'`
+  2. Hardcoded allowlist fallback: `ADMIN_EMAILS` array
 
-Connection settings:
-- `maxPoolSize: 10`
-- `minPoolSize: 2`
-- `serverSelectionTimeoutMS: 5000`
+**`api/_lib/rateLimit.js`**
+- In-memory sliding-window limiter: 10 req/min per IP
+- IP extracted from `X-Forwarded-For` → `X-Real-IP` → socket address
+- Stale entries purged every 5 minutes
 
-Database name: **`thunderbold`** (note the spelling — not `thunderbolt`).
-
-**Indexes created asynchronously on first connection** (non-blocking):
-
-| Collection | Index |
-|---|---|
-| `orders` | `{ userId: 1 }` |
-| `orders` | `{ createdAt: -1 }` |
-| `orders` | `{ clientOrderId: 1 }` (sparse, unique — for idempotency) |
-| `products` | `{ categoryId: 1 }` |
-| `cart` | `{ userId: 1 }` (unique) |
-| `wishlist` | `{ userId: 1 }` (unique) |
-| `reviews` | `{ productId: 1, isDeleted: 1, createdAt: -1 }` |
-| `reviews` | `{ userId: 1, isDeleted: 1 }` |
-| `reviews` | `{ userId: 1, productId: 1 }` |
-
-Index creation failures are non-fatal (logged as warnings).
-
-#### `firebaseAdmin.js` — Token verification
-
-```js
-export async function verifyFirebaseToken(token: string): Promise<{ email, uid, ...claims }>
-```
-
-Initializes Firebase Admin SDK lazily on first call using the `FIREBASE_SERVICE_ACCOUNT` environment variable (parsed as JSON).
-
-**Security guarantee:** There is NO insecure fallback. If `FIREBASE_SERVICE_ACCOUNT` is missing or the token is invalid, this function **always throws** — it never passes through. The previous implementation had a `jwt.decode` fallback that was removed as a security fix.
-
-Error types thrown:
-- `status: 503` — Firebase Admin SDK not initialized
-- `status: 401` — Token invalid or expired
-
-Token verification uses `verifyIdToken(token, true)` — the second argument (`checkRevoked: true`) verifies the token has not been revoked.
-
-#### `adminHelper.js` — Admin check
-
-```js
-export async function isAdmin(email: string, db: Db): Promise<boolean>
-```
-
-Two-tier check:
-1. Looks up the user document in `db.collection('users')` — if `role === 'admin'`, returns `true`.
-2. Falls back to checking against a hardcoded `ADMIN_EMAILS` array.
-
-**Hardcoded admin emails:**
-- `adminthunderbolt@gmail.com`
-- `neelsingh45940s@gmail.com`
-- `thepavanartt@gmail.com`
-
-This list must also be mirrored in `src/pages/Admin.tsx` for client-side route guarding.
-
-#### `rateLimit.js` — In-memory rate limiter
-
-```js
-export function isRateLimited(req: Request): boolean
-```
-
-Simple sliding-window rate limiter using a module-level `Map`.
-
-- **Window:** 60 seconds
-- **Max requests:** 10 per IP per window
-- **IP resolution priority:** `x-forwarded-for` → `x-real-ip` → `req.socket.remoteAddress` → `'unknown'`
-- **Cleanup:** `setInterval` every 5 minutes removes entries older than 2× the window.
-
-Currently applied to: `POST /api/orders/create` only.
-
-#### `validator.js` — Input validation
-
-```js
-validatePhone(phone): { isValid, errors }        // 10 digits (strips non-numeric)
-validatePincode(pincode): { isValid, errors }     // 6 digits
-validateRequired(value, fieldName): { isValid, errors }
-validateAddress(address): { isValid, errors }     // validates all address fields
-validateOrder(order): { isValid, errors }         // validates product structure
-```
-
-#### `response.js` — Standard response shapes
-
-```js
-successResponse(data)
-errorResponse(error, errors?)
-validationErrorResponse(errors)
-notFoundResponse(resource?)
-serverErrorResponse(error?)
-methodNotAllowedResponse(allowedMethods[])
-```
-
-These are utility functions; not all handlers use them (some inline their own JSON responses).
-
-### 7.3 API Handler Reference
-
-Every handler sets CORS headers (`Access-Control-Allow-Origin: *`) and handles `OPTIONS` preflight.
+**`api/_lib/validator.js`**
+- `validateAddress()` — validates all 6 address fields
+- `validatePhone()` — 10-digit India format
+- `validatePincode()` — 6-digit India format
+- Returns `{ isValid: boolean, errors: string[] }`
 
 ---
 
-#### `GET/POST/PUT/DELETE /api/products` (`api/products/index.js`)
+## 6. Authentication System
 
-**GET** — public, no auth required.
+### 6.1 Client-Side (Firebase Auth)
 
-Query params:
-- `?maxPrice=N` — filters products with `price <= N`
+`src/lib/firebase.ts` initialises the Firebase client SDK with `browserLocalPersistence` — users stay logged in across sessions.
 
-Returns: `{ products[], count, source: 'database' }`
+Supported sign-in methods:
+- **Google OAuth** — `signInWithPopup` + `GoogleAuthProvider` (always shows account picker via `prompt: 'select_account'`)
+- **Email + Password** — `signInWithEmailAndPassword` / `createUserWithEmailAndPassword`
 
-Projection on GET: `name, price, purchasePrice, image, images, description, categoryId, section, stock, sizeStock, highlights, createdAt, brandId`. Sorted by `createdAt: -1`.
+After every successful sign-in, `AuthContext.syncUserWithDatabase()` calls `POST /api/users` with `{ uid, email, name }` to upsert the user record.
 
-**POST** — requires admin auth.
+### 6.2 Server-Side Token Verification
 
-Body:
-```json
-{
-  "name": "string",
-  "price": 1499,
-  "purchasePrice": 2000,
-  "section": "denim|tshirts|kurta|live-sale",
-  "categoryId": "string (optional for kurta/live-sale)",
-  "brandId": "string (optional)",
-  "images": ["url1", "url2"],
-  "description": "string",
-  "sizeStock": { "28": 10, "30": 15 },
-  "highlights": { "color": "", "length": "", ... }
-}
+Every protected endpoint extracts the token from `Authorization: Bearer <token>` and calls `verifyFirebaseToken(token)`. The decoded payload provides `{ email, uid, ...claims }`.
+
+**Note on user identity**: Cart, wishlist, and orders use `email` as the `userId` in MongoDB rather than Firebase `uid`. This is intentional — Firebase UIDs can change on account re-linking, but email is stable for COD order tracking.
+
+### 6.3 Admin Access
+
+Admin endpoints additionally call `isAdmin(email, db)`. Two routes to admin status:
+1. **DB role**: set `role: 'admin'` on the user's MongoDB document
+2. **Hardcoded allowlist**: add email to `ADMIN_EMAILS` in `api/_lib/adminHelper.js`
+
+The DB check runs first; the hardcoded list is the fallback.
+
+### 6.4 Auth Flow
+
 ```
-
-`normaliseSizeStock()` is applied to `sizeStock` — only valid keys are kept, values are clamped to ≥ 0 integers. `stock` is computed as the sum.
-
-`purchasePrice` is only saved if `purchasePrice > 0`. `brandId` is only saved if truthy.
-
-**PUT** — requires admin auth, `?id=<productId>`.
-
-Same body as POST. `purchasePrice` is removed via `$unset` if not provided or zero. `brandId` is removed via `$unset` if not provided.
-
-**DELETE** — requires admin auth, `?id=<productId>`.
-
----
-
-#### `GET /api/products/:id` (`api/products/[id].js`)
-
-Public. Returns a single product by MongoDB `_id`. Tries `new ObjectId(id)` first, falls back to string match.
-
----
-
-#### `GET/POST/PUT/DELETE /api/brands` (`api/brands/index.js`)
-
-**GET** — public, no auth.
-
-Returns all brands sorted by name alphabetically. No projection — all fields returned including `logoUrl`.
-
-**POST** — admin auth. Body: `{ name, logoUrl? }`.
-
-Case-insensitive duplicate name check (`$regex: ^name$, $options: 'i'`). Returns `409` if name already exists.
-
-**PUT** — admin auth, `?id=<brandId>`. Body: `{ name, logoUrl? }`.
-
-**DELETE** — admin auth, `?id=<brandId>`.
-
-Brand IDs are parsed with `parseId()` which tries `new ObjectId()` and falls back to raw string.
-
----
-
-#### Orders (`api/orders/index.js`)
-
-This is a consolidated handler that dispatches to four sub-handlers based on the sub-route.
-
-**Sub-route resolution:**
-```js
-function resolveSubRoute(req) {
-  const fromQuery = req.query?.subpath || ""      // Vercel (set by vercel.json rewrites)
-  const fromPath = req.url.split("?")[0]...       // Express (relative URL after /api/orders)
-  return fromQuery || fromPath
-}
-```
-
-| HTTP | Sub-route | Handler | Auth |
-|---|---|---|---|
-| GET | (empty) | `handleList` | User (all orders for admin, own for regular user) |
-| POST | `create` | `handleCreate` | User |
-| PUT | `cancel` | `handleCancel` | User (own orders) or admin (any) |
-| PATCH | `manage` | `handleManage` | Admin only |
-| DELETE | `manage` | `handleManage` | Admin only |
-
-**handleList:**
-- Admin → returns all orders.
-- Regular user → returns only `{ userId: user.email }` orders.
-- Sorted by `createdAt: -1`.
-
-**handleCreate (full flow):**
-
-1. Rate limit check (10 req/min per IP).
-2. Firebase token verification.
-3. **Idempotency check:** if `clientOrderId` is provided and already exists in DB, returns the existing order immediately (HTTP 200).
-4. Validation: products array non-empty, complete address, paymentMethod present, each product has `productId, name, price (number), image, size, quantity (>0)`.
-5. **Pre-flight stock check:** for each cart item, fetches the product from DB. Checks `sizeStock[item.size]` if available, else flat `stock`. Returns `400` if insufficient stock.
-6. Inserts the order document.
-7. **Atomic stock decrement with compensation rollback:**
-   - For each item, runs `updateOne` with a filter that includes `sizeStock.SIZE >= quantity` to prevent race conditions.
-   - If any `modifiedCount === 0` (another request grabbed the stock first), restores all previously decremented items and deletes the order. Returns `409`.
-8. Returns `201` with the new order.
-
-**handleCancel:**
-- Fetches the order, checks ownership or admin status.
-- Returns `400` if already cancelled or delivered.
-- Sets `status: 'cancelled'`.
-- **Stock restoration (size-aware):** for each item in the order, checks if the product still has `sizeStock` for that size. If yes, increments both `sizeStock.SIZE` and `stock`. If no `sizeStock`, increments flat `stock` only. Failures during stock restore are logged but non-fatal.
-
-**handleManage (admin only):**
-- `PATCH` — updates status. Valid statuses: `pending`, `confirmed`, `shipped`, `delivered`. Does NOT accept `cancelled` via this route (use `cancel`).
-- `DELETE` — permanently deletes the order document.
-
----
-
-#### `GET /api/admin/analytics` (`api/admin.js`)
-
-Admin-only. Runs 6 MongoDB aggregations in `Promise.all`:
-
-1. **Overview** — total revenue, net revenue (all time), order count, user count, average order value.
-2. **Revenue over time** — daily `totalAmount` sums grouped by `YYYY-MM-DD`.
-3. **Orders over time** — daily order counts grouped by `YYYY-MM-DD`.
-4. **Top products** — top 5 by units sold (`$unwind` products array, group by `productId`, sort by `totalSold`, join with products collection for current name/image/price).
-5. **Stock alerts** — products where `stock <= 5`, split into `outOfStock` (stock === 0) and `lowStock` arrays.
-6. **Recent orders** — last 5 orders sorted by `createdAt: -1`, projected to key fields only.
-
-**Range modes** (from `?range=` query param):
-- `month` (default) — current calendar month, day-by-day series
-- `7d` — last 7 days
-- `30d` — last 30 days
-- `?month=YYYY-MM` — a specific calendar month
-
-**Revenue exclusions:** Orders with `status: 'cancelled'`, `'canceled'`, or `'refunded'` are excluded from revenue calculations (but included in order count).
-
-**Gap filling:** The daily series always includes every day in the range (zeros for days with no orders), so charts never have gaps.
-
----
-
-#### Other handlers (brief)
-
-| Handler | Notes |
-|---|---|
-| `api/cart/index.js` | GET requires auth (returns user's cart doc). POST replaces entire cart (upsert by userId). DELETE clears cart. |
-| `api/wishlist/index.js` | Same pattern as cart. POST replaces entire wishlist. |
-| `api/categories/index.js` | GET is public. POST/PUT/DELETE require admin. Category has: `name, image, section`. |
-| `api/users/index.js` | POST `/api/users` — upserts user on login. Sub-routes for profile read/update and address management. |
-| `api/address/index.js` | CRUD for saved delivery addresses. Each address requires `fullName, phone, addressLine1, city, pincode`. |
-| `api/reviews/index.js` | GET is public (by productId). POST requires auth + purchase verification. DELETE requires admin. Reviews use soft delete (`isDeleted: true`). |
-
----
-
-## 8. Data Models (MongoDB)
-
-Database name: **`thunderbold`**
-
-### `products` collection
-
-```js
-{
-  _id: ObjectId,
-  name: String,
-  price: Number,                         // selling price (what customer pays)
-  purchasePrice?: Number,                // MRP (crossed-out price) — optional
-  brandId?: String,                      // references brands._id as string — optional
-  image: String,                         // primary image URL (always = images[0])
-  images: String[],                      // ordered array of image URLs
-  description: String,
-  categoryId: String,                    // empty string for kurta and live-sale sections
-  section: 'live-sale'|'denim'|'tshirts'|'kurta',
-  sizeStock: {                           // exactly 5 keys, one size set
-    '28': Number, '30': Number, '32': Number, '34': Number, '36': Number
-    // OR:
-    'S': Number, 'M': Number, 'L': Number, 'XL': Number, 'XXL': Number
-  },
-  stock: Number,                         // computed sum of sizeStock values
-  highlights?: {                         // all fields optional
-    color: String,
-    length: String,
-    printsPattern: String,
-    waistRise: String,
-    shade: String,
-    lengthInches: String
-  } | null,
-  createdAt: Date,
-  updatedAt?: Date
-}
-```
-
-### `orders` collection
-
-```js
-{
-  _id: ObjectId,
-  userId: String,                        // Firebase user email
-  clientOrderId?: String,               // client-generated idempotency key (sparse unique index)
-  products: [{
-    productId: String,
-    name: String,
-    price: Number,
-    image: String,
-    size: String,                        // e.g. '32' or 'M'
-    quantity: Number
-  }],
-  address: {
-    fullName: String,
-    phone: String,
-    addressLine1: String,
-    addressLine2?: String,
-    city: String,
-    state?: String,
-    pincode: String
-  },
-  paymentMethod: String,
-  status: 'pending'|'confirmed'|'shipped'|'delivered'|'cancelled',
-  totalAmount: Number,                   // sum of (price * quantity) for all items
-  createdAt: Date,
-  updatedAt?: Date
-}
-```
-
-### `brands` collection
-
-```js
-{
-  _id: ObjectId,
-  name: String,
-  logoUrl: String,                       // image URL for brand logo
-  createdAt: Date,
-  updatedAt?: Date
-}
-```
-
-### `categories` collection
-
-```js
-{
-  _id: ObjectId,
-  name: String,
-  image: String,                         // image URL for category thumbnail
-  section: 'denim'|'tshirts'|'kurta',   // live-sale not a valid category section
-  createdAt: Date,
-  updatedAt?: Date
-}
-```
-
-### `users` collection
-
-```js
-{
-  _id: ObjectId,
-  uid: String,                           // Firebase UID
-  email: String,
-  name: String,
-  role?: 'admin'|'user',
-  createdAt: Date,
-  updatedAt?: Date
-}
-```
-
-### `cart` collection
-
-```js
-{
-  _id: ObjectId,
-  userId: String,                        // Firebase email (unique index)
-  items: [{
-    productId: String,
-    name: String,
-    price: Number,
-    image: String,
-    size: String,
-    quantity: Number
-  }],
-  updatedAt: Date
-}
-```
-
-### `wishlist` collection
-
-```js
-{
-  _id: ObjectId,
-  userId: String,                        // Firebase email (unique index)
-  items: [{
-    productId: String,
-    name: String,
-    price: Number,
-    image: String
-  }],
-  updatedAt: Date
-}
-```
-
-### `reviews` collection
-
-```js
-{
-  _id: ObjectId,
-  productId: String,
-  userId: String,                        // Firebase email
-  orderId: String,
-  rating: Number,                        // 1–5
-  comment: String,
-  isDeleted: Boolean,                    // soft delete flag
-  createdAt: Date,
-  updatedAt?: Date
-}
-```
-
-### `addresses` collection
-
-```js
-{
-  _id: ObjectId,
-  userId: String,
-  fullName: String,
-  phone: String,
-  addressLine1: String,
-  addressLine2?: String,
-  city: String,
-  state: String,
-  pincode: String,
-  isDefault?: Boolean,
-  createdAt: Date
-}
+User attempts protected action
+        │
+        ├── Not authenticated → Store pending action → Open login modal
+        │
+        └── Authenticated ─────────────────────────────────────┐
+                                                                │
+                  Firebase ID token → Authorization header      │
+                        │                                       │
+                  verifyFirebaseToken(token)                    │
+                    ├── Fail → 401 Unauthorized                 │
+                    └── Pass → { email, uid }                   │
+                                    │                           │
+                             Admin endpoint?                    │
+                               ├── Yes → isAdmin() → 403 if No │
+                               └── No  → Proceed ──────────────┘
 ```
 
 ---
 
-## 9. Authentication Flow
+## 7. Data Layer — API Reference
 
-### Sign-in sequence
+All endpoints accept and return JSON. Protected endpoints require `Authorization: Bearer <firebase-id-token>`.
 
-```
-User enters credentials → Firebase Client SDK → Firebase Auth servers
-→ Firebase returns ID token (JWT, signed, 1-hour expiry)
-→ AuthContext stores Firebase User object
-→ syncUserWithDatabase() → POST /api/users (no token needed for this endpoint)
-→ schedulePrefetchOrders() fires during idle time
-```
+### Products
 
-### Authenticated API request sequence
+| Method | Path                             | Auth   | Description                                       |
+|--------|----------------------------------|--------|---------------------------------------------------|
+| GET    | `/api/products`                  | Public | All products; supports `?section=` and `?maxPrice=` filters |
+| GET    | `/api/products/:id`              | Public | Single product by MongoDB ObjectId                |
+| POST   | `/api/products`                  | Admin  | Create product                                    |
+| PUT    | `/api/products?id=:id`           | Admin  | Full replace of product                           |
+| DELETE | `/api/products?id=:id`           | Admin  | Hard delete product                               |
 
-```
-Frontend: user.getIdToken() → current ID token (auto-refreshed by Firebase SDK)
-→ fetch('/api/endpoint', { headers: { Authorization: 'Bearer <token>' } })
-→ Express / Vercel receives request
-→ verifyFirebaseToken(token) → Firebase Admin SDK → cryptographic verification
-→ decoded.email extracted
-→ isAdmin(email, db) → DB check then hardcoded list
-→ handler proceeds
-```
+> Admin GET requests include `purchasePrice` (internal cost). Public GETs never expose this field.
 
-### Token refresh
+### Orders
 
-Firebase ID tokens expire after 1 hour. The client SDK automatically refreshes them. Every call to `user.getIdToken()` returns the current valid token (refreshing it silently if needed).
+| Method | Path                          | Auth       | Description                           |
+|--------|-------------------------------|------------|---------------------------------------|
+| GET    | `/api/orders`                 | User/Admin | Own orders; all orders for admin      |
+| POST   | `/api/orders/create`          | User       | Create order with stock validation    |
+| PUT    | `/api/orders/cancel`          | User/Admin | Cancel order + restore stock          |
+| PATCH  | `/api/orders/manage?id=:id`   | Admin      | Update order status                   |
+| DELETE | `/api/orders/manage?id=:id`   | Admin      | Delete order record                   |
 
-### Admin authorization
+### Users
 
-Admin status is determined server-side on every request. The client-side `ADMIN_EMAILS` array in `Admin.tsx` only controls which UI tab is visible — it cannot bypass server-side checks.
+| Method | Path         | Auth  | Description                                             |
+|--------|--------------|-------|---------------------------------------------------------|
+| GET    | `/api/users` | User  | Fetch own profile (looked up by Firebase UID)           |
+| POST   | `/api/users` | Open  | Create/sync user on login (no token required for upsert)|
+| PATCH  | `/api/users` | User  | Update name/phone, or set default address               |
+| DELETE | `/api/users` | User  | Remove address from address book                        |
+
+### Cart
+
+| Method | Path        | Auth | Description             |
+|--------|-------------|------|-------------------------|
+| GET    | `/api/cart` | User | Fetch cart items        |
+| POST   | `/api/cart` | User | Replace entire cart     |
+| DELETE | `/api/cart` | User | Clear cart              |
+
+### Wishlist
+
+| Method | Path            | Auth | Description             |
+|--------|-----------------|------|-------------------------|
+| GET    | `/api/wishlist` | User | Fetch wishlist items    |
+| POST   | `/api/wishlist` | User | Replace entire wishlist |
+| DELETE | `/api/wishlist` | User | Clear wishlist          |
+
+### Reviews
+
+| Method | Path                                        | Auth       | Description                                  |
+|--------|---------------------------------------------|------------|----------------------------------------------|
+| GET    | `/api/reviews?productId=:id`                | Public     | Active reviews for a product                 |
+| GET    | `/api/reviews?mine=true`                    | User       | All of current user's reviews                |
+| GET    | `/api/reviews?mine=true&productId=:id`      | User       | Own review + purchase eligibility flag       |
+| POST   | `/api/reviews`                              | User       | Submit review (requires delivered order)     |
+| PUT    | `/api/reviews?id=:id`                       | User       | Edit own review (rating/comment)             |
+| DELETE | `/api/reviews?id=:id`                       | User/Admin | Soft-delete review                           |
+
+### Other Endpoints
+
+| Method | Path                      | Auth   | Description                         |
+|--------|---------------------------|--------|-------------------------------------|
+| GET    | `/api/categories`         | Public | List all categories                 |
+| POST/PUT/DELETE | `/api/categories` | Admin | Manage categories              |
+| GET    | `/api/brands`             | Public | List all brands                     |
+| POST/PUT/DELETE | `/api/brands`     | Admin  | Manage brands                       |
+| GET    | `/api/slider`             | Public | Homepage banner slider entries      |
+| GET    | `/api/admin/analytics`    | Admin  | Full analytics dashboard payload    |
 
 ---
 
-## 10. Order Lifecycle
+## 8. Order Management System
 
-```
-                    CUSTOMER PLACES ORDER
-                           │
-                    POST /api/orders/create
-                           │
-              ┌─── Rate limit check (10/min) ────┐
-              │                                   │
-              ▼                                   ▼
-         Allowed                           429 Too Many Requests
-              │
-         Firebase token verified
-              │
-         Idempotency: clientOrderId exists?
-              ├── YES → return existing order (200)
-              └── NO → continue
-              │
-         Validation (products, address, paymentMethod)
-              │
-         Pre-flight stock check (per-size)
-              │
-         Insert order (status: 'pending')
-              │
-         Atomic stock decrement loop
-              ├── All succeed → 201 Created
-              └── Any fails → rollback all decrements + delete order → 409
-```
-
-**Status transitions (admin only via PATCH /api/orders/manage):**
+### 8.1 Order Lifecycle
 
 ```
 pending → confirmed → shipped → delivered
+    └──────────────────────────→ cancelled
 ```
 
-**Cancellation (user or admin via PUT /api/orders/cancel):**
+`delivered` orders cannot be cancelled. Only admins can advance status via `PATCH /api/orders/manage`.
 
+### 8.2 Order Creation Flow (`POST /api/orders/create`)
+
+Executes these steps in sequence:
+
+1. **Rate limit** — rejects if IP exceeds 10 req/min
+2. **Auth** — verifies Firebase token; binds `email` as `userId`
+3. **Idempotency** — if `clientOrderId` matches an existing order, returns the existing record immediately (prevents duplicate orders from retries / double-taps)
+4. **Request validation** — validates products array structure, address fields, payment method
+5. **Pre-flight stock check** — fetches each product from DB; verifies `sizeStock[size] >= quantity`. Outfit products check both `topwear.sizeStock[topwearSize]` and `bottomwear.sizeStock[bottomwearSize]`
+6. **Gift message sanitisation** — strips HTML tags, trims, caps at 300 chars
+7. **Order insertion** — inserts document with `status: "pending"` and computed `totalAmount`
+8. **Atomic stock decrement** — uses MongoDB `$inc` with a conditional filter (`$gte` guard) to prevent overselling. Both `sizeStock[size]` and aggregate `stock` fields are decremented together
+9. **Compensation rollback** — if any decrement fails (race condition), all previously decremented items are restored and the order document is deleted. Returns `409 Conflict`
+
+### 8.3 Outfit Product Stock Model
+
+Outfit products maintain a bifurcated stock structure:
+
+```json
+{
+  "topwear":    { "sizeStock": { "S": 5, "M": 3 }, "stock": 8 },
+  "bottomwear": { "sizeStock": { "28": 4, "30": 6 }, "stock": 10 },
+  "stock": 8
+}
 ```
-pending|confirmed|shipped → cancelled (+ stock restore)
-delivered → BLOCKED (cannot cancel delivered orders)
-```
+
+`root.stock = min(topwear.stock, bottomwear.stock)` — the bottleneck component determines available outfit quantity.
+
+### 8.4 Order Cancellation (`PUT /api/orders/cancel`)
+
+Ownership-checked (users can only cancel their own orders; admins can cancel any). Restores stock for every item using the same size-aware logic as creation. Stock restoration is best-effort — individual item failures are logged but do not block the cancellation.
 
 ---
 
-## 11. Admin Panel
+## 9. Cart & Wishlist
 
-**Route:** `/admin`
+Both follow the same sync pattern:
 
-**Access guard:** Checked client-side by comparing `user.email` against `ADMIN_EMAILS`. Non-admins are redirected away immediately.
+- **Anonymous users**: items stored in `localStorage` only
+- **Authenticated users**: items synced to MongoDB (keyed by `userId = email`)
+- **On login**: localStorage items are merged with server items (deduplicated by `productId + size`)
+- **Write strategy**: the entire array is replaced on every update
 
-**Server-side guard:** Every admin API call independently verifies the Firebase token and calls `isAdmin()`. Client-side guard is UX only.
+Required cart item fields: `productId`, `name`, `price` (number), `image`, `size`, `quantity` (positive integer).
 
-### Tabs
+Required wishlist item fields: `productId`, `name`, `price` (number), `image`.
 
-| Tab | Description |
-|---|---|
-| **Analytics** | Default tab. KPI cards + charts + top products + stock alerts + recent orders. |
-| **Orders** | Full order list. Can update status (dropdown) or delete. |
-| **Products** | Add/edit/delete products. Full product form. |
-| **Categories** | Add/edit/delete categories. |
-| **Brands** | Add/edit/delete brands (name + logo URL). |
-| **Reviews** | Per-product review listing. Admin can delete any review. |
-
-### Product Form (`SizeStockInput`)
-
-The `SizeStockInput` component accepts a `sizes: string[]` prop and renders exactly those size labels. Sizes are driven by `getSizesForSection(form.section)`.
-
-When the Section dropdown changes:
-- If the new section maps to a **different size set** (e.g., `denim` → `tshirts`), `sizeStock` resets to all zeros for the new sizes.
-- If the new section maps to the **same size set** (e.g., `denim` → `live-sale`), `sizeStock` is preserved.
-
-When editing an existing product, `getSizesFromStock(editingProduct.sizeStock)` is used to load the sizes that are actually stored on the document, in canonical order.
-
-### Analytics (admin) — see next section
+Both APIs use full `verifyFirebaseToken` cryptographic verification.
 
 ---
 
-## 12. Analytics Dashboard
+## 10. Review System
 
-**File:** `src/components/Analytics/AnalyticsTab.tsx`
+### Eligibility Gate
 
-Single fetch to `GET /api/admin/analytics?range=<mode>&month=<YYYY-MM>`.
+Only users who have received (order `status === "delivered"`) the specific product can submit a review. Verified server-side on every `POST`.
 
-**Range selector:** Three quick-select buttons (This Month / Last 7 Days / Last 30 Days) plus a month picker input. Range state is local to `AnalyticsTab`.
+### Deduplication
 
-**Component tree:**
+One active review per `(userId, productId)` pair. Duplicate `POST` returns `409 Conflict` with the existing review so the client can switch to edit mode.
 
-```
-AnalyticsTab
-├── StatsCard × 4           ← Total Revenue, Total Orders, Avg Order Value, Total Users
-├── RevenueChart            ← Recharts AreaChart (daily revenue series)
-├── OrdersChart             ← Recharts BarChart (daily order count series)
-├── TopProducts             ← Top 5 products by units sold in range
-├── StockAlerts             ← Products with stock ≤ 5 (split: out-of-stock + low-stock)
-└── RecentOrders            ← Last 5 orders (global, not range-filtered)
-```
+### Soft Delete
 
-**Mobile responsiveness:**
-- `StatsCard` uses responsive grid (`grid-cols-2 lg:grid-cols-4`).
-- Chart X-axis tick labels abbreviate month names on small screens.
-- Range buttons use shortened labels on mobile.
-
-**Backend aggregation details:**
-
-Revenue: excludes orders with `status IN ['cancelled', 'canceled', 'refunded']`.
-
-Monthly grouping format: `$dateToString: { format: '%Y-%m-%d', timezone: 'UTC' }`.
-
-Gap filling: `eachDay(from, to)` generates every date string in the range; the aggregation result is placed into a `Map` keyed by date string; missing dates get `0`.
-
-`getOverview()` runs 4 aggregations in `Promise.all`:
-1. Period revenue (with range filter + non-cancelled filter)
-2. Net revenue (all-time, non-cancelled — no date filter)
-3. Period order count (all statuses)
-4. Total user count (all time)
-
-`getTopProducts()` uses `$unwind` on the embedded products array, groups by `productId`, sorts by `totalSold` descending, limits to 5, then does a separate `find` on the products collection to get current names and images (falling back to order-embedded name/image if the product was deleted).
+Reviews are never hard-deleted. `DELETE` sets `isDeleted: true`. All public and user-scoped `GET` queries filter `{ isDeleted: { $ne: true } }`. Admins can soft-delete any review; owners can only delete their own.
 
 ---
 
-## 13. Brand System
+## 11. Admin Panel & Analytics
 
-Brands are a first-class entity stored in the `brands` MongoDB collection.
+### 11.1 Access
 
-### Data model
-```js
-{ _id, name, logoUrl, createdAt, updatedAt? }
-```
+`/admin` loads `src/pages/Admin.tsx` (lazy). Every admin API call includes the Firebase Bearer token. The backend verifies admin status on every request — no session-based admin caching.
 
-### Admin flow
-1. Admin opens **Brands tab** at `/admin`.
-2. Creates a brand with a name and optional logo URL.
-3. When adding/editing a product, a **Brand** dropdown appears — sourced from `GET /api/brands`.
-4. `brandId` is saved on the product as a string reference.
+### 11.2 Analytics Endpoint (`GET /api/admin/analytics`)
 
-### Store-facing flow
-1. `GET /api/brands` is called on homepage load.
-2. `BrandsSection` renders a full-width banner linking to `/brands`.
-3. `/brands` (`BrandsPage`) lists all brands.
-4. Clicking a brand navigates to `/brand/:brandId`.
-5. `BrandView` fetches `GET /api/products` and client-filters by `brandId`.
+Query params:
+- `?range=7d` — last 7 days
+- `?range=30d` — last 30 days
+- `?month=YYYY-MM` — specific calendar month
+- (default) — current calendar month
 
-### API auth
-- `GET /api/brands` — public (no auth required).
-- `POST /PUT /DELETE /api/brands` — admin Firebase token required.
+Response shape:
+
+| Key             | Description                                                              |
+|-----------------|--------------------------------------------------------------------------|
+| `overview`      | `totalRevenue`, `netRevenue`, `totalOrders`, `averageOrderValue`, `totalUsers`, `totalProfit`, `netProfit` |
+| `revenueSeries` | Per-day `{ day, revenue }` array for the selected range                  |
+| `ordersSeries`  | Per-day `{ day, count }` array for the selected range                    |
+| `topProducts`   | Top 5 products by units sold in the range (with image + price)           |
+| `stockAlerts`   | Products with `stock ≤ 5`, split into `outOfStock` and `lowStock`        |
+| `recentOrders`  | Latest 5 orders (all time) with customer name, total, and item count     |
+
+### 11.3 Profit Calculation
+
+Calculated via MongoDB aggregation pipeline:
+- Filters `status: { $in: ["delivered", "completed"] }` only
+- `$lookup` joins each order item with `products.purchasePrice`
+- Excludes items where `purchasePrice` is null/missing
+- Formula: `profit = (sellingPrice − purchasePrice) × quantity`
+- Two values returned: `totalProfit` (within the date range) and `netProfit` (all-time)
+
+`purchasePrice` is stripped from all public product API responses — it never reaches non-admin clients.
 
 ---
 
-## 14. Homepage Layout
+## 12. PWA Configuration
 
-Sections render top to bottom in `src/pages/Index.tsx`:
+Configured in `vite.config.ts` using `vite-plugin-pwa` with Workbox `generateSW` strategy.
 
-| # | Component | Description |
-|---|---|---|
-| 1 | `AnnouncementBar` | Fixed top bar with scrolling ticker text ("Delivery at your doorstep within 45 minutes") |
-| 2 | `Navbar` | Navigation bar with logo, search, categories, wishlist, cart, login |
-| 3 | `HeroBanner` | Full-width hero with headline, CTA button |
-| 4 | `BrandsSection` | "Discover Our Brands" — edge-to-edge clickable banner → `/brands` |
-| 5 | `LiveSaleSection` | "Special Offer" — product grid filtered to `section === 'live-sale'` |
-| 6 | `CategoriesSection` | Multi-collection grid (see below) |
-| 7 | `Footer` | Links, copyright |
+### 12.1 Service Worker Behaviour
 
-### CategoriesSection detail
+| Setting             | Value                  | Reason                                            |
+|---------------------|------------------------|---------------------------------------------------|
+| `strategies`        | `generateSW`           | Workbox manages SW fully; no custom SW maintenance|
+| `skipWaiting`       | `true`                 | New SW activates immediately on install           |
+| `clientsClaim`      | `true`                 | New SW takes control of all open tabs             |
+| `devOptions.enabled`| `false`                | Avoids conflicts with Vite HMR + API proxy        |
+| `navigateFallback`  | `/index.html`          | SPA: all navigation returns the app shell         |
+| `navigateFallbackDenylist` | `/^\/api\//` | API requests always bypass SW                     |
+
+### 12.2 Runtime Caching Strategy
+
+| Resource                     | Handler               | Cache                     | TTL / Cap           |
+|------------------------------|-----------------------|---------------------------|---------------------|
+| `/api/*`                     | `NetworkOnly`         | —                         | Never cached        |
+| JS / CSS / HTML / fonts      | Precache (build time) | Workbox managed           | Indefinite          |
+| Google Fonts CSS             | `StaleWhileRevalidate`| `tb-google-fonts-css`     | 7 days / 8 entries  |
+| Google Fonts binary          | `CacheFirst`          | `tb-google-fonts-files`   | 365 days / 30 entries |
+| Cloudinary images            | `CacheFirst`          | `tb-cloudinary-images`    | 30 days / 120 entries |
+| Local static images          | `CacheFirst`          | `tb-static-images`        | 30 days / 60 entries  |
+
+API routes are always `NetworkOnly`. Stale auth, cart, or order data would corrupt checkout.
+
+### 12.3 Web App Manifest
+
+| Property              | Value                                                     |
+|-----------------------|-----------------------------------------------------------|
+| `id`                  | `/` (stable across deployments)                           |
+| `name`                | Thunderbold                                               |
+| `display`             | `standalone`                                              |
+| `display_override`    | `window-controls-overlay` → `standalone` → `minimal-ui`  |
+| `theme_color`         | `#0a0a0a`                                                 |
+| `lang`                | `en-IN`                                                   |
+| `share_target`        | Receives shared URLs via OS share sheet (`/?share_url=…`) |
+| `launch_handler`      | `navigate-existing` — reuses open window on re-launch     |
+| `shortcuts`           | Cart · Wishlist · Orders · Deals/Under-999                |
+| `related_applications`| Play Store TWA (app ID + SHA-256 fingerprint)             |
+
+Icons: 9 sizes (72×72 → 512×512) including a maskable variant for Android adaptive icons.
+
+Screenshots: `narrow` (540×960 mobile) and `wide` (1280×800 desktop) for browser install dialogs.
+
+---
+
+## 13. Performance Architecture
+
+### 13.1 Code Splitting
+
+All heavy pages use `React.lazy()` and become separate Rollup output chunks loaded on demand. Eager-loaded pages (Index, About, CategoryView, NotFound) are on the critical first-paint path.
+
+### 13.2 Image Strategy
+
+All product images are hosted on **Cloudinary** — CDN-distributed, format-optimised, and served via transformation URLs. After first load, Workbox caches them for 30 days. This means repeat visitors load images from disk even while offline.
+
+### 13.3 Orders Cache Prefetch
+
+`src/lib/ordersCache.ts` uses `requestIdleCallback` (with `setTimeout` fallback) to prefetch the orders list into TanStack Query's cache during idle time after login. The Orders page opens instantly from cache with no visible loading state.
+
+### 13.4 Database Indexes
+
+Bootstrapped asynchronously on first MongoDB connection. All performance-critical access patterns are covered:
+
+| Collection | Index Fields                                   | Options         |
+|------------|------------------------------------------------|-----------------|
+| `orders`   | `{ userId: 1 }`                                |                 |
+| `orders`   | `{ createdAt: -1 }`                            |                 |
+| `orders`   | `{ clientOrderId: 1 }`                         | sparse + unique |
+| `products` | `{ categoryId: 1 }`                            |                 |
+| `cart`     | `{ userId: 1 }`                                | unique          |
+| `wishlist` | `{ userId: 1 }`                                | unique          |
+| `reviews`  | `{ productId: 1, isDeleted: 1, createdAt: -1 }`|                 |
+| `reviews`  | `{ userId: 1, isDeleted: 1 }`                  |                 |
+| `reviews`  | `{ userId: 1, productId: 1 }`                  |                 |
+
+---
+
+## 14. Security Model
+
+### 14.1 Authentication Security
+
+- All state-changing endpoints require a cryptographically verified Firebase ID token
+- Token revocation checking is enabled (`verifyIdToken(token, true)`)
+- **No insecure fallback**: unconfigured Firebase Admin SDK returns `503`, not a pass-through
+- Tokens are short-lived (1 hour); Firebase auto-refreshes via the client SDK
+
+### 14.2 HTTP Security Headers
+
+Applied globally by Express middleware on every response:
 
 ```
-CategoriesSection
-├── Denim Collection grid        (always rendered)
-├── PromoBanner                  (two side-by-side static images → deals pages)
-├── T-Shirts Collection grid     (rendered only when tshirt categories exist in DB)
-└── Kurta Collection grid        (always rendered; shows empty state when no kurta products exist)
+X-Content-Type-Options:  nosniff
+X-Frame-Options:         DENY
+X-XSS-Protection:        1; mode=block
+Referrer-Policy:         strict-origin-when-cross-origin
+Cross-Origin-Resource-Policy: cross-origin
 ```
 
-`PromoBanner` slides are configured in `src/components/promo/promoSlides.ts`. Each slide has an image URL and a link target (typically `/deals/:dealKey`).
+### 14.3 Rate Limiting
 
-Kurta section is always visible to encourage product addition — it shows a "No kurta products yet" empty state instead of hiding the section entirely.
+Applied to high-risk write endpoints:
+
+| Endpoint                  | Limit              |
+|---------------------------|--------------------|
+| `POST /api/orders/create` | 10 req/min per IP  |
+| `POST /api/cart`          | 10 req/min per IP  |
+| `POST /api/wishlist`      | 10 req/min per IP  |
+| `POST /api/reviews`       | 10 req/min per IP  |
+
+> The current implementation is in-memory. It resets on server restart and does not coordinate across multiple instances. For a multi-instance production deployment, replace with Redis-backed rate limiting (e.g. `rate-limiter-flexible` + `ioredis`).
+
+### 14.4 Input Sanitisation
+
+| Input           | Sanitisation Applied                                        |
+|-----------------|-------------------------------------------------------------|
+| Gift message    | HTML tags stripped, trimmed, max 300 chars                  |
+| Review comment  | Trimmed, max 1000 chars                                     |
+| Phone number    | Non-digit characters stripped before storage                |
+| Pincode         | Non-digit characters stripped before storage                |
+| Product prices  | `purchasePrice` stripped from public GET responses          |
+
+### 14.5 Privilege Isolation
+
+- `purchasePrice` is never returned to non-admin callers
+- Admin status is verified on every admin request — no session caching
+- Users can cancel only their own orders (ownership check: `order.userId !== userEmail`)
+- Users can edit/delete only their own reviews (ownership check: `review.userId === userId`)
+- Admin PATCH on orders rejects any status outside the valid set (`pending`, `confirmed`, `shipped`, `delivered`)
 
 ---
 
 ## 15. Deployment
 
-### Local / Replit (development)
+### Development (Replit / Local)
 
-- Workflow: `Start application` runs `npm run dev`.
-- Vite dev server: port 5000 (publicly accessible via Replit proxy).
-- Express API: port 3001 (internal only, accessed via Vite proxy).
-- Hot reload: frontend via Vite HMR. Backend requires workflow restart.
+Two concurrent processes:
 
-### Vercel (production)
+```bash
+# Terminal 1: API server
+node server.js          # port 3001
 
-**Build command:** `npm run build` → Vite compiles `src/` to `dist/`.
-
-**Output directory:** `dist/`
-
-**Serverless functions:** 11 of the 12 allowed on the Vercel Hobby plan.
-
-| Function file | Routes |
-|---|---|
-| `api/products/index.js` | `/api/products` |
-| `api/products/[id].js` | `/api/products/:id` |
-| `api/orders/index.js` | `/api/orders` + sub-routes |
-| `api/users/index.js` | `/api/users` + sub-routes |
-| `api/cart/index.js` | `/api/cart` |
-| `api/wishlist/index.js` | `/api/wishlist` |
-| `api/categories/index.js` | `/api/categories` |
-| `api/address/index.js` | `/api/address` |
-| `api/reviews/index.js` | `/api/reviews` |
-| `api/admin.js` | `/api/admin/analytics` |
-| `api/brands/index.js` | `/api/brands` |
-
-**`vercel.json` rewrites:**
-
-```json
-{
-  "/api/admin/analytics/:path*" → "/api/admin?subpath=:path*",
-  "/api/orders/create"          → "/api/orders?subpath=create",
-  "/api/orders/cancel"          → "/api/orders?subpath=cancel",
-  "/api/orders/manage"          → "/api/orders?subpath=manage",
-  "/api/*"                      → "/api/:path*",
-  "/(.*)"                       → "/index.html"          ← SPA fallback
-}
+# Terminal 2: Frontend dev server
+vite                    # port 5000 — proxies /api/* to :3001
 ```
 
-The `?subpath=` query param is how Vercel passes sub-route information to consolidated handlers (since Vercel cannot mount a single file at multiple paths). The `resolveSubRoute()` helper in each consolidated handler reads this param.
+Vite's proxy (`vite.config.ts`) forwards all `/api/*` requests to port 3001. Frontend code uses only relative `/api/` URLs — no environment-specific URL switching needed.
+
+### Production (Vercel)
+
+- `api/` directory — deployed as Vercel serverless functions (one function per file)
+- `dist/` — Vite build output served as a static site
+- `vercel.json` rewrites: `/api/**` → serverless functions; `/*` → `dist/index.html`
+
+The consolidated handler pattern (one file per resource, sub-routes resolved via URL/query) was designed to stay within Vercel Hobby's 12-function cap.
+
+### Android (Play Store — Trusted Web Activity)
+
+The PWA manifest includes:
+- `related_applications` entry with Play Store `id: 'app.vercel.thunderbold.twa'`
+- SHA-256 certificate fingerprint for Digital Asset Links verification
+
+Use [PWABuilder](https://www.pwabuilder.com) or Bubblewrap to generate the Android APK and publish to the Play Store. The existing `Thunderbolt.apk` in `public/` is a direct download link for sideloading.
 
 ---
 
-## 16. Security Notes
+## 16. Future Roadmap
 
-| Area | Implementation |
-|---|---|
-| Token verification | Firebase Admin SDK with `checkRevoked: true`. No fallbacks. Throws on failure. |
-| Admin auth | Server-side check on every admin request (DB role + hardcoded list). |
-| No jwt.decode fallback | Previously removed. `verifyFirebaseToken` never passes unverified tokens. |
-| Rate limiting | In-memory IP-based limiter on order creation (10 req/min). |
-| HTTP security headers | `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Cross-Origin-Resource-Policy` set on all Express responses. |
-| Input sanitization | `normaliseSizeStock` clamps values to `≥ 0` integers and rejects unknown size keys. |
-| Idempotency | Order creation accepts a `clientOrderId` for safe retry on network failure without duplicate orders. |
-| Stock race conditions | Atomic `updateOne` with a `$gte` guard prevents overselling even under concurrent requests. |
-| Soft deletes | Reviews use `isDeleted: true` flag rather than hard deletes, preserving audit trail. |
-
----
-
-## 17. Known Constraints & Design Decisions
-
-### Vercel Hobby 12-function limit
-The project uses 11 of 12 serverless function slots. To stay within the limit, related routes are consolidated into single files (orders, admin, users). Any new top-level API resource requires either consuming the last slot or consolidating further.
-
-### MongoDB Atlas connection pooling
-The `global.mongo` cache persists the connection across Vercel function invocations in warm instances but does not persist across cold starts. `maxPoolSize: 10` and `serverSelectionTimeoutMS: 5000` are tuned for Atlas free-tier latency.
-
-### Cart is localStorage-first
-The cart is read from `localStorage` synchronously on load (zero latency) and then synced to the DB asynchronously. This means cart data persists across sessions without requiring login, and the UI never blocks on a network request to display the cart.
-
-### Database name typo
-The MongoDB database is named `thunderbold` (missing the 't' in 'bolt'). This is intentional — changing it would require a data migration.
-
-### Admin emails are hardcoded in two places
-`api/_lib/adminHelper.js` (server) and `src/pages/Admin.tsx` (client). Both must be kept in sync. The DB `role: 'admin'` field provides an alternative that does not require code changes.
-
-### Reviews require purchase verification
-The reviews API verifies that the reviewer has an order containing the product before accepting a review, preventing fake reviews.
-
-### Wishlist `moveToCart` defaults size to 'M'
-When moving a wishlist item to cart, size defaults to `'M'` because wishlisted items have no size. Users should then change the size in the cart.
-
-### `purchasePrice` is optional
-Existing products without `purchasePrice` continue to work — `PriceDisplay` simply renders only the selling price with no discount badge.
-
-### `categoryId` is empty for kurta and live-sale
-These sections don't use category-based browsing, so `categoryId` is stored as an empty string. The backend skips the `categoryId` required check for these sections.
+| Feature                   | Notes                                                                    |
+|---------------------------|--------------------------------------------------------------------------|
+| Push notifications        | FCM service worker is primed; needs `firebase-messaging` init in SW + subscription backend endpoint + admin send UI |
+| Redis rate limiting       | Required for multi-instance production deployments                       |
+| Payment gateway           | Razorpay or PhonePe; requires backend webhook handler + `paymentStatus` field on orders |
+| Order tracking            | Real-time status via WebSocket or SSE push from admin status updates     |
+| Email receipts            | Order confirmation emails via Resend or SendGrid                         |
+| Low-stock webhooks        | Push admin alerts when stock drops below threshold                       |
+| Product search            | MongoDB Atlas Search for full-text + filter search across product catalogue |
+| Discount / coupon codes   | Coupon collection with usage limits, expiry, and per-user redemption tracking |
+| Multi-instance rate limit | Redis-backed `rate-limiter-flexible` replacing in-memory store           |
+| PostgreSQL migration      | See `DATABASE.md` for full migration readiness assessment and schema mapping |
