@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 
@@ -43,9 +43,11 @@ export default function NotificationPermissionPrompt() {
             className="w-full max-w-sm bg-[#141414] border border-white/10 rounded-2xl p-5 shadow-2xl"
           >
             <div className="flex items-start gap-4">
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-brass/10 border border-brass/20 flex items-center justify-center">
-                <Bell className="w-5 h-5 text-brass" />
-              </div>
+              <img
+                src="/icons/icon-192x192.png"
+                alt="Thunderbold Logo"
+                className="shrink-0 w-10 h-10 rounded-xl border border-white/10 object-cover"
+              />
 
               <div className="flex-1 min-w-0">
                 <p className="font-display text-sm tracking-[0.06em] text-tb-white uppercase leading-tight mb-1">

@@ -25,8 +25,8 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(notifTitle, {
     body: notifBody,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
+    icon: 'https://thunderbold.shop/icons/icon-192x192.png',
+    badge: 'https://thunderbold.shop/icons/icon-96x96.png',
     data: payload.data || {},
     vibrate: [200, 100, 200],
   });

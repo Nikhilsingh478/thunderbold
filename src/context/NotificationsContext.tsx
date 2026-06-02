@@ -4,8 +4,6 @@ import { requestAndRegisterToken, initMessaging } from '../lib/firebaseMessaging
 import { onMessage } from 'firebase/messaging';
 import { toast } from 'sonner';
 
-const STORAGE_KEY = 'notifPromptShown';
-
 interface NotificationsContextType {
   shouldPrompt: boolean;
   setShouldPrompt: (value: boolean) => void;
@@ -20,31 +18,18 @@ const browserSupported = (): boolean =>
   'Notification' in window &&
   'serviceWorker' in navigator;
 
-const alreadyShown = (): boolean => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
-  } catch {
-    return true;
-  }
-};
-
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [shouldPrompt, setShouldPromptState] = useState(false);
 
   const setShouldPrompt = useCallback((value: boolean) => {
-    if (!value) {
-      try {
-        localStorage.setItem(STORAGE_KEY, 'true');
-      } catch {}
-    }
     setShouldPromptState(value);
   }, []);
 
   const triggerPrompt = useCallback(() => {
     if (!user) return;
-    if (alreadyShown()) return;
     if (!browserSupported()) return;
+    if (Notification.permission === 'granted') return;
     if (Notification.permission === 'denied') return;
     setShouldPromptState(true);
   }, [user]);
@@ -79,10 +64,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     };
 
     await requestAndRegisterToken(sendToken);
-
-    try {
-      localStorage.setItem(STORAGE_KEY, 'true');
-    } catch {}
     setShouldPromptState(false);
   }, [user]);
 
