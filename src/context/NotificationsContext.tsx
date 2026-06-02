@@ -66,6 +66,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         
         if (response.ok) {
           console.log('[FCM] Token stored in database successfully.');
+          try {
+            sessionStorage.setItem(`fcm_synced_${user.uid}`, 'true');
+          } catch {}
         } else {
           const errData = await response.json().catch(() => ({}));
           console.error('[FCM] Backend failed to store token:', errData.error || response.statusText);
@@ -86,6 +89,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // Auto-register/refresh FCM token on login/startup if permission is already granted
   useEffect(() => {
     if (user && browserSupported() && Notification.permission === 'granted') {
+      try {
+        if (sessionStorage.getItem(`fcm_synced_${user.uid}`) === 'true') {
+          return;
+        }
+      } catch {}
       console.log('[FCM] Notification permission is already granted. Auto-registering/refreshing token...');
       registerToken();
     }

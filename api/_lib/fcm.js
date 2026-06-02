@@ -62,6 +62,8 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
           ),
           webpush: {
             notification: {
+              title: title,
+              body: body,
               icon: '/icons/icon-192x192.png',
               badge: '/icons/icon-96x96.png',
               vibrate: [200, 100, 200],
@@ -141,8 +143,11 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
         ),
         webpush: {
           notification: {
+            title: title,
+            body: body,
             icon: '/icons/icon-192x192.png',
             badge: '/icons/icon-96x96.png',
+            vibrate: [200, 100, 200],
           },
           fcmOptions: {
             link: clickLink,
