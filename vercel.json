@@ -50,6 +50,14 @@
       "destination": "/api/orders?subpath=:sub"
     },
     {
+      "source": "/api/users/fcm-token",
+      "destination": "/api/users?subpath=fcm-token"
+    },
+    {
+      "source": "/api/notifications/broadcast",
+      "destination": "/api/notifications?subpath=broadcast"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

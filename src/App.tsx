@@ -5,6 +5,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 import AppContent from "./AppContent";
 
 const queryClient = new QueryClient({
@@ -19,15 +20,17 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <AppContent />
-            </TooltipProvider>
-          </QueryClientProvider>
-        </WishlistProvider>
-      </CartProvider>
+      <NotificationsProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <QueryClientProvider client={queryClient}>
+              <TooltipProvider>
+                <AppContent />
+              </TooltipProvider>
+            </QueryClientProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </NotificationsProvider>
     </AuthProvider>
   );
 };

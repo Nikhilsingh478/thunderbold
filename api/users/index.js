@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   const users = db.collection('users');
 
   // ─── FCM token sub-routes (/api/users/fcm-token) ────────────────────────────
-  const subPath = (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '');
+  const subPath = (req.query && req.query.subpath) || (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '');
   if (subPath === 'fcm-token') {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));

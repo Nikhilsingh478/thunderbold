@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const sub = (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '').split('/').pop() || '';
+  const sub = (req.query && req.query.subpath) || (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '').split('/').pop() || '';
 
   if (sub !== 'broadcast') {
     return res.status(404).json({ error: 'Not found' });
