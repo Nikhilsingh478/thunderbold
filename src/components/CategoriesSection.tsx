@@ -128,11 +128,23 @@ export default function CategoriesSection() {
         const [catRes, prodRes] = await Promise.all([fetch('/api/categories'), fetch('/api/products')]);
         if (catRes.ok) {
           const data = await catRes.json();
-          setCategories(data.categories || []);
+          const freshCats = data.categories || [];
+          setCategories(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(freshCats)) {
+              return freshCats;
+            }
+            return prev;
+          });
         }
         if (prodRes.ok) {
           const data = await prodRes.json();
-          setProducts((data.products || []).filter((p: { section?: string }) => p.section === 'kurta' || p.section === 'outfits'));
+          const freshProds = (data.products || []).filter((p: { section?: string }) => p.section === 'kurta' || p.section === 'outfits');
+          setProducts(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(freshProds)) {
+              return freshProds;
+            }
+            return prev;
+          });
         }
       } catch {
         // silently fail — skeleton stays until categories load
@@ -141,6 +153,8 @@ export default function CategoriesSection() {
       }
     };
     load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const denimCategories = useMemo(

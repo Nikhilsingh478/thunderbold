@@ -26,14 +26,17 @@ interface Order {
 }
 
 const Orders = () => {
-  const { user } = useAuth();
-  // Hydrate from in-memory cache instantly if it's already populated for this user.
-  // This makes the page render with content on the first paint instead of a spinner.
-  const initialCached = user ? getStaleOrders(user.uid) : null;
-  const [orders, setOrders] = useState<Order[]>(initialCached || []);
-  const [loading, setLoading] = useState(!initialCached);
+  const { user, loading: authLoading } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Compute cache dynamically inside render so that on the frame the user object resolves,
+  // we instantly pull the cached orders instead of rendering a spinner.
+  const cachedOnRender = user ? getStaleOrders(user.uid) : null;
+  const displayOrders = orders.length > 0 ? orders : (cachedOnRender || []);
+  const isCurrentlyLoading = authLoading || (ordersLoading && !cachedOnRender);
 
   // ── Reviews state ───────────────────────────────────────────────────────
   // Map of productId → user's existing review (for quick lookup per item).
@@ -44,20 +47,13 @@ const Orders = () => {
   } | null>(null);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+    if (authLoading) return;
+    if (!user) {
+      setOrdersLoading(false);
+      return;
+    }
 
-      // If we have any cached data for this user, render it immediately
-      // and revalidate silently in the background (stale-while-revalidate).
-      const cached = getStaleOrders(user.uid);
-      if (cached) {
-        setOrders(cached);
-        setLoading(false);
-      }
-
+    const fetchOrders = async (isPoll = false) => {
       try {
         const token = await user.getIdToken();
         const response = await fetch('/api/orders', {
@@ -69,21 +65,44 @@ const Orders = () => {
         if (response.ok) {
           const data = await response.json();
           const fresh: Order[] = data.orders || [];
-          setOrders(fresh);
-          setCachedOrders(user.uid, fresh);
-        } else if (!cached) {
+          setOrders(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(fresh)) {
+              setCachedOrders(user.uid, fresh);
+              return fresh;
+            }
+            return prev;
+          });
+        } else if (!isPoll && !getStaleOrders(user.uid)) {
           setError('Failed to fetch orders');
         }
       } catch (err) {
-        if (!cached) setError('Error fetching orders');
+        if (!isPoll && !getStaleOrders(user.uid)) setError('Error fetching orders');
         console.error('Error fetching orders:', err);
       } finally {
-        setLoading(false);
+        if (!isPoll) {
+          setOrdersLoading(false);
+        }
       }
     };
 
-    fetchOrders();
-  }, [user]);
+    // Sync cache on initial load
+    const cached = getStaleOrders(user.uid);
+    if (cached) {
+      setOrders(cached);
+      setOrdersLoading(false);
+    } else {
+      setOrdersLoading(true);
+    }
+
+    fetchOrders(false);
+
+    // Setup polling every 10 seconds silently
+    const interval = setInterval(() => {
+      fetchOrders(true);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [user, authLoading]);
 
   // Fetch the user's existing reviews (so each delivered item knows whether to
   // show "Review Product" vs "Edit Review"). Lightweight — runs once per user.
@@ -240,6 +259,17 @@ const Orders = () => {
     });
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brass mx-auto mb-4"></div>
+          <p className="font-condensed text-xs text-sv-mid uppercase tracking-[0.16em]">Loading Account...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-void flex items-center justify-center">
@@ -283,9 +313,20 @@ const Orders = () => {
             <p className="text-sv-mid">Track and manage your orders</p>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brass"></div>
+          {isCurrentlyLoading ? (
+            <div className="flex flex-col gap-6 py-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-surface border border-white/10 rounded-lg p-6 animate-pulse">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="h-4 w-32 bg-white/10 rounded" />
+                    <div className="h-4 w-20 bg-white/10 rounded" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-3.5 w-2/3 bg-white/5 rounded" />
+                    <div className="h-3 w-1/2 bg-white/5 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -297,7 +338,7 @@ const Orders = () => {
                 Try Again
               </button>
             </div>
-          ) : orders.length === 0 ? (
+          ) : displayOrders.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -317,7 +358,7 @@ const Orders = () => {
             </motion.div>
           ) : (
             <div className="space-y-6">
-              {orders.map((order) => (
+              {displayOrders.map((order) => (
                 <motion.div
                   key={order._id}
                   initial={{ opacity: 0, y: 20 }}

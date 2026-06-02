@@ -29,10 +29,10 @@ function getRole(i: number, active: number): Role {
 }
 
 function roleStyle(role: Role, isMobile: boolean): React.CSSProperties {
-  const baseW = isMobile ? '82vw' : '26vw';
-  const sideW = isMobile ? '54vw' : '18vw';
-  const backW = isMobile ? '42vw' : '14vw';
-  const liftBottom = isMobile ? '14%' : '0%';
+  const baseW = isMobile ? '72vw' : '26vw';
+  const sideW = isMobile ? '48vw' : '18vw';
+  const backW = isMobile ? '38vw' : '14vw';
+  const liftBottom = isMobile ? '10%' : '0%';
 
   const common: React.CSSProperties = {
     position: 'absolute',
@@ -166,7 +166,7 @@ export default function ThunderboltSlider() {
         .tb-heading-anim { animation: tb-heading-split-in 850ms cubic-bezier(0.22, 1, 0.36, 1) both; }
       `}</style>
 
-      <div className="relative w-full" style={{ height: '100svh', minHeight: 560, overflow: 'hidden' }}>
+      <div className="relative w-full" style={{ height: isMobile ? '65svh' : '100svh', minHeight: isMobile ? 400 : 560, overflow: 'hidden' }}>
         {/* Grain overlay */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -176,14 +176,14 @@ export default function ThunderboltSlider() {
         {/* Ghost heading */}
         <div
           className="absolute inset-x-0 flex items-center justify-center pointer-events-none select-none"
-          style={{ zIndex: 2, top: isMobile ? '50%' : '14%', transform: isMobile ? 'translateY(-50%)' : 'none' }}
+          style={{ zIndex: 2, top: isMobile ? '45%' : '14%', transform: isMobile ? 'translateY(-50%)' : 'none' }}
         >
           <h1
             key={`${activeIndex}`}
             className="tb-heading-anim"
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: isMobile ? 'clamp(64px, 24vw, 150px)' : 'clamp(90px, 18vw, 260px)',
+              fontSize: isMobile ? 'clamp(48px, 16vw, 100px)' : 'clamp(90px, 18vw, 260px)',
               fontWeight: 900,
               color: 'white',
               lineHeight: 1,

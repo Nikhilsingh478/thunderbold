@@ -836,24 +836,42 @@ export default function Admin() {
     if (user && !ADMIN_EMAILS.includes(user.email)) navigate('/');
   }, [user, navigate]);
 
-  useEffect(() => { if (user && activeTab === 'orders') fetchOrders(); }, [activeTab, user]);
-  useEffect(() => { if (user && activeTab === 'products') { fetchProducts(); fetchCategories(); } }, [activeTab, user]);
-  useEffect(() => { if (user && activeTab === 'categories') fetchCategories(); }, [activeTab, user]);
-  useEffect(() => { if (user && activeTab === 'reviews') fetchProducts(); }, [activeTab, user]);
-  useEffect(() => { if (user && activeTab === 'brands') fetchBrands(); }, [activeTab, user]);
-  useEffect(() => { if (user && activeTab === 'slider') fetchSliderConfig(); }, [activeTab, user]);
+  useEffect(() => {
+    if (!user) return;
+
+    const loadData = (silent: boolean) => {
+      if (activeTab === 'orders') fetchOrders(silent);
+      else if (activeTab === 'products') { fetchProducts(silent); fetchCategories(silent); }
+      else if (activeTab === 'categories') fetchCategories(silent);
+      else if (activeTab === 'reviews') fetchProducts(silent);
+      else if (activeTab === 'brands') fetchBrands(silent);
+      else if (activeTab === 'slider') fetchSliderConfig(silent);
+    };
+
+    loadData(false); // Initial load (not silent)
+
+    const interval = setInterval(() => {
+      loadData(true); // Poll silently every 15 seconds
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [activeTab, user]);
 
   // Reset drill-down when leaving the reviews tab
   useEffect(() => { if (activeTab !== 'reviews') { setReviewsProduct(null); setProductReviews([]); } }, [activeTab]);
 
-  const fetchBrands = async () => {
+  const fetchBrands = async (silent = false) => {
     try {
       const r = await fetch('/api/brands');
-      if (r.ok) { const d = await r.json(); setBrands(d.brands ?? []); }
+      if (r.ok) {
+        const d = await r.json();
+        const fresh = d.brands ?? [];
+        setBrands(prev => JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev);
+      }
     } catch { console.error('Failed to fetch brands'); }
   };
 
-  const fetchSliderConfig = async () => {
+  const fetchSliderConfig = async (silent = false) => {
     if (!user) return;
     try {
       const [sliderRes, productsRes] = await Promise.all([
@@ -863,18 +881,20 @@ export default function Admin() {
       if (sliderRes.ok) {
         const d = await sliderRes.json();
         if (Array.isArray(d.slides) && d.slides.length === 4) {
-          setSliderSlides(d.slides.map((s: any) => ({
+          const freshSlides = d.slides.map((s: any) => ({
             imageUrl: s.imageUrl || '',
             heading: s.heading || '',
             productId: s.productId || '',
             productName: s.productName || null,
             productImage: s.productImage || null,
-          })));
+          }));
+          setSliderSlides(prev => JSON.stringify(prev) !== JSON.stringify(freshSlides) ? freshSlides : prev);
         }
       }
       if (productsRes.ok) {
         const d = await productsRes.json();
-        setSliderOutfits(d.products ?? []);
+        const freshOutfits = d.products ?? [];
+        setSliderOutfits(prev => JSON.stringify(prev) !== JSON.stringify(freshOutfits) ? freshOutfits : prev);
       }
     } catch { console.error('Failed to fetch slider config'); }
   };
@@ -974,34 +994,40 @@ export default function Admin() {
     } catch { alert('Failed to delete review.'); }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const token = await user.getIdToken();
       const r = await fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } });
-      if (r.ok) { const d = await r.json(); setOrders(d.orders ?? []); }
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+      if (r.ok) {
+        const d = await r.json();
+        const fresh = d.orders ?? [];
+        setOrders(prev => JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev);
+      }
+    } catch (e) { console.error(e); } finally { if (!silent) setLoading(false); }
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const r = await fetch('/api/products');
       const d = await r.json();
-      setProducts(d.products ?? []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+      const fresh = d.products ?? [];
+      setProducts(prev => JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev);
+    } catch (e) { console.error(e); } finally { if (!silent) setLoading(false); }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const r = await fetch('/api/categories');
       const d = await r.json();
-      setCategories(d.categories ?? []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+      const fresh = d.categories ?? [];
+      setCategories(prev => JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev);
+    } catch (e) { console.error(e); } finally { if (!silent) setLoading(false); }
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {

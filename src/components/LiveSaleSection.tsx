@@ -52,7 +52,12 @@ export default function LiveSaleSection() {
           const saleProducts = (data.products || []).filter(
             (p: Product) => p.section === 'live-sale'
           );
-          setProducts(saleProducts);
+          setProducts(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(saleProducts)) {
+              return saleProducts;
+            }
+            return prev;
+          });
         }
       } catch {
         // silently fail
@@ -61,6 +66,8 @@ export default function LiveSaleSection() {
       }
     };
     load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

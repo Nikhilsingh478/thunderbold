@@ -33,15 +33,15 @@ export default function NotificationPermissionPrompt() {
   return (
     <AnimatePresence>
       {shouldPrompt && (
-        <motion.div
-          key="notif-prompt"
-          initial={{ opacity: 0, y: 80 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 80 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[200] w-[calc(100%-2rem)] max-w-sm"
-        >
-          <div className="bg-[#141414] border border-white/10 rounded-2xl p-5 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <motion.div
+            key="notif-prompt"
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+            className="w-full max-w-sm bg-[#141414] border border-white/10 rounded-2xl p-5 shadow-2xl"
+          >
             <div className="flex items-start gap-4">
               <div className="shrink-0 w-10 h-10 rounded-xl bg-brass/10 border border-brass/20 flex items-center justify-center">
                 <Bell className="w-5 h-5 text-brass" />
@@ -79,8 +79,8 @@ export default function NotificationPermissionPrompt() {
                 Enable
               </button>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
