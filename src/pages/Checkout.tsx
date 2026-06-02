@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useNotifications } from '../hooks/useNotifications';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ScrollProgress from '../components/ScrollProgress';
@@ -28,6 +29,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items, clearCartData } = useCart();
+  const { triggerPrompt } = useNotifications();
 
   const singleProductData = location.state?.productName ? [location.state] : null;
   const cartItems = location.state?.cartItems || singleProductData || items;
@@ -201,6 +203,7 @@ export default function Checkout() {
       toast.success('Order placed successfully!');
       setShowConfirmation(true);
       setSubmitting(false);
+      triggerPrompt();
 
     } catch (error) {
       console.error('CHECKOUT: Unexpected error:', error);

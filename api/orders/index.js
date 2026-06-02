@@ -396,9 +396,9 @@ async function handleManage(req, res) {
   if (req.method === "PATCH") {
     const body = await parseBody(req);
     const { status } = body;
-    const validStatuses = ["pending", "confirmed", "shipped", "delivered"];
+    const validStatuses = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"];
     if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, shipped, delivered" });
+      return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, packed, shipped, delivered, cancelled" });
     }
 
     const existingOrder = await orders.findOne({ _id: objectId }, { projection: { status: 1, userId: 1 } });
@@ -414,9 +414,10 @@ async function handleManage(req, res) {
       const shortId = String(objectId).slice(-6).toUpperCase();
       const notifMap = {
         confirmed: { title: 'Order Confirmed', body: `Your order #TB${shortId} has been confirmed.` },
-        shipped:   { title: 'On Its Way', body: 'Your Thunderbold order is on its way 🚚' },
-        delivered: { title: 'Delivered', body: 'Your order has been delivered. Enjoy.' },
-        cancelled: { title: 'Order Cancelled', body: 'Your order has been cancelled.' },
+        packed:    { title: 'Order Packed', body: `Your order #TB${shortId} is packed and ready to ship.` },
+        shipped:   { title: 'On Its Way', body: `Your order #TB${shortId} is on its way. Hang tight!` },
+        delivered: { title: 'Delivered', body: 'Your order has been delivered. Enjoy!' },
+        cancelled: { title: 'Order Cancelled', body: `Your order #TB${shortId} has been cancelled.` },
       };
       const notif = notifMap[status];
       if (notif) {
