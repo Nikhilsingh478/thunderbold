@@ -19,7 +19,22 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {};
+  console.log('[FCM-SW] Background message received:', payload);
+
+  // If the payload contains the 'notification' key, FCM/browser automatically 
+  // renders the notification using the webpush options. We return early to 
+  // prevent self.registration.showNotification from showing a duplicate card.
+  if (payload.notification) {
+    console.log('[FCM-SW] Browser handles notification rendering automatically. Skipping SW showNotification.');
+    return;
+  }
+
+  // Fallback handler for data-only (silent) notification payloads
+  const data = payload.data || {};
+  const title = data.title;
+  const body = data.body;
+  if (!title && !body) return;
+
   const notifTitle = title || 'Thunderbold';
   const notifBody = body || '';
 
@@ -27,7 +42,7 @@ messaging.onBackgroundMessage((payload) => {
     body: notifBody,
     icon: 'https://thunderbold.shop/icons/icon-192x192.png',
     badge: 'https://thunderbold.shop/icons/icon-96x96.png',
-    data: payload.data || {},
+    data: data,
     vibrate: [200, 100, 200],
   });
 });
