@@ -39,16 +39,6 @@ app.use('/api/users', async (req, res) => {
   }
 });
 
-app.use('/api/products/:id', async (req, res) => {
-  try {
-    const { default: handler } = await import('./api/products/[id].js');
-    await handler(req, res);
-  } catch (error) {
-    console.error('Error in products/:id:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 app.use('/api/products', async (req, res) => {
   try {
     const { default: handler } = await import('./api/products/index.js');

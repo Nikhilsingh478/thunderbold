@@ -1,0 +1,261 @@
+You are a senior-level full-stack architecture engineer working on a production ecommerce PWA called Thunderbolt Denim.
+
+Current stack:
+
+* React + Vite
+* Tailwind CSS
+* TanStack Query
+* Firebase Auth
+* Firebase Cloud Messaging
+* MongoDB Atlas
+* Vercel Serverless Functions
+* PWABuilder-generated Android app
+
+==================================================
+CRITICAL PRODUCTION ISSUE
+=========================
+
+Deployment is currently FAILING on Vercel Hobby plan because the project exceeds the maximum allowed number of Serverless Functions.
+
+Error:
+“No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan.”
+
+IMPORTANT:
+This is NOT a frontend bundle issue.
+This is specifically a SERVERLESS FUNCTION COUNT issue.
+
+==================================================
+PRIMARY GOAL
+============
+
+Reduce the total number of serverless functions BELOW the Vercel Hobby limit WITHOUT breaking:
+
+* authentication
+* orders
+* notifications
+* admin functionality
+* existing APIs
+* frontend integrations
+* service workers
+* PWA behavior
+* caching
+* deployment stability
+
+==================================================
+CRITICAL REQUIREMENTS
+=====================
+
+* DO NOT rewrite the project.
+* DO NOT remove core functionality.
+* DO NOT break notifications.
+* DO NOT break order workflows.
+* DO NOT break Firebase integrations.
+* DO NOT break admin flows.
+* DO NOT introduce hacky architecture.
+* Keep implementation clean, scalable, and maintainable.
+* Consolidate intelligently.
+* Preserve current production behavior.
+
+==================================================
+
+1. AUDIT CURRENT SERVERLESS FUNCTION STRUCTURE
+   ==================================================
+
+Perform a complete audit of:
+
+* existing API routes
+* Vercel function generation
+* notification-related endpoints
+* admin-related endpoints
+* duplicate route patterns
+
+Identify:
+
+* unnecessary fragmentation
+* duplicate handlers
+* overly granular endpoints
+* routes that can safely be merged
+
+==================================================
+2. CONSOLIDATE NOTIFICATION FUNCTIONS
+=====================================
+
+CRITICAL REQUIREMENT.
+
+Notification system likely created too many separate endpoints.
+
+DO NOT keep:
+
+* one function per notification type
+* one function per order event
+* excessively granular APIs
+
+Instead:
+Create a clean centralized notification architecture.
+
+Example approach:
+Single:
+
+* /api/notifications
+  OR
+* /api/orders
+
+with internal action/type handling.
+
+Use:
+
+* action
+* type
+* event
+  patterns internally instead of separate files/functions.
+
+==================================================
+3. CONSOLIDATE ORDER-RELATED FUNCTIONS
+======================================
+
+Reduce fragmentation in order APIs.
+
+Instead of:
+
+* multiple tiny order status endpoints
+
+Use:
+
+* centralized order handler architecture
+* grouped REST structure
+* action-based routing where appropriate
+
+Maintain readability and scalability.
+
+==================================================
+4. CONSOLIDATE ADMIN FUNCTIONS
+==============================
+
+Audit admin APIs for:
+
+* duplicate logic
+* isolated tiny handlers
+* unnecessary endpoint splitting
+
+Merge safely where possible.
+
+==================================================
+5. PRESERVE CLEAN ARCHITECTURE
+==============================
+
+IMPORTANT:
+Do NOT create one giant messy monolithic file.
+
+Goal is:
+
+* logically grouped APIs
+* fewer deployed functions
+* maintainable code organization
+
+Maintain:
+
+* separation of concerns
+* modular internal logic
+* reusable utilities
+
+==================================================
+6. VERIFY VERCEL FUNCTION GENERATION
+====================================
+
+IMPORTANT:
+Understand exactly how Vercel is generating functions.
+
+Ensure:
+
+* unnecessary files are not becoming functions
+* helper files are not incorrectly placed
+* API directory structure is optimized
+
+Audit:
+
+* /api structure
+* route handlers
+* exports
+* serverless entry points
+
+==================================================
+7. KEEP NOTIFICATION SYSTEM FULLY FUNCTIONAL
+============================================
+
+Notification features MUST remain operational:
+
+* order notifications
+* broadcast notifications
+* FCM token registration
+* notification triggers
+* duplicate prevention
+* admin broadcasts
+
+Do NOT remove functionality just to reduce function count.
+
+==================================================
+8. PRESERVE FIREBASE ADMIN INTEGRATION
+======================================
+
+Ensure:
+
+* Firebase Admin SDK initialization remains stable
+* no duplicate initialization
+* shared notification utilities reused properly
+* centralized notification service architecture
+
+==================================================
+9. MAINTAIN PRODUCTION STABILITY
+================================
+
+CRITICAL REQUIREMENT.
+
+After refactor:
+
+* all existing frontend calls must still work
+  OR
+* frontend integrations must be updated safely
+
+Avoid:
+
+* broken routes
+* mismatched payloads
+* inconsistent response formats
+* notification regressions
+
+==================================================
+10. TESTING REQUIREMENTS
+========================
+
+Thoroughly test:
+
+* deployment success
+* total serverless function count
+* authentication
+* order placement
+* order status updates
+* notifications
+* admin broadcasts
+* service worker behavior
+* PWA installability
+
+Ensure:
+
+* successful Vercel deployment on Hobby plan
+* no broken APIs
+* no runtime regressions
+
+==================================================
+FINAL GOAL
+==========
+
+The final architecture should:
+
+* stay under Vercel Hobby serverless function limits
+* preserve all core functionality
+* maintain clean scalable structure
+* keep notification system production-ready
+* avoid unnecessary fragmentation
+* remain maintainable long-term
+
+This should feel like a properly engineered production serverless architecture — not a hacked-together workaround.
