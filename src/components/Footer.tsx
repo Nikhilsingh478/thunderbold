@@ -361,20 +361,6 @@ export default function Footer() {
         </div>
       </footer>
 
-      {/* THUNDERBOLD — Cinematic brand identity mark */}
-      <div
-        className="relative overflow-hidden select-none pointer-events-none py-4 md:py-6"
-        aria-hidden="true"
-        style={{ background: 'linear-gradient(to bottom, #0a0a0a 0%, #080808 100%)' }}
-      >
-        <p
-          className="font-display text-center uppercase leading-none tracking-[0.04em] text-white/[0.045]"
-          style={{ fontSize: 'clamp(4rem, 18vw, 18rem)' }}
-        >
-          Thunderbold
-        </p>
-      </div>
-
       <AnimatePresence>
         {activePolicy && (
           <PolicyModal type={activePolicy} onClose={() => setActivePolicy(null)} />

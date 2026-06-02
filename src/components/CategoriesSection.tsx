@@ -207,7 +207,7 @@ export default function CategoriesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center pt-10 md:pt-14 pb-6 md:pb-8 px-6 md:px-16"
+            className="text-center pt-4 md:pt-14 pb-3 md:pb-8 px-6 md:px-16"
           >
             <div className="font-condensed font-semibold text-[0.62rem] md:text-[0.66rem] tracking-[0.38em] uppercase text-brass mb-4 flex items-center justify-center gap-3">
               <span className="w-5 h-px bg-brass-dim inline-block" />

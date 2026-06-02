@@ -174,3 +174,17 @@
     cursor: auto !important;
   }
 }
+
+/* ── Native-app image behaviour ────────────────────────────────────────────
+   Prevents browser long-press callout (iOS "Save Image" sheet),
+   disables drag ghosts, and suppresses selection on all images.
+   Preserves tap, swipe, scroll, and carousel interactions.
+   ───────────────────────────────────────────────────────────────────────── */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+  draggable: false;
+}
