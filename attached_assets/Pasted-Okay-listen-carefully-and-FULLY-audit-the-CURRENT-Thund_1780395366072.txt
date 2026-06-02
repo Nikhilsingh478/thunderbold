@@ -1,0 +1,321 @@
+Okay, listen carefully and FULLY audit the CURRENT Thunderbolt/Thunderbold branding, homepage copy, About page architecture, metadata, SEO structure, sitemap setup, and global text references BEFORE touching anything.
+
+This is NOT a redesign task.
+This is a branding correction + foundational SEO cleanup pass.
+
+VERY IMPORTANT:
+Do NOT randomly rewrite the entire website.
+Do NOT destroy the current aesthetic.
+Do NOT remove the cinematic/premium feeling.
+Do NOT make the website feel generic or template-like.
+
+The goal is:
+
+* preserve the premium cinematic streetwear vibe
+* preserve the smooth modern UI
+* preserve animations and visual quality
+* BUT align the brand messaging with the CURRENT business reality
+* AND make the project technically SEO-ready
+
+==================================================
+CORE BRANDING CHANGE
+====================
+
+Thunderbolt must now become:
+
+THUNDERBOLD
+
+This change must happen consistently across the ENTIRE website wherever applicable.
+
+Audit and update:
+
+* logos/text references
+* navbar text
+* footer
+* metadata
+* SEO titles
+* manifest/app name
+* splash screen text
+* About page references
+* email references
+* structured data/schema
+* sitemap references
+* OpenGraph tags
+* Twitter metadata
+* any visible branding copy
+
+IMPORTANT:
+Do NOT blindly replace things without auditing context first.
+Ensure no broken formatting or weird typography occurs.
+
+==================================================
+CURRENT BUSINESS REALITY
+========================
+
+Thunderbold is CURRENTLY:
+
+* a curated fashion/streetwear ecommerce marketplace/store
+* selling denim, jeans, t-shirts, shirts, kurtas, and fashion products
+* focused on:
+
+  * value for money
+  * style
+  * wearable everyday fashion
+  * affordable quality
+  * curated collections
+
+Thunderbold is NOT currently:
+
+* a large-scale denim manufacturer
+* a fully self-manufactured original denim factory
+* an industrial denim engineering company
+
+Therefore:
+the website messaging must feel:
+
+* premium
+* cinematic
+* modern
+* stylish
+* fashion-forward
+  BUT ALSO:
+* honest
+* grounded
+* realistic
+* trustworthy
+
+==================================================
+ABOUT PAGE REWORK
+=================
+
+VERY IMPORTANT:
+DO NOT delete the current About page component/file.
+
+Keep the existing cinematic About page safely inside the project for possible future reuse.
+
+Instead:
+
+* archive/comment out/remove current route usage
+* create a NEW About page aligned with the CURRENT business direction
+
+==================================================
+NEW ABOUT PAGE DIRECTION
+========================
+
+The new About page should position Thunderbold as:
+
+* a curated fashion destination
+* a premium streetwear & denim store
+* a modern Indian fashion marketplace
+* a platform focused on handpicked fashion collections
+* affordable premium fashion for everyday wear
+
+==================================================
+VERY IMPORTANT DESIGN REQUIREMENTS
+==================================
+
+The new About page MUST:
+
+* feel cinematic
+* feel premium
+* feel smooth
+* feel modern
+* feel visually immersive
+* feel animated
+* feel professional
+* feel award-quality
+* feel clean and minimal
+* feel fashion-brand level
+
+DO NOT:
+
+* create generic corporate layouts
+* create boring template sections
+* overload with fake storytelling
+* make exaggerated manufacturing claims
+* use cheesy marketing fluff
+
+DO:
+
+* use subtle motion
+* premium typography
+* smooth transitions
+* layered visuals
+* clean spacing
+* modern layouts
+* aesthetic sections
+* refined animations
+
+==================================================
+CONTENT DIRECTION
+=================
+
+The tone should feel:
+
+* bold
+* stylish
+* premium
+* grounded
+* modern
+* trustworthy
+
+Possible themes:
+
+* curated collections
+* everyday style
+* fashion accessibility
+* modern streetwear
+* affordable premium fashion
+* handpicked quality
+* evolving fashion culture
+
+IMPORTANT:
+Keep messaging NATURAL and HONEST.
+
+Avoid fake lines like:
+
+* “world-class manufacturing”
+* “industry-leading denim engineering”
+* “crafted in our factories”
+  unless actually true.
+
+==================================================
+SEO IMPLEMENTATION TASKS
+========================
+
+After the branding/content cleanup, implement the necessary foundational technical SEO setup properly.
+
+==================================================
+REQUIRED SEO TASKS
+==================
+
+1. sitemap.xml
+
+* Generate proper sitemap
+* Include:
+
+  * homepage
+  * categories
+  * products
+  * collections
+  * about page
+  * important routes
+
+2. robots.txt
+
+* Proper crawl rules
+* Block admin/private routes
+* Allow search engine indexing
+
+3. Metadata Audit
+   Implement/improve:
+
+* page titles
+* meta descriptions
+* OpenGraph tags
+* Twitter cards
+
+4. Structured Data / Schema
+   Add proper schema where appropriate:
+
+* Organization schema
+* Website schema
+* Product schema
+* Breadcrumb schema
+
+5. Canonical URLs
+   Ensure canonical tags exist properly.
+
+6. SEO-Friendly Content Structure
+   Audit:
+
+* H1/H2 hierarchy
+* semantic HTML structure
+* heading consistency
+
+7. Image SEO
+   Ensure:
+
+* alt tags exist
+* meaningful alt text
+* optimized image loading
+
+8. Performance + Crawlability
+   Audit:
+
+* indexing issues
+* render-blocking issues
+* lazy loading behavior
+* mobile SEO friendliness
+
+==================================================
+IMPORTANT SEO REQUIREMENTS
+==========================
+
+DO NOT:
+
+* keyword stuff
+* spam keywords unnaturally
+* generate fake SEO paragraphs
+* damage the premium aesthetic for SEO
+
+DO:
+
+* keep content human-readable
+* maintain premium branding
+* make content Google-readable naturally
+
+==================================================
+VERY IMPORTANT
+==============
+
+This is NOT a complete SEO-maximization pass yet.
+This is:
+
+* branding alignment
+* foundational SEO setup
+* content correction
+* technical SEO readiness
+
+Do NOT over-engineer unnecessary SEO systems yet.
+
+==================================================
+FINAL VALIDATION REQUIRED
+=========================
+
+Before finishing verify:
+
+* Thunderbolt → Thunderbold consistency
+* About page matches current business reality
+* no broken routes
+* no broken metadata
+* sitemap works
+* robots.txt works
+* schema validates
+* metadata renders properly
+* mobile responsiveness preserved
+* animations remain smooth
+* cinematic premium feel preserved
+
+==================================================
+FINAL DELIVERABLES REQUIRED
+===========================
+
+After implementation provide:
+
+1. Files modified
+2. SEO files created
+3. Metadata/schema added
+4. Branding references updated
+5. About page design approach used
+6. Any SEO limitations remaining
+7. Recommendations for future SEO/content scaling
+
+Take your time and do this properly.
+Prioritize:
+
+* premium UX
+* truthful branding
+* clean architecture
+* scalable SEO foundation
+* modern cinematic presentation.

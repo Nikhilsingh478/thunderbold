@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -24,6 +25,7 @@ import {
   Truck,
   CheckCircle,
   Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface Address {
@@ -87,6 +89,8 @@ export default function Profile() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersLoaded, setOrdersLoaded] = useState(false);
   const [cancellingOrder, setCancellingOrder] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     if (!user) { navigate('/'); return; }
@@ -98,6 +102,34 @@ export default function Profile() {
   }, [activeTab]);
 
   const getToken = () => user!.getIdToken();
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeletingAccount(true);
+    try {
+      const token = await getToken();
+      // Clean up backend data first
+      await fetch('/api/users', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Delete Firebase auth account
+      const authUser = getAuth().currentUser;
+      if (authUser) await deleteUser(authUser);
+      toast.success('Account deleted. Goodbye.');
+      navigate('/');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Account deletion failed';
+      // Firebase requires recent sign-in for deletion
+      if (message.includes('requires-recent-login')) {
+        toast.error('For security, please sign out and sign in again before deleting your account.');
+      } else {
+        toast.error('Could not delete account. Please try again or contact support.');
+      }
+      setDeletingAccount(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -846,8 +878,99 @@ export default function Profile() {
               </AnimatePresence>
             </>
           )}
+
+          {/* Danger Zone */}
+          {!profileLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-10 border border-red-900/30 rounded-xl p-6 md:p-8 bg-red-950/10"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-400/80" />
+                    <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-red-400/80">
+                      Danger Zone
+                    </p>
+                  </div>
+                  <p className="font-body text-[0.85rem] text-white/40 leading-relaxed">
+                    Permanently delete your account and all associated data. This cannot be undone.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="shrink-0 px-5 py-2.5 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-red-400 border border-red-900/50 bg-red-950/20 hover:bg-red-900/30 hover:border-red-700/60 transition-colors duration-200"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </motion.div>
+          )}
         </div>
       </main>
+
+      {/* Delete Account Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-4"
+            onClick={() => !deletingAccount && setShowDeleteModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-md bg-[#161616] border border-white/[0.08] rounded-xl p-7 md:p-8"
+            >
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-10 h-10 rounded-full bg-red-900/30 border border-red-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="font-display text-xl tracking-[0.08em] uppercase text-white mb-1">
+                    Delete Account
+                  </h2>
+                  <p className="font-body text-[0.85rem] text-white/45 leading-relaxed">
+                    This will permanently delete your Thunderbolt account, all saved addresses, and your order history. This action cannot be reversed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deletingAccount}
+                  className="flex-1 py-3 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-white/60 border border-white/10 hover:border-white/20 hover:text-white/80 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                  className="flex-1 py-3 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-white bg-red-700 hover:bg-red-600 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {deletingAccount ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Yes, Delete My Account'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

@@ -1,0 +1,4 @@
+- [Thunderbolt stack](thunderbolt-stack.md) — React+Vite (port 5000) + Express (port 3001), /api proxy; MONGO_URI + 6 VITE_FIREBASE_* secrets required
+- [Policy content architecture](policy-content.md) — shared policyContent.ts drives both Footer modal and Policies page; always edit there
+- [lucide-react source map bug](lucide-sourcemap.md) — merge.js.map can corrupt; fix with valid empty JSON `{"version":3,"sources":[],"mappings":""}`
+- [vite-plugin-pwa install](vite-pwa-install.md) — in package.json but not auto-installed in dev env; use installLanguagePackages if missing

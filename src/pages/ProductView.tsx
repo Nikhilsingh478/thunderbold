@@ -500,6 +500,66 @@ export default function ProductView() {
                 </div>
               </div>
 
+              {/* Action Buttons — above highlights for better mobile UX */}
+              <div className="flex flex-col gap-4 mb-8 lg:mb-10">
+                {/* Cart and Wishlist Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isOutfit ? (!selectedTopwearSize || !selectedBottomwearSize || effectiveOutOfStock || isAddingToCart) : (!selectedSize || effectiveOutOfStock || isAddingToCart)}
+                    className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
+                      (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) && !effectiveOutOfStock && !isAddingToCart
+                        ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                        : 'bg-white/5 text-white/20 cursor-not-allowed'
+                    }`}
+                  >
+                    <ShoppingCart size={20} />
+                    {isAddingToCart ? 'Adding...' : effectiveOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
+                  </button>
+
+                  <button
+                    onClick={handleAddToWishlist}
+                    disabled={!product || isTogglingWishlist}
+                    className={`p-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center ${
+                      isTogglingWishlist
+                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                        : product && isInWishlist(product._id)
+                          ? 'bg-brass text-void hover:bg-yellow-400'
+                          : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Heart size={20} className={!isTogglingWishlist && product && isInWishlist(product._id) ? 'fill-current' : ''} />
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleShareProduct}
+                  disabled={!product || isSharing}
+                  className="w-full py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 border border-white/10 text-tb-white hover:border-brass hover:text-brass bg-white/[0.02] disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:border-white/10 disabled:hover:text-white/25"
+                >
+                  <Share2 size={18} />
+                  {isSharing ? 'Sharing...' : 'Share Product'}
+                </button>
+                {shareMessage && (
+                  <p className="text-center font-condensed text-[0.7rem] tracking-[0.18em] uppercase text-brass">
+                    {shareMessage}
+                  </p>
+                )}
+
+                {/* Order CTA */}
+                <button
+                  onClick={handleOrder}
+                  disabled={isOutfit ? (!selectedTopwearSize || !selectedBottomwearSize || effectiveOutOfStock || isOrdering) : (!selectedSize || effectiveOutOfStock || isOrdering)}
+                  className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
+                    (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) && !effectiveOutOfStock && !isOrdering
+                      ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                      : 'bg-white/5 text-white/20 cursor-not-allowed'
+                  }`}
+                >
+                  {isOrdering ? 'Processing...' : effectiveOutOfStock ? 'Out of Stock' : (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) ? 'Order Now' : isOutfit ? 'Select Sizes' : 'Select a Size'}
+                </button>
+              </div>
+
               {/* Product Highlights — outfit: per piece; regular: root highlights */}
               {isOutfit ? (
                 <>
@@ -585,66 +645,6 @@ export default function ProductView() {
                   );
                 })()
               )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-4 mb-8 lg:mb-10">
-                {/* Cart and Wishlist Buttons */}
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={isOutfit ? (!selectedTopwearSize || !selectedBottomwearSize || effectiveOutOfStock || isAddingToCart) : (!selectedSize || effectiveOutOfStock || isAddingToCart)}
-                    className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
-                      (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) && !effectiveOutOfStock && !isAddingToCart
-                        ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                        : 'bg-white/5 text-white/20 cursor-not-allowed'
-                    }`}
-                  >
-                    <ShoppingCart size={20} />
-                    {isAddingToCart ? 'Adding...' : effectiveOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
-                  </button>
-
-                  <button
-                    onClick={handleAddToWishlist}
-                    disabled={!product || isTogglingWishlist}
-                    className={`p-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center ${
-                      isTogglingWishlist
-                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                        : product && isInWishlist(product._id)
-                          ? 'bg-brass text-void hover:bg-yellow-400'
-                          : 'bg-white/5 text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Heart size={20} className={!isTogglingWishlist && product && isInWishlist(product._id) ? 'fill-current' : ''} />
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleShareProduct}
-                  disabled={!product || isSharing}
-                  className="w-full py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 border border-white/10 text-tb-white hover:border-brass hover:text-brass bg-white/[0.02] disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:border-white/10 disabled:hover:text-white/25"
-                >
-                  <Share2 size={18} />
-                  {isSharing ? 'Sharing...' : 'Share Product'}
-                </button>
-                {shareMessage && (
-                  <p className="text-center font-condensed text-[0.7rem] tracking-[0.18em] uppercase text-brass">
-                    {shareMessage}
-                  </p>
-                )}
-
-                {/* Order CTA */}
-                <button
-                  onClick={handleOrder}
-                  disabled={isOutfit ? (!selectedTopwearSize || !selectedBottomwearSize || effectiveOutOfStock || isOrdering) : (!selectedSize || effectiveOutOfStock || isOrdering)}
-                  className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
-                    (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) && !effectiveOutOfStock && !isOrdering
-                      ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                      : 'bg-white/5 text-white/20 cursor-not-allowed'
-                  }`}
-                >
-                  {isOrdering ? 'Processing...' : effectiveOutOfStock ? 'Out of Stock' : (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) ? 'Order Now' : isOutfit ? 'Select Sizes' : 'Select a Size'}
-                </button>
-              </div>
 
               {/* Trust Badges */}
               <div className="mb-10 lg:mb-12 flex flex-col gap-3 border border-white/[0.07] rounded-sm px-5 py-4 bg-white/[0.02]">

@@ -1,0 +1,241 @@
+You are a senior-level frontend + full-stack engineer working on a production ecommerce
+PWA called Thunderbolt Denim.
+Current stack:
+● React + Vite
+● Tailwind CSS
+● TanStack Query
+● Firebase Authentication
+● MongoDB Atlas
+● Vercel Serverless Functions
+● PWABuilder-generated Android app (.aab already generated)
+IMPORTANT:
+This project is already functional and production-oriented.
+Your task is NOT to rewrite the app.
+Your task is to implement a focused stabilization + UX + compliance + mobile polish iteration
+while preserving the existing architecture and design language.
+=================================
+=================
+CRITICAL ENGINEERING
+REQUIREMENTS
+● Write clean, maintainable, scalable, production-grade code.
+● Do NOT write messy, duplicated, hacky, or temporary code.
+● Follow proper component structure and separation of concerns.
+● Maintain existing architecture.
+● Preserve current branding and overall visual identity.
+● Avoid unnecessary libraries unless absolutely required.
+● Maintain responsiveness across devices.
+● Avoid regressions and broken functionality.
+● Ensure all animations remain smooth and premium-feeling.
+● Maintain high readability and accessibility standards.
+● Keep performance optimized for mobile devices.
+● Use modern frontend engineering best practices.
+==================================================
+1. POLICY & PLAY STORE COMPLIANCE IMPROVEMENTS
+==================================================Update and improve all existing policy pages.
+Current policies exist but need refinement and better in-app accessibility.
+Implement the following improvements:
+PRIVACY POLICY:
+● Explicitly mention account deletion rights.
+● Mention secure authentication handling.
+● Mention that trusted third-party infrastructure/services may be used to operate the
+platform securely.
+● Mention usage of local storage/session persistence where applicable.
+● Preserve the existing clean tone and wording style.
+TERMS & CONDITIONS:
+● Keep existing sections.
+● Add clearer refund processing wording.
+● Keep language simple, premium, and trustworthy.
+RETURNS & CANCELLATION:
+● Preserve current operational flow.
+● Keep wording professional and transparent.
+=================================
+=================
+2. CREATE DEDICATED IN-APP
+POLICIES PAGE
+Currently policies are only accessible through footer-style access.
+This is NOT enough.
+Create a dedicated “Policies” page accessible from the main navigation/navbar.
+Requirements:
+● Add proper navigation link/button.
+● Create a premium-looking Policies page.
+● Include:
+○ Privacy Policy○ Terms & Conditions
+○ Returns & Cancellation
+UI REQUIREMENTS:
+● Use elegant expandable dropdown/accordion sections.
+● Smooth premium animations.
+● Clean transitions.
+● Maintain Thunderbolt aesthetic.
+● Make the page feel modern, minimal, sleek, and premium.
+● Ensure typography is highly readable.
+● Improve font color contrast where needed.
+● Ensure spacing feels clean and uncluttered.
+● Optimize for mobile-first experience.
+IMPORTANT:
+Do NOT create ugly generic accordions.
+Design should feel refined and intentional.
+=================================
+=================
+3. ACCOUNT DELETION
+FUNCTIONALITY
+Implement proper account deletion flow.
+Requirements:
+● Add “Delete Account” option inside profile/settings/account section.
+● Clicking should NOT instantly delete account.
+● Show premium confirmation modal/popup.
+Confirmation flow should:
+● Clearly explain action is permanent.
+● Ask user for confirmation.
+● Include checkbox or explicit confirmation interaction before deletion proceeds.
+● Make accidental deletion difficult.
+After confirmation:
+● Properly delete Firebase Auth account.
+● Properly clean up user-related backend data where applicable.● Handle errors gracefully.
+● Show proper success/error states.
+UX REQUIREMENTS:
+● Keep interaction premium and trustworthy.
+● No ugly browser confirm dialogs.
+● Use clean animated modal.
+=================================
+=================
+4. HOMEPAGE / PRODUCT UI
+IMPROVEMENTS
+A.
+There is currently too much unwanted spacing between:
+● the “Under 999 / Under 699” promo banner
+AND
+● the outfit slider section.
+Reduce this spacing significantly.
+Make the layout tighter and more professional.
+B.
+Add heading above outfit slider:
+#OUTFITS OF THE WEEK
+Requirements:
+● Keep typography bold and stylish.
+● Preserve premium aesthetic.
+● Ensure responsive alignment.
+=================================
+=================5. PRODUCT PAGE LAYOUT
+IMPROVEMENTS
+Currently these action buttons appear below Product Highlights:
+● Add to Cart
+● Wishlist
+● Share Product
+● Order Now
+Move ALL FOUR buttons ABOVE the Product Highlights section.
+Requirements:
+● Improve visual hierarchy.
+● Improve usability on mobile.
+● Maintain spacing consistency.
+● Keep responsive alignment clean.
+=================================
+=================
+6. ORDER PAGE IMPROVEMENTS
+Currently:
+“Gift / Order Message” input placement feels incorrect.
+Move this input field ABOVE the order summary section.
+Requirements:
+● Improve form flow.
+● Improve readability.
+● Improve checkout UX hierarchy.
+=================================
+=================7. GLOBAL TYPOGRAPHY &
+READABILITY FIXES
+Across the website there are some areas where:
+● text color is too dark
+● readability suffers
+● contrast is poor
+Perform a full readability audit and improve:
+● font contrast
+● sizing
+● spacing
+● readability
+● mobile legibility
+IMPORTANT:
+Do NOT destroy aesthetic.
+Keep the UI premium and elegant while improving readability.
+=================================
+=================
+8. MOBILE / PWA / APP FEEL
+IMPROVEMENTS
+This app is a wrapped PWA/WebView-style Android app.
+Goal:
+Make the app feel more native and polished WITHOUT major rewrites.
+Implement:
+● Proper splash screen behavior
+● Smoother loading transitions
+● Better mobile responsiveness
+● Reduce browser-like feeling
+● Improve app-like experience
+● Improve Android back button handling where needed
+● Preserve current architectureIMPORTANT:
+Do NOT introduce massive native rewrites.
+Focus on refinement and polish.
+=================================
+=================
+9. CACHE / UPDATE HANDLING
+VERY IMPORTANT.
+Current goal:
+Avoid situations where users must manually clear cache.
+Implement proper:
+● service worker update handling
+● cache invalidation strategy
+● version refresh handling
+● update lifecycle management
+Desired behavior:
+● App updates cleanly after deployment
+● Either:
+○ auto-refresh safely
+OR
+○ show elegant “new update available” toast/prompt
+IMPORTANT:
+Do NOT create disruptive refresh loops.
+=================================
+=================
+10. FRONTEND SYNCHRONIZATION
+IMPROVEMENTSCurrent issue:
+Frontend does not always update properly after backend data changes.
+Implement:
+● proper TanStack Query invalidation
+● proper refetching
+● optimistic UI updates where appropriate
+● cleaner query synchronization
+● improved realtime-feeling behavior
+Focus especially on:
+● cart updates
+● order updates
+● profile/account updates
+Goal:
+UI should feel responsive and modern.
+=================================
+=================
+11. HUGE BRAND TEXT BELOW
+FOOTER
+After the footer section ends:
+Add:
+THUNDERBOLT
+Requirements:
+● VERY large typography
+● Occupy approximately 70–80% of screen width
+● Center aligned
+● Leave balanced side spacing
+● Use Bebas Neue font family
+● Strong premium fashion-brand aesthetic
+● Minimal but impactful
+This should feel cinematic and premium — almost like a luxury streetwear campaign footer
+ending.Ensure responsiveness across devices.
+=================================
+=================
+FINAL REQUIREMENTS
+Before finalizing:
+● Audit responsiveness across mobile/tablet/desktop.
+● Ensure no broken layouts.
+● Ensure no console errors.
+● Ensure animations remain smooth.
+● Preserve premium Thunderbolt branding.
+● Keep implementation scalable and maintainable.
+● Avoid temporary fixes or shortcuts.
+● Refactor carefully where needed.
+● Prioritize production-quality implementation.
+This should feel like a serious premium fashion-commerce app ready for Play Store
+publishing.

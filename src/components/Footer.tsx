@@ -2,93 +2,16 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin, Plus } from 'lucide-react';
+import { policyData } from '../lib/policyContent';
 
 type PolicyType = 'returns' | 'privacy' | 'terms' | null;
 
 function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void }) {
   if (!type) return null;
 
-  const content = {
-    returns: {
-      title: 'Returns & Cancellation',
-      subtitle: 'Our commitment to a fair and transparent process',
-      sections: [
-        {
-          heading: 'Order Confirmation',
-          text: 'Every order placed on Thunderbolt goes through a manual verification step. Our team will reach out to you via a confirmation call before your order is processed. This ensures accuracy and gives you one final opportunity to review or amend your order details.',
-        },
-        {
-          heading: 'Cancellation Before Confirmation',
-          text: 'You may cancel your order at any time before you receive the confirmation call from our team. Once the order has been confirmed and moved to processing or shipping, cancellations are no longer accepted.',
-        },
-        {
-          heading: 'Returns After Delivery',
-          text: 'If you\'ve received your order and have a valid concern — such as a manufacturing defect, incorrect item, or significant sizing discrepancy — you may raise a return request within 24 hours of delivery.',
-          list: ['Manufacturing defects', 'Wrong item delivered', 'Significant difference from product listing'],
-        },
-        {
-          heading: 'Processing Fee',
-          text: 'A nominal fee of ₹50 applies to all accepted returns or post-confirmation cancellations. This covers handling and restocking costs and will be deducted from your refund where applicable.',
-        },
-        {
-          heading: 'How to Raise a Request',
-          text: 'Contact us at support@thunderboltdenim.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
-          highlight: true,
-        },
-      ],
-    },
-    privacy: {
-      title: 'Privacy Policy',
-      subtitle: 'How we collect, use, and protect your data',
-      sections: [
-        {
-          heading: 'Information We Collect',
-          text: 'When you shop with us, we collect information you provide directly — such as your name, email address, phone number, and delivery address. We also collect basic usage data to improve your experience on our platform.',
-        },
-        {
-          heading: 'How We Use It',
-          text: 'Your information is used solely to process orders, communicate order updates, and improve our services. We do not sell, trade, or rent your personal information to any third parties under any circumstances.',
-        },
-        {
-          heading: 'Data Security',
-          text: 'We take data security seriously. Your information is stored securely and transmitted over encrypted connections. We implement industry-standard practices to protect against unauthorized access.',
-        },
-        {
-          heading: 'Your Rights',
-          text: 'You have the right to request access to, correction of, or deletion of any personal data we hold about you. Simply reach out and we\'ll respond within 7 business days.',
-        },
-        {
-          heading: 'Contact for Privacy Queries',
-          text: 'For any privacy-related questions or requests, write to us at support@thunderboltdenim.com and we\'ll respond promptly.',
-          highlight: true,
-        },
-      ],
-    },
-    terms: {
-      title: 'Terms & Conditions',
-      subtitle: 'Please read these terms carefully before placing an order',
-      sections: [
-        {
-          heading: 'Acceptance of Terms',
-          text: 'By accessing and placing an order through Thunderbolt, you confirm that you are in agreement with and bound by these terms. If you do not agree, please refrain from using our services.',
-        },
-        {
-          heading: 'Product Accuracy',
-          text: 'We make every effort to display product colours, sizes, and descriptions as accurately as possible. Minor variations in colour due to screen settings are not grounds for return unless the product is materially different from its listing.',
-        },
-        {
-          heading: 'Pricing',
-          text: 'All prices listed are in Indian Rupees (₹) and are inclusive of applicable taxes. We reserve the right to modify pricing at any time without prior notice. Prices at the time of order confirmation are final.',
-        },
-        {
-          heading: 'Governing Law',
-          text: 'These terms are governed by the laws of India. Any disputes arising shall be subject to the exclusive jurisdiction of courts in New Delhi.',
-        },
-      ],
-    },
-  };
-
-  const { title, subtitle, sections } = content[type];
+  const found = policyData.find(p => p.id === type);
+  if (!found) return null;
+  const { title, subtitle, sections } = found;
 
   return (
     <motion.div
@@ -437,6 +360,20 @@ export default function Footer() {
 
         </div>
       </footer>
+
+      {/* THUNDERBOLT — Cinematic brand identity mark */}
+      <div
+        className="relative overflow-hidden select-none pointer-events-none py-4 md:py-6"
+        aria-hidden="true"
+        style={{ background: 'linear-gradient(to bottom, #0a0a0a 0%, #080808 100%)' }}
+      >
+        <p
+          className="font-display text-center uppercase leading-none tracking-[0.04em] text-white/[0.045]"
+          style={{ fontSize: 'clamp(4rem, 18vw, 18rem)' }}
+        >
+          Thunderbolt
+        </p>
+      </div>
 
       <AnimatePresence>
         {activePolicy && (

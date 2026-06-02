@@ -1,0 +1,391 @@
+You are a senior-level full-stack engineer working on a production ecommerce PWA called Thunderbolt Denim.
+
+Current stack:
+
+* React + Vite
+* Tailwind CSS
+* TanStack Query
+* Firebase Authentication
+* MongoDB Atlas
+* Vercel Serverless Functions
+* PWABuilder-generated Android app (.aab)
+* PWA architecture with service workers
+
+IMPORTANT:
+This application is already functional and close to production release.
+
+Your task is to implement a robust, production-grade push notification system WITHOUT breaking existing functionality, UI, authentication, APIs, order flow, or caching behavior.
+
+==================================================
+CRITICAL ENGINEERING REQUIREMENTS
+=================================
+
+* DO NOT rewrite the project architecture.
+* DO NOT introduce unnecessary complexity.
+* DO NOT break existing authentication flows.
+* DO NOT break service workers or PWA functionality.
+* DO NOT introduce unstable realtime systems.
+* Keep implementation scalable, maintainable, and production-ready.
+* Write clean, modular, readable code.
+* Avoid duplicated logic.
+* Handle edge cases properly.
+* Maintain current design language and branding.
+* Ensure implementation works properly on Android PWA/PWABuilder environment.
+* Ensure no notification spam, duplicate notifications, or race-condition behavior.
+
+==================================================
+PRIMARY GOAL
+============
+
+Implement a push notification system for:
+
+1. Order placed notifications
+2. Order status update notifications
+3. Admin-triggered broadcast notifications
+
+Notifications should feel:
+
+* useful
+* clean
+* premium
+* trustworthy
+* non-spammy
+
+==================================================
+TECH STACK REQUIREMENTS
+=======================
+
+Use:
+
+* Firebase Cloud Messaging (FCM)
+* Firebase Admin SDK
+* Existing Vercel serverless backend
+* Existing MongoDB user structure
+
+DO NOT implement:
+
+* polling systems
+* cron-job-based order checking
+* unnecessary websocket systems
+* external notification services
+
+Architecture MUST remain:
+EVENT-DRIVEN
+
+Meaning:
+backend events directly trigger notifications.
+
+==================================================
+
+1. FIREBASE CLOUD MESSAGING SETUP
+   ==================================================
+
+Implement proper Firebase Cloud Messaging integration.
+
+Requirements:
+
+* Configure FCM properly for PWA/PWABuilder environment.
+* Ensure service worker compatibility.
+* Ensure Android compatibility.
+* Ensure notification permission flow works properly.
+* Ensure notification tokens persist correctly.
+
+Implement:
+
+* Firebase messaging setup
+* Notification service worker integration
+* Token registration flow
+* Token refresh handling
+
+==================================================
+2. NOTIFICATION PERMISSION FLOW
+===============================
+
+DO NOT request notification permission immediately on first app launch.
+
+Instead:
+Request permission contextually.
+
+Preferred triggers:
+
+* after successful login
+  OR
+* after successful order placement
+
+Show a premium in-app permission prompt FIRST.
+
+Example concept:
+“Enable notifications for order updates and delivery status.”
+
+Only after user interaction:
+trigger actual Android/browser notification permission request.
+
+IMPORTANT:
+
+* Avoid ugly browser-first prompts.
+* Make UX feel intentional and premium.
+* Keep UI aligned with Thunderbolt branding.
+
+==================================================
+3. FCM TOKEN STORAGE
+====================
+
+Implement proper FCM token management.
+
+Requirements:
+
+* Store FCM token inside user record in MongoDB.
+* Support multiple devices/tokens per user if possible.
+* Handle token refresh/update safely.
+* Remove invalid tokens automatically.
+
+Suggested structure:
+
+* userId
+* fcmTokens[]
+* createdAt
+* lastUsedAt
+
+IMPORTANT:
+Do NOT overwrite existing tokens incorrectly.
+
+==================================================
+4. ORDER EVENT NOTIFICATIONS
+============================
+
+Implement transactional notifications for:
+
+* Order placed
+* Order confirmed
+* Order packed
+* Order shipped
+* Delivered
+* Cancelled
+
+IMPORTANT:
+Notifications MUST be triggered directly from backend order update logic.
+
+DO NOT implement polling systems.
+
+Correct flow:
+Admin updates order status
+→ backend API updates database
+→ backend sends notification immediately
+→ response completes
+
+==================================================
+5. DUPLICATE NOTIFICATION PROTECTION
+====================================
+
+CRITICAL REQUIREMENT.
+
+Prevent duplicate notifications.
+
+Rules:
+
+* Notification should ONLY send if order status actually changes.
+* If oldStatus === newStatus → DO NOT notify.
+* Prevent accidental duplicate sends.
+* Prevent repeated notifications during retries.
+
+This is extremely important.
+
+==================================================
+6. NOTIFICATION CONTENT DESIGN
+==============================
+
+Notifications should feel premium and concise.
+
+GOOD examples:
+
+* “Your order #TB102 has been confirmed.”
+* “Your Thunderbolt order has been shipped 🚚”
+* “Your order has been delivered.”
+
+Avoid:
+
+* robotic wording
+* overly long text
+* spammy marketing style
+* excessive emojis
+
+Maintain strong premium commerce tone.
+
+==================================================
+7. DEEP LINKING / NAVIGATION
+============================
+
+When user taps a notification:
+app should open the relevant order page if possible.
+
+Requirements:
+
+* pass orderId in payload
+* route correctly inside app
+* avoid random homepage redirects
+
+Implement safely without breaking navigation.
+
+==================================================
+8. INVALID TOKEN CLEANUP
+========================
+
+Handle invalid FCM tokens properly.
+
+If Firebase returns:
+
+* invalid registration token
+* unregistered token
+* expired token
+
+Then:
+
+* remove token from database safely
+
+This prevents token accumulation and unnecessary failures.
+
+==================================================
+9. ADMIN BROADCAST NOTIFICATION SYSTEM
+======================================
+
+Implement a Notifications section inside admin panel.
+
+Admin should be able to:
+
+* enter notification title
+* enter notification message
+* send broadcast notification to all users
+
+IMPORTANT:
+Keep version 1 SIMPLE.
+
+DO NOT implement:
+
+* segmentation
+* campaigns
+* scheduling
+* automation
+* analytics dashboards
+
+Only simple manual broadcast sending.
+
+==================================================
+10. ADMIN NOTIFICATION UI REQUIREMENTS
+======================================
+
+UI should:
+
+* match Thunderbolt admin design language
+* look clean and premium
+* avoid clutter
+* include proper loading states
+* include success/error handling
+* prevent accidental double sending
+
+Suggested fields:
+
+* Notification Title
+* Notification Message
+* Send Button
+
+==================================================
+11. SERVICE WORKER + PWA COMPATIBILITY
+======================================
+
+CRITICAL REQUIREMENT.
+
+Ensure notification implementation does NOT break:
+
+* existing service worker behavior
+* cache handling
+* PWA installability
+* PWABuilder compatibility
+* offline behavior
+
+Carefully integrate notification service worker logic.
+
+Avoid:
+
+* duplicate service workers
+* conflicting registrations
+* broken caching
+* infinite update loops
+
+==================================================
+12. ERROR HANDLING
+==================
+
+Implement proper error handling everywhere.
+
+Handle:
+
+* permission denied
+* unsupported browser/device
+* missing token
+* Firebase failures
+* invalid payloads
+* backend failures
+
+IMPORTANT:
+Notification failures should NEVER break:
+
+* order placement
+* order updates
+* frontend rendering
+* admin workflow
+
+Notifications should fail gracefully.
+
+==================================================
+13. PERFORMANCE REQUIREMENTS
+============================
+
+Keep implementation lightweight.
+
+Avoid:
+
+* unnecessary rerenders
+* excessive listeners
+* large notification payloads
+* blocking API responses
+
+Notification sending should feel fast and reliable.
+
+==================================================
+14. TESTING REQUIREMENTS
+========================
+
+Thoroughly test:
+
+* Android notification permission flow
+* notification delivery
+* order update triggers
+* duplicate prevention
+* admin broadcasts
+* service worker registration
+* notification click navigation
+* PWA installability
+* app reload/update behavior
+
+Ensure:
+
+* no regressions
+* no console errors
+* no broken builds
+
+==================================================
+15. FINAL IMPLEMENTATION GOAL
+=============================
+
+The final result should feel like:
+a polished modern ecommerce notification system similar in quality and reliability to premium commerce applications.
+
+The implementation should:
+
+* feel smooth
+* feel intentional
+* feel trustworthy
+* remain maintainable long-term
+* preserve existing app stability
+
+DO NOT sacrifice stability for unnecessary complexity.

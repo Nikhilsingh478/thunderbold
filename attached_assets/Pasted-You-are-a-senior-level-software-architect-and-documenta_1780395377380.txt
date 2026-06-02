@@ -1,0 +1,406 @@
+You are a senior-level software architect and documentation engineer working on a production ecommerce PWA called Thunderbolt Denim.
+
+Current stack:
+
+* React + Vite
+* Tailwind CSS
+* TanStack Query
+* Firebase Authentication
+* MongoDB Atlas
+* Vercel Serverless Functions
+* PWABuilder-generated Android app (.aab)
+* PWA/service worker architecture
+
+The project has evolved significantly and now requires production-grade technical documentation and architecture documentation cleanup.
+
+==================================================
+CRITICAL REQUIREMENTS
+=====================
+
+* DO NOT generate shallow or generic documentation.
+* DO NOT generate bloated meaningless filler documentation.
+* Documentation must be practical, technical, maintainable, and production-grade.
+* Documentation should help future developers understand the system quickly.
+* Documentation should help future database migration efforts.
+* Documentation should help long-term scalability and maintainability.
+* Documentation should reflect ACTUAL implementation, not theoretical assumptions.
+* Documentation should be written clearly and professionally.
+* Avoid duplicated or contradictory documentation.
+* Maintain clean structure and hierarchy.
+
+==================================================
+PRIMARY GOAL
+============
+
+Refactor and reorganize the entire documentation system of the project.
+
+Current documentation is becoming fragmented and difficult to maintain.
+
+The new goal is:
+
+* centralized
+* clean
+* maintainable
+* scalable
+* future-proof
+* migration-friendly documentation
+
+==================================================
+
+1. MAIN MASTER DOCUMENTATION FILE
+   ==================================================
+
+Create ONE primary master documentation file if possible.
+
+Only split into multiple files if absolutely necessary for clarity and maintainability.
+
+The documentation structure should feel:
+
+* intentional
+* professional
+* scalable
+* easy to navigate
+
+If splitting becomes necessary:
+Use a clean modular structure.
+
+==================================================
+2. MASTER DOCUMENTATION CONTENT REQUIREMENTS
+============================================
+
+The main documentation must comprehensively cover:
+
+==================================================
+A. PROJECT OVERVIEW
+===================
+
+* Project purpose
+* Product vision
+* Current architecture overview
+* Technology stack overview
+* High-level system flow
+
+==================================================
+B. FRONTEND ARCHITECTURE
+========================
+
+Document:
+
+* React architecture
+* folder structure
+* routing structure
+* shared components
+* state management
+* TanStack Query usage
+* caching strategy
+* mutation handling
+* optimistic updates
+* responsiveness approach
+* PWA architecture
+* service worker handling
+* PWABuilder integration
+
+==================================================
+C. BACKEND ARCHITECTURE
+=======================
+
+Document:
+
+* Vercel serverless architecture
+* API route structure
+* authentication flow
+* middleware/security flow
+* request lifecycle
+* validation handling
+* error handling patterns
+* admin authorization flow
+* order processing flow
+* stock management flow
+* notification architecture
+* caching/update logic
+
+==================================================
+D. AUTHENTICATION SYSTEM
+========================
+
+Document:
+
+* Firebase authentication usage
+* token verification flow
+* protected routes
+* admin auth flow
+* session persistence
+* account deletion flow
+* security considerations
+
+==================================================
+E. ORDER MANAGEMENT SYSTEM
+==========================
+
+Document:
+
+* order lifecycle
+* status transitions
+* order validation
+* stock decrement logic
+* rollback handling
+* notification triggers
+* admin update flow
+
+==================================================
+F. NOTIFICATION SYSTEM
+======================
+
+Document:
+
+* Firebase Cloud Messaging setup
+* service worker integration
+* token storage strategy
+* event-driven notification architecture
+* admin broadcast system
+* deep linking logic
+* duplicate prevention logic
+* notification payload structure
+
+==================================================
+G. PWA / APP ARCHITECTURE
+=========================
+
+Document:
+
+* manifest configuration
+* service worker flow
+* caching strategy
+* update handling strategy
+* PWABuilder setup
+* domain/canonical setup
+* splash screen handling
+* Android compatibility considerations
+
+==================================================
+H. DEPLOYMENT ARCHITECTURE
+==========================
+
+Document:
+
+* Vercel deployment flow
+* environment variables
+* production setup
+* domain setup
+* canonical domain handling
+* redirect handling
+* build/deployment flow
+
+==================================================
+I. PERFORMANCE STRATEGY
+=======================
+
+Document:
+
+* caching strategy
+* TanStack Query optimization
+* prefetching
+* lazy loading
+* service worker caching
+* performance bottlenecks
+* cold start considerations
+* MongoDB performance considerations
+
+==================================================
+J. SECURITY CONSIDERATIONS
+==========================
+
+Document:
+
+* authentication protection
+* API protection
+* admin protection
+* token handling
+* validation flow
+* rate limiting
+* secure environment handling
+
+==================================================
+K. FUTURE ROADMAP / SCALABILITY
+===============================
+
+Document:
+
+* known technical limitations
+* scaling considerations
+* future architecture ideas
+* possible migration paths
+* future notification expansion
+* future AI/search ideas
+
+==================================================
+3. CREATE A SEPARATE DATABASE ARCHITECTURE DOCUMENT
+===================================================
+
+Create a SECOND dedicated documentation file specifically focused on DATABASE ARCHITECTURE and DATABASE MIGRATION READINESS.
+
+This file is EXTREMELY IMPORTANT.
+
+Its purpose:
+Allow future developers to understand the ENTIRE database architecture quickly and enable future migration to another database system if needed.
+
+==================================================
+4. DATABASE DOCUMENTATION REQUIREMENTS
+======================================
+
+The database document must comprehensively explain:
+
+==================================================
+A. CURRENT DATABASE OVERVIEW
+============================
+
+Document:
+
+* why MongoDB Atlas is currently used
+* how database is structured
+* current usage patterns
+* strengths/limitations of current approach
+
+==================================================
+B. COLLECTION STRUCTURE
+=======================
+
+Document ALL collections in detail.
+
+For each collection include:
+
+* purpose
+* schema structure
+* important fields
+* relationships
+* indexes
+* validation logic
+* commonly queried fields
+* update patterns
+
+Include:
+
+* users
+* products
+* orders
+* carts
+* wishlist
+* notifications
+* admin-related collections
+* any supporting collections
+
+==================================================
+C. RELATIONSHIPS & DATA FLOW
+============================
+
+Document:
+
+* how collections interact
+* how order flow works
+* how user flow works
+* how product flow works
+* how stock management works
+* how notification tokens are stored
+
+Explain:
+
+* implicit relationships
+* pseudo-relational patterns
+* data ownership
+
+==================================================
+D. QUERY ARCHITECTURE
+=====================
+
+Document:
+
+* common query patterns
+* aggregation usage
+* performance-sensitive queries
+* filtering logic
+* pagination strategy
+* indexing strategy
+
+==================================================
+E. PERFORMANCE CONSIDERATIONS
+=============================
+
+Document:
+
+* current bottlenecks
+* potential scaling concerns
+* cold start considerations
+* Atlas limitations
+* caching considerations
+
+==================================================
+F. DATABASE MIGRATION READINESS
+===============================
+
+CRITICAL SECTION.
+
+Document:
+
+* what would need to change if migrating to PostgreSQL/Supabase/Neon
+* which parts are tightly coupled to Mongo
+* which APIs abstract the database correctly
+* which schemas would require normalization
+* which collections would become relational tables
+* ObjectId considerations
+* aggregation migration considerations
+* transaction considerations
+
+==================================================
+G. FUTURE DATABASE MIGRATION STRATEGY
+=====================================
+
+Document a theoretical migration plan including:
+
+* recommended migration order
+* recommended abstractions
+* ORM recommendations
+* suggested future architecture
+* backend decoupling recommendations
+
+IMPORTANT:
+Do NOT actually migrate anything.
+Only document migration readiness.
+
+==================================================
+5. DOCUMENTATION QUALITY REQUIREMENTS
+=====================================
+
+Documentation must:
+
+* be structured
+* searchable
+* logically organized
+* future-proof
+* readable
+* technically accurate
+* implementation-aware
+
+Avoid:
+
+* generic AI-style filler
+* shallow explanations
+* vague statements
+* unnecessary verbosity
+* duplicated sections
+
+==================================================
+6. FINAL GOAL
+=============
+
+The final documentation system should feel like:
+a professionally maintained production engineering project with clear long-term scalability and maintainability.
+
+A future developer should be able to:
+
+* understand the architecture quickly
+* debug issues faster
+* onboard easily
+* scale the project confidently
+* migrate databases safely if needed
+
+without reverse-engineering the entire codebase.

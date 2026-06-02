@@ -195,12 +195,29 @@ export default function CategoriesSection() {
         </div>
 
         {/* ── Promo Banner (between Denim and T-Shirts) ────────────── */}
-        <div className="mt-10 md:mt-16 -mx-6 md:-mx-16">
+        <div className="mt-8 md:mt-12 -mx-6 md:-mx-16">
           <PromoBanner />
         </div>
 
-        {/* ── Outfit Slider (between promo banners and T-Shirts) ───── */}
-        <div className="-mx-6 md:-mx-16 -mt-4 md:mt-0">
+        {/* ── Outfit Slider ────────────────────────────────────────── */}
+        <div className="-mx-6 md:-mx-16 mt-0">
+          {/* Section heading */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center pt-10 md:pt-14 pb-6 md:pb-8 px-6 md:px-16"
+          >
+            <div className="font-condensed font-semibold text-[0.62rem] md:text-[0.66rem] tracking-[0.38em] uppercase text-brass mb-4 flex items-center justify-center gap-3">
+              <span className="w-5 h-px bg-brass-dim inline-block" />
+              Editorial Picks
+              <span className="w-5 h-px bg-brass-dim inline-block" />
+            </div>
+            <h2 className="font-display text-3xl md:text-5xl tracking-[0.12em] uppercase metal-text">
+              #Outfits of the Week
+            </h2>
+          </motion.div>
           <ThunderboltSlider />
         </div>
 

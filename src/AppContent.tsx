@@ -29,6 +29,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const DealsPage = lazy(() => import("./pages/DealsPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const BrandView = lazy(() => import("./pages/BrandView"));
+const Policies = lazy(() => import("./pages/Policies"));
 
 /**
  * Branded page loader — shown while lazy-loaded route chunks are fetching.
@@ -141,6 +142,7 @@ const AppContent = () => {
             <Route path="/brand/:brandId" element={<BrandView />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/policies" element={<Policies />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

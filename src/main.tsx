@@ -6,7 +6,12 @@ createRoot(document.getElementById("root")!).render(<App />);
 
 if ('serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => {
-    registerSW({
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        window.dispatchEvent(
+          new CustomEvent('pwa-update-available', { detail: { updateSW } })
+        );
+      },
       onOfflineReady() {
         window.dispatchEvent(new CustomEvent('pwa-offline-ready'));
       },

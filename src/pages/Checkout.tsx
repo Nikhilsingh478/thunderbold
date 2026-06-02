@@ -243,50 +243,49 @@ export default function Checkout() {
               />
             </div>
 
-            {/* Order Summary */}
-            <div>
+            {/* Right Column — Gift Message then Order Summary */}
+            <div className="flex flex-col gap-6">
+              {/* Gift / Order Message */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="border border-white/[0.08] bg-white/[0.02] p-5 md:p-6"
+              >
+                <div className="mb-4">
+                  <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-tb-white">
+                    Gift / Order Message
+                    <span className="ml-2 font-condensed text-[0.6rem] tracking-[0.14em] text-sv-dim normal-case">
+                      Optional
+                    </span>
+                  </p>
+                  <p className="font-body text-[0.75rem] text-sv-dim mt-1">
+                    Add a personal note or any special instructions for your order.
+                  </p>
+                </div>
+                <div className="relative">
+                  <textarea
+                    value={giftMessage}
+                    onChange={e => setGiftMessage(e.target.value.slice(0, GIFT_MSG_MAX))}
+                    placeholder="Write a message for the recipient (optional)"
+                    rows={3}
+                    className="w-full bg-surface border border-white/[0.08] focus:border-brass/40 px-4 py-3 font-body text-[0.9rem] text-tb-white placeholder:text-sv-dim/50 outline-none transition-colors duration-300 resize-none"
+                  />
+                  <span className={`absolute bottom-3 right-3 font-condensed text-[0.62rem] tracking-wide tabular-nums transition-colors duration-200 ${
+                    giftMessage.length >= GIFT_MSG_MAX ? 'text-red-400/70' : 'text-sv-dim/60'
+                  }`}>
+                    {giftMessage.length}/{GIFT_MSG_MAX}
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Order Summary */}
               <ProductSummary
                 items={cartItems}
                 totalAmount={totalAmount}
               />
             </div>
           </div>
-
-          {/* Gift / Order Message — optional, standalone section below the grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 border border-white/[0.08] bg-white/[0.02] p-5 md:p-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div>
-                <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-tb-white">
-                  Gift / Order Message
-                  <span className="ml-2 font-condensed text-[0.6rem] tracking-[0.14em] text-sv-dim normal-case">
-                    Optional
-                  </span>
-                </p>
-                <p className="font-body text-[0.75rem] text-sv-dim mt-0.5">
-                  Add a personal note for the recipient or any special instructions.
-                </p>
-              </div>
-            </div>
-            <div className="relative">
-              <textarea
-                value={giftMessage}
-                onChange={e => setGiftMessage(e.target.value.slice(0, GIFT_MSG_MAX))}
-                placeholder="Write a message for the recipient (optional)"
-                rows={3}
-                className="w-full bg-surface border border-white/[0.08] focus:border-brass/40 px-4 py-3 font-body text-[0.9rem] text-tb-white placeholder:text-sv-dim/50 outline-none transition-colors duration-300 resize-none"
-              />
-              <span className={`absolute bottom-3 right-3 font-condensed text-[0.62rem] tracking-wide tabular-nums transition-colors duration-200 ${
-                giftMessage.length >= GIFT_MSG_MAX ? 'text-red-400/70' : 'text-sv-dim/60'
-              }`}>
-                {giftMessage.length}/{GIFT_MSG_MAX}
-              </span>
-            </div>
-          </motion.div>
         </div>
       </main>
 
