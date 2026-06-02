@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import AnnouncementBar from "./components/AnnouncementBar";
 import SplashScreen from "./components/SplashScreen";
 import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
+import NotificationPermissionPrompt from "./components/NotificationPermissionPrompt";
 
 // Eagerly loaded (small / always needed on first paint)
 import Index from "./pages/Index.tsx";
@@ -157,6 +158,9 @@ const AppContent = () => {
 
       {/* PWA lifecycle toasts — update available + offline ready */}
       <PWAUpdatePrompt />
+
+      {/* Push notification permission prompt — shown 3s after first login */}
+      <NotificationPermissionPrompt />
     </>
   );
 };

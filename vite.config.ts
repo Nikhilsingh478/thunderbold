@@ -227,6 +227,8 @@ export default defineConfig(() => ({
         skipWaiting: true,
         clientsClaim: true,
 
+        importScripts: ['/firebase-messaging-sw-part.js'],
+
         runtimeCaching: [
           {
             /**

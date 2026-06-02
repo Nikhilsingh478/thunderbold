@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
 import AnalyticsTab from '../components/Analytics/AnalyticsTab';
 import Navbar from '../components/Navbar';
@@ -794,7 +794,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews' | 'brands' | 'slider'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews' | 'brands' | 'slider' | 'notifications'>('analytics');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -813,6 +813,13 @@ export default function Admin() {
   const [reviewsProduct, setReviewsProduct] = useState<Product | null>(null);
   const [productReviews, setProductReviews] = useState<AdminReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // Notifications tab state
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifBody, setNotifBody] = useState('');
+  const [notifSending, setNotifSending] = useState(false);
+  const [notifResult, setNotifResult] = useState<{ sent: number; failed: number; usersReached: number } | null>(null);
+  const [notifError, setNotifError] = useState('');
 
   // Slider tab state
   const [sliderSlides, setSliderSlides] = useState<Array<{ imageUrl: string; heading: string; productId: string; productName: string | null; productImage: string | null }>>([
@@ -1238,6 +1245,30 @@ export default function Admin() {
     } catch { return false; }
   };
 
+  const sendBroadcast = async () => {
+    if (!user || !notifTitle.trim() || !notifBody.trim()) return;
+    setNotifSending(true);
+    setNotifResult(null);
+    setNotifError('');
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/notifications/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ title: notifTitle.trim(), body: notifBody.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send');
+      setNotifResult(data);
+      setNotifTitle('');
+      setNotifBody('');
+    } catch (err: any) {
+      setNotifError(err.message || 'Failed to send broadcast');
+    } finally {
+      setNotifSending(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="noise-overlay min-h-screen flex items-center justify-center bg-void">
@@ -1256,6 +1287,7 @@ export default function Admin() {
     { key: 'brands' as const, label: 'Brands', Icon: Tag },
     { key: 'reviews' as const, label: 'Reviews', Icon: MessageSquare },
     { key: 'slider' as const, label: 'Slider', Icon: SlidersHorizontal },
+    { key: 'notifications' as const, label: 'Notify', Icon: Bell },
   ];
 
   return (
@@ -1945,9 +1977,71 @@ export default function Admin() {
 
                   {sliderOutfits.length === 0 && (
                     <p className="font-condensed text-xs text-sv-mid mt-5 text-center">
-                      Add products with section "Thunder Looks" in the Products tab to enable product mapping.
+                      Add products with section &quot;Thunder Looks&quot; in the Products tab to enable product mapping.
                     </p>
                   )}
+                </motion.div>
+              )}
+
+              {/* ── NOTIFICATIONS ── */}
+              {activeTab === 'notifications' && (
+                <motion.div key="notifications" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="mb-6">
+                    <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Broadcast Notification</h2>
+                    <p className="font-condensed text-xs text-sv-mid mt-1">Send a push notification to all subscribed users.</p>
+                  </div>
+
+                  <div className="max-w-lg space-y-5">
+                    <div>
+                      <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Title <span className="text-brass">*</span></label>
+                      <input
+                        type="text"
+                        value={notifTitle}
+                        maxLength={50}
+                        onChange={(e) => { setNotifTitle(e.target.value); setNotifResult(null); setNotifError(''); }}
+                        placeholder="e.g. Flash Sale Live Now"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+                      />
+                      <p className="font-condensed text-xs text-sv-dim mt-1 text-right">{notifTitle.length}/50</p>
+                    </div>
+
+                    <div>
+                      <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Body <span className="text-brass">*</span></label>
+                      <textarea
+                        value={notifBody}
+                        maxLength={150}
+                        rows={3}
+                        onChange={(e) => { setNotifBody(e.target.value); setNotifResult(null); setNotifError(''); }}
+                        placeholder="e.g. 20% off all denim — today only."
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors resize-none"
+                      />
+                      <p className="font-condensed text-xs text-sv-dim mt-1 text-right">{notifBody.length}/150</p>
+                    </div>
+
+                    {notifError && (
+                      <p className="font-condensed text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">{notifError}</p>
+                    )}
+
+                    {notifResult && (
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-4 space-y-1">
+                        <p className="font-condensed font-bold text-xs text-green-400 uppercase tracking-wider">Broadcast Sent</p>
+                        <p className="font-condensed text-xs text-sv-mid">
+                          <span className="text-tb-white">{notifResult.sent}</span> delivered &nbsp;·&nbsp;
+                          <span className="text-tb-white">{notifResult.failed}</span> failed &nbsp;·&nbsp;
+                          <span className="text-tb-white">{notifResult.usersReached}</span> users reached
+                        </p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={sendBroadcast}
+                      disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
+                      className="flex items-center gap-2 px-6 py-3 bg-tb-white text-void font-condensed font-bold text-xs tracking-[0.15em] uppercase rounded-lg hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Bell className="w-3.5 h-3.5" />
+                      {notifSending ? 'Sending…' : 'Send to All Subscribers'}
+                    </button>
+                  </div>
                 </motion.div>
               )}
 

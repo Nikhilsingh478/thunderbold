@@ -2,3 +2,4 @@
 - [Policy content architecture](policy-content.md) — shared policyContent.ts drives both Footer modal and Policies page; always edit there
 - [lucide-react source map bug](lucide-sourcemap.md) — merge.js.map can corrupt; fix with valid empty JSON `{"version":3,"sources":[],"mappings":""}`
 - [vite-plugin-pwa install](vite-pwa-install.md) — in package.json but not auto-installed in dev env; use installLanguagePackages if missing
+- [FCM push notification system](fcm-system.md) — full push notification system implemented; fire-and-forget pattern; VITE_FIREBASE_VAPID_KEY env var required from user to enable token registration

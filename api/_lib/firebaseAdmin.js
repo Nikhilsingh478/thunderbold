@@ -1,7 +1,9 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getMessaging } from 'firebase-admin/messaging';
 
 let adminAuth = null;
+let adminMessaging = null;
 let initError = null;
 
 function init() {
@@ -22,10 +24,20 @@ function init() {
       initializeApp({ credential: cert(serviceAccount) });
     }
     adminAuth = getAuth();
+    adminMessaging = getMessaging();
   } catch (err) {
     initError = `Firebase Admin init failed: ${err.message}`;
     console.error('[firebaseAdmin]', initError);
   }
+}
+
+/**
+ * Returns the Firebase Admin Messaging instance, or null if unavailable.
+ * Never throws — callers (FCM send helpers) check for null and skip silently.
+ */
+export function getAdminMessaging() {
+  init();
+  return adminMessaging;
 }
 
 /**

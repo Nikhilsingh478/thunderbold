@@ -16,6 +16,7 @@ import { ObjectId } from "mongodb";
 import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
 import { isAdmin } from "../_lib/adminHelper.js";
 import { isRateLimited } from "../_lib/rateLimit.js";
+import { sendToUser } from "../_lib/fcm.js";
 
 // ─────────────────────────── Helpers ─────────────────────────────────────────
 
@@ -286,6 +287,12 @@ async function handleCreate(req, res) {
     return res.status(409).json({ error: stockError });
   }
 
+  sendToUser(db, userId, {
+    title: 'Order Received',
+    body: "We've received your order. Our team will call to confirm.",
+    data: { orderId: String(result.insertedId), type: 'order_update' },
+  });
+
   return res.status(201).json({
     message: "Order created successfully",
     orderId: result.insertedId,
@@ -393,11 +400,33 @@ async function handleManage(req, res) {
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, shipped, delivered" });
     }
+
+    const existingOrder = await orders.findOne({ _id: objectId }, { projection: { status: 1, userId: 1 } });
+    if (!existingOrder) return res.status(404).json({ error: "Order not found" });
+
     const result = await orders.updateOne(
       { _id: objectId },
       { $set: { status, updatedAt: new Date() } }
     );
     if (result.matchedCount === 0) return res.status(404).json({ error: "Order not found" });
+
+    if (existingOrder.status !== status && existingOrder.userId) {
+      const shortId = String(objectId).slice(-6).toUpperCase();
+      const notifMap = {
+        confirmed: { title: 'Order Confirmed', body: `Your order #TB${shortId} has been confirmed.` },
+        shipped:   { title: 'On Its Way', body: 'Your Thunderbold order is on its way 🚚' },
+        delivered: { title: 'Delivered', body: 'Your order has been delivered. Enjoy.' },
+        cancelled: { title: 'Order Cancelled', body: 'Your order has been cancelled.' },
+      };
+      const notif = notifMap[status];
+      if (notif) {
+        sendToUser(db, existingOrder.userId, {
+          ...notif,
+          data: { orderId: String(objectId), type: 'order_update' },
+        });
+      }
+    }
+
     return res.status(200).json({ message: "Status updated", orderId, newStatus: status });
   }
 

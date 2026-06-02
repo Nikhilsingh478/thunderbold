@@ -139,6 +139,16 @@ app.use('/api/slider', async (req, res) => {
   }
 });
 
+app.use('/api/notifications', async (req, res) => {
+  try {
+    const { default: handler } = await import('./api/notifications/index.js');
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error in notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`API server running on http://localhost:${port}`);
   console.log('Serving API endpoints:');

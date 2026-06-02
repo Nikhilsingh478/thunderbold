@@ -1,6 +1,7 @@
 import { getDb } from '../_lib/mongodb.js';
 import { successResponse, errorResponse } from '../_lib/response.js';
 import { validateAddress } from '../_lib/validator.js';
+import { verifyFirebaseToken } from '../_lib/firebaseAdmin.js';
 import jwt from 'jsonwebtoken';
 
 function decodeFirebaseToken(token) {
@@ -24,6 +25,55 @@ export default async function handler(req, res) {
 
   const db = await getDb();
   const users = db.collection('users');
+
+  // ─── FCM token sub-routes (/api/users/fcm-token) ────────────────────────────
+  const subPath = (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '');
+  if (subPath === 'fcm-token') {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(authHeader.split(' ')[1]);
+    } catch {
+      return res.status(401).json(errorResponse('Unauthorized'));
+    }
+    if (!decoded?.email) return res.status(401).json(errorResponse('Unauthorized'));
+
+    const userEmail = decoded.email;
+    const { token } = req.body || {};
+
+    if (req.method === 'POST') {
+      if (!token || typeof token !== 'string' || !token.trim()) {
+        return res.status(400).json(errorResponse('token is required'));
+      }
+      try {
+        await users.updateOne(
+          { email: userEmail },
+          { $addToSet: { fcmTokens: token.trim() }, $set: { updatedAt: new Date() } }
+        );
+        return res.status(200).json(successResponse({ message: 'FCM token registered' }));
+      } catch (err) {
+        return res.status(500).json(errorResponse('Server error: ' + err.message));
+      }
+    }
+
+    if (req.method === 'DELETE') {
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json(errorResponse('token is required'));
+      }
+      try {
+        await users.updateOne(
+          { email: userEmail },
+          { $pull: { fcmTokens: token.trim() }, $set: { updatedAt: new Date() } }
+        );
+        return res.status(200).json(successResponse({ message: 'FCM token removed' }));
+      } catch (err) {
+        return res.status(500).json(errorResponse('Server error: ' + err.message));
+      }
+    }
+
+    return res.status(405).json(errorResponse('Method not allowed'));
+  }
 
   // ─── GET: fetch user profile ────────────────────────────────────────────────
   if (req.method === 'GET') {
