@@ -108,7 +108,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ sent: 0, failed: 0, usersReached: 0 });
     }
 
-    const allTokens = usersWithTokens.flatMap((u) => u.fcmTokens || []);
+    const allTokens = usersWithTokens.flatMap((u) => 
+      (u.fcmTokens || []).map((t) => (typeof t === 'string' ? t : t?.token)).filter(Boolean)
+    );
     const usersReached = usersWithTokens.length;
 
     const { sent, failed, invalidTokens } = await sendMulticast(messaging, allTokens, {
@@ -118,10 +120,25 @@ export default async function handler(req, res) {
 
     if (invalidTokens.length > 0) {
       for (const user of usersWithTokens) {
-        const stale = (user.fcmTokens || []).filter((t) => invalidTokens.includes(t));
-        if (stale.length > 0) {
+        const staleStrings = (user.fcmTokens || [])
+          .map((t) => (typeof t === 'string' ? t : t?.token))
+          .filter((tStr) => tStr && invalidTokens.includes(tStr));
+
+        if (staleStrings.length > 0) {
           db.collection('users')
-            .updateOne({ email: user.email }, { $pull: { fcmTokens: { $in: stale } } })
+            .updateOne(
+              { email: user.email },
+              {
+                $pull: {
+                  fcmTokens: {
+                    $or: [
+                      { token: { $in: staleStrings } },
+                      { $in: staleStrings }
+                    ]
+                  }
+                }
+              }
+            )
             .catch(() => {});
         }
       }

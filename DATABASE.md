@@ -71,6 +71,13 @@ One document per registered user. Created/updated on every login via `POST /api/
       "createdAt":   "ISO string"
     }
   ],
+  "fcmTokens": [
+    {
+      "token":     "string",       // FCM registration token
+      "deviceId":  "string",       // Unique client/browser device ID (stored in localStorage)
+      "updatedAt": Date
+    }
+  ],
   "createdAt": Date,
   "updatedAt": Date
 }
@@ -81,6 +88,7 @@ One document per registered user. Created/updated on every login via `POST /api/
 - `email` is used as the foreign key across orders, cart, and wishlist (not `uid`). This is because Firebase UIDs can change on account re-linking, while email is stable
 - `addresses` is an embedded array (not a separate collection). Up to a reasonable number (typically <10 per user) this is efficient and avoids joins
 - At most one address can have `isDefault: true` — enforced at the application layer
+- `fcmTokens` tracks client notification subscriptions. Storing tokens alongside a persistent browser-generated `deviceId` ensures that only one active FCM token is maintained per device/browser, completely preventing duplicate notification delivery bugs.
 
 **Unique constraints** (application-enforced): `uid`, `email`
 
@@ -167,10 +175,10 @@ The product catalogue. Supports two structural variants: standard products and o
 
 One document per order. `products` is an embedded snapshot (prices/names are frozen at order time — product catalogue changes do not affect historical orders).
 
-```json
 {
   "_id":          ObjectId,
   "userId":       "string",       // User's email address
+  "orderNumber":  "string",       // Unique, collision-resistant standardized order number (e.g., "TB-H8G3X2")
   "clientOrderId":"string | null",// Client-generated idempotency key (optional)
   "products": [
     {
@@ -207,6 +215,7 @@ One document per order. `products` is an embedded snapshot (prices/names are fro
 - `address` is embedded (snapshot). The user may change their saved addresses later, but the delivery address is frozen at order time
 - `products` array is a snapshot. Historical orders remain accurate even if a product is deleted or repriced
 - `userId` is the user's email (not Firebase UID) for the reasons described in the users schema
+- `orderNumber` provides a clean, standardized, 6-character alphanumeric reference code (prefixed with `TB-`) for orders. Uniqueness is checked at write time. For current/legacy orders that lack this property, the UI dynamically falls back to formatting the last 6 characters of the MongoDB `_id` string as `TB-XXXXXX`, maintaining complete layout consistency.
 - `clientOrderId` has a sparse unique index — enables idempotent order creation from the frontend
 
 ---

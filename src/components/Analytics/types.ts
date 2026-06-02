@@ -47,6 +47,7 @@ export interface StockAlerts {
 
 export interface RecentOrder {
   _id: string;
+  orderNumber?: string | null;
   userId: string | null;
   customer: string;
   totalAmount: number;

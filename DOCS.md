@@ -398,7 +398,7 @@ Executes these steps in sequence:
 4. **Request validation** — validates products array structure, address fields, payment method
 5. **Pre-flight stock check** — fetches each product from DB; verifies `sizeStock[size] >= quantity`. Outfit products check both `topwear.sizeStock[topwearSize]` and `bottomwear.sizeStock[bottomwearSize]`
 6. **Gift message sanitisation** — strips HTML tags, trims, caps at 300 chars
-7. **Order insertion** — inserts document with `status: "pending"` and computed `totalAmount`
+7. **Order ID generation & insertion** — generates a unique, collision-resistant 6-character uppercase alphanumeric code prefixed with `TB-` (excluding ambiguous characters: `I`, `O`, `0`, `1`), collision-checked against the DB at write time, and inserts the document with `status: "pending"`, the unique `orderNumber`, and computed `totalAmount`.
 8. **Atomic stock decrement** — uses MongoDB `$inc` with a conditional filter (`$gte` guard) to prevent overselling. Both `sizeStock[size]` and aggregate `stock` fields are decremented together
 9. **Compensation rollback** — if any decrement fails (race condition), all previously decremented items are restored and the order document is deleted. Returns `409 Conflict`
 
@@ -540,6 +540,15 @@ Icons: 9 sizes (72×72 → 512×512) including a maskable variant for Android ad
 
 Screenshots: `narrow` (540×960 mobile) and `wide` (1280×800 desktop) for browser install dialogs.
 
+### 12.4 Push Notifications & Duplicate Mitigation
+
+Thunderbold integrates Firebase Cloud Messaging (FCM) to deliver order updates and admin broadcasts. To ensure high reliability and prevent duplicate notification cards:
+
+- **Service Worker Synchronization:** In [firebaseMessaging.ts](file:///c:/Users/neels/Desktop/thunderbolt-brand-world/src/lib/firebaseMessaging.ts), the application polls for the main Workbox PWA service worker (`/sw.js`) for up to 3 seconds in production before falling back to default Firebase registration (`/firebase-messaging-sw.js`). This prevents dual service worker registrations.
+- **Client Device Tracking:** On frontend load, [NotificationsContext.tsx](file:///c:/Users/neels/Desktop/thunderbolt-brand-world/src/context/NotificationsContext.tsx) generates a persistent, random `deviceId` and caches it in `localStorage`. 
+- **Database Deduplication:** The backend token registry (`POST /api/users/fcm-token`) pulls any previous FCM token registrations associated with the same `deviceId` or the same `token` string before appending the new one. This enforces a strict 1-to-1 mapping between a physical browser instance and its active FCM token in MongoDB, ensuring duplicate notification delivery is completely resolved.
+- **Automatic Browser Rendering:** Background notifications contain a standard JSON `notification` payload. The service worker (`/firebase-messaging-sw-part.js`) intercepts the message and delegates rendering to the browser's native Web Push agent, preventing duplicate notification cards from being spawned by manual worker listener calls.
+
 ---
 
 ## 13. Performance Architecture
@@ -666,7 +675,7 @@ Use [PWABuilder](https://www.pwabuilder.com) or Bubblewrap to generate the Andro
 
 | Feature                   | Notes                                                                    |
 |---------------------------|--------------------------------------------------------------------------|
-| Push notifications        | FCM service worker is primed; needs `firebase-messaging` init in SW + subscription backend endpoint + admin send UI |
+| Push notifications        | [Fully Implemented] Foreground toasts & background pushes via custom Workbox sw.js registration and deviceId deduplication. |
 | Redis rate limiting       | Required for multi-instance production deployments                       |
 | Payment gateway           | Razorpay or PhonePe; requires backend webhook handler + `paymentStatus` field on orders |
 | Order tracking            | Real-time status via WebSocket or SSE push from admin status updates     |

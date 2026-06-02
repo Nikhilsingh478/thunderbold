@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
+import { formatOrderId } from '../lib/utils';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ScrollProgress from '../components/ScrollProgress';
@@ -63,6 +64,7 @@ interface Order {
   totalAmount: number;
   status: string;
   createdAt: string;
+  orderNumber?: string;
 }
 
 const emptyAddress = {
@@ -821,7 +823,7 @@ export default function Profile() {
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-wrap items-center gap-3">
                                 <span className="font-condensed text-xs tracking-[0.14em] text-sv-mid uppercase">
-                                  #{order._id.slice(-8)}
+                                  {formatOrderId(order)}
                                 </span>
                                 <div className="flex items-center gap-1.5 text-sv-dim text-xs">
                                   <Calendar className="w-3 h-3" />

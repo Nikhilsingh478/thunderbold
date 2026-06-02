@@ -40,7 +40,13 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
       return { sent: 0, failed: 0 };
     }
 
-    console.log(`[FCM-Send] Attempting to send notification to ${userId} (${tokens.length} active token(s))`);
+    const tokenStrings = tokens.map(t => typeof t === 'string' ? t : t?.token).filter(Boolean);
+    if (tokenStrings.length === 0) {
+      console.log(`[FCM-Send] No valid FCM tokens resolved for user: ${userId}. Skipping.`);
+      return { sent: 0, failed: 0 };
+    }
+
+    console.log(`[FCM-Send] Attempting to send notification to ${userId} (${tokenStrings.length} active token(s))`);
     
     // Build click destination URL
     let clickLink = 'https://thunderbold.shop/';
@@ -52,7 +58,7 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
     let failed = 0;
     const tokensToRemove = [];
 
-    for (const token of tokens) {
+    for (const token of tokenStrings) {
       try {
         const message = {
           token,
@@ -93,7 +99,16 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
       try {
         const updateRes = await db.collection('users').updateOne(
           { email: userId },
-          { $pull: { fcmTokens: { $in: tokensToRemove } } }
+          { 
+            $pull: { 
+              fcmTokens: {
+                $or: [
+                  { token: { $in: tokensToRemove } },
+                  { $in: tokensToRemove }
+                ]
+              }
+            } 
+          }
         );
         console.log(`[FCM-Send] Removed ${tokensToRemove.length} stale tokens for user: ${userId}. Update matched: ${updateRes.matchedCount}`);
       } catch (dbErr) {

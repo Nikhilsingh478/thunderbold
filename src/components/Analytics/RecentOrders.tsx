@@ -1,5 +1,6 @@
 import ChartCard from './ChartCard';
 import type { RecentOrder } from './types';
+import { formatOrderId } from '../../lib/utils';
 
 interface RecentOrdersProps {
   data: RecentOrder[];
@@ -55,7 +56,7 @@ export default function RecentOrders({ data }: RecentOrdersProps) {
           <tbody className="divide-y divide-white/5">
             {data.map((o) => (
               <tr key={o._id} className="text-tb-white/90">
-                <td className="px-2 py-3 font-mono text-xs">#{o._id.slice(-8)}</td>
+                <td className="px-2 py-3 font-mono text-xs">{formatOrderId(o)}</td>
                 <td className="px-2 py-3 truncate max-w-[180px]" title={o.customer}>
                   {o.customer}
                 </td>
@@ -90,7 +91,7 @@ export default function RecentOrders({ data }: RecentOrdersProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-mono text-[11px] text-sv-mid">#{o._id.slice(-8)}</p>
+                <p className="font-mono text-[11px] text-sv-mid">{formatOrderId(o)}</p>
                 <p className="truncate text-sm text-tb-white" title={o.customer}>
                   {o.customer}
                 </p>

@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getStaleOrders, setCachedOrders } from '../lib/ordersCache';
 import ReviewModal, { ReviewData } from '../components/reviews/ReviewModal';
 import LightningRating from '../components/reviews/LightningRating';
+import { formatOrderId } from '../lib/utils';
 
 interface OrderProduct {
   productId?: string;
@@ -23,6 +24,7 @@ interface Order {
   totalAmount: number;
   status: string;
   createdAt: string;
+  orderNumber?: string;
 }
 
 const Orders = () => {
@@ -371,7 +373,7 @@ const Orders = () => {
                       <div className="flex items-center gap-2">
                         <Package className="w-5 h-5 text-sv-mid" />
                         <span className="font-condensed text-sm text-sv-mid">
-                          Order #{order._id.slice(-8)}
+                          Order {formatOrderId(order)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sv-mid">

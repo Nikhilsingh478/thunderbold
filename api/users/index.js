@@ -40,16 +40,45 @@ export default async function handler(req, res) {
     if (!decoded?.email) return res.status(401).json(errorResponse('Unauthorized'));
 
     const userEmail = decoded.email;
-    const { token } = req.body || {};
+    const { token, deviceId } = req.body || {};
 
     if (req.method === 'POST') {
       if (!token || typeof token !== 'string' || !token.trim()) {
         return res.status(400).json(errorResponse('token is required'));
       }
+      const activeDeviceId = deviceId || 'default';
+      const cleanToken = token.trim();
       try {
+        // Remove any old occurrences of this device ID or this token string
+        // (to prevent multiple tokens pointing to the same device or duplicates)
         await users.updateOne(
           { email: userEmail },
-          { $addToSet: { fcmTokens: token.trim() }, $set: { updatedAt: new Date() } }
+          {
+            $pull: {
+              fcmTokens: {
+                $or: [
+                  { deviceId: activeDeviceId },
+                  { token: cleanToken },
+                  cleanToken
+                ]
+              }
+            }
+          }
+        );
+
+        // Push the new token with device metadata
+        await users.updateOne(
+          { email: userEmail },
+          {
+            $push: {
+              fcmTokens: {
+                token: cleanToken,
+                deviceId: activeDeviceId,
+                updatedAt: new Date()
+              }
+            },
+            $set: { updatedAt: new Date() }
+          }
         );
         return res.status(200).json(successResponse({ message: 'FCM token registered' }));
       } catch (err) {
@@ -61,10 +90,21 @@ export default async function handler(req, res) {
       if (!token || typeof token !== 'string') {
         return res.status(400).json(errorResponse('token is required'));
       }
+      const cleanToken = token.trim();
       try {
         await users.updateOne(
           { email: userEmail },
-          { $pull: { fcmTokens: token.trim() }, $set: { updatedAt: new Date() } }
+          {
+            $pull: {
+              fcmTokens: {
+                $or: [
+                  { token: cleanToken },
+                  cleanToken
+                ]
+              }
+            },
+            $set: { updatedAt: new Date() }
+          }
         );
         return res.status(200).json(successResponse({ message: 'FCM token removed' }));
       } catch (err) {

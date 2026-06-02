@@ -18,6 +18,19 @@ const browserSupported = (): boolean =>
   'Notification' in window &&
   'serviceWorker' in navigator;
 
+function getOrCreateDeviceId(): string {
+  try {
+    let id = localStorage.getItem('thunderbold_device_id');
+    if (!id) {
+      id = 'dev_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
+      localStorage.setItem('thunderbold_device_id', id);
+    }
+    return id;
+  } catch {
+    return 'temp_device_' + Date.now();
+  }
+}
+
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [shouldPrompt, setShouldPromptState] = useState(false);
@@ -40,13 +53,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     const sendToken = async (token: string) => {
       try {
         const idToken = await user.getIdToken();
+        const deviceId = getOrCreateDeviceId();
         const response = await fetch('/api/users/fcm-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ token }),
+          body: JSON.stringify({ token, deviceId }),
         });
         
         if (response.ok) {

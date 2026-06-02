@@ -10,6 +10,7 @@ import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
 import { printInvoice } from '../utils/printInvoice';
+import { formatOrderId } from '../lib/utils';
 
 const ADMIN_EMAILS = [
   "adminthunderbolt@gmail.com",
@@ -44,6 +45,7 @@ interface Order {
   address?: OrderAddress;
   paymentMethod?: string;
   giftMessage?: string;
+  orderNumber?: string;
 }
 
 interface AdminReview {
@@ -1386,7 +1388,7 @@ export default function Admin() {
                             <div className="flex items-start justify-between gap-3 mb-3">
                               <div className="min-w-0">
                                 <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-0.5">Order ID</p>
-                                <p className="text-tb-white text-xs font-mono">#{order._id?.slice(-10) ?? '—'}</p>
+                                <p className="text-tb-white text-xs font-mono">{formatOrderId(order)}</p>
                               </div>
                               <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-condensed uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
                                 {order.status ?? 'pending'}
@@ -1491,7 +1493,7 @@ export default function Admin() {
                               <tr key={order._id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors align-top">
                                 {/* Order ID */}
                                 <td className="px-4 py-4 text-xs text-sv-mid font-mono whitespace-nowrap">
-                                  #{order._id?.slice(-10) ?? '—'}
+                                  {formatOrderId(order)}
                                 </td>
                                 {/* Customer */}
                                 <td className="px-4 py-4 text-sm text-sv-mid max-w-[160px]">
@@ -2088,7 +2090,7 @@ export default function Admin() {
                 Are you sure you want to delete order
               </p>
               <p className="font-mono text-xs text-tb-white bg-white/5 border border-white/10 rounded-lg px-3 py-2 mb-4">
-                #{confirmDeleteOrder._id?.slice(-10)}
+                {formatOrderId(confirmDeleteOrder)}
               </p>
               <p className="text-sv-mid text-xs">
                 This will permanently remove the order for{' '}
@@ -2115,7 +2117,7 @@ export default function Admin() {
         {viewAddressOrder && (
           <ModalShell onClose={() => setViewAddressOrder(null)}>
             <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
-              <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest mb-0.5">Order #{viewAddressOrder._id?.slice(-10)}</p>
+              <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest mb-0.5">Order {formatOrderId(viewAddressOrder)}</p>
               <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">Delivery Address</h3>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">

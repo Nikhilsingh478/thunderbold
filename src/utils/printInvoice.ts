@@ -17,6 +17,8 @@ interface OrderAddress {
   pincode?: string;
 }
 
+import { formatOrderId } from '../lib/utils';
+
 export interface PrintableOrder {
   _id: string;
   userId?: string;
@@ -27,6 +29,7 @@ export interface PrintableOrder {
   totalAmount?: number;
   createdAt?: string;
   giftMessage?: string;
+  orderNumber?: string;
 }
 
 function formatDate(iso?: string): string {
@@ -55,8 +58,7 @@ export function printInvoice(order: PrintableOrder): void {
   const addr = order.address ?? {};
   const items = order.products ?? [];
   const subtotal = items.reduce((s, i) => s + (i.price ?? 0) * (i.quantity ?? 1), 0);
-  const orderId = order._id;
-  const shortId = orderId?.slice(-10) ?? '—';
+  const displayId = formatOrderId(order);
   const status = order.status ?? 'pending';
   const statusColor = statusBadgeColor(status);
 
@@ -103,7 +105,7 @@ export function printInvoice(order: PrintableOrder): void {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Packing Slip — #${shortId}</title>
+  <title>Packing Slip — ${displayId}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -266,14 +268,14 @@ export function printInvoice(order: PrintableOrder): void {
       <div class="brand">THUNDER<span>BOLT</span></div>
       <div class="doc-title">
         <h2>Packing Slip</h2>
-        <p>#${shortId}</p>
+        <p>${displayId}</p>
       </div>
     </div>
 
     <div class="meta-grid">
       <div class="meta-box">
         <h3>Order Details</h3>
-        <p><strong>Order ID:</strong> ${orderId}</p>
+        <p><strong>Order ID:</strong> ${displayId}</p>
         <p><strong>Date:</strong> ${formatDate(order.createdAt)}</p>
         <p><strong>Payment:</strong> ${order.paymentMethod ?? '—'}</p>
         <p><strong>Status:</strong></p>

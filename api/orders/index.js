@@ -175,6 +175,28 @@ async function handleCreate(req, res) {
     ? giftMessage.replace(/<[^>]*>/g, "").trim().slice(0, 300)
     : "";
 
+  // Generate unique, collision-resistant orderNumber
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded confusing: O, 0, I, 1
+  let orderNumber = '';
+  let isUnique = false;
+  let attempts = 0;
+  while (!isUnique && attempts < 10) {
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const tempNum = `TB-${code}`;
+    const duplicate = await ordersCollection.findOne({ orderNumber: tempNum });
+    if (!duplicate) {
+      orderNumber = tempNum;
+      isUnique = true;
+    }
+    attempts++;
+  }
+  if (!orderNumber) {
+    orderNumber = `TB-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+  }
+
   // Create order
   const order = {
     userId,
@@ -184,6 +206,7 @@ async function handleCreate(req, res) {
     status: "pending",
     createdAt: new Date(),
     totalAmount: products.reduce((sum, p) => sum + p.price * p.quantity, 0),
+    orderNumber,
     ...(clientOrderId ? { clientOrderId } : {}),
     ...(sanitizedGiftMessage ? { giftMessage: sanitizedGiftMessage } : {}),
   };
@@ -287,9 +310,13 @@ async function handleCreate(req, res) {
     return res.status(409).json({ error: stockError });
   }
 
+  const firstProduct = products[0]?.name || "items";
+  const otherCount = products.length - 1;
+  const productDisplay = otherCount > 0 ? `"${firstProduct}" and ${otherCount} other item(s)` : `"${firstProduct}"`;
+
   sendToUser(db, userId, {
-    title: 'Order Received',
-    body: "We've received your order. Our team will call to confirm.",
+    title: 'Order Received ⚡',
+    body: `We've received your order for ${productDisplay}. Our team will call to confirm.`,
     data: { orderId: String(result.insertedId), type: 'order_update' },
   });
 
@@ -401,7 +428,7 @@ async function handleManage(req, res) {
       return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, packed, shipped, delivered, cancelled" });
     }
 
-    const existingOrder = await orders.findOne({ _id: objectId }, { projection: { status: 1, userId: 1 } });
+    const existingOrder = await orders.findOne({ _id: objectId }, { projection: { status: 1, userId: 1, products: 1 } });
     if (!existingOrder) return res.status(404).json({ error: "Order not found" });
 
     const result = await orders.updateOne(
@@ -411,13 +438,16 @@ async function handleManage(req, res) {
     if (result.matchedCount === 0) return res.status(404).json({ error: "Order not found" });
 
     if (existingOrder.status !== status && existingOrder.userId) {
-      const shortId = String(objectId).slice(-6).toUpperCase();
+      const firstProduct = existingOrder.products?.[0]?.name || "items";
+      const otherCount = (existingOrder.products?.length || 1) - 1;
+      const productDisplay = otherCount > 0 ? `"${firstProduct}" and ${otherCount} other item(s)` : `"${firstProduct}"`;
+
       const notifMap = {
-        confirmed: { title: 'Order Confirmed', body: `Your order #TB${shortId} has been confirmed.` },
-        packed:    { title: 'Order Packed', body: `Your order #TB${shortId} is packed and ready to ship.` },
-        shipped:   { title: 'On Its Way', body: `Your order #TB${shortId} is on its way. Hang tight!` },
-        delivered: { title: 'Delivered', body: 'Your order has been delivered. Enjoy!' },
-        cancelled: { title: 'Order Cancelled', body: `Your order #TB${shortId} has been cancelled.` },
+        confirmed: { title: 'Order Confirmed', body: `Your order for ${productDisplay} has been confirmed.` },
+        packed:    { title: 'Order Packed', body: `Your order for ${productDisplay} is packed and ready to ship.` },
+        shipped:   { title: 'On Its Way', body: `Your order for ${productDisplay} is on its way. Hang tight!` },
+        delivered: { title: 'Delivered', body: `Your order for ${productDisplay} has been delivered. Enjoy!` },
+        cancelled: { title: 'Order Cancelled', body: `Your order for ${productDisplay} has been cancelled.` },
       };
       const notif = notifMap[status];
       if (notif) {

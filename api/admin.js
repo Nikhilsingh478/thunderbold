@@ -316,6 +316,7 @@ async function getRecentOrders(db, limit = 5) {
           createdAt: 1,
           "address.fullName": 1,
           products: 1,
+          orderNumber: 1,
         },
       }
     )
@@ -325,6 +326,7 @@ async function getRecentOrders(db, limit = 5) {
 
   return docs.map((o) => ({
     _id: String(o._id),
+    orderNumber: o.orderNumber || null,
     userId: o.userId || null,
     customer: o.address?.fullName || o.userId || "—",
     totalAmount: o.totalAmount || 0,

@@ -55,10 +55,22 @@ export async function requestAndRegisterToken(
 
     // Try registering with the active PWA service worker (/sw.js)
     try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      const mainReg = registrations.find(r => 
-        (r.active || r.installing || r.waiting)?.scriptURL.endsWith('/sw.js')
-      );
+      let mainReg = null;
+      // Wait up to 3 seconds for /sw.js to appear in service worker registrations in production
+      for (let i = 0; i < 6; i++) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        mainReg = registrations.find(r => 
+          (r.active || r.installing || r.waiting)?.scriptURL.endsWith('/sw.js')
+        );
+        if (mainReg) break;
+        // In local development, the service worker /sw.js won't show up.
+        // We check if it's running in development mode (import.meta.env.DEV).
+        // If it is DEV mode, we don't wait for /sw.js since it will never register.
+        if (import.meta.env.DEV) {
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
       if (mainReg) {
         console.log('[FCM] Main PWA service worker (/sw.js) found. Registering token through it.');
