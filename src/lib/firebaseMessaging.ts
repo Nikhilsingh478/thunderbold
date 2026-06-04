@@ -53,41 +53,37 @@ export async function requestAndRegisterToken(
 
     let token = null;
 
-    // Try registering with the active PWA service worker (/sw.js)
+    // Try registering/retrieving the main PWA service worker (/sw.js)
     try {
       let mainReg = null;
-      // Wait up to 3 seconds for /sw.js to appear in service worker registrations in production
-      for (let i = 0; i < 6; i++) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        mainReg = registrations.find(r => 
-          (r.active || r.installing || r.waiting)?.scriptURL.endsWith('/sw.js')
-        );
-        if (mainReg) break;
-        // In local development, the service worker /sw.js won't show up.
-        // We check if it's running in development mode (import.meta.env.DEV).
-        // If it is DEV mode, we don't wait for /sw.js since it will never register.
-        if (import.meta.env.DEV) {
-          break;
+      if ('serviceWorker' in navigator) {
+        // In production, we register/retrieve the main PWA service worker (/sw.js)
+        if (!import.meta.env.DEV) {
+          try {
+            mainReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log('[FCM] Main PWA service worker (/sw.js) registered/retrieved successfully.');
+          } catch (swErr) {
+            console.error('[FCM] Failed to register main PWA service worker (/sw.js):', swErr);
+          }
         }
-        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       if (mainReg) {
-        console.log('[FCM] Main PWA service worker (/sw.js) found. Registering token through it.');
+        console.log('[FCM] Registering token through main PWA service worker (/sw.js)...');
         token = await getToken(messaging, {
           vapidKey,
           serviceWorkerRegistration: mainReg,
         });
       } else {
-        console.log('[FCM] Main PWA service worker (/sw.js) is not registered yet.');
+        console.log('[FCM] PWA service worker not used (either in DEV mode or service worker registration failed).');
       }
     } catch (swErr) {
       console.warn('[FCM] Failed to fetch token using main PWA service worker:', swErr);
     }
 
-    // Fallback: use default FCM registration (registers /firebase-messaging-sw.js)
-    if (!token) {
-      console.log('[FCM] Attempting default FCM service worker token registration (/firebase-messaging-sw.js)...');
+    // Fallback: use default FCM registration (registers /firebase-messaging-sw.js) ONLY in development
+    if (!token && import.meta.env.DEV) {
+      console.log('[FCM] Dev fallback: Attempting default FCM service worker token registration (/firebase-messaging-sw.js)...');
       try {
         token = await getToken(messaging, { vapidKey });
       } catch (fallbackErr) {

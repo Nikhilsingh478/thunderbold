@@ -21,7 +21,7 @@ const INVALID_TOKEN_CODES = [
  * This function NEVER throws. All errors are caught and logged so callers
  * (order creation, status updates) are never blocked by notification failures.
  */
-export async function sendToUser(db, userId, { title, body, data = {} }) {
+export async function sendToUser(db, userId, { title, body, data = {} }, origin = 'https://thunderbold.shop') {
   try {
     const messaging = getAdminMessaging();
     if (!messaging) {
@@ -48,10 +48,25 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
 
     console.log(`[FCM-Send] Attempting to send notification to ${userId} (${tokenStrings.length} active token(s))`);
     
-    // Build click destination URL
-    let clickLink = 'https://thunderbold.shop/';
+    // Resolve dynamic image and click link
+    const imageUrl = data.imageUrl || data.image || '';
+    let clickLink = `${origin}/`;
     if (data.orderId) {
-      clickLink = `https://thunderbold.shop/orders?orderId=${data.orderId}`;
+      clickLink = `${origin}/orders?orderId=${data.orderId}`;
+    }
+
+    // Build interactive action buttons
+    const actions = [];
+    if (data.orderId) {
+      actions.push(
+        { action: 'track_order', title: 'Track Order 📦' },
+        { action: 'shop_now', title: 'Shop Streetwear ⚡' }
+      );
+    } else {
+      actions.push(
+        { action: 'shop_now', title: 'Shop Now ⚡' },
+        { action: 'view_deals', title: 'View Deals 🏷️' }
+      );
     }
 
     let sent = 0;
@@ -62,17 +77,34 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
       try {
         const message = {
           token,
-          notification: { title, body },
+          notification: { 
+            title, 
+            body,
+            ...(imageUrl ? { imageUrl } : {})
+          },
           data: Object.fromEntries(
             Object.entries(data).map(([k, v]) => [k, String(v)])
           ),
+          android: {
+            priority: 'high',
+            notification: {
+              sound: 'default',
+              ...(imageUrl ? { imageUrl } : {})
+            }
+          },
           webpush: {
+            headers: {
+              Urgency: 'high',
+              TTL: '2419200', // 4 weeks
+            },
             notification: {
               title: title,
               body: body,
-              icon: 'https://thunderbold.shop/icons/icon-192x192.png',
-              badge: 'https://thunderbold.shop/icons/icon-96x96.png',
+              icon: `${origin}/icons/icon-192x192.png`,
+              badge: `${origin}/favicon.svg`,
               vibrate: [200, 100, 200],
+              ...(imageUrl ? { image: imageUrl } : {}),
+              actions: actions,
             },
             fcmOptions: {
               link: clickLink,
@@ -132,16 +164,30 @@ export async function sendToUser(db, userId, { title, body, data = {} }) {
  * @param {{ title, body, data? }} payload
  * @returns {{ sent: number, failed: number, invalidTokens: string[] }}
  */
-export async function sendMulticast(messaging, tokens, { title, body, data = {} }) {
+export async function sendMulticast(messaging, tokens, { title, body, data = {} }, origin = 'https://thunderbold.shop') {
   console.log(`[FCM-Multicast] Starting broadcast to ${tokens.length} token(s)`);
   
   let sent = 0;
   let failed = 0;
   const invalidTokens = [];
 
+  const imageUrl = data.imageUrl || data.image || '';
   const clickLink = data.orderId 
-    ? `https://thunderbold.shop/orders?orderId=${data.orderId}`
-    : 'https://thunderbold.shop/';
+    ? `${origin}/orders?orderId=${data.orderId}`
+    : `${origin}/`;
+
+  const actions = [];
+  if (data.orderId) {
+    actions.push(
+      { action: 'track_order', title: 'Track Order 📦' },
+      { action: 'shop_now', title: 'Shop Streetwear ⚡' }
+    );
+  } else {
+    actions.push(
+      { action: 'shop_now', title: 'Shop Now ⚡' },
+      { action: 'view_deals', title: 'View Deals 🏷️' }
+    );
+  }
 
   const batches = [];
   for (let i = 0; i < tokens.length; i += 500) {
@@ -152,17 +198,34 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
     try {
       const response = await messaging.sendEachForMulticast({
         tokens: batch,
-        notification: { title, body },
+        notification: { 
+          title, 
+          body,
+          ...(imageUrl ? { imageUrl } : {})
+        },
         data: Object.fromEntries(
           Object.entries(data).map(([k, v]) => [k, String(v)])
         ),
+        android: {
+          priority: 'high',
+          notification: {
+            sound: 'default',
+            ...(imageUrl ? { imageUrl } : {})
+          }
+        },
         webpush: {
+          headers: {
+            Urgency: 'high',
+            TTL: '2419200', // 4 weeks
+          },
           notification: {
             title: title,
             body: body,
-            icon: 'https://thunderbold.shop/icons/icon-192x192.png',
-            badge: 'https://thunderbold.shop/icons/icon-96x96.png',
+            icon: `${origin}/icons/icon-192x192.png`,
+            badge: `${origin}/favicon.svg`,
             vibrate: [200, 100, 200],
+            ...(imageUrl ? { image: imageUrl } : {}),
+            actions: actions,
           },
           fcmOptions: {
             link: clickLink,

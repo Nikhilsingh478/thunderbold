@@ -59,13 +59,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'User email not found in token' });
     }
     
-    console.log(`[notifications/test-send] Triggering test send for user: ${userEmail}`);
+    // Resolve dynamic request origin
+    const host = req.headers.host || 'thunderbold.shop';
+    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+    const origin = `${protocol}://${host}`;
+
+    console.log(`[notifications/test-send] Triggering test send for user: ${userEmail} with origin ${origin}`);
     try {
       const result = await sendToUser(db, userEmail, {
         title: 'Test Notification ⚡',
         body: 'FCM delivery from Thunderbolt Denim is operational!',
         data: { type: 'test_send' }
-      });
+      }, origin);
       console.log(`[notifications/test-send] Result for ${userEmail}:`, result);
       return res.status(200).json(result);
     } catch (err) {
@@ -86,7 +91,7 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
-  const { title, body: msgBody } = body;
+  const { title, body: msgBody, imageUrl } = body;
 
   if (!title || typeof title !== 'string' || !title.trim()) {
     return res.status(400).json({ error: 'title is required' });
@@ -113,10 +118,16 @@ export default async function handler(req, res) {
     );
     const usersReached = usersWithTokens.length;
 
+    // Resolve dynamic request origin
+    const host = req.headers.host || 'thunderbold.shop';
+    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+    const origin = `${protocol}://${host}`;
+
     const { sent, failed, invalidTokens } = await sendMulticast(messaging, allTokens, {
       title: title.trim(),
       body: msgBody.trim(),
-    });
+      data: imageUrl ? { imageUrl: imageUrl.trim() } : {}
+    }, origin);
 
     if (invalidTokens.length > 0) {
       for (const user of usersWithTokens) {

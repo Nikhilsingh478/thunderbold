@@ -314,11 +314,16 @@ async function handleCreate(req, res) {
   const otherCount = products.length - 1;
   const productDisplay = otherCount > 0 ? `"${firstProduct}" and ${otherCount} other item(s)` : `"${firstProduct}"`;
 
+  // Resolve dynamic request origin
+  const host = req.headers.host || 'thunderbold.shop';
+  const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+  const origin = `${protocol}://${host}`;
+
   sendToUser(db, userId, {
     title: 'Order Received ⚡',
     body: `We've received your order for ${productDisplay}. Our team will call to confirm.`,
     data: { orderId: String(result.insertedId), type: 'order_update' },
-  });
+  }, origin);
 
   return res.status(201).json({
     message: "Order created successfully",
@@ -451,10 +456,15 @@ async function handleManage(req, res) {
       };
       const notif = notifMap[status];
       if (notif) {
+        // Resolve dynamic request origin
+        const host = req.headers.host || 'thunderbold.shop';
+        const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+        const origin = `${protocol}://${host}`;
+
         sendToUser(db, existingOrder.userId, {
           ...notif,
           data: { orderId: String(objectId), type: 'order_update' },
-        });
+        }, origin);
       }
     }
 

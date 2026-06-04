@@ -819,6 +819,7 @@ export default function Admin() {
   // Notifications tab state
   const [notifTitle, setNotifTitle] = useState('');
   const [notifBody, setNotifBody] = useState('');
+  const [notifImage, setNotifImage] = useState('');
   const [notifSending, setNotifSending] = useState(false);
   const [notifResult, setNotifResult] = useState<{ sent: number; failed: number; usersReached: number } | null>(null);
   const [notifError, setNotifError] = useState('');
@@ -1283,13 +1284,18 @@ export default function Admin() {
       const res = await fetch('/api/notifications/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ title: notifTitle.trim(), body: notifBody.trim() }),
+        body: JSON.stringify({ 
+          title: notifTitle.trim(), 
+          body: notifBody.trim(),
+          imageUrl: notifImage.trim() || undefined
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send');
       setNotifResult(data);
       setNotifTitle('');
       setNotifBody('');
+      setNotifImage('');
     } catch (err: any) {
       setNotifError(err.message || 'Failed to send broadcast');
     } finally {
@@ -2044,6 +2050,17 @@ export default function Admin() {
                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors resize-none"
                       />
                       <p className="font-condensed text-xs text-sv-dim mt-1 text-right">{notifBody.length}/150</p>
+                    </div>
+
+                    <div>
+                      <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Banner Image URL <span className="text-sv-mid/40 normal-case tracking-normal">(Optional)</span></label>
+                      <input
+                        type="url"
+                        value={notifImage}
+                        onChange={(e) => { setNotifImage(e.target.value); setNotifResult(null); setNotifError(''); }}
+                        placeholder="e.g. https://res.cloudinary.com/... (shows as rich banner)"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+                      />
                     </div>
 
                     {notifError && (

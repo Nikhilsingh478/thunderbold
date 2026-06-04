@@ -37,13 +37,30 @@ messaging.onBackgroundMessage((payload) => {
 
   const notifTitle = title || 'Thunderbold';
   const notifBody = body || '';
+  const imageUrl = data.imageUrl || data.image || '';
+
+  // Build actions list for silent/fallback notifications
+  const actions = [];
+  if (data.orderId) {
+    actions.push(
+      { action: 'track_order', title: 'Track Order 📦' },
+      { action: 'shop_now', title: 'Shop Streetwear ⚡' }
+    );
+  } else {
+    actions.push(
+      { action: 'shop_now', title: 'Shop Now ⚡' },
+      { action: 'view_deals', title: 'View Deals 🏷️' }
+    );
+  }
 
   self.registration.showNotification(notifTitle, {
     body: notifBody,
-    icon: 'https://thunderbold.shop/icons/icon-192x192.png',
-    badge: 'https://thunderbold.shop/icons/icon-96x96.png',
+    icon: '/icons/icon-192x192.png',
+    badge: '/favicon.svg',
+    image: imageUrl || undefined,
     data: data,
     vibrate: [200, 100, 200],
+    actions: actions,
   });
 });
 
@@ -51,19 +68,33 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const orderId = data.orderId;
-  const url = orderId ? `/orders?orderId=${orderId}` : '/orders';
+  const action = event.action;
+
+  // Resolve target URL based on action button clicked
+  let url = '/';
+  if (action === 'track_order' && data.orderId) {
+    url = `/orders?orderId=${data.orderId}`;
+  } else if (action === 'shop_now') {
+    url = '/#categories';
+  } else if (action === 'view_deals') {
+    url = '/deals/under-999';
+  } else {
+    // Default notification body click
+    url = data.orderId ? `/orders?orderId=${data.orderId}` : '/';
+  }
 
   event.waitUntil(
     clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
+        // Find existing open tab/window
         for (const client of windowClients) {
           if ('focus' in client) {
             client.navigate(url);
             return client.focus();
           }
         }
+        // Fallback to opening a new tab
         if (clients.openWindow) {
           return clients.openWindow(url);
         }
