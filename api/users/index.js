@@ -49,8 +49,13 @@ export default async function handler(req, res) {
       const activeDeviceId = deviceId || 'default';
       const cleanToken = token.trim();
       try {
-        // Remove any old occurrences of this device ID or this token string
-        // (to prevent multiple tokens pointing to the same device or duplicates)
+        // Remove any legacy raw string tokens that match this token
+        await users.updateOne(
+          { email: userEmail },
+          { $pull: { fcmTokens: cleanToken } }
+        );
+
+        // Remove any object-based tokens matching this deviceId or token value
         await users.updateOne(
           { email: userEmail },
           {
@@ -58,8 +63,7 @@ export default async function handler(req, res) {
               fcmTokens: {
                 $or: [
                   { deviceId: activeDeviceId },
-                  { token: cleanToken },
-                  { $eq: cleanToken }
+                  { token: cleanToken }
                 ]
               }
             }
@@ -92,16 +96,18 @@ export default async function handler(req, res) {
       }
       const cleanToken = token.trim();
       try {
+        // Remove any legacy raw string tokens
+        await users.updateOne(
+          { email: userEmail },
+          { $pull: { fcmTokens: cleanToken } }
+        );
+
+        // Remove any object-based tokens
         await users.updateOne(
           { email: userEmail },
           {
             $pull: {
-              fcmTokens: {
-                $or: [
-                  { token: cleanToken },
-                  { $eq: cleanToken }
-                ]
-              }
+              fcmTokens: { token: cleanToken }
             },
             $set: { updatedAt: new Date() }
           }
