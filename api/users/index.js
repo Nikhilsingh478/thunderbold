@@ -59,7 +59,7 @@ export default async function handler(req, res) {
                 $or: [
                   { deviceId: activeDeviceId },
                   { token: cleanToken },
-                  cleanToken
+                  { $eq: cleanToken }
                 ]
               }
             }
@@ -99,7 +99,7 @@ export default async function handler(req, res) {
               fcmTokens: {
                 $or: [
                   { token: cleanToken },
-                  cleanToken
+                  { $eq: cleanToken }
                 ]
               }
             },
