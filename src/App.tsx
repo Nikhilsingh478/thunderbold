@@ -11,7 +11,10 @@ import AppContent from "./AppContent";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,
+      staleTime: 30 * 1000, // Mark data stale after 30 seconds to fetch changes quickly
+      refetchOnWindowFocus: true, // Automatically refetch stale queries on window focus
+      refetchOnReconnect: true,   // Automatically refetch on network reconnect
+      refetchOnMount: true,       // Refetch stale queries on component mount
       retry: 1,
     },
   },

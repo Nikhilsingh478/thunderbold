@@ -64,9 +64,9 @@ export default function PWAUpdatePrompt() {
     'update-available': {
       icon: <Zap className="w-4 h-4 text-brass" />,
       iconBg: 'rgba(212,170,48,0.10)',
-      title: 'Update Available',
-      body: 'A new version of Thunderbold is ready.',
-      action: { label: 'Refresh', onClick: handleRefresh },
+      title: 'New version available',
+      body: 'Thunderbold has been updated.',
+      action: { label: 'Update Now', onClick: handleRefresh },
     },
   };
 

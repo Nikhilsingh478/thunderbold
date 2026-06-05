@@ -2,8 +2,30 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
+import fs from "fs";
+
+// Generate a build-time version timestamp
+const buildVersion = new Date().getTime().toString();
+
+// Write version.json immediately on config evaluation
+try {
+  const publicDir = path.resolve(process.cwd(), "public");
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+  fs.writeFileSync(
+    path.resolve(publicDir, "version.json"),
+    JSON.stringify({ version: buildVersion }, null, 2)
+  );
+  console.log(`[Version] Successfully wrote version.json to public/ with version ${buildVersion}`);
+} catch (err) {
+  console.error("[Version] Failed to write version.json:", err);
+}
 
 export default defineConfig(() => ({
+  define: {
+    __APP_VERSION__: JSON.stringify(buildVersion),
+  },
   build: {
     sourcemap: false,
     rollupOptions: {
@@ -33,7 +55,7 @@ export default defineConfig(() => ({
        * Simpler and more reliable than injectManifest for this use case.
        */
       strategies: 'generateSW',
-      registerType: 'autoUpdate', // Auto-apply updates silently — no user action needed
+      registerType: 'prompt', // Prompt user before applying updates to prevent route breaks
       injectRegister: null,      // We register manually in main.tsx via virtual:pwa-register
 
       /**
@@ -220,12 +242,11 @@ export default defineConfig(() => ({
         cleanupOutdatedCaches: true,
 
         /**
-         * Skip waiting — newly installed SW activates immediately after install.
-         * Combined with 'prompt' registerType, users see an update prompt
-         * and can choose when to apply it (non-disruptive for checkout flows).
+         * In 'prompt' mode, do not auto skip waiting or claim clients.
+         * The prompt component handles this upon explicit user approval.
          */
-        skipWaiting: true,
-        clientsClaim: true,
+        skipWaiting: false,
+        clientsClaim: false,
 
         importScripts: ['/firebase-messaging-sw-part.js'],
 
