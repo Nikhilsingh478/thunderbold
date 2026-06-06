@@ -190,6 +190,17 @@ export default defineConfig(() => ({
           {
             relation: ['delegate_permission/common.handle_all_urls'],
             platform: 'play',
+            id: 'shop.thunderbold.www.twa',
+            fingerprints: [
+              {
+                type: 'sha256_cert',
+                value: '45:BD:08:98:06:70:41:FE:B4:C7:E9:32:B0:B7:E1:74:5F:1B:9C:60:0E:B5:24:47:B4:E7:CA:52:C4:06:93:30',
+              },
+            ],
+          },
+          {
+            relation: ['delegate_permission/common.handle_all_urls'],
+            platform: 'play',
             id: 'shop.thunderbold.twa',
             fingerprints: [
               {
