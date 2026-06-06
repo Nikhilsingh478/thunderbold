@@ -75,55 +75,57 @@ export default function PWAUpdatePrompt() {
   return (
     <AnimatePresence>
       {active && (
-        <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.97 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9000] w-[calc(100vw-2rem)] max-w-sm"
-          role="alert"
-        >
-          <div
-            className="rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl"
-            style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.10)' }}
+        <div className="fixed bottom-6 left-0 right-0 z-[9000] flex justify-center pointer-events-none px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-auto w-full max-w-sm"
+            role="alert"
           >
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: active.iconBg }}
+              className="rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl"
+              style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.10)' }}
             >
-              {active.icon}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="font-condensed text-xs font-bold tracking-[0.1em] uppercase text-white">
-                {active.title}
-              </p>
-              <p className="font-condensed text-[0.63rem] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                {active.body}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {active.action && (
-                <button
-                  onClick={active.action.onClick}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-condensed text-[0.65rem] tracking-[0.12em] uppercase font-bold text-black bg-brass hover:bg-yellow-400 transition-colors duration-200"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  {active.action.label}
-                </button>
-              )}
-              <button
-                onClick={() => setType(null)}
-                className="p-1 flex-shrink-0 ml-1"
-                style={{ color: 'rgba(255,255,255,0.35)' }}
-                aria-label="Dismiss"
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: active.iconBg }}
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
+                {active.icon}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="font-condensed text-xs font-bold tracking-[0.1em] uppercase text-white">
+                  {active.title}
+                </p>
+                <p className="font-condensed text-[0.63rem] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {active.body}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {active.action && (
+                  <button
+                    onClick={active.action.onClick}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-condensed text-[0.65rem] tracking-[0.12em] uppercase font-bold text-black bg-brass hover:bg-yellow-400 transition-colors duration-200"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    {active.action.label}
+                  </button>
+                )}
+                <button
+                  onClick={() => setType(null)}
+                  className="p-1 flex-shrink-0 ml-1"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
+                  aria-label="Dismiss"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

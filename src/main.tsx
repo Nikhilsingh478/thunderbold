@@ -89,7 +89,10 @@ if ('serviceWorker' in navigator) {
           }
         };
 
-        // Run the version.json check 5 seconds after startup to not block initial loading resources
+        // Run the version.json check immediately on startup
+        checkVersionJson();
+
+        // Also run a backup check 5 seconds later just in case page resources are still loading
         setTimeout(checkVersionJson, 5000);
 
         // Run the version.json check on visibility change (focus)
@@ -99,8 +102,8 @@ if ('serviceWorker' in navigator) {
           }
         });
 
-        // Poll version.json every 5 minutes in the background
-        const versionPollInterval = 5 * 60 * 1000;
+        // Poll version.json aggressively every 15 seconds in the background to catch updates fast
+        const versionPollInterval = 15 * 1000;
         setInterval(checkVersionJson, versionPollInterval);
       }
     });

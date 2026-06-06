@@ -40,7 +40,7 @@ const Index = () => (
       {/* pt clears: apk banner (36px) + announcement bar (36px) + navbar (~64px mobile / ~72px desktop) */}
       <div className="pt-[calc(100px+var(--tb-banner-h))] md:pt-[calc(108px+var(--tb-banner-h))]">
         <MobileSearchBar />
-        {/* <HeroBanner /> */}
+        <HeroBanner />
       </div>
       <BrandsSection />
       <LiveSaleSection />
