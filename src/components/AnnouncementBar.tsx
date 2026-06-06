@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-const MESSAGE = "Delivery at your doorstep within 45 minutes.";
+const MESSAGE = "Fast delivery at your doorstep — Live PWA Update Tested.";
 const SEPARATOR = "✦";
 const REPEAT = 8;
 
