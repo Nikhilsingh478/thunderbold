@@ -190,7 +190,7 @@ export default defineConfig(() => ({
           {
             relation: ['delegate_permission/common.handle_all_urls'],
             platform: 'play',
-            id: 'shop.thunderbold.www.twa',
+            id: 'shop.thunderbold.twa',
             fingerprints: [
               {
                 type: 'sha256_cert',
