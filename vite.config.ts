@@ -242,11 +242,12 @@ export default defineConfig(() => ({
         cleanupOutdatedCaches: true,
 
         /**
-         * In 'prompt' mode, do not auto skip waiting or claim clients.
-         * The prompt component handles this upon explicit user approval.
+         * In 'prompt' mode, do not auto skip waiting but do claim clients upon activation.
+         * The prompt component triggers activation, and clientsClaim ensures it immediately
+         * takes control of all pages to trigger page reloads reliably.
          */
         skipWaiting: false,
-        clientsClaim: false,
+        clientsClaim: true,
 
         importScripts: ['/firebase-messaging-sw-part.js'],
 

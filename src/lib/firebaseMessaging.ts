@@ -53,29 +53,29 @@ export async function requestAndRegisterToken(
 
     let token = null;
 
-    // Try registering/retrieving the main PWA service worker (/sw.js)
+    // Try retrieving the main active PWA service worker registration
     try {
       let mainReg = null;
       if ('serviceWorker' in navigator) {
-        // In production, we register/retrieve the main PWA service worker (/sw.js)
+        // In production, we reuse the service worker registered by main.tsx once it is ready
         if (!import.meta.env.DEV) {
           try {
-            mainReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-            console.log('[FCM] Main PWA service worker (/sw.js) registered/retrieved successfully.');
+            mainReg = await navigator.serviceWorker.ready;
+            console.log('[FCM] Main PWA service worker is ready for push registration.');
           } catch (swErr) {
-            console.error('[FCM] Failed to register main PWA service worker (/sw.js):', swErr);
+            console.error('[FCM] Failed to await main service worker readiness:', swErr);
           }
         }
       }
 
       if (mainReg) {
-        console.log('[FCM] Registering token through main PWA service worker (/sw.js)...');
+        console.log('[FCM] Registering token through main PWA service worker...');
         token = await getToken(messaging, {
           vapidKey,
           serviceWorkerRegistration: mainReg,
         });
       } else {
-        console.log('[FCM] PWA service worker not used (either in DEV mode or service worker registration failed).');
+        console.log('[FCM] PWA service worker not used (either in DEV mode or service worker ready timed out).');
       }
     } catch (swErr) {
       console.warn('[FCM] Failed to fetch token using main PWA service worker:', swErr);
