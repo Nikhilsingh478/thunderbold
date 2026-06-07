@@ -65,11 +65,11 @@ function SlideImagePlaceholder() {
 }
 
 /**
- * ThunderboltSlider — dynamic editorial carousel.
+ * ThunderboldSlider — dynamic editorial carousel.
  * Navigation: touch/pointer swipe (horizontal drag ≥ 50 px triggers advance).
  * Arrows removed — swipe only for native-app feel.
  */
-export default function ThunderboltSlider() {
+export default function ThunderboldSlider() {
   const navigate = useNavigate();
   const [slides, setSlides] = useState<SlideData[] | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);

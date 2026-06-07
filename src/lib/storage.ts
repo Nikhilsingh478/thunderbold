@@ -27,7 +27,7 @@ export interface StorageData {
 // CART STORAGE FUNCTIONS
 export const getCart = (): CartItem[] => {
   try {
-    const cartData = localStorage.getItem('thunderbolt_cart');
+    const cartData = localStorage.getItem('thunderbold_cart');
     return cartData ? JSON.parse(cartData) : [];
   } catch (error) {
     console.error('Error reading cart from localStorage:', error);
@@ -37,7 +37,7 @@ export const getCart = (): CartItem[] => {
 
 export const setCart = (cart: CartItem[]): void => {
   try {
-    localStorage.setItem('thunderbolt_cart', JSON.stringify(cart));
+    localStorage.setItem('thunderbold_cart', JSON.stringify(cart));
   } catch (error) {
     console.error('Error saving cart to localStorage:', error);
   }
@@ -45,7 +45,7 @@ export const setCart = (cart: CartItem[]): void => {
 
 export const clearCart = (): void => {
   try {
-    localStorage.removeItem('thunderbolt_cart');
+    localStorage.removeItem('thunderbold_cart');
   } catch (error) {
     console.error('Error clearing cart from localStorage:', error);
   }
@@ -54,7 +54,7 @@ export const clearCart = (): void => {
 // WISHLIST STORAGE FUNCTIONS
 export const getWishlist = (): WishlistItem[] => {
   try {
-    const wishlistData = localStorage.getItem('thunderbolt_wishlist');
+    const wishlistData = localStorage.getItem('thunderbold_wishlist');
     return wishlistData ? JSON.parse(wishlistData) : [];
   } catch (error) {
     console.error('Error reading wishlist from localStorage:', error);
@@ -64,7 +64,7 @@ export const getWishlist = (): WishlistItem[] => {
 
 export const setWishlist = (wishlist: WishlistItem[]): void => {
   try {
-    localStorage.setItem('thunderbolt_wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('thunderbold_wishlist', JSON.stringify(wishlist));
   } catch (error) {
     console.error('Error saving wishlist to localStorage:', error);
   }
@@ -72,7 +72,7 @@ export const setWishlist = (wishlist: WishlistItem[]): void => {
 
 export const clearWishlist = (): void => {
   try {
-    localStorage.removeItem('thunderbolt_wishlist');
+    localStorage.removeItem('thunderbold_wishlist');
   } catch (error) {
     console.error('Error clearing wishlist from localStorage:', error);
   }

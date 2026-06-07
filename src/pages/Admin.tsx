@@ -13,7 +13,7 @@ import { printInvoice } from '../utils/printInvoice';
 import { formatOrderId } from '../lib/utils';
 
 const ADMIN_EMAILS = [
-  "adminthunderbolt@gmail.com",
+  "adminthunderbold@gmail.com",
   "neelsingh45940s@gmail.com",
   "thepavanartt@gmail.com",
 ];

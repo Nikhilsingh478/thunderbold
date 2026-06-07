@@ -26,7 +26,7 @@ interface ProductGridProps {
 
 /**
  * Reusable product grid used by CategoryView, DealsPage, BrandView, etc.
- * Renders the canonical Thunderbolt product card (image, wishlist heart,
+ * Renders the canonical Thunderbold product card (image, wishlist heart,
  * name, PriceDisplay) with consistent animations and skeletons everywhere.
  */
 export default function ProductGrid({

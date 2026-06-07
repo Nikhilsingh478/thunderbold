@@ -116,7 +116,7 @@ const HeroSection = () => {
             className="mb-6 pointer-events-none w-full max-w-[1200px]"
           >
             <svg viewBox="0 0 850 160" className="w-[140%] -ml-[5%] md:w-full md:ml-0 h-auto drop-shadow-2xl">
-              <text x="0" y="130" fontSize="85" className="font-display thunderbolt-text" textAnchor="start">
+              <text x="0" y="130" fontSize="85" className="font-display thunderbold-text" textAnchor="start">
                 BUILT FOR THE BOLD
               </text>
             </svg>

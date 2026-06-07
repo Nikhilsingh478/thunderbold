@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import PromoBanner from './promo/PromoBanner';
 import ProductGrid, { type GridProduct } from './products/ProductGrid';
-import ThunderboltSlider from './ThunderboltSlider';
+import ThunderboldSlider from './ThunderboldSlider';
 
 const SKELETON_COUNT = 3;
 
@@ -232,7 +232,7 @@ export default function CategoriesSection() {
               #Outfits of the Week
             </h2>
           </motion.div>
-          <ThunderboltSlider />
+          <ThunderboldSlider />
         </div>
 
         {/* ── T-Shirt Collection ───────────────────────────────────── */}

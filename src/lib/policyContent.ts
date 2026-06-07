@@ -49,7 +49,7 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'Contact for Privacy Queries',
-        text: 'For any privacy-related questions or requests, write to us at adminthunderbolt@gmail.com and we\'ll respond promptly.',
+        text: 'For any privacy-related questions or requests, write to us at adminthunderbold@gmail.com and we\'ll respond promptly.',
         highlight: true,
       },
     ],
@@ -105,7 +105,7 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'How to Raise a Request',
-        text: 'Contact us at adminthunderbolt@gmail.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
+        text: 'Contact us at adminthunderbold@gmail.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
         highlight: true,
       },
     ],

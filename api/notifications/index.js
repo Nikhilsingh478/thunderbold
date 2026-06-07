@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     try {
       const result = await sendToUser(db, userEmail, {
         title: 'Test Notification ⚡',
-        body: 'FCM delivery from Thunderbolt Denim is operational!',
+        body: 'FCM delivery from Thunderbold Denim is operational!',
         data: { type: 'test_send' }
       }, origin);
       console.log(`[notifications/test-send] Result for ${userEmail}:`, result);
