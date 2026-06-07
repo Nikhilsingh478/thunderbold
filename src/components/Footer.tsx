@@ -142,7 +142,7 @@ const SupportList = () => (
     ))}
     <li>
       <a
-        href="mailto:support@thunderbolddenim.com"
+        href="mailto:adminthunderbolt@gmail.com"
         className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
       >
         <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
@@ -173,10 +173,10 @@ const ContactBlock = () => (
     <div className="flex items-center gap-2.5">
       <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
       <a
-        href="mailto:support@thunderbolddenim.com"
+        href="mailto:adminthunderbolt@gmail.com"
         className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
       >
-        support@thunderbolddenim.com
+        adminthunderbolt@gmail.com
       </a>
     </div>
     <div className="flex items-center gap-2.5">

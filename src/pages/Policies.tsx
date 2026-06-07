@@ -154,10 +154,10 @@ export default function Policies() {
               <p className="font-body text-[0.85rem] text-white/40 mt-0.5">
                 Reach out at{' '}
                 <a
-                  href="mailto:support@thunderbolddenim.com"
+                  href="mailto:adminthunderbolt@gmail.com"
                   className="text-brass hover:text-brass-bright transition-colors duration-200 underline underline-offset-2 decoration-brass/30"
                 >
-                  support@thunderbolddenim.com
+                  adminthunderbolt@gmail.com
                 </a>
               </p>
             </div>
