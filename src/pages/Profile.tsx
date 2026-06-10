@@ -886,29 +886,26 @@ export default function Profile() {
               </AnimatePresence>
             </>
           )}
-          {/* Danger Zone */}
+          {/* Delete Account */}
           {!profileLoading && (
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-10 border border-red-900/30 rounded-xl p-6 md:p-8 bg-red-950/10"
+              className="mt-16 pt-8 border-t border-white/[0.08]"
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400/80" />
-                    <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-red-400/80">
-                      Danger Zone
-                    </p>
-                  </div>
+                  <h3 className="font-display text-sm tracking-[0.12em] uppercase text-white mb-1">
+                    Delete Account
+                  </h3>
                   <p className="font-body text-[0.85rem] text-white/40 leading-relaxed">
-                    Permanently delete your account and all associated data. This cannot be undone.
+                    Permanently delete your account and all associated data. This action is irreversible.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="shrink-0 px-5 py-2.5 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-red-400 border border-red-900/50 bg-red-950/20 hover:bg-red-900/30 hover:border-red-700/60 transition-colors duration-200"
+                  className="shrink-0 px-5 py-2.5 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-red-400/80 border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-colors duration-200"
                 >
                   Delete Account
                 </button>
