@@ -481,8 +481,8 @@ export default function ProductView() {
                         <span>Topwear Size <span className="text-sv-mid normal-case tracking-normal">(Shirt / T-Shirt)</span></span>
                         {sizeError && !selectedTopwearSize && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case">Select a top size</span>}
                       </div>
-                      <div className="grid grid-cols-5 gap-2 md:flex md:flex-wrap">
-                        {Object.keys(product?.topwear?.sizeStock ?? {}).map(size => {
+                      <div className="flex flex-row flex-nowrap gap-2 md:flex-wrap">
+                        {getSizesFromProduct(product?.topwear?.sizeStock).map(size => {
                           const oos = isTopwearOos(size);
                           return (
                             <button
@@ -491,7 +491,7 @@ export default function ProductView() {
                               onClick={() => { setSizeError(false); !oos && setSelectedTopwearSize(size); }}
                               disabled={oos}
                               title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                              className={`h-12 w-full md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                              className={`h-12 flex-1 md:flex-initial md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
                                 oos
                                   ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
                                   : selectedTopwearSize === size
@@ -511,8 +511,8 @@ export default function ProductView() {
                         <span>Bottomwear Size <span className="text-sv-mid normal-case tracking-normal">(Jeans)</span></span>
                         {sizeError && !selectedBottomwearSize && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case">Select a bottom size</span>}
                       </div>
-                      <div className="grid grid-cols-5 gap-2 md:flex md:flex-wrap">
-                        {Object.keys(product?.bottomwear?.sizeStock ?? {}).map(size => {
+                      <div className="flex flex-row flex-nowrap gap-2 md:flex-wrap">
+                        {getSizesFromProduct(product?.bottomwear?.sizeStock).map(size => {
                           const oos = isBottomwearOos(size);
                           return (
                             <button
@@ -521,7 +521,7 @@ export default function ProductView() {
                               onClick={() => { setSizeError(false); !oos && setSelectedBottomwearSize(size); }}
                               disabled={oos}
                               title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                              className={`h-12 w-full md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                              className={`h-12 flex-1 md:flex-initial md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
                                 oos
                                   ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
                                   : selectedBottomwearSize === size
@@ -552,7 +552,7 @@ export default function ProductView() {
                         Size Guide
                       </button>
                     </div>
-                    <div className="grid grid-cols-5 gap-2 sm:gap-4 md:flex md:flex-wrap">
+                    <div className="flex flex-row flex-nowrap gap-2 md:flex-wrap">
                       {getSizesFromProduct(product?.sizeStock).map(size => {
                         const oos = isSizeOos(size);
                         return (
@@ -562,7 +562,7 @@ export default function ProductView() {
                             onClick={() => { setSizeError(false); !oos && setSelectedSize(size); }}
                             disabled={oos}
                             title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                            className={`h-12 w-full md:w-14 md:h-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                            className={`h-12 flex-1 md:flex-initial md:w-14 md:h-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
                               oos
                                 ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
                                 : selectedSize === size
