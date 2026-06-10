@@ -4,6 +4,7 @@ import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Heart, Share2, ShoppingCart, X } from 'lucide-react';
+import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -47,11 +48,53 @@ export default function ProductView() {
   const [isSharing, setIsSharing] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
 
-  // Interactive zoom and lightbox states
+  // Interactive zoom, size error validation, size guide and sticky mobile buy bar states
   const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({});
   const [isZoomed, setIsZoomed] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const sizeSelectorRef = useRef<HTMLDivElement>(null);
+  const [sizeError, setSizeError] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!actionsRef.current) return;
+      const rect = actionsRef.current.getBoundingClientRect();
+      // Show sticky bar only on mobile screens when the main buy/cart buttons are scrolled out of view
+      setShowStickyBar(window.innerWidth < 768 && rect.bottom < 0);
+    };
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
+  const validateSizeSelection = (): boolean => {
+    const isOutfitProduct = !!(product?.topwear && product?.bottomwear);
+    if (isOutfitProduct) {
+      if (!selectedTopwearSize || !selectedBottomwearSize) {
+        setSizeError(true);
+        toast.error('Please select both Topwear and Bottomwear sizes.');
+        sizeSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+    } else {
+      if (!selectedSize) {
+        setSizeError(true);
+        toast.error('Please select a size first.');
+        sizeSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+    }
+    setSizeError(false);
+    return true;
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
     if (window.innerWidth < 768) return; // ignore on mobile
@@ -131,13 +174,9 @@ export default function ProductView() {
 
   const handleOrder = requireAuth(() => {
     if (!product || isOrdering) return;
-    const isOutfitProduct = !!(product.topwear && product.bottomwear);
-    if (isOutfitProduct) {
-      if (!selectedTopwearSize || !selectedBottomwearSize) return;
-    } else {
-      if (!selectedSize) return;
-    }
+    if (!validateSizeSelection()) return;
     setIsOrdering(true);
+    const isOutfitProduct = !!(product.topwear && product.bottomwear);
     const effectiveSize = isOutfitProduct
       ? `${selectedTopwearSize} / ${selectedBottomwearSize}`
       : selectedSize;
@@ -157,13 +196,9 @@ export default function ProductView() {
 
   const handleAddToCart = async () => {
     if (!product || isAddingToCart) return;
-    const isOutfitProduct = !!(product.topwear && product.bottomwear);
-    if (isOutfitProduct) {
-      if (!selectedTopwearSize || !selectedBottomwearSize) return;
-    } else {
-      if (!selectedSize) return;
-    }
+    if (!validateSizeSelection()) return;
     setIsAddingToCart(true);
+    const isOutfitProduct = !!(product.topwear && product.bottomwear);
     try {
       const effectiveSize = isOutfitProduct
         ? `${selectedTopwearSize} / ${selectedBottomwearSize}`
@@ -434,27 +469,106 @@ export default function ProductView() {
               )}
 
               {/* Size Selector — dual for outfits, single for regular */}
-              {isOutfit ? (
-                <div className="mb-10 space-y-6">
-                  <div>
-                    <div className="font-condensed text-xs tracking-[0.2em] uppercase text-brass mb-3">
-                      Topwear Size <span className="text-sv-mid normal-case tracking-normal">(Shirt / T-Shirt)</span>
+              <div 
+                ref={sizeSelectorRef}
+                className={`mb-10 p-4 rounded-xl border transition-all duration-300 ${
+                  sizeError ? 'border-red-500/30 bg-red-500/5' : 'border-transparent'
+                }`}
+              >
+                {isOutfit ? (
+                  <div className="space-y-6">
+                    <div>
+                      <div className="font-condensed text-xs tracking-[0.2em] uppercase text-brass mb-3 flex items-center justify-between">
+                        <span>Topwear Size <span className="text-sv-mid normal-case tracking-normal">(Shirt / T-Shirt)</span></span>
+                        {sizeError && !selectedTopwearSize && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case">Select a top size</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.keys(product?.topwear?.sizeStock ?? {}).map(size => {
+                          const oos = isTopwearOos(size);
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => { setSizeError(false); !oos && setSelectedTopwearSize(size); }}
+                              disabled={oos}
+                              title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
+                              className={`h-12 w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                                oos
+                                  ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
+                                  : selectedTopwearSize === size
+                                    ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
+                                    : 'border-white/20 text-tb-white hover:bg-white/5 hover:scale-[1.02]'
+                              }`}
+                            >
+                              <span className={oos ? 'line-through decoration-white/30' : ''}>{size}</span>
+                              {oos && <span className="text-[9px] tracking-wider text-white/25 leading-none mt-0.5">OOS</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.keys(product?.topwear?.sizeStock ?? {}).map(size => {
-                        const oos = isTopwearOos(size);
+                    <div>
+                      <div className="font-condensed text-xs tracking-[0.2em] uppercase text-brass mb-3 flex items-center justify-between">
+                        <span>Bottomwear Size <span className="text-sv-mid normal-case tracking-normal">(Jeans)</span></span>
+                        {sizeError && !selectedBottomwearSize && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case">Select a bottom size</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.keys(product?.bottomwear?.sizeStock ?? {}).map(size => {
+                          const oos = isBottomwearOos(size);
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => { setSizeError(false); !oos && setSelectedBottomwearSize(size); }}
+                              disabled={oos}
+                              title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
+                              className={`h-12 w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                                oos
+                                  ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
+                                  : selectedBottomwearSize === size
+                                    ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
+                                    : 'border-white/20 text-tb-white hover:bg-white/5 hover:scale-[1.02]'
+                              }`}
+                            >
+                              <span className={oos ? 'line-through decoration-white/30' : ''}>{size}</span>
+                              {oos && <span className="text-[9px] tracking-wider text-white/25 leading-none mt-0.5">OOS</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="font-condensed text-xs tracking-[0.2em] uppercase text-tb-white mb-5 flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        Select Size
+                        {sizeError && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case ml-2">Please select a size</span>}
+                      </span>
+                      <button 
+                        type="button"
+                        onClick={() => setShowSizeGuide(true)}
+                        className="text-brass hover:text-brass-bright transition-colors underline underline-offset-4 decoration-brass/30 text-xs tracking-[0.08em] uppercase"
+                      >
+                        Size Guide
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2 sm:gap-4 md:flex md:flex-wrap">
+                      {getSizesFromProduct(product?.sizeStock).map(size => {
+                        const oos = isSizeOos(size);
                         return (
                           <button
                             key={size}
-                            onClick={() => !oos && setSelectedTopwearSize(size)}
+                            type="button"
+                            onClick={() => { setSizeError(false); !oos && setSelectedSize(size); }}
                             disabled={oos}
                             title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                            className={`h-12 w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                            className={`h-12 w-full md:w-14 md:h-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
                               oos
                                 ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
-                                : selectedTopwearSize === size
+                                : selectedSize === size
                                   ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
-                                  : 'border-white text-tb-white hover:bg-white/5 hover:scale-[1.02]'
+                                  : 'border-white/20 text-tb-white hover:bg-white/5 hover:scale-[1.02]'
                             }`}
                           >
                             <span className={oos ? 'line-through decoration-white/30' : ''}>{size}</span>
@@ -464,66 +578,8 @@ export default function ProductView() {
                       })}
                     </div>
                   </div>
-                  <div>
-                    <div className="font-condensed text-xs tracking-[0.2em] uppercase text-brass mb-3">
-                      Bottomwear Size <span className="text-sv-mid normal-case tracking-normal">(Jeans)</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.keys(product?.bottomwear?.sizeStock ?? {}).map(size => {
-                        const oos = isBottomwearOos(size);
-                        return (
-                          <button
-                            key={size}
-                            onClick={() => !oos && setSelectedBottomwearSize(size)}
-                            disabled={oos}
-                            title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                            className={`h-12 w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
-                              oos
-                                ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
-                                : selectedBottomwearSize === size
-                                  ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
-                                  : 'border-white text-tb-white hover:bg-white/5 hover:scale-[1.02]'
-                            }`}
-                          >
-                            <span className={oos ? 'line-through decoration-white/30' : ''}>{size}</span>
-                            {oos && <span className="text-[9px] tracking-wider text-white/25 leading-none mt-0.5">OOS</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-10">
-                  <div className="font-condensed text-xs tracking-[0.2em] uppercase text-tb-white mb-5 flex items-center justify-between">
-                    <span>Select Size</span>
-                    <button className="text-sv-mid hover:text-brass transition-colors underline underline-offset-4 decoration-white/20">Size Guide</button>
-                  </div>
-                  <div className="grid grid-cols-5 gap-2 sm:gap-4 md:flex md:flex-wrap">
-                    {getSizesFromProduct(product?.sizeStock).map(size => {
-                      const oos = isSizeOos(size);
-                      return (
-                        <button
-                          key={size}
-                          onClick={() => !oos && setSelectedSize(size)}
-                          disabled={oos}
-                          title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                          className={`h-12 w-full md:w-14 md:h-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
-                            oos
-                              ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
-                              : selectedSize === size
-                                ? 'border-brass bg-brass/10 text-brass scale-[1.05] shadow-[0_0_15px_rgba(212,170,48,0.15)]'
-                                : 'border-white text-tb-white hover:bg-white/5 hover:scale-[1.02]'
-                          }`}
-                        >
-                          <span className={oos ? 'line-through decoration-white/30' : ''}>{size}</span>
-                          {oos && <span className="text-[9px] tracking-wider text-white/25 leading-none mt-0.5">OOS</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Quantity Selector */}
               <div className="mb-10 lg:mb-12">
@@ -532,6 +588,7 @@ export default function ProductView() {
                 </div>
                 <div className="flex items-center w-[140px] h-12 border border-white/10 text-tb-white font-condensed text-lg">
                   <button 
+                    type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-r border-white/10"
                   >
@@ -541,6 +598,7 @@ export default function ProductView() {
                     {quantity}
                   </div>
                   <button 
+                    type="button"
                     onClick={() => setQuantity(quantity + 1)}
                     className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-l border-white/10"
                   >
@@ -549,44 +607,69 @@ export default function ProductView() {
                 </div>
               </div>
 
-              {/* Action Buttons — above highlights for better mobile UX */}
-              <div className="flex flex-col gap-4 mb-8 lg:mb-10">
-                {/* Cart and Wishlist Buttons */}
+              {/* Conversion Optimized Checkout Dashboard */}
+              <div className="flex flex-col gap-4 mb-10" ref={actionsRef}>
+                {/* 1. Primary CTA: Express checkout buy button */}
+                <button
+                  type="button"
+                  onClick={handleOrder}
+                  disabled={effectiveOutOfStock || isOrdering}
+                  className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
+                    effectiveOutOfStock || isOrdering
+                      ? 'bg-white/5 text-white/25 cursor-not-allowed'
+                      : 'bg-brass text-void hover:bg-brass-bright hover:scale-[1.015] shadow-[0_4px_30px_rgba(212,170,48,0.25)]'
+                  }`}
+                >
+                  {isOrdering ? 'Processing...' : effectiveOutOfStock ? 'Out of Stock' : 'Order Now (Buy 1-Click)'}
+                </button>
+
+                {/* 2. Secondary CTAs: Add to Cart and Wishlist side-by-side */}
                 <div className="flex gap-4">
                   <button
+                    type="button"
                     onClick={handleAddToCart}
-                    disabled={isOutfit ? (!selectedTopwearSize || !selectedBottomwearSize || effectiveOutOfStock || isAddingToCart) : (!selectedSize || effectiveOutOfStock || isAddingToCart)}
-                    className={`flex-1 py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
-                      (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) && !effectiveOutOfStock && !isAddingToCart
-                        ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                        : 'bg-white/5 text-white/20 cursor-not-allowed'
+                    disabled={effectiveOutOfStock || isAddingToCart}
+                    className={`flex-1 py-4 font-condensed font-bold text-sm tracking-[0.18em] uppercase transition-all duration-300 flex items-center justify-center gap-2 border ${
+                      effectiveOutOfStock || isAddingToCart
+                        ? 'border-white/5 bg-white/5 text-white/25 cursor-not-allowed'
+                        : 'border-white/15 hover:border-white/30 text-white hover:bg-white/[0.04] bg-white/[0.01]'
                     }`}
                   >
-                    <ShoppingCart size={20} />
-                    {isAddingToCart ? 'Adding...' : effectiveOutOfStock ? 'Out of Stock' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
+                    <ShoppingCart size={16} />
+                    {isAddingToCart ? 'Adding...' : isInCartWithSize ? `In Cart (${itemQuantity})` : 'Add to Cart'}
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleAddToWishlist}
                     disabled={!product || isTogglingWishlist}
-                    className={`p-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center ${
+                    className={`px-5 py-4 border transition-all duration-300 flex items-center justify-center rounded-sm ${
                       isTogglingWishlist
-                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                        ? 'border-white/5 bg-white/5 text-white/25 cursor-not-allowed'
                         : product && isInWishlist(product._id)
-                          ? 'bg-brass text-void hover:bg-yellow-400'
-                          : 'bg-white/5 text-white hover:bg-white/10'
+                          ? 'border-brass bg-brass/10 text-brass hover:bg-brass/25'
+                          : 'border-white/15 text-white hover:border-white/30 hover:bg-white/[0.04]'
                     }`}
                   >
-                    <Heart size={20} className={!isTogglingWishlist && product && isInWishlist(product._id) ? 'fill-current' : ''} />
+                    <Heart size={18} className={!isTogglingWishlist && product && isInWishlist(product._id) ? 'fill-current' : ''} />
                   </button>
                 </div>
 
+                {/* Shipping & COD Assurance tag */}
+                <p className="text-center font-condensed text-[0.65rem] tracking-[0.14em] uppercase text-sv-mid flex items-center justify-center gap-1.5 opacity-80 mt-1">
+                  <span>⚡ FREE SHIPPING</span>
+                  <span className="text-white/25">•</span>
+                  <span>📦 CASH ON DELIVERY AVAILABLE</span>
+                </p>
+
+                {/* 3. Muted CTA: Share Product */}
                 <button
+                  type="button"
                   onClick={handleShareProduct}
                   disabled={!product || isSharing}
-                  className="w-full py-4 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 flex items-center justify-center gap-2 border border-white/10 text-tb-white hover:border-brass hover:text-brass bg-white/[0.02] disabled:cursor-not-allowed disabled:text-white/25 disabled:hover:border-white/10 disabled:hover:text-white/25"
+                  className="w-full py-3 font-condensed font-semibold text-xs tracking-[0.18em] uppercase transition-all duration-300 flex items-center justify-center gap-2 border border-white/5 text-white/45 hover:text-white hover:border-white/20 bg-white/[0.005]"
                 >
-                  <Share2 size={18} />
+                  <Share2 size={14} />
                   {isSharing ? 'Sharing...' : 'Share Product'}
                 </button>
                 {shareMessage && (
@@ -594,19 +677,6 @@ export default function ProductView() {
                     {shareMessage}
                   </p>
                 )}
-
-                {/* Order CTA */}
-                <button
-                  onClick={handleOrder}
-                  disabled={isOutfit ? (!selectedTopwearSize || !selectedBottomwearSize || effectiveOutOfStock || isOrdering) : (!selectedSize || effectiveOutOfStock || isOrdering)}
-                  className={`w-full py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt ${
-                    (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) && !effectiveOutOfStock && !isOrdering
-                      ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                      : 'bg-white/5 text-white/20 cursor-not-allowed'
-                  }`}
-                >
-                  {isOrdering ? 'Processing...' : effectiveOutOfStock ? 'Out of Stock' : (isOutfit ? (selectedTopwearSize && selectedBottomwearSize) : selectedSize) ? 'Order Now' : isOutfit ? 'Select Sizes' : 'Select a Size'}
-                </button>
               </div>
 
               {/* Product Highlights — outfit: per piece; regular: root highlights */}
@@ -731,6 +801,133 @@ export default function ProductView() {
           productImage={product.images?.[0] || product.image}
         />
       )}
+
+      {/* Mobile Sticky Action Bar */}
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-0 left-0 right-0 z-[100] bg-[#0d0d0d]/95 backdrop-blur-lg border-t border-white/[0.08] px-4 py-3 flex items-center justify-between md:hidden gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                src={optimizeCloudinaryUrl(IMAGES[0] || '/placeholder.png', IMG_SIZES.thumbnail)}
+                alt={product?.name}
+                className="w-9 h-12 object-cover rounded border border-white/10"
+              />
+              <div className="min-w-0">
+                <p className="font-condensed font-bold text-xs text-white truncate uppercase tracking-wide">
+                  {product?.name}
+                </p>
+                <p className="font-condensed text-brass text-sm font-bold mt-0.5">
+                  ₹{product?.price?.toLocaleString('en-IN')}
+                </p>
+              </div>
+            </div>
+            
+            <button
+              type="button"
+              onClick={handleOrder}
+              disabled={effectiveOutOfStock || isOrdering}
+              className="px-5 py-2.5 bg-brass text-void font-condensed font-bold text-xs tracking-wider uppercase flex-shrink-0 transition-transform duration-200 active:scale-95"
+            >
+              {isOrdering ? '...' : effectiveOutOfStock ? 'OOS' : 'BUY NOW'}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Size Guide Drawer Modal */}
+      <AnimatePresence>
+        {showSizeGuide && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowSizeGuide(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-[#121212] border border-white/10 rounded-xl p-6 md:p-8"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-display text-lg tracking-[0.12em] uppercase text-white">Size Chart</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(false)}
+                  className="p-2 text-sv-mid hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Jeans Table */}
+                <div>
+                  <p className="font-condensed text-xs text-brass uppercase tracking-wider mb-2.5">Bottomwear / Jeans (Inches)</p>
+                  <div className="border border-white/10 rounded overflow-hidden">
+                    <table className="w-full text-left font-condensed text-xs text-white/80">
+                      <thead className="bg-white/5 border-b border-white/10">
+                        <tr>
+                          <th className="px-3 py-2">Size</th>
+                          <th className="px-3 py-2">Waist</th>
+                          <th className="px-3 py-2">Inseam</th>
+                          <th className="px-3 py-2">Hip</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/[0.06]">
+                        {[['28', '28"', '30"', '36"'], ['30', '30"', '30"', '38"'], ['32', '32"', '32"', '40"'], ['34', '34"', '32"', '42"'], ['36', '36"', '32"', '44"']].map(([sz, waist, inseam, hip]) => (
+                          <tr key={sz} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-3 py-2 text-brass font-bold">{sz}</td>
+                            <td className="px-3 py-2">{waist}</td>
+                            <td className="px-3 py-2">{inseam}</td>
+                            <td className="px-3 py-2">{hip}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Shirts / T-shirts Table */}
+                <div>
+                  <p className="font-condensed text-xs text-brass uppercase tracking-wider mb-2.5">Topwear / T-Shirts & Shirts (Inches)</p>
+                  <div className="border border-white/10 rounded overflow-hidden">
+                    <table className="w-full text-left font-condensed text-xs text-white/80">
+                      <thead className="bg-white/5 border-b border-white/10">
+                        <tr>
+                          <th className="px-3 py-2">Size</th>
+                          <th className="px-3 py-2">Chest</th>
+                          <th className="px-3 py-2">Shoulder</th>
+                          <th className="px-3 py-2">Length</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/[0.06]">
+                        {[['S', '36" - 38"', '17.5"', '27.5"'], ['M', '38" - 40"', '18.0"', '28.5"'], ['L', '40" - 42"', '18.5"', '29.5"'], ['XL', '42" - 44"', '19.0"', '30.5"'], ['XXL', '44" - 46"', '19.5"', '31.5"']].map(([sz, chest, shoulder, len]) => (
+                          <tr key={sz} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-3 py-2 text-brass font-bold">{sz}</td>
+                            <td className="px-3 py-2">{chest}</td>
+                            <td className="px-3 py-2">{shoulder}</td>
+                            <td className="px-3 py-2">{len}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Advanced Lightbox Modal for Immersive Review */}
       <AnimatePresence>
