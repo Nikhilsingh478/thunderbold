@@ -38,5 +38,25 @@
         "BC:FF:96:C4:C3:4D:A1:F6:26:BC:90:C1:39:6C:4E:C5:CD:96:69:02:82:3C:89:21:32:FD:11:C2:A3:A8:F7:84"
       ]
     }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "shop.thunderbold.twa",
+      "sha256_cert_fingerprints": [
+        "56:6E:56:0A:50:9A:44:C8:70:C5:1C:25:66:5A:5A:C4:2D:AF:FF:B5:58:DC:D1:F5:68:73:F5:05:5D:D2:58:16"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "shop.thunderbold.www.twa",
+      "sha256_cert_fingerprints": [
+        "56:6E:56:0A:50:9A:44:C8:70:C5:1C:25:66:5A:5A:C4:2D:AF:FF:B5:58:DC:D1:F5:68:73:F5:05:5D:D2:58:16"
+      ]
+    }
   }
 ]
