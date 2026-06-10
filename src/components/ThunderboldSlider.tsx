@@ -110,6 +110,10 @@ export default function ThunderboldSlider() {
 
   // Pointer event handlers — works for both mouse and touch via pointer events API
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // If the click is on an interactive element (button, link, or its children), ignore it for slider drag
+    if ((e.target as HTMLElement).closest('button, a')) {
+      return;
+    }
     dragStartX.current = e.clientX;
     dragDeltaX.current = 0;
     isDragging.current = false;
@@ -117,6 +121,7 @@ export default function ThunderboldSlider() {
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
     const delta = e.clientX - dragStartX.current;
     dragDeltaX.current = delta;
     // Mark as drag once horizontal movement exceeds 8px
@@ -125,7 +130,11 @@ export default function ThunderboldSlider() {
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
     const delta = dragDeltaX.current;
     if (Math.abs(delta) > 50) {
       go(delta < 0 ? 'next' : 'prev');
