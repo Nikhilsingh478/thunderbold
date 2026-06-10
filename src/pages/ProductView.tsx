@@ -1,9 +1,9 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
-import { Heart, Share2, ShoppingCart } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
@@ -46,7 +46,39 @@ export default function ProductView() {
   const [isOrdering, setIsOrdering] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
-  
+
+  // Interactive zoom and lightbox states
+  const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({});
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (window.innerWidth < 768) return; // ignore on mobile
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomStyle({
+      transformOrigin: `${x}% ${y}%`,
+      transform: 'scale(2.2)',
+      transition: 'transform 0.1s ease-out, transform-origin 0.05s ease-out',
+    });
+  };
+
+  const handleMouseEnter = () => {
+    if (window.innerWidth < 768) return;
+    setIsZoomed(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsZoomed(false);
+    setZoomStyle({
+      transformOrigin: 'center center',
+      transform: 'scale(1)',
+      transition: 'transform 0.25s ease-out',
+    });
+  };
+
   const IMAGES: string[] = product?.images?.length
     ? product.images
     : product?.image
@@ -248,10 +280,36 @@ export default function ProductView() {
           </button>
 
           <div className="flex flex-col md:flex-row gap-7 md:gap-12 lg:gap-24">
-            {/* Left: Image Slider */}
-            <div className="w-full md:w-1/2 flex flex-col">
+            {/* Left: Premium Product Media Gallery */}
+            <div className="w-full md:w-1/2 flex flex-col-reverse md:flex-row gap-5 items-start">
+              {/* Desktop Vertical Thumbnails (Amazon/Flipkart-style) */}
+              <div className="hidden md:flex flex-col gap-3 shrink-0 max-h-[520px] overflow-y-auto pr-1.5 select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {IMAGES.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => emblaApi?.scrollTo(index)}
+                    onMouseEnter={() => emblaApi?.scrollTo(index)} // hover-to-change for premium experience
+                    className={`relative w-20 aspect-[3/4] overflow-hidden border transition-all duration-300 rounded ${
+                      index === selectedIndex 
+                        ? 'border-brass scale-105 shadow-[0_0_15px_rgba(212,170,48,0.25)]' 
+                        : 'border-white/15 opacity-60 hover:opacity-100 hover:border-white/30 bg-white/[0.02]'
+                    }`}
+                  >
+                    <img 
+                      src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} 
+                      alt={`Thumbnail ${index + 1}`} 
+                      className="w-full h-full object-cover object-center" 
+                      loading="lazy" 
+                      decoding="async" 
+                      onError={(e) => { e.currentTarget.src = '/placeholder.png'; }} 
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {/* Main Swipable Viewport with Inline Zoom & Lightbox Click */}
               <div 
-                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group" 
+                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group rounded-sm flex-1" 
                 ref={emblaRef}
               >
                 <div className="flex h-full touch-pan-y">
@@ -260,7 +318,15 @@ export default function ProductView() {
                       <img
                         src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover object-center cursor-zoom-in transition-transform duration-100 ease-out origin-center"
+                        style={index === selectedIndex && isZoomed ? zoomStyle : {}}
+                        onMouseMove={handleMouseMove}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                        onClick={() => {
+                          setLightboxIndex(index);
+                          setShowLightbox(true);
+                        }}
                         loading={index === 0 ? "eager" : "lazy"}
                         decoding="async"
                         onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
@@ -271,14 +337,14 @@ export default function ProductView() {
                 
                 {/* Navigation Buttons - visible on hover */}
                 <button
-                  onClick={scrollPrev}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black/20 hover:bg-black/60 rounded-full text-white backdrop-blur-xl transition-all duration-300 border border-white/10 z-[20] opacity-0 group-hover:opacity-100 hidden md:flex"
+                  onClick={(e) => { e.stopPropagation(); scrollPrev(); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black/40 hover:bg-black/80 rounded-full text-white backdrop-blur-xl transition-all duration-300 border border-white/10 z-[20] opacity-0 group-hover:opacity-100 hidden md:flex"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 <button
-                  onClick={scrollNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black/20 hover:bg-black/60 rounded-full text-white backdrop-blur-xl transition-all duration-300 border border-white/10 z-[20] opacity-0 group-hover:opacity-100 hidden md:flex"
+                  onClick={(e) => { e.stopPropagation(); scrollNext(); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black/40 hover:bg-black/80 rounded-full text-white backdrop-blur-xl transition-all duration-300 border border-white/10 z-[20] opacity-0 group-hover:opacity-100 hidden md:flex"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
@@ -292,23 +358,6 @@ export default function ProductView() {
                     />
                   ))}
                 </div>
-              </div>
-              
-              {/* Desktop Thumbnails */}
-              <div className="hidden md:flex gap-4 mt-6">
-                {IMAGES.map((img, index) => (
-                  <button
-                    key={index}
-                    onClick={() => emblaApi?.scrollTo(index)}
-                    className={`relative w-24 aspect-[4/5] overflow-hidden border transition-all duration-300 ${
-                      index === selectedIndex 
-                        ? 'border-brass scale-105 shadow-[0_0_15px_rgba(212,170,48,0.2)]' 
-                        : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/30'
-                    }`}
-                  >
-                    <img src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} alt={`Thumbnail ${index}`} className="w-full h-full object-cover object-center" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = '/placeholder.png'; }} />
-                  </button>
-                ))}
               </div>
             </div>
 
@@ -682,6 +731,86 @@ export default function ProductView() {
           productImage={product.images?.[0] || product.image}
         />
       )}
+
+      {/* Advanced Lightbox Modal for Immersive Review */}
+      <AnimatePresence>
+        {showLightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 md:p-8 select-none"
+            onClick={() => setShowLightbox(false)}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between w-full z-10">
+              <span className="font-condensed text-xs tracking-[0.2em] uppercase text-white/60">
+                {lightboxIndex + 1} / {IMAGES.length} — {product?.name}
+              </span>
+              <button
+                onClick={() => setShowLightbox(false)}
+                className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Main Image Viewport */}
+            <div className="flex-1 flex items-center justify-center relative w-full max-h-[70vh] my-auto">
+              {/* Left Arrow */}
+              {IMAGES.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => (prev + IMAGES.length - 1) % IMAGES.length); }}
+                  className="absolute left-2 md:left-6 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white backdrop-blur-xl transition-all z-[20]"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+              )}
+
+              <motion.img
+                key={lightboxIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                src={optimizeCloudinaryUrl(IMAGES[lightboxIndex], IMG_SIZES.detail)}
+                alt={`Enlarged product image ${lightboxIndex + 1}`}
+                className="max-w-full max-h-full object-contain cursor-zoom-out"
+                onClick={(e) => { e.stopPropagation(); setShowLightbox(false); }}
+              />
+
+              {/* Right Arrow */}
+              {IMAGES.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => (prev + 1) % IMAGES.length); }}
+                  className="absolute right-2 md:right-6 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white backdrop-blur-xl transition-all z-[20]"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+              )}
+            </div>
+
+            {/* Bottom Thumbnails */}
+            {IMAGES.length > 1 && (
+              <div className="w-full flex justify-center gap-3 overflow-x-auto py-4 z-10 no-scrollbar" onClick={(e) => e.stopPropagation()}>
+                {IMAGES.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setLightboxIndex(idx)}
+                    className={`w-14 aspect-[3/4] overflow-hidden border transition-all duration-300 rounded shrink-0 ${
+                      idx === lightboxIndex 
+                        ? 'border-brass scale-105 shadow-[0_0_12px_rgba(212,170,48,0.25)]' 
+                        : 'border-white/10 opacity-50 hover:opacity-100 bg-white/[0.02]'
+                    }`}
+                  >
+                    <img src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>
