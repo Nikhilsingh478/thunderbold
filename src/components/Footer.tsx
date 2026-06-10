@@ -290,7 +290,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-void border-t border-white/[0.07] pt-16 pb-0 px-6 md:px-16">
+      <footer className="bg-void border-t border-white/[0.07] pt-10 md:pt-16 pb-0 px-6 md:px-16">
         <div className="max-w-[1200px] mx-auto">
 
           {/* Mobile layout: brand + accordions */}

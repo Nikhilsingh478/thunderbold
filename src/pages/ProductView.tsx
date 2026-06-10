@@ -49,8 +49,7 @@ export default function ProductView() {
   const [shareMessage, setShareMessage] = useState('');
 
   // Interactive zoom, size error validation, size guide and sticky mobile buy bar states
-  const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({});
-  const [isZoomed, setIsZoomed] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -101,25 +100,25 @@ export default function ProductView() {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
     const y = ((e.clientY - top) / height) * 100;
-    setZoomStyle({
-      transformOrigin: `${x}% ${y}%`,
-      transform: 'scale(2.2)',
-      transition: 'transform 0.1s ease-out, transform-origin 0.05s ease-out',
-    });
+    const img = e.currentTarget;
+    img.style.transformOrigin = `${x}% ${y}%`;
+    img.style.transform = 'scale(2.2)';
+    img.style.transition = 'transform 0.1s ease-out, transform-origin 0.05s ease-out';
   };
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (e: React.MouseEvent<HTMLImageElement>) => {
     if (window.innerWidth < 768) return;
-    setIsZoomed(true);
+    const img = e.currentTarget;
+    img.style.transform = 'scale(2.2)';
+    img.style.transition = 'transform 0.1s ease-out, transform-origin 0.05s ease-out';
   };
 
-  const handleMouseLeave = () => {
-    setIsZoomed(false);
-    setZoomStyle({
-      transformOrigin: 'center center',
-      transform: 'scale(1)',
-      transition: 'transform 0.25s ease-out',
-    });
+  const handleMouseLeave = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (window.innerWidth < 768) return;
+    const img = e.currentTarget;
+    img.style.transformOrigin = 'center center';
+    img.style.transform = 'scale(1)';
+    img.style.transition = 'transform 0.25s ease-out';
   };
 
   const IMAGES: string[] = product?.images?.length
@@ -304,7 +303,7 @@ export default function ProductView() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h))] md:pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h))] md:pt-[calc(164px+var(--tb-banner-h))] pb-12 md:pb-24 px-6 md:px-16">
         <div className="max-w-[1240px] mx-auto">
           {/* Back Button */}
           <button
@@ -354,12 +353,12 @@ export default function ProductView() {
                         src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
                         className="w-full h-full object-cover object-center cursor-zoom-in transition-transform duration-100 ease-out origin-center"
-                        style={index === selectedIndex && isZoomed ? zoomStyle : {}}
                         onMouseMove={handleMouseMove}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => {
                           setLightboxIndex(index);
+                          setLightboxZoom(false);
                           setShowLightbox(true);
                         }}
                         loading={index === 0 ? "eager" : "lazy"}
@@ -482,7 +481,7 @@ export default function ProductView() {
                         <span>Topwear Size <span className="text-sv-mid normal-case tracking-normal">(Shirt / T-Shirt)</span></span>
                         {sizeError && !selectedTopwearSize && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case">Select a top size</span>}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-5 gap-2 md:flex md:flex-wrap">
                         {Object.keys(product?.topwear?.sizeStock ?? {}).map(size => {
                           const oos = isTopwearOos(size);
                           return (
@@ -492,7 +491,7 @@ export default function ProductView() {
                               onClick={() => { setSizeError(false); !oos && setSelectedTopwearSize(size); }}
                               disabled={oos}
                               title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                              className={`h-12 w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                              className={`h-12 w-full md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
                                 oos
                                   ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
                                   : selectedTopwearSize === size
@@ -512,7 +511,7 @@ export default function ProductView() {
                         <span>Bottomwear Size <span className="text-sv-mid normal-case tracking-normal">(Jeans)</span></span>
                         {sizeError && !selectedBottomwearSize && <span className="text-[10px] font-semibold text-red-400 tracking-normal normal-case">Select a bottom size</span>}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-5 gap-2 md:flex md:flex-wrap">
                         {Object.keys(product?.bottomwear?.sizeStock ?? {}).map(size => {
                           const oos = isBottomwearOos(size);
                           return (
@@ -522,7 +521,7 @@ export default function ProductView() {
                               onClick={() => { setSizeError(false); !oos && setSelectedBottomwearSize(size); }}
                               disabled={oos}
                               title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
-                              className={`h-12 w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
+                              className={`h-12 w-full md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
                                 oos
                                   ? 'border-white/15 text-white/20 cursor-not-allowed bg-white/[0.02]'
                                   : selectedBottomwearSize === size
@@ -937,7 +936,10 @@ export default function ProductView() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 md:p-8 select-none"
-            onClick={() => setShowLightbox(false)}
+            onClick={() => {
+              setLightboxZoom(false);
+              setShowLightbox(false);
+            }}
           >
             {/* Header */}
             <div className="flex items-center justify-between w-full z-10">
@@ -945,7 +947,10 @@ export default function ProductView() {
                 {lightboxIndex + 1} / {IMAGES.length} — {product?.name}
               </span>
               <button
-                onClick={() => setShowLightbox(false)}
+                onClick={() => {
+                  setLightboxZoom(false);
+                  setShowLightbox(false);
+                }}
                 className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -953,33 +958,66 @@ export default function ProductView() {
             </div>
 
             {/* Main Image Viewport */}
-            <div className="flex-1 flex items-center justify-center relative w-full max-h-[70vh] my-auto">
+            <div 
+              className="flex-1 flex items-center justify-center relative w-full max-h-[70vh] my-auto overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Left Arrow */}
               {IMAGES.length > 1 && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => (prev + IMAGES.length - 1) % IMAGES.length); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxZoom(false);
+                    setLightboxIndex(prev => (prev + IMAGES.length - 1) % IMAGES.length);
+                  }}
                   className="absolute left-2 md:left-6 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white backdrop-blur-xl transition-all z-[20]"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
               )}
 
-              <motion.img
-                key={lightboxIndex}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                src={optimizeCloudinaryUrl(IMAGES[lightboxIndex], IMG_SIZES.detail)}
-                alt={`Enlarged product image ${lightboxIndex + 1}`}
-                className="max-w-full max-h-full object-contain cursor-zoom-out"
-                onClick={(e) => { e.stopPropagation(); setShowLightbox(false); }}
-              />
+              {/* Zoomable Container Wrapper */}
+              <div
+                className={`w-full h-full flex transition-all duration-300 ${
+                  lightboxZoom ? 'overflow-auto items-start justify-start' : 'items-center justify-center overflow-hidden'
+                }`}
+                onClick={(e) => {
+                  if (lightboxZoom) {
+                    e.stopPropagation();
+                    setLightboxZoom(false);
+                  } else {
+                    setShowLightbox(false);
+                  }
+                }}
+              >
+                <motion.img
+                  key={lightboxIndex}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  src={optimizeCloudinaryUrl(IMAGES[lightboxIndex], IMG_SIZES.detail)}
+                  alt={`Enlarged product image ${lightboxIndex + 1}`}
+                  className={`transition-all duration-300 ${
+                    lightboxZoom
+                      ? 'w-[200vw] h-[200vh] max-w-none max-h-none object-contain cursor-zoom-out block'
+                      : 'max-w-full max-h-full object-contain cursor-zoom-in'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxZoom(!lightboxZoom);
+                  }}
+                />
+              </div>
 
               {/* Right Arrow */}
               {IMAGES.length > 1 && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => (prev + 1) % IMAGES.length); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxZoom(false);
+                    setLightboxIndex(prev => (prev + 1) % IMAGES.length);
+                  }}
                   className="absolute right-2 md:right-6 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white backdrop-blur-xl transition-all z-[20]"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18l6-6-6-6"/></svg>
@@ -993,10 +1031,13 @@ export default function ProductView() {
                 {IMAGES.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setLightboxIndex(idx)}
+                    onClick={() => {
+                      setLightboxZoom(false);
+                      setLightboxIndex(idx);
+                    }}
                     className={`w-14 aspect-[3/4] overflow-hidden border transition-all duration-300 rounded shrink-0 ${
-                      idx === lightboxIndex 
-                        ? 'border-brass scale-105 shadow-[0_0_12px_rgba(212,170,48,0.25)]' 
+                      idx === lightboxIndex
+                        ? 'border-brass scale-105 shadow-[0_0_12px_rgba(212,170,48,0.25)]'
                         : 'border-white/10 opacity-50 hover:opacity-100 bg-white/[0.02]'
                     }`}
                   >

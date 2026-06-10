@@ -150,7 +150,7 @@ export default function ProductReviewsSection({ productId, productName, productI
 
   return (
     <section className="border-t border-white/[0.07] bg-void">
-      <div className="max-w-[1240px] mx-auto px-6 md:px-16 py-16 md:py-20">
+      <div className="max-w-[1240px] mx-auto px-6 md:px-16 py-10 md:py-20">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div>
