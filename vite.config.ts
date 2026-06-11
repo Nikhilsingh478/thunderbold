@@ -204,6 +204,10 @@ export default defineConfig(() => ({
                 type: 'sha256_cert',
                 value: '56:6E:56:0A:50:9A:44:C8:70:C5:1C:25:66:5A:5A:C4:2D:AF:FF:B5:58:DC:D1:F5:68:73:F5:05:5D:D2:58:16',
               },
+              {
+                type: 'sha256_cert',
+                value: 'F5:7E:39:EB:A4:6D:68:1E:24:8F:A7:9A:F8:C7:EE:FD:C1:FC:B2:81:7D:22:8A:E4:BB:23:17:0B:3A:39:4B:1E',
+              },
             ],
           },
           {
@@ -222,6 +226,10 @@ export default defineConfig(() => ({
               {
                 type: 'sha256_cert',
                 value: '56:6E:56:0A:50:9A:44:C8:70:C5:1C:25:66:5A:5A:C4:2D:AF:FF:B5:58:DC:D1:F5:68:73:F5:05:5D:D2:58:16',
+              },
+              {
+                type: 'sha256_cert',
+                value: 'F5:7E:39:EB:A4:6D:68:1E:24:8F:A7:9A:F8:C7:EE:FD:C1:FC:B2:81:7D:22:8A:E4:BB:23:17:0B:3A:39:4B:1E',
               },
             ],
           },
