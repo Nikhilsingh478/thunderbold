@@ -49,14 +49,16 @@ export default function ProductView() {
   const [shareMessage, setShareMessage] = useState('');
 
   // Interactive zoom, size error validation, size guide and sticky mobile buy bar states
-  const [lightboxScale, setLightboxScale] = useState(1);
-  const [lightboxPosition, setLightboxPosition] = useState({ x: 0, y: 0 });
-  const touchStartRef = useRef<{ distance: number; scale: number; pos: { x: number; y: number } } | null>(null);
-  const singleTouchStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const currentScaleRef = useRef(1);
+  const currentPositionRef = useRef({ x: 0, y: 0 });
 
   const resetLightboxZoom = useCallback(() => {
-    setLightboxScale(1);
-    setLightboxPosition({ x: 0, y: 0 });
+    currentScaleRef.current = 1;
+    currentPositionRef.current = { x: 0, y: 0 };
+    if (imgRef.current) {
+      imgRef.current.style.transform = 'translate(0px, 0px) scale(1)';
+    }
   }, []);
 
   const [showLightbox, setShowLightbox] = useState(false);
@@ -130,61 +132,109 @@ export default function ProductView() {
     img.style.transition = 'transform 0.25s ease-out';
   };
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
-    if (e.touches.length === 2) {
-      const t1 = e.touches[0];
-      const t2 = e.touches[1];
-      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-      touchStartRef.current = {
-        distance: dist,
-        scale: lightboxScale,
-        pos: { ...lightboxPosition }
-      };
-      singleTouchStartRef.current = null;
-    } else if (e.touches.length === 1 && lightboxScale > 1) {
-      const t = e.touches[0];
-      singleTouchStartRef.current = {
-        x: t.clientX,
-        y: t.clientY,
-        posX: lightboxPosition.x,
-        posY: lightboxPosition.y
-      };
-    }
-  };
+  // Native touch listener effect for precise pinch-to-zoom and panning
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
-    if (e.touches.length === 2 && touchStartRef.current) {
-      const t1 = e.touches[0];
-      const t2 = e.touches[1];
-      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-      const factor = dist / touchStartRef.current.distance;
-      const newScale = Math.min(Math.max(touchStartRef.current.scale * factor, 1), 4);
-      setLightboxScale(newScale);
-      if (newScale <= 1.01) {
-        setLightboxPosition({ x: 0, y: 0 });
+    let initialDistance = 0;
+    let initialScale = 1;
+    let initialTouchX = 0;
+    let initialTouchY = 0;
+    let initialPosX = 0;
+    let initialPosY = 0;
+    let isPinching = false;
+    let isPanning = false;
+    let lastTap = 0;
+
+    const handleTouchStartNative = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        isPanning = false;
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        initialDistance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        initialScale = currentScaleRef.current;
+      } else if (e.touches.length === 1) {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          e.preventDefault();
+          if (currentScaleRef.current > 1.05) {
+            resetLightboxZoom();
+          } else {
+            currentScaleRef.current = 2.5;
+            img.style.transform = `translate(0px, 0px) scale(2.5)`;
+          }
+          lastTap = 0;
+          return;
+        }
+        lastTap = now;
+
+        if (currentScaleRef.current > 1) {
+          isPanning = true;
+          isPinching = false;
+          const t = e.touches[0];
+          initialTouchX = t.clientX;
+          initialTouchY = t.clientY;
+          initialPosX = currentPositionRef.current.x;
+          initialPosY = currentPositionRef.current.y;
+        }
       }
-    } else if (e.touches.length === 1 && singleTouchStartRef.current && lightboxScale > 1) {
-      const t = e.touches[0];
-      const deltaX = t.clientX - singleTouchStartRef.current.x;
-      const deltaY = t.clientY - singleTouchStartRef.current.y;
-      
-      const maxPanX = (lightboxScale - 1) * 160;
-      const maxPanY = (lightboxScale - 1) * 220;
-      
-      setLightboxPosition({
-        x: Math.min(Math.max(singleTouchStartRef.current.posX + deltaX, -maxPanX), maxPanX),
-        y: Math.min(Math.max(singleTouchStartRef.current.posY + deltaY, -maxPanY), maxPanY)
-      });
-    }
-  };
+    };
 
-  const handleTouchEnd = () => {
-    touchStartRef.current = null;
-    singleTouchStartRef.current = null;
-    if (lightboxScale < 1.05) {
-      resetLightboxZoom();
-    }
-  };
+    const handleTouchMoveNative = (e: TouchEvent) => {
+      if (isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const currentDistance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        const factor = currentDistance / (initialDistance || 1);
+        const nextScale = Math.min(Math.max(initialScale * factor, 0.8), 4);
+
+        currentScaleRef.current = nextScale;
+        if (nextScale <= 1.05) {
+          currentPositionRef.current = { x: 0, y: 0 };
+        }
+        img.style.transform = `translate(${currentPositionRef.current.x}px, ${currentPositionRef.current.y}px) scale(${nextScale})`;
+      } else if (isPanning && e.touches.length === 1 && currentScaleRef.current > 1) {
+        e.preventDefault();
+        const t = e.touches[0];
+        const deltaX = t.clientX - initialTouchX;
+        const deltaY = t.clientY - initialTouchY;
+
+        const boundX = (currentScaleRef.current - 1) * (window.innerWidth / 2);
+        const boundY = (currentScaleRef.current - 1) * (window.innerHeight / 2);
+
+        const nextX = Math.min(Math.max(initialPosX + deltaX, -boundX), boundX);
+        const nextY = Math.min(Math.max(initialPosY + deltaY, -boundY), boundY);
+
+        currentPositionRef.current = { x: nextX, y: nextY };
+        img.style.transform = `translate(${nextX}px, ${nextY}px) scale(${currentScaleRef.current})`;
+      }
+    };
+
+    const handleTouchEndNative = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        isPinching = false;
+      }
+      if (e.touches.length === 0) {
+        isPanning = false;
+        if (currentScaleRef.current < 1.05) {
+          resetLightboxZoom();
+        }
+      }
+    };
+
+    img.addEventListener('touchstart', handleTouchStartNative, { passive: false });
+    img.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
+    img.addEventListener('touchend', handleTouchEndNative, { passive: false });
+
+    return () => {
+      img.removeEventListener('touchstart', handleTouchStartNative);
+      img.removeEventListener('touchmove', handleTouchMoveNative);
+      img.removeEventListener('touchend', handleTouchEndNative);
+    };
+  }, [showLightbox, lightboxIndex, resetLightboxZoom]);
 
   const IMAGES: string[] = product?.images?.length
     ? product.images
@@ -1049,6 +1099,7 @@ export default function ProductView() {
                 }}
               >
                 <motion.img
+                  ref={imgRef}
                   key={lightboxIndex}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1058,15 +1109,12 @@ export default function ProductView() {
                   alt={`Enlarged product image ${lightboxIndex + 1}`}
                   className="max-w-full max-h-full object-contain cursor-zoom-out select-none"
                   style={{
-                    transform: `translate(${lightboxPosition.x}px, ${lightboxPosition.y}px) scale(${lightboxScale})`,
-                    touchAction: lightboxScale > 1 ? 'none' : 'auto'
+                    transform: 'translate(0px, 0px) scale(1)',
+                    touchAction: 'none'
                   }}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (lightboxScale <= 1.05) {
+                    if (currentScaleRef.current <= 1.05) {
                       setShowLightbox(false);
                     } else {
                       resetLightboxZoom();
