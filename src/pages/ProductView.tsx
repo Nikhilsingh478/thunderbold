@@ -49,7 +49,16 @@ export default function ProductView() {
   const [shareMessage, setShareMessage] = useState('');
 
   // Interactive zoom, size error validation, size guide and sticky mobile buy bar states
-  const [lightboxZoom, setLightboxZoom] = useState(false);
+  const [lightboxScale, setLightboxScale] = useState(1);
+  const [lightboxPosition, setLightboxPosition] = useState({ x: 0, y: 0 });
+  const touchStartRef = useRef<{ distance: number; scale: number; pos: { x: number; y: number } } | null>(null);
+  const singleTouchStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
+
+  const resetLightboxZoom = useCallback(() => {
+    setLightboxScale(1);
+    setLightboxPosition({ x: 0, y: 0 });
+  }, []);
+
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -119,6 +128,62 @@ export default function ProductView() {
     img.style.transformOrigin = 'center center';
     img.style.transform = 'scale(1)';
     img.style.transition = 'transform 0.25s ease-out';
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      touchStartRef.current = {
+        distance: dist,
+        scale: lightboxScale,
+        pos: { ...lightboxPosition }
+      };
+      singleTouchStartRef.current = null;
+    } else if (e.touches.length === 1 && lightboxScale > 1) {
+      const t = e.touches[0];
+      singleTouchStartRef.current = {
+        x: t.clientX,
+        y: t.clientY,
+        posX: lightboxPosition.x,
+        posY: lightboxPosition.y
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length === 2 && touchStartRef.current) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const factor = dist / touchStartRef.current.distance;
+      const newScale = Math.min(Math.max(touchStartRef.current.scale * factor, 1), 4);
+      setLightboxScale(newScale);
+      if (newScale <= 1.01) {
+        setLightboxPosition({ x: 0, y: 0 });
+      }
+    } else if (e.touches.length === 1 && singleTouchStartRef.current && lightboxScale > 1) {
+      const t = e.touches[0];
+      const deltaX = t.clientX - singleTouchStartRef.current.x;
+      const deltaY = t.clientY - singleTouchStartRef.current.y;
+      
+      const maxPanX = (lightboxScale - 1) * 160;
+      const maxPanY = (lightboxScale - 1) * 220;
+      
+      setLightboxPosition({
+        x: Math.min(Math.max(singleTouchStartRef.current.posX + deltaX, -maxPanX), maxPanX),
+        y: Math.min(Math.max(singleTouchStartRef.current.posY + deltaY, -maxPanY), maxPanY)
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartRef.current = null;
+    singleTouchStartRef.current = null;
+    if (lightboxScale < 1.05) {
+      resetLightboxZoom();
+    }
   };
 
   const IMAGES: string[] = product?.images?.length
@@ -358,7 +423,7 @@ export default function ProductView() {
                         onMouseLeave={handleMouseLeave}
                         onClick={() => {
                           setLightboxIndex(index);
-                          setLightboxZoom(false);
+                          resetLightboxZoom();
                           setShowLightbox(true);
                         }}
                         loading={index === 0 ? "eager" : "lazy"}
@@ -937,7 +1002,7 @@ export default function ProductView() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 md:p-8 select-none"
             onClick={() => {
-              setLightboxZoom(false);
+              resetLightboxZoom();
               setShowLightbox(false);
             }}
           >
@@ -948,7 +1013,7 @@ export default function ProductView() {
               </span>
               <button
                 onClick={() => {
-                  setLightboxZoom(false);
+                  resetLightboxZoom();
                   setShowLightbox(false);
                 }}
                 className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 transition-colors"
@@ -967,7 +1032,7 @@ export default function ProductView() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxZoom(false);
+                    resetLightboxZoom();
                     setLightboxIndex(prev => (prev + IMAGES.length - 1) % IMAGES.length);
                   }}
                   className="absolute left-2 md:left-6 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white backdrop-blur-xl transition-all z-[20]"
@@ -978,16 +1043,9 @@ export default function ProductView() {
 
               {/* Zoomable Container Wrapper */}
               <div
-                className={`w-full h-full flex transition-all duration-300 ${
-                  lightboxZoom ? 'overflow-auto items-start justify-start' : 'items-center justify-center overflow-hidden'
-                }`}
+                className="w-full h-full flex items-center justify-center overflow-hidden"
                 onClick={(e) => {
-                  if (lightboxZoom) {
-                    e.stopPropagation();
-                    setLightboxZoom(false);
-                  } else {
-                    setShowLightbox(false);
-                  }
+                  setShowLightbox(false);
                 }}
               >
                 <motion.img
@@ -998,14 +1056,21 @@ export default function ProductView() {
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   src={optimizeCloudinaryUrl(IMAGES[lightboxIndex], IMG_SIZES.detail)}
                   alt={`Enlarged product image ${lightboxIndex + 1}`}
-                  className={`transition-all duration-300 ${
-                    lightboxZoom
-                      ? 'w-[200vw] h-[200vh] max-w-none max-h-none object-contain cursor-zoom-out block'
-                      : 'max-w-full max-h-full object-contain cursor-zoom-in'
-                  }`}
+                  className="max-w-full max-h-full object-contain cursor-zoom-out select-none"
+                  style={{
+                    transform: `translate(${lightboxPosition.x}px, ${lightboxPosition.y}px) scale(${lightboxScale})`,
+                    touchAction: lightboxScale > 1 ? 'none' : 'auto'
+                  }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxZoom(!lightboxZoom);
+                    if (lightboxScale <= 1.05) {
+                      setShowLightbox(false);
+                    } else {
+                      resetLightboxZoom();
+                    }
                   }}
                 />
               </div>
@@ -1015,7 +1080,7 @@ export default function ProductView() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxZoom(false);
+                    resetLightboxZoom();
                     setLightboxIndex(prev => (prev + 1) % IMAGES.length);
                   }}
                   className="absolute right-2 md:right-6 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white backdrop-blur-xl transition-all z-[20]"
@@ -1032,7 +1097,7 @@ export default function ProductView() {
                   <button
                     key={idx}
                     onClick={() => {
-                      setLightboxZoom(false);
+                      resetLightboxZoom();
                       setLightboxIndex(idx);
                     }}
                     className={`w-14 aspect-[3/4] overflow-hidden border transition-all duration-300 rounded shrink-0 ${
