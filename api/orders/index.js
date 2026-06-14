@@ -358,7 +358,9 @@ async function handleCancel(req, res) {
     return res.status(403).json({ error: "You can only cancel your own orders" });
   }
   if (order.status === "cancelled") return res.status(400).json({ error: "Order is already cancelled" });
-  if (order.status === "delivered") return res.status(400).json({ error: "Delivered orders cannot be cancelled" });
+  if (order.status === "shipped" || order.status === "delivered") {
+    return res.status(400).json({ error: `Orders that are already ${order.status} cannot be cancelled.` });
+  }
 
   const result = await ordersCollection.updateOne(
     { _id: orderObjectId },

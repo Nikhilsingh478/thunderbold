@@ -393,7 +393,7 @@ const Orders = () => {
                       <div className="text-right">
                         <p className="font-condensed text-tb-white">₹{order.totalAmount}</p>
                       </div>
-                      {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                      {!['cancelled', 'delivered', 'shipped'].includes(order.status) && (
                         <button
                           onClick={() => cancelOrder(order._id)}
                           className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs font-condensed uppercase tracking-wider hover:bg-red-500/30 transition-colors duration-200"
