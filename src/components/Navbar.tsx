@@ -156,7 +156,7 @@ const Navbar = () => {
           className="font-display text-xl md:text-2xl tracking-[0.28em] text-tb-white z-[110] relative decoration-none hover:opacity-90"
         >
           <motion.span variants={itemVariants}>
-            THUNDER<span className="brass-text">BOLT</span>
+            THUNDER<span className="brass-text">BOLD</span>
           </motion.span>
         </Link>
 

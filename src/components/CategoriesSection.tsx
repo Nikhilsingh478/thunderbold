@@ -70,7 +70,6 @@ function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; 
 }
 
 interface CollectionSectionProps {
-  eyebrow: string;
   heading: string;
   subtitle?: string;
   categories: Category[];
@@ -79,7 +78,7 @@ interface CollectionSectionProps {
   className?: string;
 }
 
-function CollectionSection({ eyebrow, heading, subtitle, categories, loading, navigate, className = '' }: CollectionSectionProps) {
+function CollectionSection({ heading, subtitle, categories, loading, navigate, className = '' }: CollectionSectionProps) {
   return (
     <div className={className}>
       <motion.div
@@ -89,11 +88,6 @@ function CollectionSection({ eyebrow, heading, subtitle, categories, loading, na
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="mb-12 md:mb-20 text-center"
       >
-        <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
-          <span className="w-5 h-px bg-brass-dim inline-block" />
-          {eyebrow}
-          <span className="w-5 h-px bg-brass-dim inline-block" />
-        </div>
         <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
           {heading}
         </h2>
@@ -189,11 +183,6 @@ export default function CategoriesSection() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-12 md:mb-20 text-center"
         >
-          <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
-            <span className="w-5 h-px bg-brass-dim inline-block" />
-            Shop By Fit
-            <span className="w-5 h-px bg-brass-dim inline-block" />
-          </div>
           <h1 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
             The Denim Collection
           </h1>
@@ -223,11 +212,6 @@ export default function CategoriesSection() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="text-center pt-4 md:pt-14 pb-3 md:pb-8 px-6 md:px-16"
           >
-            <div className="font-condensed font-semibold text-[0.62rem] md:text-[0.66rem] tracking-[0.38em] uppercase text-brass mb-4 flex items-center justify-center gap-3">
-              <span className="w-5 h-px bg-brass-dim inline-block" />
-              Editorial Picks
-              <span className="w-5 h-px bg-brass-dim inline-block" />
-            </div>
             <h2 className="font-display text-3xl md:text-5xl tracking-[0.12em] uppercase metal-text">
               #Outfits of the Week
             </h2>
@@ -238,7 +222,6 @@ export default function CategoriesSection() {
         {/* ── T-Shirt Collection ───────────────────────────────────── */}
         {showTshirts && (
           <CollectionSection
-            eyebrow="New Category"
             heading="The T-Shirt Collection"
             subtitle="Premium cuts. Everyday essentials."
             categories={tshirtCategories}
@@ -258,11 +241,6 @@ export default function CategoriesSection() {
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="mb-12 md:mb-16 text-center"
             >
-              <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
-                <span className="w-5 h-px bg-brass-dim inline-block" />
-                New Arrival
-                <span className="w-5 h-px bg-brass-dim inline-block" />
-              </div>
               <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
                 The Kurta Collection
               </h2>
@@ -300,11 +278,6 @@ export default function CategoriesSection() {
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="mb-12 md:mb-16 text-center"
             >
-              <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-6 flex items-center justify-center gap-3">
-                <span className="w-5 h-px bg-brass-dim inline-block" />
-                Complete Outfits
-                <span className="w-5 h-px bg-brass-dim inline-block" />
-              </div>
               <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
                 Thunder Looks
               </h2>
