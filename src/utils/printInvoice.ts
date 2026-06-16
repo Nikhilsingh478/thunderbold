@@ -2,7 +2,7 @@ interface OrderItem {
   productId?: string;
   name: string;
   quantity: number;
-  price: number;
+  price?: number;
   size?: string;
   image?: string;
 }
