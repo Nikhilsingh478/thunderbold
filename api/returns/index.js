@@ -221,6 +221,49 @@ async function handleManage(req, res) {
       { $set: { status: "return_approved", updatedAt: new Date() } }
     );
 
+    // ── Restore stock for each item (size-aware) ─────────────────────────────
+    const orderProducts = returnDoc.products || [];
+    const productsCollection = db.collection("products");
+    for (const item of orderProducts) {
+      if (!item.productId || !item.quantity) continue;
+      try {
+        let productObjectId;
+        try { productObjectId = new ObjectId(item.productId); }
+        catch { productObjectId = item.productId; }
+
+        const dbProduct = await productsCollection.findOne({ _id: productObjectId });
+        if (!dbProduct) continue;
+
+        const isOutfit = dbProduct.section === "outfits"
+          && dbProduct.topwear && dbProduct.bottomwear
+          && item.topwearSize && item.bottomwearSize;
+
+        let restoreOp;
+        if (isOutfit) {
+          restoreOp = {
+            $inc: {
+              [`topwear.sizeStock.${item.topwearSize}`]: item.quantity,
+              "topwear.stock": item.quantity,
+              [`bottomwear.sizeStock.${item.bottomwearSize}`]: item.quantity,
+              "bottomwear.stock": item.quantity,
+              stock: item.quantity,
+            },
+          };
+        } else {
+          const hasSizeStock = dbProduct.sizeStock
+            && typeof dbProduct.sizeStock === "object"
+            && item.size in dbProduct.sizeStock;
+          restoreOp = hasSizeStock
+            ? { $inc: { [`sizeStock.${item.size}`]: item.quantity, stock: item.quantity } }
+            : { $inc: { stock: item.quantity } };
+        }
+
+        await productsCollection.updateOne({ _id: productObjectId }, restoreOp);
+      } catch (err) {
+        console.error("RETURN APPROVE: Failed to restore stock for:", item.productId, err.message);
+      }
+    }
+
     return res.status(200).json({
       message: "Return approved. Refund of ₹" + finalRefund + " to be issued.",
       refundAmount: finalRefund,
