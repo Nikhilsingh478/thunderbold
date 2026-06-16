@@ -676,3 +676,5 @@ No other new runtime dependencies added. All PWA functionality is build-time (Wo
 ---
 
 *Thunderbolt — Premium Indian Denim. Built for the Bold.*
+
+> Last deployed: June 16, 2026
