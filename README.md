@@ -1,102 +1,125 @@
-# Thunderbolt — Production-Grade Premium Denim E-Commerce PWA
+# Thunderbold — Production-Grade Premium Fashion E-Commerce PWA
 
-A full-stack, installable Progressive Web App built for a real retail brand. React 18 + Vite frontend, Express/MongoDB backend, Firebase Auth, and a production-grade Workbox service worker.
+A full-stack, installable Progressive Web App built for a real retail brand selling curated Indian streetwear. React 18 + Vite frontend, Express/MongoDB backend, Firebase Auth, Firebase Cloud Messaging, and a Workbox service worker.
+
+> **Brand:** Thunderbold · **Market:** India · **Domain:** thunderbolddenim.com · **Payment:** Cash on Delivery only
 
 ---
 
 ## Table of Contents
 
-
-1. [Tech Stack](#tech-stack)
-2. [Architecture Overview](#architecture-overview)
-3. [Environment Setup](#environment-setup)
-4. [Running the App](#running-the-app)
-5. [PWA Architecture](#pwa-architecture)
-6. [Service Worker Architecture](#service-worker-architecture)
-7. [Caching Strategy](#caching-strategy)
-8. [Offline Strategy](#offline-strategy)
-9. [Manifest Setup](#manifest-setup)
-10. [App Capabilities](#app-capabilities)
-11. [Update Lifecycle](#update-lifecycle)
-12. [Icon Strategy](#icon-strategy)
-13. [Splash Screen System](#splash-screen-system)
-14. [Deployment (Vercel)](#deployment-vercel)
-15. [TWA / Play Store Readiness](#twa--play-store-readiness)
-16. [Project Structure](#project-structure)
-17. [Database Schema](#database-schema)
-18. [Pricing System](#pricing-system)
-19. [Analytics System](#analytics-system)
-20. [Admin Panel](#admin-panel)
-21. [API Reference](#api-reference)
-22. [PWABuilder Verification](#pwabuilder-verification)
-23. [Edge Cases Handled](#edge-cases-handled)
-24. [Troubleshooting](#troubleshooting)
+1. [Tech Stack](#1-tech-stack)
+2. [Architecture Overview](#2-architecture-overview)
+3. [Environment Setup](#3-environment-setup)
+4. [Running the App](#4-running-the-app)
+5. [Project Structure](#5-project-structure)
+6. [Frontend Architecture](#6-frontend-architecture)
+7. [Backend Architecture](#7-backend-architecture)
+8. [Authentication System](#8-authentication-system)
+9. [API Reference](#9-api-reference)
+10. [Order Management System](#10-order-management-system)
+11. [Returns System](#11-returns-system)
+12. [Cart & Wishlist](#12-cart--wishlist)
+13. [Review System](#13-review-system)
+14. [Admin Panel & Analytics](#14-admin-panel--analytics)
+15. [Push Notifications (FCM)](#15-push-notifications-fcm)
+16. [Performance Architecture](#16-performance-architecture)
+17. [Security Model](#17-security-model)
+18. [PWA Architecture](#18-pwa-architecture)
+19. [Service Worker & Caching](#19-service-worker--caching)
+20. [Web App Manifest](#20-web-app-manifest)
+21. [App Capabilities](#21-app-capabilities)
+22. [Update Lifecycle](#22-update-lifecycle)
+23. [Icons & Splash Screen](#23-icons--splash-screen)
+24. [Deployment — Vercel](#24-deployment--vercel)
+25. [TWA / Play Store Readiness](#25-twa--play-store-readiness)
+26. [Database Schema Summary](#26-database-schema-summary)
+27. [Pricing System](#27-pricing-system)
+28. [Edge Cases Handled](#28-edge-cases-handled)
+29. [Troubleshooting](#29-troubleshooting)
 
 ---
 
-## Tech Stack
+## 1. Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, TypeScript, Vite 5, Tailwind CSS, shadcn/ui |
+| Frontend | React 18, TypeScript, Vite 5, Tailwind CSS |
 | Routing | React Router v6 |
-| State / Data | TanStack Query (React Query) |
+| Server State | TanStack Query (React Query) v5 |
 | Animations | Framer Motion |
 | Charts | Recharts |
-| Authentication | Firebase Authentication (email/password) |
-| Database | MongoDB Atlas |
-| Backend | Node.js + Express (dev), Vercel Serverless Functions (prod) |
-| PWA | vite-plugin-pwa v1.x + Workbox `generateSW` strategy |
 | Icons | Lucide React |
-| Build | Vite |
+| Toasts | Sonner |
+| Authentication | Firebase Authentication (Google OAuth + Email/Password) |
+| Push Notifications | Firebase Cloud Messaging (FCM) |
+| Database | MongoDB Atlas (Native Node.js Driver) |
+| Backend | Node.js + Express 5 (dev + prod); Vercel Serverless Functions (prod) |
+| Media CDN | Cloudinary |
+| PWA | vite-plugin-pwa v1.x + Workbox `generateSW` strategy |
+| Build | Vite 5.4 with manual chunk splitting |
 
 ---
 
-## Architecture Overview
+## 2. Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                        Browser                            │
-│  React 18 SPA (Vite, port 5000)                          │
-│  - React Router v6 (client-side routing)                 │
-│  - TanStack Query (server state / caching)               │
-│  - Framer Motion (animations)                            │
-│  - Firebase Auth SDK (client-side auth)                  │
-│  - Service Worker (Workbox — offline + asset caching)    │
-└────────────────────────┬─────────────────────────────────┘
-                         │ /api/* (proxied by Vite dev server)
-┌────────────────────────▼─────────────────────────────────┐
-│                  Express API (port 3001)                  │
-│  api/*.js — same files run in Vercel as serverless fns   │
-│  - Firebase Admin (token verification)                   │
-│  - MongoDB Atlas (getDb() shared client)                 │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                          Browser                              │
+│  React 18 SPA (Vite, port 5000 in dev)                        │
+│  ├── React Router v6 (client-side routing)                    │
+│  ├── TanStack Query (server state / caching)                  │
+│  ├── Framer Motion (GPU-composited animations)                │
+│  ├── Firebase Auth SDK (lazy-initialised — off critical path) │
+│  ├── Firebase Messaging SDK (FCM push notifications)          │
+│  └── Service Worker (Workbox — offline + asset caching)       │
+└───────────────────────────┬──────────────────────────────────┘
+                            │  /api/* (proxied in dev via Vite)
+┌───────────────────────────▼──────────────────────────────────┐
+│              Express API Server (port 3001)                   │
+│  api/*.js — same files deployed as Vercel Serverless Fns      │
+│  ├── Firebase Admin SDK (cryptographic token verification)    │
+│  ├── MongoDB Atlas (getDb() singleton connection pool)        │
+│  ├── FCM multicast (admin broadcast, order status pushes)     │
+│  └── In-memory rate limiter (10 req/min per IP)               │
+└──────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## Environment Setup
-
-Set these as Replit secrets (never commit):
-
-| Variable | Purpose |
-|---|---|
-| `MONGO_URI` | MongoDB Atlas connection string |
-| `VITE_FIREBASE_API_KEY` | Firebase project API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID` | Firebase App ID |
-
-Without `MONGO_URI`, all data endpoints explicitly return `500 Database unavailable` — no silent fallbacks.
+**Key design decisions:**
+- Frontend uses only relative `/api/...` URLs — no environment-specific URL switching needed
+- All API handlers are consolidated (one file per resource) to stay within Vercel Hobby's 12-function limit
+- `purchasePrice` (internal cost) is stripped via MongoDB projection from every non-admin API response
+- Email (not Firebase UID) is used as `userId` across orders/cart/wishlist — stable across account re-linking
 
 ---
 
-## Running the App
+## 3. Environment Setup
+
+Set these as Replit secrets (or `.env` locally). **Never commit these values.**
+
+| Variable | Used By | Description |
+|---|---|---|
+| `MONGO_URI` | `api/_lib/mongodb.js` | MongoDB Atlas connection string |
+| `FIREBASE_SERVICE_ACCOUNT` | `api/_lib/firebaseAdmin.js` | Stringified Firebase service account JSON (server-only) |
+| `VITE_FIREBASE_API_KEY` | `src/lib/firebase.ts` | Firebase public API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | `src/lib/firebase.ts` | Firebase Auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | `src/lib/firebase.ts` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | `src/lib/firebase.ts` | Firebase Storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `src/lib/firebase.ts` | Firebase Messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | `src/lib/firebase.ts` | Firebase App ID |
+
+> `VITE_*` variables are embedded into the frontend bundle at build time by Vite. Firebase client SDK keys are designed to be public — they are not secrets.
+>
+> `FIREBASE_SERVICE_ACCOUNT` and `MONGO_URI` are **server-only** and must **never** carry the `VITE_` prefix.
+
+Without `MONGO_URI`, all data endpoints return `500 Database unavailable` — no silent fallbacks.
+
+---
+
+## 4. Running the App
 
 ```bash
-npm run dev        # Concurrently: node server.js (3001) + vite (5000)
+npm run dev        # Concurrently: node server.js (:3001) + vite (:5000)
 npm run build      # Production build — generates dist/sw.js + manifest
 npm run preview    # Preview production build locally
 ```
@@ -105,22 +128,739 @@ The service worker is **only active in production builds** (`npm run build`). Du
 
 ---
 
-## PWA Architecture
+## 5. Project Structure
 
-### Root Cause of Previous PWABuilder Failure
+```
+thunderbold/
+├── api/                              # Express / Vercel Serverless handlers
+│   ├── _lib/                         # Shared backend utilities
+│   │   ├── mongodb.js                # Singleton connection pool + index bootstrap
+│   │   ├── firebaseAdmin.js          # Token verification + Admin Messaging
+│   │   ├── fcm.js                    # sendToUser() + sendMulticast() helpers
+│   │   ├── adminHelper.js            # isAdmin() — DB role + hardcoded allowlist
+│   │   ├── rateLimit.js              # In-memory sliding-window rate limiter
+│   │   ├── response.js               # Standardised JSON response helpers
+│   │   └── validator.js              # Address / phone / pincode validators
+│   ├── orders/index.js               # Orders CRUD + atomic stock management
+│   ├── returns/index.js              # Return requests + admin approve/reject
+│   ├── users/index.js                # User profile + address book + FCM tokens
+│   ├── products/
+│   │   ├── index.js                  # Product catalogue (public read, admin write)
+│   │   └── [id].js                   # Single product by MongoDB ObjectId
+│   ├── cart/index.js                 # Per-user cart (full replace on each write)
+│   ├── wishlist/index.js             # Per-user wishlist
+│   ├── reviews/index.js              # Verified-purchase review system
+│   ├── categories/index.js           # Category management
+│   ├── brands/index.js               # Brand management
+│   ├── address/index.js              # Address management
+│   ├── notifications/index.js        # Admin broadcast + test-send push notifications
+│   └── admin.js                      # Analytics dashboard + slider data
+│
+├── src/
+│   ├── App.tsx                       # Root provider tree
+│   ├── AppContent.tsx                # BrowserRouter + route definitions + Suspense
+│   ├── main.tsx                      # Vite entry + PWA SW registration + version polling
+│   ├── vite-env.d.ts                 # Vite + vite-plugin-pwa type references
+│   │
+│   ├── context/
+│   │   ├── AuthContext.tsx           # Firebase auth state + MongoDB sync on login
+│   │   ├── CartContext.tsx           # Cart state (server-synced + localStorage fallback)
+│   │   ├── WishlistContext.tsx       # Wishlist state (server-synced + localStorage fallback)
+│   │   └── NotificationsContext.tsx  # FCM token registration + deviceId deduplication
+│   │
+│   ├── pages/
+│   │   ├── Index.tsx                 # Homepage
+│   │   ├── About.tsx                 # Brand story
+│   │   ├── CategoryView.tsx          # Product listing by category
+│   │   ├── ProductView.tsx           # Product detail + reviews + add to cart (lazy)
+│   │   ├── Cart.tsx                  # Shopping cart (lazy)
+│   │   ├── Checkout.tsx              # Address selection + order placement (lazy)
+│   │   ├── Orders.tsx                # Order history + return requests (lazy)
+│   │   ├── Wishlist.tsx              # Saved products (lazy)
+│   │   ├── Profile.tsx               # User profile + address book (lazy)
+│   │   ├── Admin.tsx                 # Full admin panel (lazy)
+│   │   ├── BrandsPage.tsx            # Brand listing (lazy)
+│   │   ├── BrandView.tsx             # Brand detail + products (lazy)
+│   │   ├── DealsPage.tsx             # Deals / filtered product listings (lazy)
+│   │   ├── Policies.tsx              # Returns, shipping, privacy policies (lazy)
+│   │   └── NotFound.tsx              # 404 fallback
+│   │
+│   ├── components/
+│   │   ├── Navbar.tsx                # Sticky nav with cart badge + search + auth
+│   │   ├── Footer.tsx                # Site links, policies, social (customer pages only)
+│   │   ├── SplashScreen.tsx          # Cinematic branded intro (once per session)
+│   │   ├── PWAUpdatePrompt.tsx       # SW update / offline-ready toast
+│   │   ├── HeroBanner.tsx            # Hero carousel with compositor-only dot animation
+│   │   ├── ThunderboldSlider.tsx     # Full-screen product showcase slider (LCP-optimised)
+│   │   ├── CategoriesSection.tsx     # Category grid with lazy-loaded product tiles
+│   │   ├── LiveSaleSection.tsx       # Live sale product row
+│   │   ├── BrandsSection.tsx         # Brand logo grid
+│   │   ├── AnnouncementBar.tsx       # Top announcement ticker
+│   │   ├── Ticker.tsx                # Scrolling announcement text
+│   │   ├── SearchOverlay.tsx         # Full-screen search modal
+│   │   ├── PriceDisplay.tsx          # Price / MRP / discount badge
+│   │   ├── ScrollProgress.tsx        # Page scroll progress bar
+│   │   ├── CustomCursor.tsx          # Custom cursor for desktop
+│   │   ├── ReturnRequestModal.tsx    # Return request submission flow
+│   │   ├── ApkBanner.tsx             # PWA / APK install prompt banner
+│   │   ├── NotificationPermissionPrompt.tsx  # FCM permission request UI
+│   │   ├── AnalyticsNumbers.tsx      # KPI number cards
+│   │   ├── promo/
+│   │   │   └── PromoSlider.tsx       # Homepage promo slider with brass dot animation
+│   │   ├── products/
+│   │   │   └── ProductGrid.tsx       # Responsive product grid with skeleton states
+│   │   ├── checkout/                 # Address form + order summary components
+│   │   ├── reviews/                  # Star rating + review card components
+│   │   ├── auth/                     # Login modal components
+│   │   ├── Analytics/                # Admin analytics dashboard charts (Recharts)
+│   │   └── ui/                       # shadcn/ui primitives
+│   │
+│   ├── lib/
+│   │   ├── apiCache.ts               # Module-level fetch cache: 60s TTL + in-flight dedup
+│   │   ├── firebase.ts               # Firebase client SDK + lazy getFirebaseAuth() getter
+│   │   ├── firebaseMessaging.ts      # FCM client setup + SW synchronisation
+│   │   ├── ordersCache.ts            # Idle-time prefetch of orders into TanStack cache
+│   │   ├── pricing.ts                # computePrice(price, mrp) — discount % derivation
+│   │   ├── cloudinary.ts             # Cloudinary URL transformation helpers
+│   │   ├── requireAuth.ts            # Pending action gating behind auth
+│   │   ├── modalController.ts        # Event bus for login modal (no prop drilling)
+│   │   ├── storage.ts                # localStorage cart/wishlist helpers
+│   │   ├── policyContent.ts          # Static policy text (returns, shipping, privacy)
+│   │   └── usePWAInstall.ts          # beforeinstallprompt hook
+│   │
+│   └── utils/
+│       ├── printInvoice.ts           # Client-side invoice PDF generation
+│       └── utils.ts                  # Shared formatting helpers
+│
+├── public/
+│   ├── icons/                        # 9 PWA icons (72–512px) + maskable variant
+│   ├── screenshots/
+│   │   ├── mobile.svg                # Narrow (540×960) — manifest install dialog
+│   │   └── desktop.svg               # Wide (1280×800) — manifest install dialog
+│   ├── offline.html                  # Custom branded offline fallback page
+│   ├── sitemap.xml                   # Static sitemap for search indexing
+│   ├── robots.txt                    # Crawler directives
+│   └── Thunderbolt.apk               # Sideload APK (TWA build)
+│
+├── server.js                         # Express server (port 3001) — dev + Replit prod
+├── vite.config.ts                    # Vite + VitePWA + proxy + manual chunk splitting
+├── index.html                        # Entry HTML (SEO meta tags, JSON-LD schema, preconnects)
+├── tailwind.config.ts                # Tailwind + custom design tokens (brass, obsidian)
+├── vercel.json                       # Serverless routing + static asset headers
+├── package.json
+├── README.md                         # This file
+├── DATABASE.md                       # Full MongoDB schema + migration guide
+└── DOCS.md                           # Comprehensive technical reference
+```
 
-`vite-plugin-pwa` was listed in `package.json` but **not installed** in `node_modules`. The build failed before generating any `sw.js`, so PWABuilder found no service worker at all.
+---
 
-**Fix**: Installed `vite-plugin-pwa@^1.3.0`. Every production build now generates:
-- `dist/sw.js` — the service worker
-- `dist/workbox-*.js` — the Workbox runtime
-- `dist/manifest.webmanifest` — the enhanced Web App Manifest
+## 6. Frontend Architecture
 
-### Strategy: generateSW
+### 6.1 Provider Tree
 
-Workbox generates the entire service worker from `vite.config.ts`. No custom `sw.ts` to maintain — simpler and more reliable.
+```
+<QueryClientProvider>          ← TanStack Query global client
+  <AuthProvider>               ← Firebase auth state + DB sync on login
+    <CartProvider>             ← Cart state (server-synced + localStorage)
+      <WishlistProvider>       ← Wishlist state (server-synced + localStorage)
+        <BrowserRouter>
+          <AppContent />       ← Routes + Suspense + login modal + splash screen
+        </BrowserRouter>
+      </WishlistProvider>
+    </CartProvider>
+  </AuthProvider>
+</QueryClientProvider>
+```
 
-### Registration Flow
+### 6.2 Routing & Code Splitting
+
+Routes are defined in `src/AppContent.tsx`. Heavy pages use `React.lazy()` — each becomes a separate Rollup chunk loaded on demand. A branded `<PageLoader />` (bolt icon on `#0a0a0a`) is shown via `<Suspense>` while chunks download.
+
+| Path | Component | Strategy |
+|---|---|---|
+| `/` | `Index` | Eager |
+| `/about` | `About` | Eager |
+| `/category/:id` | `CategoryView` | Eager |
+| `/product/:id` | `ProductView` | Lazy |
+| `/cart` | `Cart` | Lazy |
+| `/checkout` | `Checkout` | Lazy |
+| `/orders` | `Orders` | Lazy |
+| `/wishlist` | `Wishlist` | Lazy |
+| `/profile` | `Profile` | Lazy |
+| `/admin` | `Admin` | Lazy |
+| `/deals/:slug` | `DealsPage` | Lazy |
+| `/brands` | `BrandsPage` | Lazy |
+| `/brands/:id` | `BrandView` | Lazy |
+| `/policies/:slug` | `Policies` | Lazy |
+| `*` | `NotFound` | Eager |
+
+### 6.3 State Management
+
+**Server state** is handled entirely by TanStack Query (`useQuery` / `useMutation`). Covers products, orders, user profiles, reviews, and categories. Provides caching, background refetch, deduplication, and error states.
+
+**Client state** for cart and wishlist uses React `useReducer` inside context providers. Both:
+- Read from `localStorage` immediately on mount (zero-latency for returning users)
+- Sync to MongoDB once authenticated
+- Fall back to `localStorage`-only for anonymous users
+- Merge localStorage items with server items on login (deduplicated by `productId + size`)
+
+**Auth state** wraps Firebase's `onAuthStateChanged`. On every login, the user record is upserted in MongoDB via `POST /api/users`.
+
+### 6.4 Login Modal System
+
+`src/lib/modalController.ts` is a custom event bus that lets any component trigger the login modal without prop drilling. Three trigger sources:
+
+| Source | Condition |
+|---|---|
+| `requireAuth` | User action (add to cart / wishlist) while unauthenticated |
+| `delayedPrompt` | 10 seconds after page load, once per session, for unauthenticated visitors |
+| `manual` | User clicks a sign-in button directly |
+
+After login, any stored pending action is automatically re-executed via `executeStoredAction()` in `src/lib/requireAuth.ts`.
+
+### 6.5 Firebase Auth — Lazy Initialisation
+
+`src/lib/firebase.ts` exposes `getFirebaseAuth()` — a lazy getter that initialises Firebase Auth only on first call, caching the instance for all subsequent calls. This defers the Auth iframe and SDK bootstrap off the critical render path. The `initializeApp()` call is still eager (needed for Firestore/Storage), but `getAuth()` is deferred.
+
+```typescript
+let _auth: Auth | null = null;
+export function getFirebaseAuth(): Auth {
+  if (!_auth) _auth = getAuth(app);
+  return _auth;
+}
+```
+
+All `AuthContext.tsx` handlers call `getFirebaseAuth()` instead of the old top-level `auth` export.
+
+---
+
+## 7. Backend Architecture
+
+### 7.1 Express Server (`server.js`)
+
+Runs on **port 3001**. Each API route dynamically imports its handler module on first request, avoiding ESM circular dependency issues and keeping startup fast.
+
+In development, Vite's dev server on **port 5000** proxies all `/api/*` requests to `localhost:3001`. Frontend code always uses relative `/api/...` URLs.
+
+### 7.2 Shared Library Modules
+
+**`api/_lib/mongodb.js`**
+- Singleton pool cached in `global.mongo` — survives serverless warm-starts
+- Pool: `maxPoolSize: 10`, `minPoolSize: 2`, `serverSelectionTimeoutMS: 5000`
+- Database: `thunderbold`
+- Bootstraps all required MongoDB indexes asynchronously on first connection (non-blocking, non-fatal)
+
+**`api/_lib/firebaseAdmin.js`**
+- Initialises Firebase Admin SDK from `FIREBASE_SERVICE_ACCOUNT` environment variable (JSON string)
+- `verifyFirebaseToken(token)` — cryptographic ID token verification with revocation checking
+- `getAdminMessaging()` — returns Firebase Admin Messaging instance for FCM
+- No insecure fallback: throws `401` on invalid token, `503` if SDK is unconfigured
+
+**`api/_lib/fcm.js`**
+- `sendToUser(db, userId, payload, origin)` — sends to all FCM tokens for one user; never throws (callers are never blocked by notification failures); automatically prunes stale/invalid tokens from DB
+- `sendMulticast(messaging, tokens, payload, origin)` — batches tokens in groups of 500 (FCM limit); used by admin broadcast; collects and returns invalid token list for cleanup
+
+**`api/_lib/adminHelper.js`**
+- `isAdmin(email, db)` — two-step resolution: DB role check (`users.role === 'admin'`) first, then hardcoded `ADMIN_EMAILS` allowlist fallback
+
+**`api/_lib/rateLimit.js`**
+- In-memory sliding-window limiter: 10 req/min per IP
+- IP extracted from `X-Forwarded-For` → `X-Real-IP` → socket address
+- Stale entries purged every 5 minutes
+
+**`api/_lib/validator.js`**
+- `validateAddress()` — validates all 6 required address fields
+- `validatePhone()` — 10-digit India format
+- `validatePincode()` — 6-digit India format
+
+### 7.3 Cache-Control Headers (server.js)
+
+Public, read-only GET routes return CDN-friendly cache headers:
+
+```
+Cache-Control: public, s-maxage=60, stale-while-revalidate=300
+```
+
+Applied to: `/api/products`, `/api/categories`, `/api/brands`, `/api/slider`.
+
+Only fires on `GET` requests — writes (POST/PUT/DELETE) are never cached. Auth-sensitive routes (orders, cart, wishlist, users, returns, address, reviews) have no cache headers.
+
+---
+
+## 8. Authentication System
+
+### 8.1 Client-Side (Firebase Auth)
+
+`src/lib/firebase.ts` initialises with `browserLocalPersistence` — users stay logged in across browser sessions.
+
+Supported sign-in methods:
+- **Google OAuth** — `signInWithPopup` + `GoogleAuthProvider` (`prompt: 'select_account'` always shows account picker)
+- **Email + Password** — `signInWithEmailAndPassword` / `createUserWithEmailAndPassword`
+
+After every successful sign-in, `AuthContext.syncUserWithDatabase()` calls `POST /api/users` with `{ uid, email, name }` to upsert the user record in MongoDB.
+
+### 8.2 Server-Side Token Verification
+
+Every protected endpoint extracts the token from `Authorization: Bearer <token>` and calls `verifyFirebaseToken(token)`. The decoded payload provides `{ email, uid, ...claims }`.
+
+**User identity note:** Cart, wishlist, and orders use `email` as `userId` (not Firebase UID). This is intentional — Firebase UIDs can change on account re-linking, but email is stable for COD order tracking.
+
+### 8.3 Admin Access
+
+Admin endpoints additionally call `isAdmin(email, db)`:
+1. DB lookup: `users.role === 'admin'`
+2. Hardcoded allowlist: `ADMIN_EMAILS` in `api/_lib/adminHelper.js`
+
+Admin status is verified on every request — no session-based admin caching.
+
+### 8.4 Auth Flow Diagram
+
+```
+User attempts protected action
+        │
+        ├── Not authenticated → store pending action → open login modal
+        │
+        └── Authenticated
+                │
+                Firebase ID token → Authorization header
+                        │
+                verifyFirebaseToken(token)
+                  ├── Fail → 401 Unauthorized
+                  └── Pass → { email, uid }
+                                │
+                         Admin endpoint?
+                           ├── Yes → isAdmin() → 403 if not admin
+                           └── No  → process request
+```
+
+---
+
+## 9. API Reference
+
+All endpoints accept and return JSON. Protected endpoints require `Authorization: Bearer <firebase-id-token>`.
+
+### Products
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/products` | Public | All products; supports `?section=` and `?maxPrice=` filters. `purchasePrice` excluded. |
+| `GET` | `/api/products/:id` | Public | Single product by MongoDB ObjectId |
+| `POST` | `/api/products` | Admin | Create product |
+| `PUT` | `/api/products?id=:id` | Admin | Full replace of product |
+| `DELETE` | `/api/products?id=:id` | Admin | Hard delete product |
+
+> Admin `GET` requests include `purchasePrice`. Public `GET` never exposes it.
+
+### Orders
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/orders` | User/Admin | User sees own orders; admin sees all |
+| `POST` | `/api/orders/create` | User | Create order with idempotency check + atomic stock decrement |
+| `PUT` | `/api/orders/cancel` | User/Admin | Cancel order + restore stock |
+| `PATCH` | `/api/orders/manage?id=:id` | Admin | Update order status (triggers FCM push) |
+| `DELETE` | `/api/orders/manage?id=:id` | Admin | Delete order record |
+
+### Returns
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/returns` | User/Admin | User sees own requests; admin sees all |
+| `POST` | `/api/returns` | User | Submit return request (delivered orders only; one per order) |
+| `PATCH` | `/api/returns?id=:id` | Admin | Approve / reject / issue refund |
+
+### Users
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/users` | User | Fetch own profile (by Firebase UID) |
+| `POST` | `/api/users` | Open | Create/sync user on login |
+| `PATCH` | `/api/users` | User | Update name/phone or set default address |
+| `DELETE` | `/api/users` | User | Remove address from address book |
+| `POST` | `/api/users?subpath=fcm-token` | User | Register/update device FCM token |
+
+### Cart
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/cart` | User | Fetch cart items |
+| `POST` | `/api/cart` | User | Replace entire cart |
+| `DELETE` | `/api/cart` | User | Clear cart |
+
+### Wishlist
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/wishlist` | User | Fetch wishlist items |
+| `POST` | `/api/wishlist` | User | Replace entire wishlist |
+| `DELETE` | `/api/wishlist` | User | Clear wishlist |
+
+### Reviews
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/reviews?productId=:id` | Public | Active reviews for a product |
+| `GET` | `/api/reviews?mine=true` | User | All of current user's reviews |
+| `GET` | `/api/reviews?mine=true&productId=:id` | User | Own review + purchase eligibility flag |
+| `POST` | `/api/reviews` | User | Submit review (requires delivered order) |
+| `PUT` | `/api/reviews?id=:id` | User | Edit own review |
+| `DELETE` | `/api/reviews?id=:id` | User/Admin | Soft-delete review |
+
+### Catalogue & Content
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/categories` | Public | List all categories |
+| `POST/PUT/DELETE` | `/api/categories` | Admin | Manage categories |
+| `GET` | `/api/brands` | Public | List all brands |
+| `POST/PUT/DELETE` | `/api/brands` | Admin | Manage brands |
+| `GET` | `/api/slider` | Public | Homepage banner slider entries |
+| `PUT` | `/api/slider` | Admin | Update slider configuration |
+
+### Admin & Notifications
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/admin/analytics` | Admin | Full analytics dashboard payload |
+| `POST` | `/api/notifications/broadcast` | Admin | Send push notification to all users |
+| `POST` | `/api/notifications/test-send` | User | Send test push to own devices |
+
+---
+
+## 10. Order Management System
+
+### 10.1 Order Status Lifecycle
+
+```
+pending → confirmed → shipped → delivered
+    └──────────────────────────→ cancelled
+    └──────────────────────────→ return_requested → return_approved → refund_issued
+                                                  └→ return_rejected
+```
+
+`delivered` orders cannot be cancelled via the standard cancel route. Only admins advance status via `PATCH /api/orders/manage`.
+
+### 10.2 Order Creation Flow (`POST /api/orders/create`)
+
+1. **Rate limit** — rejects if IP exceeds 10 req/min
+2. **Auth** — verifies Firebase token; binds `email` as `userId`
+3. **Idempotency** — if `clientOrderId` matches existing order, returns it immediately (prevents double-taps / retries)
+4. **Request validation** — validates products array, address fields, payment method
+5. **Pre-flight stock check** — fetches each product; verifies `sizeStock[size] >= quantity`. Outfit products check both `topwear.sizeStock[topwearSize]` and `bottomwear.sizeStock[bottomwearSize]`
+6. **Gift message sanitisation** — strips HTML tags, trims, caps at 300 chars
+7. **Order ID generation** — generates a unique 6-character alphanumeric code prefixed `TB-` (excluding ambiguous chars `I`, `O`, `0`, `1`); collision-checked at write time
+8. **Atomic stock decrement** — MongoDB `$inc` with `$gte` guard; both `sizeStock[size]` and aggregate `stock` decremented together
+9. **Compensation rollback** — if any decrement fails (race condition), all previously decremented items are restored and the order document is deleted. Returns `409 Conflict`
+10. **FCM push** — `sendToUser()` fires an order confirmation notification to the customer's registered devices (non-blocking; never delays the response)
+
+### 10.3 Outfit Product Stock Model
+
+```json
+{
+  "topwear":    { "sizeStock": { "S": 5, "M": 3 }, "stock": 8 },
+  "bottomwear": { "sizeStock": { "28": 4, "30": 6 }, "stock": 10 },
+  "stock": 8
+}
+```
+
+`root.stock = min(topwear.stock, bottomwear.stock)` — the bottleneck component determines available outfit quantity.
+
+---
+
+## 11. Returns System
+
+### 11.1 Policy
+
+- Return requests may only be raised for orders with `status: "delivered"`
+- One return request per order (idempotency enforced at DB level)
+- Valid reasons: `defective`, `wrong_item`, `size_issue`, `not_as_described`, `other`
+- Description minimum 10 characters, maximum 500 characters
+
+### 11.2 Return Flow
+
+```
+Customer submits POST /api/returns
+        │
+        Order status updated: delivered → return_requested
+        Return document created: status "pending"
+        │
+Admin reviews via PATCH /api/returns?id=:id
+        │
+        ├── action: "approve"
+        │     ├── Calculates refundAmount = totalAmount − shippingCharges (admin can override)
+        │     ├── Restores product stock (size-aware, outfit-aware)
+        │     ├── Order status: return_requested → return_approved
+        │     └── return status: pending → approved
+        │
+        ├── action: "reject"
+        │     ├── Stores adminNotes
+        │     ├── Order status: return_requested → return_rejected
+        │     └── return status: pending → rejected
+        │
+        └── action: "issue_refund" (after approval)
+              ├── return status: approved → refund_issued
+              └── Order status: return_approved → refund_issued
+```
+
+### 11.3 Refund Calculation
+
+Default shipping deduction: ₹50. Admin can override both `shippingCharges` and `refundAmount` during approval. Formula: `refundAmount = max(0, totalAmount − shippingCharges)`.
+
+---
+
+## 12. Cart & Wishlist
+
+Both follow the same sync pattern:
+
+- **Anonymous users** — items stored in `localStorage` only
+- **Authenticated users** — items synced to MongoDB (keyed by `userId = email`)
+- **On login** — localStorage items merged with server items (deduplicated by `productId + size`)
+- **Write strategy** — entire array replaced on every update (no incremental PATCH)
+
+Required cart item fields: `productId`, `name`, `price` (number), `image`, `size`, `quantity` (positive integer).
+
+Required wishlist item fields: `productId`, `name`, `price` (number), `image`.
+
+---
+
+## 13. Review System
+
+### Eligibility Gate
+Only users who have a `delivered` order containing the specific `productId` can submit a review. Verified server-side on every `POST /api/reviews`.
+
+### Deduplication
+One active review per `(userId, productId)` pair. Duplicate `POST` returns `409 Conflict` with the existing review — client can switch to edit mode.
+
+### Soft Delete
+Reviews are never hard-deleted. `DELETE` sets `isDeleted: true`. All public and user-scoped `GET` queries filter `{ isDeleted: { $ne: true } }`. Admins can soft-delete any review; users can only delete their own.
+
+---
+
+## 14. Admin Panel & Analytics
+
+### 14.1 Access
+
+Route `/admin` loads `src/pages/Admin.tsx` (lazy). Every admin API call requires Firebase Bearer token + admin verification. No footer on admin pages.
+
+Tabs: **Analytics · Orders · Products · Categories · Brands · Reviews**
+
+### 14.2 Analytics Endpoint (`GET /api/admin/analytics`)
+
+Query params:
+- `?range=7d` — last 7 days
+- `?range=30d` — last 30 days
+- `?month=YYYY-MM` — specific calendar month
+- (default) — current calendar month
+
+Response shape:
+
+| Key | Description |
+|---|---|
+| `overview` | `totalRevenue`, `netRevenue`, `totalOrders`, `averageOrderValue`, `totalUsers`, `totalProfit`, `netProfit` |
+| `revenueSeries` | Per-day `{ day, revenue }` array for the selected range |
+| `ordersSeries` | Per-day `{ day, count }` array for the selected range |
+| `topProducts` | Top 5 products by units sold in the range (with image + price) |
+| `stockAlerts` | Products with `stock ≤ 5`, split into `outOfStock` and `lowStock` |
+| `recentOrders` | Latest 5 orders (all time) with customer name, total, and item count |
+
+### 14.3 Profit Calculation
+
+Calculated via MongoDB aggregation pipeline:
+- Filters `status: { $in: ["delivered", "completed"] }` only
+- `$lookup` joins each order item with `products.purchasePrice`
+- Excludes items where `purchasePrice` is null/missing
+- Formula: `profit = (sellingPrice − purchasePrice) × quantity`
+- Two values: `totalProfit` (within date range) and `netProfit` (all-time)
+
+---
+
+## 15. Push Notifications (FCM)
+
+### 15.1 Device Token Registration
+
+`src/context/NotificationsContext.tsx` manages the full client-side FCM lifecycle:
+
+1. Generates a persistent random `deviceId` stored in `localStorage` (one per browser/device)
+2. On permission grant, obtains the FCM registration token via `getToken(messaging, { vapidKey, serviceWorkerRegistration })`
+3. Calls `POST /api/users?subpath=fcm-token` with `{ token, deviceId }`
+4. Backend deduplicates: removes any existing entry for the same `deviceId` or same `token` before inserting the new one — guarantees exactly one active token per device
+
+### 15.2 Service Worker Synchronisation
+
+`src/lib/firebaseMessaging.ts` polls for the main Workbox PWA service worker (`/sw.js`) for up to 3 seconds before falling back to the default Firebase registration (`/firebase-messaging-sw.js`). This prevents dual service worker registrations and duplicate notification delivery.
+
+### 15.3 Notification Delivery
+
+**Order status updates:** When admin updates order status via `PATCH /api/orders/manage`, `sendToUser()` fires a push to the customer's registered devices. Non-blocking — notification failure never blocks the API response.
+
+**Admin broadcasts:** `POST /api/notifications/broadcast` sends to all users with registered FCM tokens. Tokens are batched in groups of 500 (FCM API limit). Invalid/expired tokens discovered during the send are automatically removed from the DB.
+
+### 15.4 Notification Payload (Web Push)
+
+```
+title:    e.g. "Order Confirmed ✅" / "Custom broadcast message"
+body:     Order details or broadcast text
+icon:     /icons/icon-192x192.png
+badge:    /favicon.svg
+vibrate:  [200, 100, 200]
+actions:  [{ action: 'track_order', title: 'Track Order 📦' }, ...]
+link:     /orders?orderId=... (order notifications) or / (broadcasts)
+android priority: high
+TTL:      4 weeks (2,419,200 seconds)
+```
+
+---
+
+## 16. Performance Architecture
+
+### 16.1 Module-Level API Cache (`src/lib/apiCache.ts`)
+
+A singleton fetch cache shared across all components. Two layers:
+
+- **In-flight deduplication** — if two components call the same URL simultaneously, only one HTTP request fires; both get the same Promise
+- **TTL cache** — responses stored in a `Map` with a timestamp; default TTL 60 seconds; repeated calls skip the network entirely
+
+Applied to: `ThunderboldSlider`, `CategoriesSection`, `LiveSaleSection`. Usage:
+
+```typescript
+import('../lib/apiCache').then(({ cachedFetch }) =>
+  cachedFetch<{ products?: Product[] }>('/api/products')
+)
+```
+
+`clearCache(url?)` evicts one entry or the entire cache.
+
+### 16.2 Lazy Firebase Auth
+
+`getFirebaseAuth()` in `src/lib/firebase.ts` defers `getAuth(app)` until the first authentication action. This removes the Firebase Auth SDK initialisation and its associated cross-origin iframe from the critical render path — these no longer block the initial paint.
+
+### 16.3 Bundle Splitting (`vite.config.ts`)
+
+Manual chunks via Rollup `manualChunks`:
+
+| Chunk | Contents | Purpose |
+|---|---|---|
+| `vendor` | react, react-dom, react-router-dom, lucide-react | Core UI framework — cached separately from app code |
+| `firebase` | all `firebase/*` packages | Firebase SDK is large; cached until Firebase releases an update |
+| `motion` | framer-motion | Animation library — cached separately from both |
+
+Effect: updating app code no longer busts the Firebase or Framer Motion cache entry.
+
+### 16.4 Compositor-Only Animations
+
+All carousel dot indicators (`ThunderboldSlider`, `HeroBanner`, `PromoSlider`) use `transform: scaleX()` + `opacity` instead of `width` + `background-color`. Width changes force layout recalc on every frame; scale + opacity run entirely on the GPU compositor thread.
+
+```css
+/* Inactive dot — no layout, no paint */
+transform: scaleX(0.25);
+opacity: 0.35;
+transition: transform 300ms ease, opacity 300ms ease;
+will-change: transform, opacity;
+```
+
+`ThunderboldSlider`'s heading keyframe also had `letter-spacing` removed (forces layout on every frame). The animation now touches only `opacity`, `transform`, and `filter`.
+
+### 16.5 LCP Image Prioritisation
+
+The first slide image in `ThunderboldSlider` is the Largest Contentful Paint element:
+
+```jsx
+fetchPriority="high"   // promoted to top of browser fetch queue
+decoding="sync"        // guaranteed to render in first frame, no async decode tick
+loading="eager"        // (already; confirmed)
+```
+
+All subsequent slide images use `fetchPriority="low"` and `decoding="async"`.
+
+### 16.6 Version Polling
+
+`src/main.tsx` polls `/version.json` to detect new deployments. Consolidations made:
+
+- Removed 5-second backup `setTimeout` (redundant)
+- `visibilitychange` listener registered exactly once (was registered inside the interval callback — caused duplicates)
+- Polling interval changed: **15 s → 60 s** (sufficient to detect a new deploy within 1 minute)
+
+### 16.7 Server-Side `stale-while-revalidate`
+
+```
+Cache-Control: public, s-maxage=60, stale-while-revalidate=300
+```
+
+On CDN-served deployments (Vercel Edge Network), product/category/brand/slider responses are served from edge cache for 60 seconds. After expiry, the CDN serves the stale version instantly while revalidating in the background — zero perceived latency on cache refresh.
+
+### 16.8 Orders Prefetch
+
+`src/lib/ordersCache.ts` uses `requestIdleCallback` (with `setTimeout` fallback) to prefetch the orders list into TanStack Query's cache during idle time after login. The Orders page opens instantly with no loading state.
+
+### 16.9 Cloudinary CDN + Workbox
+
+All product images are hosted on Cloudinary (CDN-distributed, format-optimised). After first load, Workbox's `CacheFirst` strategy caches them locally for 30 days. Repeat visitors — and offline users — load product images from disk.
+
+---
+
+## 17. Security Model
+
+### 17.1 Authentication
+
+- All state-changing endpoints require a cryptographically verified Firebase ID token
+- Token revocation checking is enabled (`verifyIdToken(token, true)`)
+- No insecure fallback: unconfigured Firebase Admin SDK returns `503`, not a pass-through
+- Tokens expire after 1 hour; Firebase client SDK auto-refreshes them
+
+### 17.2 HTTP Security Headers
+
+Applied globally by Express middleware on every response:
+
+```
+X-Content-Type-Options:           nosniff
+X-Frame-Options:                  DENY
+X-XSS-Protection:                 1; mode=block
+Referrer-Policy:                  strict-origin-when-cross-origin
+Cross-Origin-Resource-Policy:     cross-origin
+```
+
+### 17.3 Rate Limiting
+
+| Endpoint | Limit |
+|---|---|
+| `POST /api/orders/create` | 10 req/min per IP |
+| `POST /api/cart` | 10 req/min per IP |
+| `POST /api/wishlist` | 10 req/min per IP |
+| `POST /api/reviews` | 10 req/min per IP |
+
+> Current implementation is in-memory. For multi-instance production deployments, replace with Redis-backed rate limiting (e.g. `rate-limiter-flexible` + `ioredis`).
+
+### 17.4 Input Sanitisation
+
+| Input | Sanitisation |
+|---|---|
+| Gift message | HTML tags stripped, trimmed, max 300 chars |
+| Return description | HTML tags stripped, trimmed, 10–500 chars |
+| Review comment | Trimmed, max 1000 chars |
+| Admin notes | HTML tags stripped, trimmed, max 500 chars |
+| Phone number | Non-digit chars stripped before storage |
+| Pincode | Non-digit chars stripped before storage |
+| Product prices | `purchasePrice` stripped from all public GET projections |
+
+### 17.5 Privilege Isolation
+
+- `purchasePrice` is never returned to non-admin callers (MongoDB projection)
+- Admin status verified on every admin request — no session caching
+- Users can cancel only their own orders (ownership: `order.userId !== userEmail`)
+- Users can edit/delete only their own reviews (ownership: `review.userId === userId`)
+- Users can submit returns only for their own delivered orders
+- Admin PATCH on orders rejects any status outside the valid set
+
+---
+
+## 18. PWA Architecture
+
+### 18.1 Strategy: `generateSW`
+
+Workbox generates the entire service worker from `vite.config.ts`. No custom `sw.ts` to maintain.
+
+### 18.2 Registration Flow
 
 ```
 src/main.tsx
@@ -133,58 +873,34 @@ src/components/PWAUpdatePrompt.tsx
   └── Listens for both events → shows non-intrusive bottom toast
 ```
 
-### registerType: 'prompt'
+### 18.3 `registerType: 'prompt'`
 
-The SW uses `prompt` (not `autoUpdate`):
-- New SW installs in background — does **not** take control immediately
-- User sees a subtle "Update available" toast at bottom of screen
+- New SW installs in background — does not take control immediately
+- User sees a subtle "Update available" toast at the bottom of screen
 - Clicking "Refresh" triggers `skipWaiting` + page reload
 - No forced mid-checkout reloads — user decides when to apply
-- Old SW continues serving the app until the user acts
+- Old SW continues serving until user acts
 
 ---
 
-## Service Worker Architecture
+## 19. Service Worker & Caching
 
 ### Generated Files
 
 | File | Description |
 |---|---|
-| `dist/sw.js` | Main SW — Workbox runtime + precache manifest + route rules |
-| `dist/workbox-*.js` | Workbox runtime (content-hashed for cache busting) |
-| `dist/manifest.webmanifest` | Web App Manifest (generated from `vite.config.ts`) |
-
-### Vercel Serving
-
-Vercel's routing priority:
-1. **Static files from `dist/`** are served **before** rewrites
-2. `/sw.js` served from `dist/sw.js` with explicit no-cache headers
-3. SPA catch-all `/(.*) → /index.html` only applies to paths with no static file match
-
-**Headers configured for `/sw.js`** in `vercel.json`:
-```
-Content-Type: application/javascript; charset=utf-8
-Cache-Control: no-cache, no-store, must-revalidate
-Service-Worker-Allowed: /
-```
-
-Zero-cache on the service worker ensures new deployments propagate immediately without stale SW serving old content.
-
----
-
-## Caching Strategy
+| `dist/sw.js` | Main SW — Workbox runtime + precache manifest + runtime route rules |
+| `dist/workbox-*.js` | Workbox runtime (content-hashed) |
+| `dist/manifest.webmanifest` | Web App Manifest |
 
 ### Never Cached — NetworkOnly
 
 ```
-/api/*    — All API routes (auth, cart, orders, admin, checkout, products)
+/api/*    — All API routes (always fresh — no stale cart, stock, or auth data)
 ```
 
-API responses must always be fresh. Stale API data causes incorrect stock counts, auth failures, and order corruption.
+### Precache (Install Time)
 
-### Precache — Install Time
-
-Built by Workbox from the Vite output:
 - All JS/CSS chunks (content-hashed — immutable)
 - `index.html` (navigation fallback)
 - `offline.html`
@@ -200,56 +916,30 @@ Built by Workbox from the Vite output:
 | `res.cloudinary.com/*` | CacheFirst | `tb-cloudinary-images` | 30 days | 120 |
 | `*.{png,jpg,webp,svg,…}` | CacheFirst | `tb-static-images` | 30 days | 60 |
 
-Cloudinary URLs are content-addressed (transformations in the URL) so CacheFirst is safe.
+### Offline Strategy
+
+- **App shell** — precached `index.html` + all JS/CSS bundles load instantly from cache with no network
+- **Navigation fallback** — all SPA routes served from cached shell; API calls fail gracefully, UI shows error states
+- **Hard offline** — `offline.html` served for uncached routes when completely offline
+
+What works offline: previously cached product images · app shell · cart/wishlist from localStorage
+What requires network: live product data · server cart sync · checkout · Firebase auth
+
+### Stale Chunk Prevention
+
+All JS/CSS filenames include content hashes (`index-CoGOINT0.js`). New deployments produce new hashes. `cleanupOutdatedCaches: true` removes stale cache entries on SW activation.
 
 ---
 
-## Offline Strategy
-
-### App Shell
-
-Precached `index.html` + all JS/CSS bundles form the app shell. Loads instantly from cache even with no network.
-
-### Navigation Fallback
-
-```js
-navigateFallback: '/index.html',
-navigateFallbackDenylist: [/^\/api\//, /^\/sw\.js$/],
-```
-
-All SPA routes are served from the cached shell. API calls within those routes fail gracefully — the UI handles error states.
-
-### Hard Offline (uncached route, no network)
-
-`offline.html` — a branded dark-background page shown when a user navigates to a route that was never cached.
-
-### What Works Offline
-
-- Browsing previously cached product images (Cloudinary CacheFirst)
-- App shell / homepage skeleton
-- Cart and wishlist (stored in localStorage)
-- Any route previously visited (assets cached)
-
-### What Requires Network
-
-- Live product data (prices, stock levels)
-- Server-side cart sync
-- Checkout / order placement
-- Firebase authentication
-
----
-
-## Manifest Setup
+## 20. Web App Manifest
 
 Generated as `dist/manifest.webmanifest` from `vite.config.ts`.
-
-### All Fields
 
 | Field | Value |
 |---|---|
 | `id` | `/` |
-| `name` | `Thunderbolt` |
-| `short_name` | `Thunderbolt` |
+| `name` | `Thunderbold` |
+| `short_name` | `Thunderbold` |
 | `description` | `Premium Indian Denim — Built for the Bold` |
 | `start_url` | `/` |
 | `scope` | `/` |
@@ -261,19 +951,17 @@ Generated as `dist/manifest.webmanifest` from `vite.config.ts`.
 | `lang` | `en-IN` |
 | `dir` | `ltr` |
 | `categories` | `['shopping']` |
-| `shortcuts` | 4 shortcuts (Cart, Wishlist, Orders, Deals) |
-| `screenshots` | 2 images (mobile narrow, desktop wide) |
-| `share_target` | URL sharing into the app |
+| `shortcuts` | 4 (Cart, Wishlist, Orders, Deals) |
+| `screenshots` | 2 (narrow mobile 540×960, wide desktop 1280×800) |
+| `share_target` | URL sharing via OS share sheet |
 | `launch_handler` | `navigate-existing` |
 | `icons` | 9 sizes (72–512px) + 1 maskable |
 
 ---
 
-## App Capabilities
+## 21. App Capabilities
 
-### Shortcuts
-
-Long-press home screen icon (Android) or right-click taskbar icon (desktop):
+### Shortcuts (long-press icon / right-click taskbar)
 
 | Shortcut | URL |
 |---|---|
@@ -284,7 +972,7 @@ Long-press home screen icon (Android) or right-click taskbar icon (desktop):
 
 ### Share Target
 
-Other apps can share URLs into Thunderbolt via the OS share sheet:
+Other apps can share URLs into Thunderbold via the OS share sheet:
 ```json
 { "action": "/", "method": "GET", "params": { "title": "title", "text": "text", "url": "url" } }
 ```
@@ -298,47 +986,31 @@ Reuses the existing app window instead of opening a second tab:
 
 ### Window Controls Overlay
 
-`window-controls-overlay` is first in `display_override`. On desktop Chromium PWA installs, the title bar becomes part of the CSS drawing area.
-
-### What Was Intentionally NOT Implemented
-
-| Capability | Reason |
-|---|---|
-| File Handlers | No file format relevant to a denim store |
-| Protocol Handlers | No custom URL protocol needed |
-| Periodic Background Sync | Products update in real time via API |
-| Push Notifications | Not implemented server-side yet |
-| Tabbed Display | Experimental, unstable across browsers |
-| Widgets | Windows 11 only — too narrow an audience |
-| Edge Side Panel | Edge-only — very low share |
-| IARC rating | Not required for ecommerce / Hobby plan |
+`window-controls-overlay` is first in `display_override`. On desktop Chromium PWA installs, the title bar area becomes part of the CSS drawing surface.
 
 ---
 
-## Update Lifecycle
+## 22. Update Lifecycle
 
 ```
-User visits app → SW checks for new version in background
-  → New version found → new SW downloads and installs
-    → onNeedRefresh(reloadFn) fires
-      → 'pwa-update-available' dispatched with reloadFn
-        → PWAUpdatePrompt toast appears (bottom of screen)
-          → User clicks "Refresh"
-              → reloadFn() called → SW.skipWaiting() → clients.claim
-                → Page reloads with new version
-          → User dismisses
-              → Old SW continues until next page load
+User visits app
+  → SW checks /sw.js hash in background
+    → New version found → new SW downloads + installs
+      → onNeedRefresh(reloadFn) fires
+        → 'pwa-update-available' event dispatched with reloadFn
+          → PWAUpdatePrompt toast appears (bottom of screen)
+            → User clicks "Refresh"
+                → reloadFn() → SW.skipWaiting() → clients.claim()
+                  → Page reloads with new version
+            → User dismisses
+                → Old SW continues until next full page load
 ```
-
-### Stale Chunk Prevention
-
-All JS/CSS filenames include a content hash (`index-CoGOINT0.js`). New deployments produce new hashes — old cached chunks remain valid for the old SW, new SW references new hashes. No stale chunk errors.
-
-`cleanupOutdatedCaches: true` removes cache entries from old SW versions on activation.
 
 ---
 
-## Icon Strategy
+## 23. Icons & Splash Screen
+
+### Icon Set
 
 | File | Size | Purpose |
 |---|---|---|
@@ -346,92 +1018,91 @@ All JS/CSS filenames include a content hash (`index-CoGOINT0.js`). New deploymen
 | `icon-96x96.png` | 96×96 | Shortcut icons |
 | `icon-128x128.png` | 128×128 | Chrome Web Store |
 | `icon-144x144.png` | 144×144 | Windows tile |
-| `icon-152x152.png` | 152×152 | Apple touch (iPad) |
+| `icon-152x152.png` | 152×152 | Apple Touch (iPad) |
 | `icon-192x192.png` | 192×192 | Android home screen (`any`) |
 | `icon-384x384.png` | 384×384 | High-DPI Android |
 | `icon-512x512.png` | 512×512 | Play Store / splash (`any`) |
 | `icon-512x512-maskable.png` | 512×512 | Android adaptive icon (`maskable`) |
 
-The maskable icon has the lightning bolt centered within the 80% safe-zone so it renders correctly under all Android mask shapes (circle, squircle, teardrop).
+The maskable icon has the lightning bolt centered within the 80% safe zone — renders correctly under all Android mask shapes (circle, squircle, teardrop).
 
----
+### Splash Screen (`src/components/SplashScreen.tsx`)
 
-## Splash Screen System
+Renders once per browser session (controlled via `sessionStorage`). Total duration ~2.4 seconds:
 
-`src/components/SplashScreen.tsx` — renders once per browser session (controlled via `sessionStorage`).
-
-**Sequence** (total ~2.4 s):
 1. Lightning bolt scales + fades in (spring easing)
 2. Amber glow pulses behind the bolt
-3. "THUNDERBOLT" text expands with letter-spacing animation
-4. "PREMIUM DENIM" tagline fades in
+3. "THUNDERBOLD" text expands with letter-spacing animation
+4. "CURATED FASHION" tagline fades in
 5. Amber sweep bar progresses across the bottom
 6. Full screen fades out
 
-**Performance**: GPU-composited transforms only — no layout thrash. Does not block React Suspense.
+All animations use GPU-composited transforms — no layout thrash. Does not block React Suspense.
 
 ---
 
-## Deployment (Vercel)
+## 24. Deployment — Vercel
 
-### Build
+### Build Settings
 
 | Setting | Value |
 |---|---|
 | Build Command | `npm run build` |
-| Output Directory | `dist/` (auto-detected by Vercel for Vite) |
+| Output Directory | `dist/` |
+| Node.js Version | 20.x |
 
-### Routing
+### Routing (`vercel.json`)
 
 ```
-vercel.json rewrites (in order):
+Rewrites (in order):
   1. /api/admin/analytics/* → /api/admin?subpath=*
   2. /api/orders/create|cancel|manage → /api/orders?subpath=*
   3. /api/* → Vercel serverless functions
   4. /(.*) → /index.html  (SPA fallback — static files evaluated first)
 
-Static files served before rewrites:
-  /sw.js           → dist/sw.js         (no-cache + Service-Worker-Allowed)
-  /workbox-*.js    → dist/workbox-*.js  (no-cache)
-  /icons/*         → dist/icons/*       (immutable 1-year cache)
-  /screenshots/*   → dist/screenshots/* (1-day cache)
+Static file headers:
+  /sw.js           → no-cache + Service-Worker-Allowed: /
+  /workbox-*.js    → no-cache
+  /icons/*         → immutable 1-year cache
+  /screenshots/*   → 1-day cache
 ```
 
-### Serverless Functions
+Zero-cache on the service worker ensures new deployments propagate immediately.
 
-11 API handlers in `api/`. Same files run as Express routes in dev and Vercel serverless functions in prod.
+### Serverless Function Layout
+
+12 handler files in `api/` map to Vercel serverless functions. The consolidated handler pattern (one file per resource, sub-routes resolved via URL/query parsing) stays within the Vercel Hobby 12-function limit.
 
 ---
 
-## TWA / Play Store Readiness
+## 25. TWA / Play Store Readiness
 
-### Current Status: Ready for PWABuilder Packaging
+### Manifest Checklist
 
-The manifest satisfies all TWA requirements:
 - `id: '/'` — stable app identity
 - `display: 'standalone'` — required for TWA
 - Maskable icon at 512×512
 - `theme_color` + `background_color` for splash/status bar
 - Valid service worker at root scope (`/`)
 
-### Generating the APK with PWABuilder
+### Generating the APK
 
+**Via PWABuilder (web UI):**
 1. Visit [PWABuilder.com](https://www.pwabuilder.com)
-2. Enter production URL: `https://thunderboltjeans.vercel.app`
+2. Enter production URL: `https://thunderbolddenim.com`
 3. Package for stores → Android → Download `.aab`
 4. Upload to Google Play Console
 
-### Using Bubblewrap (CLI)
-
+**Via Bubblewrap (CLI):**
 ```bash
 npm install -g @bubblewrap/cli
-bubblewrap init --manifest https://thunderboltjeans.vercel.app/manifest.webmanifest
+bubblewrap init --manifest https://thunderbolddenim.com/manifest.webmanifest
 bubblewrap build
 ```
 
-### Digital Asset Links (Required for TWA)
+### Digital Asset Links
 
-After generating your signing key fingerprint from PWABuilder/Bubblewrap, create `public/.well-known/assetlinks.json`:
+After generating your signing key fingerprint, create `public/.well-known/assetlinks.json`:
 
 ```json
 [{
@@ -444,189 +1115,49 @@ After generating your signing key fingerprint from PWABuilder/Bubblewrap, create
 }]
 ```
 
-Then add a header rule in `vercel.json` to serve it with `Content-Type: application/json`.
-
 ---
 
-## Project Structure
+## 26. Database Schema Summary
 
-### Frontend (`src/`)
-
-```
-src/
-├── App.tsx                    — Root with providers
-├── AppContent.tsx             — Router + SplashScreen + PWAUpdatePrompt
-├── main.tsx                   — React root + service worker registration
-├── vite-env.d.ts              — Vite + vite-plugin-pwa type references
-├── context/
-│   ├── AuthContext.tsx
-│   ├── CartContext.tsx
-│   └── WishlistContext.tsx
-├── pages/
-│   ├── Index.tsx, About.tsx, CategoryView.tsx, ProductView.tsx
-│   ├── Cart.tsx, Wishlist.tsx, Checkout.tsx, Orders.tsx
-│   ├── Admin.tsx, Profile.tsx
-│   ├── BrandsPage.tsx, BrandView.tsx, DealsPage.tsx
-│   └── NotFound.tsx
-├── components/
-│   ├── SplashScreen.tsx       — Cinematic branded intro
-│   ├── PWAUpdatePrompt.tsx    — SW update / offline-ready toast
-│   ├── Navbar.tsx, Footer.tsx
-│   ├── HeroBanner.tsx, BrandsSection.tsx, LiveSaleSection.tsx
-│   ├── CategoriesSection.tsx, PriceDisplay.tsx
-│   ├── Analytics/             — Admin analytics dashboard
-│   └── products/ProductGrid.tsx
-├── lib/
-│   ├── pricing.ts, cloudinary.ts, ordersCache.ts
-│   ├── requireAuth.ts, modalController.ts
-└── utils/
-    └── printInvoice.ts
-```
-
-### Backend (`api/`)
-
-| File | Routes |
-|---|---|
-| `api/products/index.js` | `GET/POST/PUT/DELETE /api/products` |
-| `api/products/[id].js` | `GET /api/products/:id` |
-| `api/orders/index.js` | `GET /api/orders`, `POST create`, `PUT cancel`, `PATCH/DELETE manage` |
-| `api/users/index.js` | `POST /api/users/create`, profile + address sub-routes |
-| `api/cart/index.js` | `GET/POST/DELETE /api/cart` |
-| `api/wishlist/index.js` | `GET/POST/DELETE /api/wishlist` |
-| `api/categories/index.js` | `GET/POST/PUT/DELETE /api/categories` |
-| `api/address/index.js` | `GET/POST/PUT/DELETE /api/address` |
-| `api/reviews/index.js` | `GET/POST/DELETE /api/reviews` |
-| `api/admin.js` | `GET /api/admin/analytics` |
-| `api/brands/index.js` | `GET/POST/PUT/DELETE /api/brands` |
-
-### Public Assets (`public/`)
-
-```
-public/
-├── favicon.svg, robots.txt, offline.html
-├── icons/                — 9 PWA icons (72–512px) + maskable
-├── screenshots/
-│   ├── mobile.svg        — Portrait screenshot for manifest (540×960)
-│   └── desktop.svg       — Landscape screenshot for manifest (1280×800)
-└── banners/              — Hero banner images
-```
-
----
-
-## Database Schema
-
-**MongoDB Atlas** — database: `thunderbold` (intentional)
+**MongoDB Atlas** — database: `thunderbold` — 9 collections
 
 | Collection | Description |
 |---|---|
-| `products` | Product catalog |
-| `orders` | Customer orders |
-| `users` | User profiles |
-| `cart` | Per-user cart items |
-| `wishlist` | Per-user wishlisted products |
-| `categories` | Category records |
-| `brands` | Brand name records |
-| `addresses` | Saved delivery addresses |
-| `reviews` | Per-product customer reviews |
+| `products` | Product catalogue (standard + outfit variants) |
+| `orders` | Customer orders with embedded product + address snapshots |
+| `returns` | Return requests with admin approval/rejection workflow |
+| `users` | User profiles with embedded addresses + FCM tokens |
+| `cart` | Per-user cart (one document per user) |
+| `wishlist` | Per-user wishlist (one document per user) |
+| `categories` | Category records (admin-managed lookup table) |
+| `brands` | Brand records (admin-managed lookup table) |
+| `reviews` | Per-product customer reviews (soft-deleted) |
+
+See `DATABASE.md` for full field-level schemas, indexes, query patterns, integrity mechanisms, and PostgreSQL migration readiness assessment.
 
 ---
 
-## Pricing System
+## 27. Pricing System
 
 | Field | Visibility | Purpose |
 |---|---|---|
-| `price` | Public | Actual selling price |
-| `mrp` | Public | Original / crossed-out price |
+| `price` | Public | Actual selling price (INR) |
+| `mrp` | Public | Original / crossed-out price shown to customers |
 | `purchasePrice` | Admin only | Internal cost for profit calculations |
 
-`src/lib/pricing.ts` → `computePrice(price, mrp)` derives discount % dynamically. `purchasePrice` is never included in public API responses.
+`src/lib/pricing.ts` → `computePrice(price, mrp)` derives the discount percentage dynamically. `purchasePrice` is stripped from all non-admin API responses via MongoDB projection — it never reaches the client.
 
 ---
 
-## Analytics System
-
-Single endpoint: `GET /api/admin/analytics` — all KPI metrics in one `Promise.all` across MongoDB aggregations.
-
-**Profit calculation**: `(selling price − purchasePrice) × quantity` for delivered/completed orders only. Items without `purchasePrice` are excluded gracefully.
-
-**Monthly charts**: Revenue and order volume for the last 12 months. Zero-activity months are filled automatically.
-
----
-
-## Admin Panel
-
-Route: `/admin` — restricted to `ADMIN_EMAILS` (hardcoded in `api/_lib/adminHelper.js`).
-
-Tabs: Analytics, Orders, Products, Categories, Brands, Reviews.
-
-No footer inside admin — `<Footer>` only renders on customer-facing pages.
-
----
-
-## API Reference
-
-All write endpoints require `Authorization: Bearer <firebase-id-token>`. Admin endpoints additionally check `isAdmin(email, db)`.
-
-| Endpoint | Auth | Description |
-|---|---|---|
-| `GET /api/products` | Public | List products (purchasePrice excluded) |
-| `POST /api/products` | Admin | Create product |
-| `PUT /api/products` | Admin | Update product |
-| `DELETE /api/products` | Admin | Delete product |
-| `GET /api/products/:id` | Public | Product detail |
-| `GET /api/orders` | User | User's orders |
-| `POST /api/orders/create` | User | Place order |
-| `PUT /api/orders/cancel` | User | Cancel order (restores stock) |
-| `PATCH /api/orders/manage` | Admin | Update order status |
-| `DELETE /api/orders/manage` | Admin | Delete order |
-| `GET /api/cart` | User | Fetch cart |
-| `POST /api/cart` | User | Add to cart |
-| `DELETE /api/cart` | User | Remove from cart |
-| `GET /api/wishlist` | User | Fetch wishlist |
-| `POST /api/wishlist` | User | Add to wishlist |
-| `DELETE /api/wishlist` | User | Remove from wishlist |
-| `GET /api/admin/analytics` | Admin | Full analytics payload |
-| `GET /api/brands` | Public | List brands |
-| `GET /api/categories` | Public | List categories |
-
----
-
-## PWABuilder Verification
-
-### What PWABuilder Detects After This Fix
-
-| Check | Status | Detail |
-|---|---|---|
-| Service Worker | Detected | `generateSW` strategy, Workbox 7 runtime |
-| SW Logic | Present | Precache + 5 runtime caching rules |
-| Offline Support | Present | `navigateFallback` + `offline.html` |
-| Manifest Valid | Yes | All required fields populated |
-| `id` field | Present | `/` |
-| `display_override` | Present | WCO + standalone + minimal-ui |
-| Shortcuts | 4 shortcuts | Cart, Wishlist, Orders, Deals |
-| Screenshots | 2 images | Narrow (mobile) + Wide (desktop) |
-| Share Target | Present | URL sharing via OS share sheet |
-| Launch Handler | Present | `navigate-existing` |
-| Maskable Icon | Present | 512×512 maskable |
-
-### Chrome DevTools Verification Checklist
-
-1. Application → Service Workers: SW is active and controlling the page
-2. Application → Manifest: all fields parsed, no errors
-3. Application → Storage → Cache Storage: precache entries visible
-4. Network: `/api/*` requests show no SW intercept (NetworkOnly)
-5. Network → Offline mode: `offline.html` served for uncached routes
-
----
-
-## Edge Cases Handled
+## 28. Edge Cases Handled
 
 | Case | Handling |
 |---|---|
-| Old products with `purchasePrice` as MRP | `mrp: doc.mrp ?? doc.purchasePrice ?? null` — no migration |
-| Products with no `purchasePrice` | Excluded from profit calculations |
+| Old products with `purchasePrice` as MRP | `mrp: doc.mrp ?? doc.purchasePrice ?? null` — no migration needed |
+| Products with no `purchasePrice` | Excluded from profit calculations — no division by zero |
 | Out-of-stock sizes | Size buttons disabled; atomic stock check on order create |
 | Order cancellation | Restores `sizeStock` per size + total `stock` |
+| Return approval | Restores `sizeStock` per size (size-aware, outfit-aware) |
 | Mid-checkout SW update | `registerType: 'prompt'` — user decides when to reload |
 | Stale JS chunks after deploy | Content-hash filenames + `cleanupOutdatedCaches: true` |
 | API offline | `NetworkOnly` — no stale API data ever served |
@@ -634,14 +1165,20 @@ All write endpoints require `Authorization: Bearer <firebase-id-token>`. Admin e
 | SW not supported | `'serviceWorker' in navigator` guard in `main.tsx` |
 | PWA register import failure | try/catch in `main.tsx` — app works without SW |
 | Duplicate app windows | `launch_handler: navigate-existing` prevents it |
+| Duplicate FCM notifications | `deviceId` deduplication in DB; one active token per device |
+| Stale FCM tokens | Automatically pruned from DB on first failed send attempt |
+| Duplicate order on retry | `clientOrderId` sparse unique index — returns existing order |
+| Race condition on stock | `$gte` guard + compensation rollback on `modifiedCount === 0` |
+| Return on non-delivered order | 400 error with current status in message |
+| Duplicate return request | 409 Conflict with existing return ID + status |
 
 ---
 
-## Troubleshooting
+## 29. Troubleshooting
 
 ### Service Worker Not Detected by PWABuilder
 
-- Must test the **production URL** (`thunderboltjeans.vercel.app`), not localhost
+- Must test the **production URL**, not localhost
 - SW is only generated by `npm run build` — dev mode has no SW
 - Confirm `dist/sw.js` exists and `Content-Type` is `application/javascript` (not `text/html`)
 
@@ -649,8 +1186,8 @@ All write endpoints require `Authorization: Bearer <firebase-id-token>`. Admin e
 
 - Must be served over HTTPS
 - Chrome has an engagement heuristic (2+ visits, 30+ second sessions)
-- Check DevTools → Application → Manifest for any parsing errors
-- Confirm 192×192 (`any`) and 512×512 (`maskable`) icons exist
+- Check DevTools → Application → Manifest for parsing errors
+- Confirm 192×192 (`any`) and 512×512 (`maskable`) icons are present
 
 ### Blank Screen After Deploy
 
@@ -660,21 +1197,23 @@ All write endpoints require `Authorization: Bearer <firebase-id-token>`. Admin e
 
 ### API Calls Failing Offline
 
-- Expected — `NetworkOnly` ensures no stale API data
-- The UI shows an error/empty state — not a crash
+- Expected — `NetworkOnly` ensures no stale data
+- UI shows error/empty state — not a crash
+
+### FCM Notifications Not Arriving
+
+- Check that `FIREBASE_SERVICE_ACCOUNT` is set on the server
+- Verify the browser has granted notification permission
+- Check DevTools → Application → Service Workers — SW must be active
+- Test via `POST /api/notifications/test-send` with a valid Bearer token
+
+### MongoDB Connection Error on Startup
+
+- `MONGO_URI` secret not set — all data endpoints return 500
+- Verify Atlas cluster is running and IP allowlist includes `0.0.0.0/0` (or Replit's IP range)
 
 ---
 
-## Dependencies
+*Thunderbold — Premium Indian Fashion. Built for the Bold.*
 
-| Package | Version | Purpose |
-|---|---|---|
-| `vite-plugin-pwa` | `^1.3.0` | Workbox SW generation + manifest injection + `virtual:pwa-register` |
-
-No other new runtime dependencies added. All PWA functionality is build-time (Workbox) or native browser APIs.
-
----
-
-*Thunderbolt — Premium Indian Denim. Built for the Bold.*
-
-> Last deployed: June 16, 2026
+> Last updated: June 16, 2026
