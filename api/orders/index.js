@@ -429,6 +429,7 @@ async function handleManage(req, res) {
 
   if (req.method === "PATCH") {
     const body = await parseBody(req);
+    const { status } = body;
     const validStatuses = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled", "return_requested", "return_approved", "return_rejected", "refunded"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, packed, shipped, delivered, cancelled, return_requested, return_approved, return_rejected, refunded" });
