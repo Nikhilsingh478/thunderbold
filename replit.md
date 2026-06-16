@@ -1,8 +1,8 @@
-# Thunderbolt — Project Documentation
+# Thunderbold — Complete Project Documentation
 
 ## Overview
 
-Thunderbolt is a production-grade premium denim e-commerce storefront built for a real retail brand. It features a full-stack architecture with a React 18 + Vite frontend, Node.js/Express API backend, Firebase Authentication, and MongoDB Atlas database. The platform supports product browsing, cart, wishlist, checkout with optional gift messaging, order management, brand pages, deals pages, and a full admin panel with analytics, slider management, and order printing.
+Thunderbold is a production-grade premium fashion e-commerce storefront for a real retail brand. The platform is a full-stack Progressive Web App (PWA) built on React 18 + Vite (frontend), Node.js/Express (backend API), Firebase Authentication, and MongoDB Atlas. It supports end-to-end retail operations: product browsing by category/brand, cart management, wishlist, checkout with gift messaging, order tracking, return/refund requests, customer reviews, push notifications, and a full admin panel.
 
 ---
 
@@ -12,65 +12,74 @@ Thunderbolt is a production-grade premium denim e-commerce storefront built for 
 |---|---|
 | Frontend | React 18, TypeScript, Vite 5, Tailwind CSS, shadcn/ui |
 | Routing | React Router v6 |
-| State / Data | TanStack Query (React Query) |
+| Server State | TanStack Query (React Query) |
 | Animations | Framer Motion |
 | Charts | Recharts |
-| Authentication | Firebase Authentication (email/password + Google) |
+| Authentication | Firebase Authentication (email/password + Google OAuth) |
 | Database | MongoDB Atlas |
-| Backend | Node.js + Express (local dev), Vercel Serverless Functions (production) |
-| PWA | vite-plugin-pwa v1.x + Workbox generateSW strategy |
+| Backend | Node.js + Express (dev), Vercel Serverless Functions (prod) |
+| PWA | vite-plugin-pwa v1.x + Workbox `generateSW` strategy |
+| Push Notifications | Firebase Cloud Messaging (FCM) |
 | Icons | Lucide React |
+| Image CDN | Cloudinary |
 | Build | Vite (frontend) |
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    Browser                           │
-│  React 18 SPA (Vite, port 5000)                     │
-│  - React Router v6 (client-side routing)            │
-│  - TanStack Query (server state / caching)          │
-│  - Framer Motion (animations)                       │
-│  - Firebase Auth SDK (client-side auth)             │
-└───────────────────────┬─────────────────────────────┘
-                        │ /api/* (proxied by Vite dev server)
-┌───────────────────────▼─────────────────────────────┐
-│                Express API (port 3001)               │
-│  api/*.js — same files run in Vercel as functions   │
-│  - Firebase Admin (token verification)              │
-│  - MongoDB Atlas (getDb() shared client)            │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                         Browser                              │
+│   React 18 SPA (Vite dev server — port 5000)                │
+│   • React Router v6  — client-side routing                  │
+│   • TanStack Query   — server state + caching               │
+│   • Framer Motion    — animations                           │
+│   • Firebase Auth SDK — client-side session management      │
+│   • Firebase FCM SDK  — push notification subscription      │
+│   • Workbox SW        — offline cache + PWA install         │
+└───────────────────────────┬──────────────────────────────────┘
+                            │  /api/*  (Vite proxy in dev)
+┌───────────────────────────▼──────────────────────────────────┐
+│                 Express API (port 3001)                       │
+│   api/*.js — same files run on Vercel as serverless fns     │
+│   • Firebase Admin SDK — token verification                 │
+│   • MongoDB Atlas (getDb() cached client)                   │
+│   • isAdmin() — email-based admin guard                     │
+│   • isRateLimited() — in-memory rate limiter                │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### Running the App
+### Running Locally
 
 ```bash
 npm run dev
 ```
 
-This runs two processes concurrently:
+This runs two concurrent processes:
 - `node server.js` — Express API on port 3001
-- `vite` — Frontend dev server on port 5000, proxying `/api/*` to Express
+- `vite` — Frontend on port 5000, proxying `/api/*` to Express
 
 ---
 
 ## Environment Variables
 
-Set these as Replit secrets (never commit to source):
+All secrets are stored in **Replit Secrets** (never committed to source). The server reads them via `process.env.*` at runtime. The Replit platform makes secret *names* visible to the agent for planning purposes — the actual values are never accessible and remain encrypted.
 
-| Variable | Purpose |
-|---|---|
-| `MONGO_URI` | MongoDB Atlas connection string |
-| `VITE_FIREBASE_API_KEY` | Firebase project API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID` | Firebase App ID |
+| Variable | Used By | Purpose |
+|---|---|---|
+| `MONGO_URI` | Backend | MongoDB Atlas connection string (`mongodb+srv://...`) |
+| `VITE_FIREBASE_API_KEY` | Frontend + Backend | Firebase project API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Frontend | Firebase Auth domain (`project.firebaseapp.com`) |
+| `VITE_FIREBASE_PROJECT_ID` | Frontend + Backend | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Frontend | Firebase Storage bucket URL |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Frontend | FCM sender ID |
+| `VITE_FIREBASE_APP_ID` | Frontend | Firebase App ID |
+| `VITE_FIREBASE_VAPID_KEY` | Frontend | FCM VAPID public key — required to register push subscription tokens |
 
-Without `MONGO_URI`, all data endpoints explicitly return `500 Database unavailable` — no silent fallbacks by design.
+**Without `MONGO_URI`:** All database endpoints return `500 Database unavailable` explicitly — no silent fallbacks by design.
+
+**Without `VITE_FIREBASE_VAPID_KEY`:** The app works fully but push notification subscription silently skips token registration.
 
 ---
 
@@ -80,93 +89,114 @@ Without `MONGO_URI`, all data endpoints explicitly return `500 Database unavaila
 
 ```
 src/
-├── App.tsx                    — Root with providers (Auth, Cart, Wishlist, QueryClient)
-├── AppContent.tsx             — Router, SplashScreen, PageLoader, modal management
+├── App.tsx                        — Root: wraps AuthProvider, CartProvider, WishlistProvider, QueryClientProvider
+├── AppContent.tsx                 — Router, SplashScreen, PageLoader, Login modal, AnnouncementBar
+├── index.css                      — Global styles, Tailwind directives, custom CSS variables
+│
 ├── context/
-│   ├── AuthContext.tsx        — Firebase auth state; exposes user, loading, login, logout
-│   ├── CartContext.tsx        — Cart state (localStorage synced)
-│   └── WishlistContext.tsx    — Wishlist state
+│   ├── AuthContext.tsx            — Firebase onAuthStateChanged; exposes user, loading, login, logout
+│   ├── CartContext.tsx            — Cart state (persisted to localStorage)
+│   └── WishlistContext.tsx        — Wishlist state (localStorage)
+│
 ├── pages/
-│   ├── Index.tsx              — Homepage
-│   ├── About.tsx
-│   ├── CategoryView.tsx       — Category product listing with discount badges
-│   ├── ProductView.tsx        — Product detail page (image, sizes, description, pricing)
-│   ├── Cart.tsx
-│   ├── Wishlist.tsx
-│   ├── Checkout.tsx           — Checkout with address form + optional gift message
-│   ├── Orders.tsx             — Customer order history with cancel support
-│   ├── Admin.tsx              — Full admin panel (multi-admin)
-│   ├── Profile.tsx
-│   ├── BrandsPage.tsx         — All brands listing
-│   ├── BrandView.tsx          — Brand-filtered product listing
-│   ├── DealsPage.tsx          — Denim-only price-filtered deals
-│   └── NotFound.tsx
+│   ├── Index.tsx                  — Homepage: Hero, BrandsSection, LiveSaleSection, CategoriesSection, Footer
+│   ├── About.tsx                  — Brand story page
+│   ├── CategoryView.tsx           — Category product grid with discount badges
+│   ├── ProductView.tsx            — Product detail: images, sizes, description, MRP/price, add to cart/wishlist
+│   ├── Cart.tsx                   — Cart page
+│   ├── Wishlist.tsx               — Wishlist page
+│   ├── Checkout.tsx               — Checkout: address form + order summary + optional gift message
+│   ├── Orders.tsx                 — Customer order history: statuses, cancel (pending only),
+│   │                                request return (delivered only), review delivered items
+│   ├── Admin.tsx                  — Full admin panel (tabs: Analytics, Orders, Products,
+│   │                                Categories, Brands, Reviews, Slider, Notify, Returns)
+│   ├── Profile.tsx                — User profile + saved addresses + account deletion
+│   ├── BrandsPage.tsx             — All brands listing
+│   ├── BrandView.tsx              — Products filtered by brandId
+│   ├── DealsPage.tsx              — Denim-only deals filtered by price cap (≤₹999 or ≤₹699)
+│   └── NotFound.tsx               — 404 page
+│
 ├── components/
-│   ├── SplashScreen.tsx       — Cinematic branded intro (once per session via sessionStorage)
-│   ├── AnnouncementBar.tsx    — Fixed marquee bar at top of every page (z-[120], h-9/36px)
-│   ├── Navbar.tsx             — Fixed navbar with stable auth skeleton (no flicker)
-│   ├── Footer.tsx             — Customer-facing pages only (not admin)
-│   ├── HeroBanner.tsx         — Hero image/sale banner below navbar
-│   ├── BrandsSection.tsx      — Horizontal logo marquee
-│   ├── LiveSaleSection.tsx    — "Live Sale" highlighted products
-│   ├── CategoriesSection.tsx  — Full category listing + promo banners + ThunderboltSlider
-│   ├── ThunderboltSlider.tsx  — Editorial outfit carousel (swipe-only, no arrows)
-│   ├── PriceDisplay.tsx       — Unified price renderer (selling + MRP strikethrough + badge)
+│   ├── SplashScreen.tsx           — Cinematic branded intro (once per session via sessionStorage)
+│   ├── AnnouncementBar.tsx        — Fixed marquee bar, top-0, z-[120], h-9 (36px)
+│   ├── Navbar.tsx                 — Fixed navbar, auth skeleton (no flicker), mobile full-screen menu
+│   ├── Footer.tsx                 — Customer pages only (not admin); policy modals
+│   ├── HeroBanner.tsx             — Full-width hero/sale image
+│   ├── BrandsSection.tsx          — Horizontal logo marquee
+│   ├── LiveSaleSection.tsx        — "Live Sale" highlighted product grid
+│   ├── CategoriesSection.tsx      — Master homepage section: categories, PromoBanner, ThunderboltSlider
+│   ├── ThunderboltSlider.tsx      — Editorial 3D coverflow outfit carousel (swipe-only, no arrows)
+│   ├── PriceDisplay.tsx           — Unified price renderer: selling + strikethrough MRP + discount badge
+│   ├── CustomCursor.tsx           — Custom cursor for desktop
+│   ├── ScrollProgress.tsx         — Top scroll progress bar
+│   ├── PWAUpdatePrompt.tsx        — Toast prompting user to reload when a new SW version is available
+│   ├── ReturnRequestModal.tsx     — Customer return request form: reason picker + description + refund estimate
+│   │
 │   ├── promo/
-│   │   ├── PromoBanner.tsx    — Side-by-side static promo banner (Under ₹999 + Under ₹699)
-│   │   └── promoSlides.ts     — Promo slide configuration (image paths + routes)
+│   │   ├── PromoBanner.tsx        — Side-by-side static deal banners (Under ₹999, Under ₹699)
+│   │   └── promoSlides.ts         — Image paths + routes for promo banners
+│   │
 │   ├── checkout/
-│   │   ├── AddressForm.tsx    — Validated delivery address form
-│   │   ├── ProductSummary.tsx — Order item + total summary panel
-│   │   └── OrderConfirmation.tsx — Post-order success modal
-│   ├── Analytics/
-│   │   ├── AnalyticsTab.tsx   — Admin analytics dashboard
-│   │   ├── StatsCard.tsx      — KPI tile
-│   │   ├── RevenueChart.tsx   — Monthly revenue area chart
-│   │   ├── OrdersChart.tsx    — Monthly orders bar chart
-│   │   ├── TopProducts.tsx
-│   │   ├── StockAlerts.tsx
-│   │   ├── RecentOrders.tsx
-│   │   └── types.ts           — Shared TypeScript interfaces
-│   └── products/
-│       └── ProductGrid.tsx    — Reusable product card grid
+│   │   ├── AddressForm.tsx        — Validated delivery address form
+│   │   ├── ProductSummary.tsx     — Order items + total summary panel
+│   │   └── OrderConfirmation.tsx  — Post-order success modal
+│   │
+│   ├── reviews/
+│   │   ├── ReviewModal.tsx        — Submit/edit/delete product reviews (delivered orders only)
+│   │   └── LightningRating.tsx    — Lightning-bolt star rating widget
+│   │
+│   └── Analytics/
+│       ├── AnalyticsTab.tsx       — Admin analytics dashboard wrapper
+│       ├── StatsCard.tsx          — KPI metric tile
+│       ├── RevenueChart.tsx       — Monthly revenue area chart (Recharts)
+│       ├── OrdersChart.tsx        — Monthly orders bar chart (Recharts)
+│       ├── TopProducts.tsx        — Best-selling products list
+│       ├── StockAlerts.tsx        — Low-stock product alerts
+│       ├── RecentOrders.tsx       — Recent orders mini-table
+│       └── types.ts               — Shared TypeScript interfaces for analytics
+│
 ├── lib/
-│   ├── pricing.ts             — computePrice(sellingPrice, mrp) → PriceInfo
-│   ├── cloudinary.ts          — Image URL optimization helpers
-│   ├── ordersCache.ts         — Deduped fetch + in-memory cache for /api/orders
-│   ├── requireAuth.ts         — Action deferral until authenticated
-│   └── modalController.ts     — Event-based login modal controller
+│   ├── pricing.ts                 — computePrice(sellingPrice, mrp) → PriceInfo
+│   ├── cloudinary.ts              — Cloudinary URL optimisation helpers + IMG_SIZES presets
+│   ├── ordersCache.ts             — Deduped fetch + in-memory cache keyed by user UID
+│   ├── requireAuth.ts             — Defer actions until Firebase auth resolves
+│   ├── modalController.ts         — Event bus for opening the login modal from anywhere
+│   ├── policyContent.ts           — Policy text data (privacy, terms, returns & cancellation)
+│   └── utils.ts                   — formatOrderId() + shared utilities
+│
 └── utils/
-    └── printInvoice.ts        — Packing slip print utility (gift message aware)
+    └── printInvoice.ts            — Browser-print packing slip generator (gift message aware)
 ```
 
 ### Backend (`api/`)
 
-Each file is a Vercel serverless function (also mounted as Express routes locally via `server.js`).
+Each file is a Vercel Serverless Function. The same files are mounted as Express routes in `server.js` for local development. No code duplication.
 
-| File | Routes |
+| File | HTTP Methods & Routes |
 |---|---|
-| `api/products/index.js` | `GET/POST/PUT/DELETE /api/products` |
-| `api/products/[id].js` | `GET /api/products/:id` |
-| `api/orders/index.js` | `GET /api/orders`, `POST /api/orders/create`, `PUT /api/orders/cancel`, `PATCH/DELETE /api/orders/manage` |
-| `api/users/index.js` | `POST /api/users/create`, profile + address sub-routes |
+| `api/products/index.js` | `GET /api/products` (list + filter), `POST` (create), `PUT` (update), `DELETE` |
+| `api/products/[id].js` | `GET /api/products/:id` (single product detail) |
+| `api/orders/index.js` | `GET /api/orders` (user or all-admin), `POST .../create`, `PUT .../cancel`, `PATCH/DELETE .../manage` |
+| `api/returns/index.js` | `GET /api/returns` (user: own; admin: all), `POST` (create request), `PATCH?id=` (admin approve/reject) |
+| `api/users/index.js` | `POST /api/users/create`, profile read/update, address sub-routes, FCM token registration, account deletion |
 | `api/cart/index.js` | `GET/POST/DELETE /api/cart` |
 | `api/wishlist/index.js` | `GET/POST/DELETE /api/wishlist` |
 | `api/categories/index.js` | `GET/POST/PUT/DELETE /api/categories` |
 | `api/address/index.js` | `GET/POST/PUT/DELETE /api/address` |
-| `api/reviews/index.js` | `GET/POST/DELETE /api/reviews` |
-| `api/admin.js` | `GET /api/admin/analytics` — consolidated analytics + profit metrics |
+| `api/reviews/index.js` | `GET /api/reviews` (by product or mine=true), `POST` (create), `PUT?id=` (update), `DELETE?id=` |
+| `api/admin.js` | `GET /api/admin/analytics` — all KPIs + charts in one payload |
 | `api/brands/index.js` | `GET/POST/PUT/DELETE /api/brands` |
 | `api/slider/index.js` | `GET /api/slider` (public), `POST /api/slider` (admin-only) |
+| `api/notifications/index.js` | `POST .../broadcast` (admin), `POST .../test-send` (admin) |
 
 ### Shared Backend Helpers (`api/_lib/`)
 
 | File | Purpose |
 |---|---|
-| `mongodb.js` | Cached MongoClient — `getDb()` returns the `thunderbold` database |
+| `mongodb.js` | `getDb()` — cached `MongoClient`, returns the `thunderbold` database |
 | `firebaseAdmin.js` | `verifyFirebaseToken(idToken)` — decodes and validates Firebase JWT |
-| `adminHelper.js` | `isAdmin(email, db)` — checks `ADMIN_EMAILS` array (3 admins) |
-| `rateLimit.js` | `isRateLimited(req)` — in-memory rate limiting for write endpoints |
+| `adminHelper.js` | `isAdmin(email, db)` — checks DB role first, falls back to hardcoded `ADMIN_EMAILS` array |
+| `rateLimit.js` | `isRateLimited(req)` — in-memory sliding-window rate limiter for write endpoints |
 | `validator.js` | Input validation utilities |
 | `response.js` | Standard JSON response helpers |
 
@@ -174,62 +204,73 @@ Each file is a Vercel serverless function (also mounted as Express routes locall
 
 ## Database
 
-**MongoDB Atlas** — database name: `thunderbold`
+**MongoDB Atlas** — database name: `thunderbold` (intentional — not a typo)
 
 ### Collections
 
 | Collection | Description |
 |---|---|
-| `products` | Product catalog |
-| `orders` | Customer orders (includes optional `giftMessage` field) |
-| `users` | User profiles |
-| `cart` | Per-user cart items |
+| `products` | Full product catalog with size stock, images, pricing, and highlights |
+| `orders` | Customer orders — all statuses including return lifecycle |
+| `returns` | Return requests — one per order, linked by `orderId` |
+| `users` | User profiles, saved addresses, FCM tokens |
+| `cart` | Per-user cart items (synced with backend) |
 | `wishlist` | Per-user wishlisted products |
-| `categories` | Category records |
-| `brands` | Brand name records |
-| `addresses` | Saved delivery addresses |
-| `reviews` | Per-product customer reviews |
-| `slider` | ThunderboltSlider editorial config (4 slides, admin-managed) |
+| `categories` | Category records (name, image, section) |
+| `brands` | Brand records (name, logoUrl) |
+| `addresses` | Saved delivery addresses per user |
+| `reviews` | Per-product customer reviews (rating + comment) |
+| `slider` | ThunderboltSlider editorial config — always 4 slots, admin-managed |
 
 ---
 
-## Product Data Model
+## Data Models
+
+### Product
 
 ```js
 {
   _id,
   name,
-  price,           // Selling price — what the customer pays
-  mrp?,            // MRP / original price — shown crossed-out on the storefront (optional)
-  purchasePrice?,  // Internal cost price — admin-only, used for profit analytics (never sent to customers)
-  brandId?,        // References brands._id (optional)
-  image,           // Primary display image URL
-  images[],        // All images (first is primary)
+  price,           // Selling price — what the customer pays at checkout
+  mrp?,            // MRP / original price — shown crossed-out (indicates discount)
+  purchasePrice?,  // Internal cost — admin-only, never sent to customers, used for profit analytics
+  brandId?,        // Optional — references brands._id
+  image,           // Primary display image (Cloudinary URL)
+  images[],        // All product images (first = primary)
   description,
   categoryId,
   section,         // 'live-sale' | 'denim' | 'tshirts' | 'kurta' | 'outfits'
-  sizeStock: { '28':n, '30':n, '32':n, '34':n, '36':n },  // Per-size inventory (jeans)
-                                                            // or { 'S':n, 'M':n, 'L':n, 'XL':n, 'XXL':n } (apparel)
-  stock,           // Computed total (sum of sizeStock values)
-  highlights?,     // { color, length, printsPattern, waistRise, shade, lengthInches }
+  sizeStock: {
+    // Jeans/denim:
+    '28': n, '30': n, '32': n, '34': n, '36': n
+    // OR apparel (tshirts, kurta, outfits):
+    'S': n, 'M': n, 'L': n, 'XL': n, 'XXL': n
+  },
+  stock,           // Computed total — sum of all sizeStock values
+  highlights?: {   // Optional metadata shown on product page
+    color, length, printsPattern, waistRise, shade, lengthInches
+  },
+  // Outfit products only — separate topwear + bottomwear:
+  topwear?: { sizeStock, stock, highlights },
+  bottomwear?: { sizeStock, stock, highlights },
   createdAt,
   updatedAt?
 }
 ```
 
----
-
-## Order Data Model
+### Order
 
 ```js
 {
   _id,
-  userId,          // Customer email (from Firebase token)
+  userId,          // Customer email (from Firebase token — used as owner key)
+  orderNumber?,    // Human-readable ID e.g. "TB-001234" (auto-generated)
   products: [
     {
       productId,
       name,
-      price,         // Selling price at time of order
+      price,         // Selling price at time of order (snapshot — not live product price)
       size,
       quantity,
       image,
@@ -238,142 +279,366 @@ Each file is a Vercel serverless function (also mounted as Express routes locall
     }
   ],
   address: {
-    fullName, phone, addressLine1, addressLine2,
-    city, state, pincode, landmark
+    fullName, phone, addressLine1, addressLine2?,
+    city, state, pincode, landmark?
   },
-  paymentMethod,   // 'COD'
-  status,          // 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
-  totalAmount,     // Server-calculated: sum(price × quantity)
+  paymentMethod,   // 'COD' (Cash on Delivery — only method currently)
+  status,          // See Order Status Flow below
+  totalAmount,     // Server-calculated: sum(price × quantity) — never trusted from client
   createdAt,
-  clientOrderId?,  // UUID for idempotency (prevents duplicate orders on retry)
-  giftMessage?     // Optional — set only when customer provides one (max 300 chars, HTML-stripped)
+  updatedAt?,
+  clientOrderId?,  // UUID idempotency key — prevents duplicate orders on network retry
+  giftMessage?     // Optional — HTML-stripped, max 300 chars, stored only when non-empty
 }
 ```
+
+### Return Request
+
+```js
+{
+  _id,
+  orderId,               // String ID linking to the orders collection
+  orderNumber?,          // Human-readable order number (copied from order)
+  userId,                // Customer email — must match the order owner
+  products[],            // Snapshot of order.products at time of request
+  totalAmount,           // Snapshot of order.totalAmount
+  shippingCharges,       // ₹50 — deducted from every approved refund
+  suggestedRefundAmount, // totalAmount − shippingCharges (pre-calculated, admin can override)
+  reason,                // 'defective' | 'wrong_item' | 'size_issue' | 'not_as_described' | 'other'
+  description,           // Customer's explanation — HTML-stripped, 10–500 chars
+  status,                // 'pending' | 'approved' | 'rejected'
+  refundAmount?,         // Set by admin on approval — may differ from suggestedRefundAmount
+  adminNotes?,           // Optional admin message (shown to customer indirectly)
+  createdAt,
+  updatedAt
+}
+```
+
+---
+
+## Order Status Flow
+
+```
+[Customer places order]
+         │
+         ▼
+      pending  ◄── Customer CAN cancel here (Cancel button visible in My Orders)
+         │
+         │  [Admin confirms via call]
+         ▼
+     confirmed  ◄── Customer CANNOT cancel anymore
+         │
+         │  [Packed for dispatch]
+         ▼
+       packed
+         │
+         │  [Dispatched]
+         ▼
+      shipped
+         │
+         │  [Delivered to customer]
+         ▼
+     delivered  ◄── Customer CAN request a return here
+         │
+         │  [Customer submits ReturnRequestModal]
+         ▼
+  return_requested  ◄── Admin reviews in Returns tab
+         │
+    ┌────┴────┐
+    ▼         ▼
+return_    return_
+approved   rejected
+```
+
+**Additional terminal state:** `cancelled` (reachable only from `pending` by customer, or from non-delivered states by admin)
+
+### Policy Details
+
+| Scenario | Rule |
+|---|---|
+| Cancel when `pending` | Allowed — stock restored per size, `status → cancelled` |
+| Cancel when `confirmed` or beyond | Blocked for customers — error message with support phone number |
+| Admin cancel | Allowed for any status except `delivered`, `return_*` |
+| Return request | Only when `status === 'delivered'` AND no prior return exists for this order |
+| One return per order | Enforced: duplicate POST returns `409 Conflict` |
+| Refund amount | `totalAmount − ₹50 shipping charges` — admin can override when approving |
+| 3 delivery attempts | If undeliverable after 3 attempts, package returns to us — customer is not charged |
+
+---
+
+## Cancellation — Technical Detail
+
+**Backend (`api/orders/index.js` → `handleCancel`):**
+
+```
+1. Verify Firebase token → extract email
+2. Fetch order by ID
+3. Check ownership (userId === email) OR isAdmin
+4. If status === 'cancelled' → 400 Already cancelled
+5. If not admin AND status !== 'pending' → 400 with status-specific message
+6. If admin AND status in [delivered, return_*] → 400 blocked
+7. Update status → 'cancelled'
+8. Restore sizeStock per ordered size + total stock
+```
+
+**Frontend (`src/pages/Orders.tsx`):** Cancel button only renders when `order.status === 'pending'`.
+
+---
+
+## Return / Refund System — Technical Detail
+
+### Customer Flow
+
+1. Order has `status === 'delivered'` → "Return" button appears (amber, with RotateCcw icon)
+2. Button opens `ReturnRequestModal`:
+   - **Reason picker** — 5 options: Defective Product, Wrong Item Delivered, Size Issue, Not As Described, Other
+   - **Description textarea** — 10–500 characters, HTML-stripped server-side
+   - **Refund estimate** — displays `totalAmount − ₹50` before submitting
+3. On submit → `POST /api/returns` with `{ orderId, reason, description }`
+4. Backend creates return document, updates `order.status → 'return_requested'`
+5. UI optimistically updates order status — "Return" button disappears, replaced by amber "Return Pending" badge + info banner
+
+### Admin Flow (`Admin.tsx` → Returns tab)
+
+- Lists all return requests, newest first
+- Pending count badge shown next to "Returns" tab label
+- Each card shows: order reference, customer email, reason, full description, order total, product list, suggested refund amount
+- **Approve**: Admin enters refund amount (defaults to `totalAmount − ₹50`), adds optional notes → `PATCH /api/returns?id=...` with `{ action: 'approve', refundAmount, adminNotes }`
+- **Reject**: Admin adds notes → `PATCH /api/returns?id=...` with `{ action: 'reject', adminNotes }`
+- On either action: return status updated, corresponding order status updated (`return_approved` or `return_rejected`)
+
+### Return Request API (`api/returns/index.js`)
+
+| Method | Auth | Action |
+|---|---|---|
+| `GET /api/returns` | Required | Customer: own returns; Admin: all returns |
+| `POST /api/returns` | Required | Create return (delivered orders only, one per order) |
+| `PATCH /api/returns?id=` | Admin only | Approve (with refundAmount) or reject (with notes) |
 
 ---
 
 ## Pricing System
 
-Three separate fields serve distinct purposes:
+Three fields serve entirely different purposes:
 
-| Field | Visibility | Purpose |
+| Field | Who Sees It | Purpose |
 |---|---|---|
-| `price` | Public (customers + admin) | Actual selling price — what the customer pays |
-| `mrp` | Public (customers + admin) | Original/MRP price — shown crossed-out to indicate a discount |
-| `purchasePrice` | Admin only — never in public API responses | Internal cost price — used for profit calculations in analytics |
+| `price` | Everyone (customers + admin) | Actual selling price — what the customer pays |
+| `mrp` | Everyone (customers + admin) | Original/RRP — shown crossed-out to communicate savings |
+| `purchasePrice` | Admin only, never in public API | Internal cost — used only for profit analytics |
 
-### Frontend Rendering
-
-`src/lib/pricing.ts` — `computePrice(sellingPrice, mrp)` derives the discount percentage dynamically (no hardcoded %):
+### `computePrice()` (`src/lib/pricing.ts`)
 
 ```ts
 computePrice(price, mrp) → {
   sellingPrice,   // cleaned selling price
-  mrp,            // original/MRP price
-  discountPct,    // % off, derived dynamically
-  savings,        // absolute savings (MRP - selling)
-  hasDiscount     // true when MRP > selling price
+  mrp,            // original price
+  discountPct,    // derived dynamically: Math.round((1 - selling/mrp) * 100)
+  savings,        // mrp - sellingPrice
+  hasDiscount     // true when mrp > sellingPrice
 }
 ```
 
-`src/components/PriceDisplay.tsx` renders: selling price + optional crossed-out MRP + savings badge. Used on every product card and the product detail page.
+`src/components/PriceDisplay.tsx` uses this to render: selling price + optional strikethrough MRP + "X% OFF" badge. Used on every product card and the product detail page.
 
 ### Backward Compatibility
 
-Existing products that stored MRP in the old `purchasePrice` field are handled gracefully by the API:
+Old products that stored MRP in `purchasePrice` before the field split are handled by the API:
 
 ```js
-// GET /api/products — normalises for backward compat
 mrp: doc.mrp ?? doc.purchasePrice ?? null
 ```
 
-Old products continue to show their crossed-out price without any data migration.
+No data migration was ever needed.
 
-### Admin Panel Fields
+---
 
-The product create/edit form (Admin → Products tab) has three distinct fields:
-1. **MRP (₹)** — customer-facing original price
-2. **Selling Price (₹)** — the actual checkout price
-3. **Purchase Price / Cost (₹)** — internal cost, marked "Admin only", never exposed publicly
+## Admin Panel
+
+Route: `/admin` — hard-guarded both frontend (ADMIN_EMAILS check in `Admin.tsx`) and backend (`isAdmin()` on every write endpoint).
+
+### Admin Emails
+
+Hardcoded in two places — must be kept in sync:
+- `api/_lib/adminHelper.js`
+- `src/pages/Admin.tsx`
+
+```js
+const ADMIN_EMAILS = [
+  "adminthunderbold@gmail.com",
+  "neelsingh45940s@gmail.com",
+  "thepavanartt@gmail.com",
+];
+```
+
+To add an admin: update both files.
+
+### Tabs
+
+| Tab | Icon | Description |
+|---|---|---|
+| Analytics | BarChart3 | Revenue, profit, order KPI cards; monthly revenue + orders charts; top products; stock alerts; recent orders |
+| Orders | Users | All orders table; status update dropdown; view delivery address + gift message modal; print packing slip; delete order |
+| Products | Package | Create/edit/delete products. Form: name, section, category, brand, MRP, selling price, cost/purchase price (admin-only), per-size stock, up to N images, description, highlights |
+| Categories | Folder | Create/edit/delete categories (name, image URL, section) |
+| Brands | Tag | Create/edit/delete brand names + logo URLs |
+| Reviews | MessageSquare | Per-product review listing with admin delete |
+| Slider | SlidersHorizontal | Configure all 4 ThunderboltSlider slides (image URL, heading text, linked outfit product) |
+| Notify | Bell | Broadcast push notification to all subscribed users (title, body, optional image URL) |
+| Returns | RotateCcw | Review pending return requests; approve with custom refund amount; reject with notes |
+
+The admin panel has **no footer** — `Footer.tsx` is only rendered on customer-facing pages.
+
+---
+
+## Analytics System
+
+### Endpoint
+
+`GET /api/admin/analytics` — single payload via `Promise.all` across multiple MongoDB aggregation pipelines.
+
+### KPI Cards
+
+| Metric | Definition |
+|---|---|
+| Total Revenue | Sum of `totalAmount` for all non-cancelled orders in the selected date range |
+| Net Revenue | Same, but lifetime (all time) |
+| Total Orders | Count of all orders in the selected date range |
+| Avg Order Value | Total Revenue ÷ Total Orders |
+| Period Profit | Sum of (selling price − purchasePrice) × quantity for delivered orders in range |
+| Net Profit (All Time) | Same profit calculation, lifetime, all delivered/completed orders |
+
+### Profit Calculation Pipeline
+
+Only `delivered` and `completed` orders count toward profit. Items without a `purchasePrice` are excluded gracefully.
+
+```
+orders (status: delivered or completed)
+  → $unwind products[]
+  → $lookup → products collection (get purchasePrice per productId)
+  → $filter (exclude items where purchasePrice is null/missing)
+  → $group: sum((item.price - product.purchasePrice) × item.quantity)
+```
+
+### Monthly Charts
+
+Revenue and order volume for the last 12 months. Months with zero activity are always filled in so the chart always shows a complete 12-month window without gaps.
+
+---
+
+## PWA (Progressive Web App)
+
+### Implementation
+
+- `vite-plugin-pwa` v1.x with `generateSW` strategy
+- Workbox handles asset precaching and runtime caching
+- `public/manifest.webmanifest` — full Web App Manifest with:
+  - `id`, `name`, `short_name`, `description`
+  - `display_override: ['standalone', 'minimal-ui']`
+  - `theme_color`, `background_color`
+  - App shortcuts (Shop, Orders, Cart)
+  - Share target (`/share-target`)
+  - Launch handler (`client-mode`)
+  - Screenshots for install prompt
+- `public/sw.js` — generated service worker (Workbox)
+- `public/offline.html` — offline fallback page
+
+### Update Prompt
+
+`src/components/PWAUpdatePrompt.tsx` — listens for `onNeedRefresh` from Workbox. When a new service worker is waiting, shows a toast: "Update available" with a "Reload" button that calls `updateServiceWorker(true)`.
+
+### Display Mode Detection
+
+A CSS custom property `--tb-banner-h` adapts the layout for PWA mode:
+
+```css
+/* Browser: APK download banner is visible */
+--tb-banner-h: 36px;
+
+/* Standalone / PWA / fullscreen: banner is hidden */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  --tb-banner-h: 0px;
+}
+```
+
+All page top-padding uses `calc(base + var(--tb-banner-h))` so content always clears the stacked fixed bars correctly in both contexts.
+
+---
+
+## Push Notifications (FCM)
+
+### How It Works
+
+1. User opens the app in a browser that supports notifications
+2. `src/context/AuthContext.tsx` (or equivalent) requests notification permission after login
+3. Firebase `getToken(messaging, { vapidKey })` registers a device token — requires `VITE_FIREBASE_VAPID_KEY`
+4. Token is sent to `POST /api/users/fcm-token` and stored in the user's `users` document in MongoDB
+5. Admin visits **Notify** tab in the admin panel → enters title, body, optional banner image URL → clicks "Send to All Subscribers"
+6. `POST /api/notifications/broadcast` fetches all FCM tokens from MongoDB → calls Firebase Admin `sendEachForMulticast()` → fire-and-forget per token
+7. Failed/stale tokens (404/410 errors from FCM) are removed from the database automatically
+
+### Vercel.json Rewrites
+
+```json
+{ "source": "/api/notifications/broadcast", "destination": "/api/notifications?subpath=broadcast" },
+{ "source": "/api/notifications/test-send",  "destination": "/api/notifications?subpath=test-send" }
+```
 
 ---
 
 ## Homepage Layout
 
-The homepage renders components in this exact order:
+Components render in this exact order:
 
-1. **`AnnouncementBar`** — fixed top, z-[120], height 36px, animated marquee text
-2. **APK Banner** — fixed top, z-[99999], height 36px (hidden in standalone/PWA/WebView mode)
-3. **`Navbar`** — fixed below banners via `top: calc(36px + var(--tb-banner-h))`, z-[100]
-4. **`HeroBanner`** — full-width sale/hero image below navbar
-5. **`BrandsSection`** — horizontal logo marquee
-6. **`LiveSaleSection`** — featured "Live Sale" products
-7. **`CategoriesSection`** — large composite section containing:
-   - Denim Collection fit categories (grid)
-   - **`PromoBanner`** — side-by-side Under ₹999 and Under ₹699 deal banners
-   - **`ThunderboltSlider`** — editorial outfit carousel (swipe-only)
-   - T-Shirt Collection categories (grid, if any exist)
+1. **`AnnouncementBar`** — `position: fixed`, `top: 0`, `z-index: 120`, `height: 36px` — animated marquee promotional text
+2. **APK Banner** — `position: fixed`, `z-index: 99999`, `height: 36px` — "Download our app" strip; hidden in standalone/PWA/WebView via `display-mode` media query
+3. **`Navbar`** — `position: fixed`, `top: calc(36px + var(--tb-banner-h))`, `z-index: 100`
+4. **`HeroBanner`** — Full-width hero or sale image (first visible element below fixed bars)
+5. **`BrandsSection`** — Horizontal auto-scrolling logo marquee
+6. **`LiveSaleSection`** — Products with `section === 'live-sale'`
+7. **`CategoriesSection`** — Composite section containing:
+   - Denim Collection category cards (grid)
+   - **`PromoBanner`** — Under ₹999 + Under ₹699 side-by-side deal banners
+   - **`ThunderboltSlider`** — 3D coverflow editorial outfit carousel
+   - T-Shirt Collection category cards (if any exist)
    - Kurta Collection product grid
    - Thunder Looks / Outfits product grid
 8. **`Footer`**
 
 ### Page Top-Padding Formula
 
-All pages use a top-padding formula that accounts for the stacked fixed bars:
-
 ```css
-pt-[calc(100px + var(--tb-banner-h))]     /* mobile */
-pt-[calc(108px + var(--tb-banner-h))]     /* desktop (md+) */
+/* All customer pages */
+pt-[calc(100px + var(--tb-banner-h))]   /* mobile */
+pt-[calc(108px + var(--tb-banner-h))]   /* md+ */
 ```
-
-`--tb-banner-h` is a CSS custom property:
-- `36px` in browser (APK banner is visible)
-- `0px` in standalone/PWA/fullscreen mode (banner is hidden)
-
-This means headers and content always clear the bars correctly in both web and installed-app contexts.
 
 ---
 
 ## Navbar Architecture
 
-`src/components/Navbar.tsx`
-
 ### Layout
 
 ```
-[THUNDERBOLT logo]   [Search bar]  [Categories] [About Us]  [Wishlist] [Cart]  [Auth]
+[THUNDERBOLD ⚡] │ [Search input (desktop)] │ Categories │ About Us │ Wishlist │ Cart │ [Auth]
 ```
 
-On mobile, the search bar moves below the navbar as a full-width tap target (`MobileSearchBar` in `Index.tsx`).
+On mobile, the search bar moves below the navbar as a full-width tap target (`MobileSearchBar` rendered in `Index.tsx`).
 
-### Auth Loading (no flicker design)
+### Auth Loading (zero-flicker design)
 
-The navbar reads `loading` from `useAuth()` (the Firebase `onAuthStateChanged` resolution state). While `loading` is `true`:
+While Firebase `onAuthStateChanged` is resolving (`loading === true`):
+- A skeleton placeholder (`w-8 h-8 rounded-full bg-white/[0.06] animate-pulse`) renders in place of both the profile avatar and login button
+- The mobile full-screen menu suppresses auth-dependent items (`Profile`, `Orders`, `Logout`, `Login`) until resolved
+- No layout shift — the skeleton has identical dimensions to the profile avatar
 
-- A **skeleton placeholder** (`w-8 h-8 rounded-full bg-white/[0.06] animate-pulse`) renders in place of the profile icon or login button — both on desktop and mobile.
-- The skeleton has **identical dimensions** to the profile avatar circle, so there is zero layout shift when the real auth state resolves.
-- The mobile fullscreen menu suppresses auth-dependent links (`Profile`, `Orders`, `Logout`, `Login`) while loading, preventing a momentary flash of the wrong state.
+### Scroll Behaviour
 
-**Root cause of the old flicker:** `loading` was never read from `useAuth()`. The navbar always rendered the Login button first (because `user` starts as `null`), then re-rendered to the Profile icon 1–2 seconds later once Firebase resolved — causing a visible layout jump.
+After scrolling 50px: transitions to `bg-[#070707]/90 backdrop-blur-md border-b border-white/5`.
 
-### Scroll behaviour
+### Mobile Full-Screen Menu
 
-After scrolling 50px, the navbar transitions to `bg-[#070707]/90 backdrop-blur-md border-b border-white/5`.
-
-### Mobile full-screen menu
-
-Opens via a clip-path circle animation anchored to the hamburger button position. Closes on route change.
-
----
-
-## Announcement Bar
-
-`src/components/AnnouncementBar.tsx`
-
-- Fixed to `top-0`, `z-[120]`, height `h-9` (36px)
-- Contains animated CSS marquee with promotional text
-- Always visible across all pages (rendered in `AppContent.tsx`)
-- Hidden in standalone/PWA display mode via `--tb-banner-h: 0px` CSS variable
+Opens via a clip-path circle animation anchored to the hamburger button. Closes automatically on route change.
 
 ---
 
@@ -382,12 +647,15 @@ Opens via a clip-path circle animation anchored to the hamburger button position
 `src/components/ThunderboltSlider.tsx`
 
 ### Position
-Rendered inside `CategoriesSection.tsx`, directly between the `PromoBanner` (Under ₹999 / Under ₹699) and the T-Shirt Collection section. It bleeds edge-to-edge using negative margins (`-mx-6 md:-mx-16`).
 
-### Data Source
-Fetches `GET /api/slider` on mount. Returns `{ slides: SlideData[] }` with 4 slots. If all 4 slides have neither `imageUrl` nor `heading`, the component returns `null` and renders nothing.
+Inside `CategoriesSection.tsx`, between the `PromoBanner` and T-Shirt Collection. Bleeds edge-to-edge via negative margins (`-mx-6 md:-mx-16`).
 
-### Slide Data Shape
+### Data
+
+`GET /api/slider` → `{ slides: SlideData[4] }`. Admin-managed. If all 4 slots have neither `imageUrl` nor `heading`, the component renders nothing.
+
+### Slide Shape
+
 ```ts
 interface SlideData {
   imageUrl: string;
@@ -398,341 +666,216 @@ interface SlideData {
 }
 ```
 
-### Navigation — Swipe Only (no arrows)
+### Swipe Navigation (Pointer Events API)
 
-Navigation is swipe/drag only, using the **Pointer Events API** (`onPointerDown`, `onPointerMove`, `onPointerUp`, `onPointerCancel`). This works identically for mouse drag and touch swipe.
+- `onPointerDown` — records `dragStartX`
+- `onPointerMove` — accumulates `dragDeltaX`; sets `isDragging = true` once `|delta| > 8px`
+- `onPointerUp` — if `|delta| > 50px`: advance slide in swipe direction; if `isDragging`, suppress link click
+- `setPointerCapture` on the container — gesture tracked even if pointer leaves the element
+- `touch-action: pan-y` — native vertical scrolling preserved; horizontal intercepted
 
-Implementation details:
-- `dragStartX` ref stores the X position on pointer down
-- `dragDeltaX` ref tracks accumulated horizontal delta on move
-- `isDragging` ref is set to `true` once `|delta| > 8px` — prevents accidental click firing during swipe
-- On pointer up: if `|delta| > 50px`, advance the carousel in the swipe direction (`delta < 0` → next, `delta > 0` → prev)
-- `setPointerCapture` is called on the container so the gesture is tracked even when the pointer moves outside the element
-- `touch-action: pan-y` on the container preserves native vertical scrolling while capturing horizontal swipes
-- `select-none` prevents text selection during drag
+### Visual Design
 
-### Visual Layout
-- 4-slot 3D coverflow: center card is full-size and sharp; flanking cards are scaled down and blurred; the back card is very small and nearly transparent
-- A large "ghost heading" (`Bebas Neue`, up to 380px) renders behind the cards with a cinematic blur-in animation on slide change
-- Film grain overlay (`opacity: 0.4`) adds editorial texture
-- Bottom-left: "THUNDER LOOKS" label + **dot indicators** (active dot widens to 24px)
-- Bottom-right: "SHOP THIS LOOK →" CTA button (navigates to the active slide's product page; disabled if no product linked; click is suppressed if a swipe was in progress)
-
-### Admin Management
-The Slider tab in `/admin` lets admins configure all 4 slides: image URL, heading text, and linked product (dropdown of products with `section === 'outfits'`).
+- 4-slot 3D coverflow: active card full-size + sharp; adjacent cards scaled + blurred; far card tiny + near-transparent
+- Large ghost heading (Bebas Neue, up to 380px) behind cards with cinematic blur-in on slide change
+- Film grain overlay (`opacity: 0.4`) for editorial texture
+- Bottom-left: "THUNDER LOOKS" label + dot indicators (active dot expands to 24px width)
+- Bottom-right: "SHOP THIS LOOK →" CTA — links to active slide's product page; click suppressed if a swipe occurred
 
 ---
 
-## Promo Banners
+## Gift / Order Message
 
-`src/components/promo/PromoBanner.tsx` and `src/components/promo/promoSlides.ts`
+### Checkout UI
 
-Two static side-by-side banners inside `CategoriesSection`, positioned between the Denim Collection and the ThunderboltSlider.
+- Full-width card below the address + summary grid
+- Textarea: 3 rows, 300 character max with live counter (counter turns red at limit)
+- Non-blocking — empty message is silently omitted from the order payload
 
-| Banner | Image | Route |
-|---|---|---|
-| Under ₹999 | `/banners/under-999.webp` | `/deals/under-999` |
-| Under ₹699 | `/under699new.webp` | `/deals/under-699` |
+### Backend Sanitization
 
-To swap a banner image: copy the new image to `public/` and update the corresponding `image` field in `promoSlides.ts`.
-
----
-
-## Gift / Order Message Feature
-
-An optional free-text field that customers can fill at checkout. Designed to support gift orders or special instructions.
-
-### Checkout UI (`src/pages/Checkout.tsx`)
-
-- A full-width card section rendered **below** the two-column address + summary grid
-- Heading: "Gift / Order Message" with an "Optional" label in subdued text
-- Textarea: 3 rows, placeholder "Write a message for the recipient (optional)"
-- Character counter: `{current}/{300}` shown bottom-right; turns red at the limit
-- Max length enforced client-side at 300 characters (`.slice(0, 300)` on every keystroke)
-- The message is stored in local `giftMessage` state in `Checkout.tsx`
-- **Does not block checkout** — empty message is treated as no message
-- When submitting: if `giftMessage.trim()` is non-empty, it is added to `orderData.giftMessage` before the API call; otherwise the field is omitted entirely from the payload
-
-### Backend Storage (`api/orders/index.js`)
-
-`giftMessage` is extracted from the request body alongside `products`, `address`, `paymentMethod`, and `clientOrderId`.
-
-Sanitization pipeline:
 ```js
 const sanitizedGiftMessage = typeof giftMessage === "string"
   ? giftMessage.replace(/<[^>]*>/g, "").trim().slice(0, 300)
   : "";
-```
-1. Type-checks for string (ignores non-string payloads silently)
-2. Strips all HTML tags (XSS prevention)
-3. Trims leading/trailing whitespace
-4. Hard-caps at 300 characters
-
-The sanitized message is stored on the order document only when non-empty:
-```js
+// Stored only when non-empty — no empty strings in DB
 ...(sanitizedGiftMessage ? { giftMessage: sanitizedGiftMessage } : {})
 ```
-Orders without a gift message have no `giftMessage` field at all — no empty strings in the database.
 
-**Backward compatible:** All existing orders without `giftMessage` continue to work normally everywhere.
+### Admin View
 
-### Admin Panel View (`src/pages/Admin.tsx`)
+"View Address" modal on any order row includes a `giftMessage` section (amber label, `whitespace-pre-wrap` box) — conditionally rendered only when the field exists.
 
-The "View Address" modal (opened via the address icon on any order row) now includes a **Gift / Order Message section** at the bottom of the modal, separated by a divider:
+### Packing Slip
 
-- Section label: "GIFT / ORDER MESSAGE" in amber/brass color
-- Message text renders in a lightly bordered box with `whitespace-pre-wrap` to preserve line breaks
-- The entire section is conditionally rendered — **only appears** when `order.giftMessage` is truthy
-- Orders without a message show no change to the modal layout
-
-### Invoice / Packing Slip (`src/utils/printInvoice.ts`)
-
-The `PrintableOrder` interface now includes `giftMessage?: string`.
-
-In the generated HTML packing slip:
-- A styled amber-bordered box (background `#fffbeb`, border `#fde68a`) renders between the order meta grid and the items table
-- Heading: "GIFT / ORDER MESSAGE" (uppercase, amber label)
-- Message body preserves whitespace with `white-space: pre-wrap`
-- The entire block is **conditionally generated** — if `order.giftMessage` is falsy, the block is an empty string and the layout is unchanged
-- Existing packing slips printed for old orders (no `giftMessage`) are completely unaffected
-
----
-
-## Mobile UX
-
-### Zoom Disabled
-
-`index.html` viewport meta tag:
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0,
-  maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-```
-
-This prevents:
-- Pinch-to-zoom
-- Double-tap zoom
-
-`viewport-fit=cover` is preserved for edge-to-edge display on notched/Dynamic Island phones.
-
-### Native App Feel
-
-- `touch-action: pan-y` on the ThunderboltSlider allows vertical scrolling while intercepting horizontal swipes
-- Pointer Events API used for swipe (not TouchEvents) — unified handling across mouse and touch without `preventDefault` hacks
-- Splash screen runs once per session (`sessionStorage` guard) — does not re-run on navigation
-- Announcement bar and APK banner automatically collapse to zero height when running in standalone PWA / WebView mode via CSS `--tb-banner-h` custom property
-
----
-
-## Analytics System
-
-### Overview
-
-Single endpoint: `GET /api/admin/analytics` — returns all metrics in one payload via `Promise.all` across multiple MongoDB aggregation pipelines.
-
-### KPI Cards
-
-| Card | Definition |
-|---|---|
-| Total Revenue | Sum of `totalAmount` for all non-cancelled orders in the period |
-| Net Revenue | Same, lifetime |
-| Total Orders | Count of all orders in the period |
-| Avg Order Value | Total Revenue ÷ Total Orders |
-| Period Profit | Profit from delivered orders in the current period |
-| Net Profit (All Time) | Lifetime profit from all delivered/completed orders |
-
-### Profit Calculation
-
-Only **delivered** and **completed** orders are counted toward profit.
-
-Per-item profit: `(order item selling price − product purchasePrice) × quantity`
-
-The calculation uses a MongoDB aggregation pipeline with `$lookup` to join order items to their products' `purchasePrice`. Items from products without a `purchasePrice` set are excluded gracefully — no errors, no zero-padding.
-
-```
-orders (delivered/completed)
-  → $unwind products[]
-  → $lookup products.purchasePrice
-  → $filter (exclude items with no purchasePrice)
-  → $group: sum((sellingPrice - cost) × qty)
-```
-
-Both **period profit** (current date range) and **lifetime profit** run in parallel via `Promise.all`.
-
-### Monthly Charts
-
-Revenue and order volume are charted for the last 12 months (`YYYY-MM` labels). Months with zero activity are filled in automatically so the chart always shows a complete 12-month window.
-
----
-
-## Deals / Promo Filtering
-
-The deals pages (`/deals/under-999`, `/deals/under-699`) filter products by **both price cap AND denim section**:
-
-```
-GET /api/products?maxPrice=999&section=denim
-GET /api/products?maxPrice=699&section=denim
-```
-
-This ensures only denim/jeans products appear — no kurtas or t-shirts — regardless of price. Newly added denim products automatically appear on the correct deals page without any manual configuration.
-
----
-
-## Admin Panel
-
-Route: `/admin` — restricted to emails listed in `ADMIN_EMAILS`. Requires a valid Firebase ID token. All three admin accounts share the same MongoDB database — fully centralized.
-
-### Admin Accounts
-
-Hardcoded in both `api/_lib/adminHelper.js` (backend) and `src/pages/Admin.tsx` (frontend guard):
-
-```js
-const ADMIN_EMAILS = [
-  "adminthunderbolt@gmail.com",
-  "neelsingh45940s@gmail.com",
-  "thepavanartt@gmail.com",
-];
-```
-
-To add a new admin, update the array in both files.
-
-### Tabs
-
-| Tab | Description |
-|---|---|
-| Analytics | KPI cards (revenue, orders, profit), monthly charts, top products, stock alerts, recent orders |
-| Orders | View all orders, update status, view delivery address + gift message, print packing slip, delete |
-| Products | Create/edit/delete products. Form includes: name, section, category, brand, MRP, selling price, purchase price/cost (admin-only), size stock, images, description, highlights |
-| Categories | Create/edit/delete categories |
-| Brands | Create/edit/delete brand names |
-| Reviews | Per-product review listing with admin delete |
-| Slider | Configure all 4 ThunderboltSlider slides (image URL, heading, linked outfit product) |
-
-The admin panel has **no footer** — the storefront footer only renders on customer-facing pages.
+`printInvoice.ts` renders an amber-bordered box with the message between the order meta grid and the items table — only when `giftMessage` is present.
 
 ---
 
 ## Order Print / Packing Slip
 
-`src/utils/printInvoice.ts` — `printInvoice(order: PrintableOrder)` opens a new browser window with a professionally formatted HTML packing slip and automatically triggers `window.print()`.
+`src/utils/printInvoice.ts` — opens a new browser window with a complete HTML packing slip and triggers `window.print()`.
 
-### PrintableOrder Interface
+### Document Contents (in order)
 
-```ts
-interface PrintableOrder {
-  _id: string;
-  userId?: string;
-  products: OrderItem[];
-  address?: OrderAddress;
-  paymentMethod?: string;
-  status?: string;
-  totalAmount?: number;
-  createdAt?: string;
-  giftMessage?: string;   // Optional — only present if customer added a message
-}
-```
-
-### Packing Slip Contents (in document order)
-
-1. **Header** — THUNDERBOLT brand name (amber accent) + "Packing Slip" title + short order ID
-2. **Meta grid** (2 columns):
-   - Left: Order ID, date, payment method, status badge (color-coded)
-   - Right: Ship-to address block + phone number
-3. **Gift Message box** _(conditional — only rendered when `giftMessage` is present)_
-   - Amber-bordered box (`#fffbeb` background, `#fde68a` border)
-   - "GIFT / ORDER MESSAGE" label in amber
-   - Message body with `white-space: pre-wrap`
+1. **Header** — Brand name (amber) + "Packing Slip" + short order ID
+2. **Meta grid** (2-column): Order ID, date, payment method, status badge | Ship-to address + phone
+3. **Gift Message box** (conditional) — amber-bordered, `white-space: pre-wrap`
 4. **Items table** — product name, size, quantity, unit price, line total
-5. **Summary box** — subtotal, shipping (Free), total
-6. **Footer** — "Thank you" message + customer name + print timestamp
-
-The print button (printer icon) appears next to the delete button on every order row in the admin Orders tab — both mobile cards and desktop table.
+5. **Summary box** — subtotal, shipping (Free), order total
+6. **Footer** — "Thank you" + customer name + print timestamp
 
 ---
 
-## Splash Screen
+## Customer Reviews
 
-`src/components/SplashScreen.tsx` — renders once per browser session (controlled via `sessionStorage`).
+`api/reviews/index.js` + `src/components/reviews/ReviewModal.tsx`
 
-- Full-screen dark background (`#0a0a0a`)
-- Lightning bolt icon animates in (scale + opacity, spring easing)
-- Amber glow pulses behind the bolt
-- "THUNDERBOLT" brand text expands in with letter-spacing animation
-- "PREMIUM DENIM" tagline fades in
-- Amber sweep bar progresses across the bottom
-- Smooth fade-out after 2 seconds
-- Zero impact on route rendering — overlays the app, does not block Suspense
+- Only available for items in **delivered** orders — enforced both frontend (button only shown) and backend (order status check on POST)
+- One review per (user, product) pair — upsert on duplicate
+- Rating: 1–5 rendered as lightning bolts via `LightningRating.tsx`
+- Admin can delete any review from the Reviews tab
+
+---
+
+## Deals / Promo Filtering
+
+```
+/deals/under-999  →  GET /api/products?maxPrice=999&section=denim
+/deals/under-699  →  GET /api/products?maxPrice=699&section=denim
+```
+
+Both price cap AND section filter applied — ensures only denim/jeans appear regardless of category pricing.
 
 ---
 
 ## Brand System
 
-Brands are stored in the `brands` MongoDB collection.
-
-**Flow:**
-1. Admin creates brand names in the Brands tab (`/admin` → Brands)
-2. When adding/editing a product, admin selects a brand from a dropdown (optional)
-3. Homepage shows a "Shop by Brand" `BrandsSection`
-4. Clicking navigates to `/brands` (all brands) or `/brand/:brandId` (filtered products)
+1. Admin creates brand records in the Brands tab (name + logo URL)
+2. Products optionally reference a `brandId` (set in product form dropdown)
+3. `BrandsSection` on homepage: auto-scrolling logo marquee
+4. `/brands` — all brands grid → `/brand/:brandId` — products filtered by brand
 
 ---
 
 ## Size-Based Stock System
 
-Products use a `sizeStock` map:
-- Jeans/denim: keys `['28','30','32','34','36']`
-- Apparel (t-shirts, kurtas, outfits): keys `['S','M','L','XL','XXL']`
+- **Jeans/denim:** `sizeStock` keys `['28','30','32','34','36']`
+- **Apparel (t-shirts, kurtas, outfits):** `sizeStock` keys `['S','M','L','XL','XXL']`
+- `stock` field = computed total (sum of all size values)
 
-The flat `stock` field is the computed total across all sizes.
+### Atomic Stock Operations
 
-- **Ordering**: Pre-flight stock check with atomic decrement + compensation rollback (prevents oversells even under concurrent orders)
-- **Cancellation**: Restores `sizeStock` per size (if available) and total `stock`
+- **Order creation:** Pre-flight check + atomic `$inc` decrement per size. If any size is out of stock, the order is rejected cleanly.
+- **Cancellation:** `$inc` restores per-size quantity and total stock.
+- Concurrent orders cannot oversell — MongoDB atomic operations guarantee this.
 
 ---
 
 ## Checkout Flow
 
-1. User arrives at `/checkout` from Cart ("Checkout" button) or ProductView ("Buy Now")
-2. Saved address auto-loaded from localStorage, then overridden by profile default address if available
-3. Address form validates: full name, 10-digit Indian mobile, address, city, state, 6-digit pincode
-4. Optional gift message textarea (below the address + summary grid)
-5. "Place Order" button submits to `POST /api/orders/create` with:
+1. User arrives at `/checkout` from Cart ("Checkout") or ProductView ("Buy Now")
+2. Saved address auto-loaded from localStorage, then profile default address overrides if available
+3. Address form validation:
+   - Full name (required)
+   - Phone: 10-digit Indian mobile format
+   - Address line 1 (required)
+   - City, state (required)
+   - Pincode: exactly 6 digits
+4. Optional gift message (below the 2-column grid)
+5. "Place Order" submits to `POST /api/orders/create` with:
    - Validated address
-   - Cart items (productId, name, price, size, quantity, image)
+   - Cart items snapshot (productId, name, price, size, quantity, image)
    - `paymentMethod: 'COD'`
-   - `clientOrderId` UUID (idempotency key)
-   - `giftMessage` (only if non-empty)
-6. Retry wrapper: up to 3 attempts on network failure (exponential backoff)
-7. On success: cart is cleared (if cart checkout), `OrderConfirmation` modal shown, redirects to `/orders`
+   - `clientOrderId` UUID — idempotency key
+   - `giftMessage` (omitted if empty)
+6. Server calculates `totalAmount` independently — never trusts client-sent total
+7. Retry wrapper: up to 3 attempts on network failure with exponential backoff
+8. Success: cart cleared (if cart checkout), `OrderConfirmation` modal shown, redirect to `/orders`
+
+---
+
+## Splash Screen
+
+`src/components/SplashScreen.tsx` — plays once per browser session (`sessionStorage` guard).
+
+- Full-screen `#0a0a0a` background
+- Lightning bolt icon: scale + opacity spring animation
+- Amber radial glow behind the bolt
+- "THUNDERBOLD" brand text: letter-spacing expand animation
+- "PREMIUM DENIM" tagline: fade in
+- Amber sweep bar: progress across bottom
+- Smooth fade-out after ~2 seconds
+- Overlays the app — does not block routing, React Suspense, or data fetching
+
+---
+
+## Policy System
+
+`src/lib/policyContent.ts` — single source of truth for all policy text. Changes here automatically propagate to:
+- `Footer.tsx` — "Returns & Cancellation", "Privacy Policy", "Terms & Conditions" buttons open in-app modals
+- Any dedicated policy page
+
+### Policy Data Shape
+
+```ts
+interface PolicyData {
+  id: 'privacy' | 'terms' | 'returns';
+  title: string;
+  subtitle: string;
+  sections: Array<{
+    heading: string;
+    text: string;
+    list?: string[];
+    highlight?: boolean;  // Renders with brass background tint
+  }>;
+}
+```
 
 ---
 
 ## Deployment
 
-### Local / Replit (development)
+### Local / Replit (Development)
 
 ```bash
-npm run dev        # Concurrently: node server.js (3001) + vite (5000)
+npm run dev
+# Concurrently:
+#   node server.js       — Express API on :3001
+#   vite                 — Frontend on :5000, /api/* proxied to Express
 ```
 
-Vite proxies `/api/*` → Express.
+### Vercel (Production)
 
-### Vercel (production)
+- **Build command:** `npm run build` → output to `dist/`
+- **Serverless functions:** Files in `api/` become functions automatically
+- **Sub-route pattern:** Sub-paths (e.g. `/api/orders/create`) are routed via `vercel.json` rewrites using `?subpath=create` — the handler switches on `req.query.subpath` (Vercel) or URL path (Express). Same code, zero duplication.
+- **Function limit:** Vercel Hobby plan — 12 serverless functions max
 
-- **Build command**: `npm run build` (Vite output to `dist/`)
-- **Functions**: 12 serverless functions (at the Hobby plan limit)
-- **`vercel.json` rewrites**: Sub-route consolidated handlers use `?subpath=` query param (Vercel) vs URL path remainder (Express)
+### `vercel.json` Key Rewrites
 
-The same handler files run unchanged in both environments.
+```json
+{ "source": "/api/orders/:sub(create|cancel|manage)", "destination": "/api/orders?subpath=:sub" },
+{ "source": "/api/returns", "destination": "/api/returns" },
+{ "source": "/api/notifications/broadcast", "destination": "/api/notifications?subpath=broadcast" },
+{ "source": "/api/(.*)", "destination": "/api/$1" },
+{ "source": "/(.*)", "destination": "/index.html" }
+```
 
 ---
 
-## API Security Notes
+## Security
 
-- All write endpoints require a valid Firebase ID token (`Authorization: Bearer <token>`)
-- Admin endpoints additionally check `isAdmin(email, db)` against `ADMIN_EMAILS`
-- `purchasePrice` (internal cost) is **never included** in public `GET /api/products` responses — only returned to authenticated admins
-- Rate limiting applied to all write endpoints via `api/_lib/rateLimit.js`
-- Gift message is HTML-stripped server-side before storage
+| Layer | Mechanism |
+|---|---|
+| All write endpoints | Firebase ID token in `Authorization: Bearer` header — verified server-side |
+| Admin endpoints | `isAdmin(email, db)` check on top of token verification |
+| `purchasePrice` | Stripped from all public `GET /api/products` responses — only returned to admins |
+| Gift messages | HTML-stripped server-side before storage (`/<[^>]*>/g`) |
+| Return descriptions | Same HTML-strip + 500-char cap before storage |
+| Rate limiting | `api/_lib/rateLimit.js` — in-memory sliding window on all write endpoints |
+| Duplicate orders | `clientOrderId` UUID + DB unique check — safe to retry on network failure |
+| Admin emails | Hardcoded in two places — never in DB alone (DB role checked first, hardcoded as fallback) |
 
 ---
 
@@ -740,26 +883,39 @@ The same handler files run unchanged in both environments.
 
 | Case | Handling |
 |---|---|
-| Old products with `purchasePrice` as MRP | API normalises: `mrp: doc.mrp ?? doc.purchasePrice ?? null` — no migration needed |
-| Products with no `purchasePrice` (cost) | Excluded from profit calculations gracefully — no errors |
-| Out-of-stock sizes | Size buttons disabled on ProductView; atomic stock checks on order create |
-| Order cancellation | Restores `sizeStock` per size (if available) and total `stock` |
-| Missing `brandId` on products | Optional — backwards compatible, unbranded products still work |
-| Deals page with mixed categories | Section filter (`?section=denim`) ensures only denim products appear |
-| Orders without `giftMessage` | No field in DB — admin modal and packing slip show nothing (no empty sections) |
+| Old products with `purchasePrice` as MRP (before field split) | API normalises: `mrp: doc.mrp ?? doc.purchasePrice ?? null` — no migration needed |
+| Products with no `purchasePrice` | Excluded from profit calculations gracefully — no errors or zero-padding |
+| Out-of-stock sizes | Size buttons disabled on ProductView; atomic stock check on order create |
+| Order cancellation stock restore | `$inc` per ordered size + total — exact undo |
+| Cancel when not pending | Backend returns status-specific human-readable error; cancel button hidden in UI |
+| Return when not delivered | Backend returns 400; "Return" button only shown for `delivered` |
+| Duplicate return per order | Backend returns 409 Conflict with existing return ID |
+| Missing `brandId` on products | Optional — backwards compatible, unbranded products still work everywhere |
+| Deals page mixed sections | `?section=denim` filter — only denim regardless of price |
+| Orders without `giftMessage` | No field in DB — admin modal and packing slip show nothing, no empty sections |
 | Swipe vs click on ThunderboltSlider | `isDragging` ref checked in CTA handler — swipes never accidentally trigger navigation |
-| Auth loading state in navbar | Skeleton placeholder rendered while Firebase resolves — zero layout shift |
-| PWA / standalone display mode | `--tb-banner-h: 0px` collapses APK banner space; announcement bar hidden |
-| Duplicate order submissions | `clientOrderId` UUID idempotency key + DB unique index prevents double-orders on retry |
+| Auth loading state | Navbar skeleton + menu suppression while Firebase resolves — zero layout shift |
+| PWA / standalone display mode | `--tb-banner-h: 0px` collapses APK banner space; navbar top recalculated |
+| Duplicate order submissions | `clientOrderId` UUID idempotency key — safe retries |
+| Stale FCM tokens | Invalid/expired tokens (FCM 404/410) auto-removed from DB on next broadcast |
+| Return statuses in analytics | `return_approved` orders excluded from cancellation count; treated as delivered for revenue |
+
+---
+
+## Admin Email Note
+
+The admin email in code (`adminthunderbold@gmail.com`) uses "bold" — matching the brand name **Thunderbold**. The APK download link in the banner points to `/Thunderbolt.apk` (with a "t") — this is a deliberate legacy filename, not a bug.
 
 ---
 
 ## User Preferences
 
-- No emojis in code or comments unless user explicitly requests
-- No Footer inside Admin panel
-- Admin emails are hardcoded in `api/_lib/adminHelper.js` and `src/pages/Admin.tsx`
-- Database name is `thunderbold` (not `thunderbolt`) — this is intentional
-- Pricing: `mrp` = crossed-out display price; `purchasePrice` = internal cost (admin-only)
-- All data endpoints must fail explicitly with `500 Database unavailable` when MongoDB is unavailable — no silent fallbacks
-- Currency symbol is ₹ (Indian Rupee) everywhere — not ¥ or $
+- No emojis in code or comments unless explicitly requested
+- No Footer component inside the Admin panel
+- Database name is `thunderbold` (not `thunderbolt`) — intentional
+- `mrp` = crossed-out customer-facing price; `purchasePrice` = internal cost (admin-only, never public)
+- All data endpoints must explicitly return `500 Database unavailable` when MongoDB is unreachable — no silent fallbacks
+- Currency symbol is always ₹ (Indian Rupee)
+- Cancel button only appears for `pending` orders
+- Return button only appears for `delivered` orders
+- Shipping deduction on refunds is ₹50 (hardcoded as `SHIPPING_CHARGES` in `api/returns/index.js`)
