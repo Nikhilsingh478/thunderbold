@@ -73,7 +73,7 @@ export const policyData: PolicyData[] = [
       },
       {
         heading: 'Order Processing & Refunds',
-        text: 'Every order goes through a manual confirmation step before processing. Refunds, where applicable, are processed within 5–7 business days of approval. A nominal ₹50 handling fee applies to accepted returns or post-confirmation cancellations, deducted from the refund amount. Refunds are issued to the original payment method or as agreed store credit.',
+        text: 'Every order goes through a manual confirmation step before processing. Refunds, where applicable, are processed within 5–7 business days of approval. For accepted returns, the refund amount will be the total order amount minus the return shipping and logistics charges. Refunds are issued via UPI or bank transfer as agreed.',
       },
       {
         heading: 'Governing Law',
@@ -91,17 +91,17 @@ export const policyData: PolicyData[] = [
         text: 'Every order placed on Thunderbold goes through a manual verification step. Our team will reach out to you via a confirmation call before your order is processed. This gives you one final opportunity to review or amend your order.',
       },
       {
-        heading: 'Cancellation Before Confirmation',
-        text: 'You may cancel your order at any time before you receive the confirmation call from our team. Once the order has been confirmed and moved to processing or shipping, cancellations are no longer accepted.',
+        heading: 'Cancellation Before Shipping',
+        text: 'You may cancel your order at any time before it has been shipped. Once the order has been shipped, cancellations are no longer accepted. If a delivery fails after multiple courier attempts (up to 3 attempts), the logistics cost is managed entirely by us.',
       },
       {
         heading: 'Returns After Delivery',
-        text: 'If you\'ve received your order and have a valid concern — such as a manufacturing defect, incorrect item, or significant sizing discrepancy — you may raise a return request within 24 hours of delivery.',
-        list: ['Manufacturing defects', 'Wrong item delivered', 'Significant difference from product listing'],
+        text: 'Once you receive your order and have paid, you may raise a return request. To raise a return request, you will need to submit a reason for return and your refund payment details (such as a UPI ID or bank details) on your order history page.',
+        list: ['Manufacturing defects', 'Incorrect sizing or fit issues', 'Wrong item delivered'],
       },
       {
         heading: 'Refund Processing',
-        text: 'Once your return is approved, refunds are processed within 5–7 business days. A nominal ₹50 processing fee applies to all accepted returns or post-confirmation cancellations, covering handling and restocking costs, deducted from the refund amount.',
+        text: 'Once your return request is approved and the returned package is received and verified at our warehouse, the refund will be processed within 5–7 business days. Please note that the refund amount will equal the total order value minus the return shipping and logistics charges.',
       },
       {
         heading: 'How to Raise a Request',
