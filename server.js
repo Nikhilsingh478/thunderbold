@@ -121,7 +121,8 @@ app.use('/api/brands', async (req, res) => {
 
 app.use('/api/slider', async (req, res) => {
   try {
-    const { default: handler } = await import('./api/slider.js');
+    req.query.subpath = 'slider';
+    const { default: handler } = await import('./api/admin.js');
     await handler(req, res);
   } catch (error) {
     console.error('Error in slider:', error);

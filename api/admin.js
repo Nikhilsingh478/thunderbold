@@ -422,23 +422,115 @@ async function getProfitMetrics(db, range) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Slider config — merged here to stay within Vercel's 12-function limit.
+// Routes via ?subpath=slider (vercel.json rewrite) or /api/slider (Express).
+// GET /api/slider  — public (no auth)
+// PUT /api/slider  — admin only
+// ---------------------------------------------------------------------------
+
+const DEFAULT_SLIDES = [
+  { imageUrl: "", heading: "SHARP", productId: null },
+  { imageUrl: "", heading: "REBEL", productId: null },
+  { imageUrl: "", heading: "WILD",  productId: null },
+  { imageUrl: "", heading: "NOIR",  productId: null },
+];
+
+async function handleSlider(req, res, db) {
+  res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  const configCol = db.collection("config");
+
+  if (req.method === "GET") {
+    const doc = await configCol.findOne({ _id: "slider" });
+    const rawSlides = doc?.slides ?? DEFAULT_SLIDES;
+
+    const productIds = rawSlides
+      .map((s) => s.productId)
+      .filter(Boolean)
+      .map((id) => { try { return new ObjectId(String(id)); } catch { return null; } })
+      .filter(Boolean);
+
+    let productMap = new Map();
+    if (productIds.length) {
+      const products = await db
+        .collection("products")
+        .find({ _id: { $in: productIds } }, { projection: { name: 1, image: 1, images: 1 } })
+        .toArray();
+      products.forEach((p) => productMap.set(String(p._id), p));
+    }
+
+    const slides = rawSlides.map((s) => {
+      const p = s.productId ? productMap.get(String(s.productId)) : null;
+      return {
+        imageUrl: s.imageUrl || "",
+        heading: s.heading || "",
+        productId: s.productId || null,
+        productName: p?.name || null,
+        productImage: p ? (p.images?.[0] || p.image || null) : null,
+      };
+    });
+
+    return res.status(200).json({ slides });
+  }
+
+  if (req.method === "PUT") {
+    const auth = await checkAdminAuth(req, db);
+    if (!auth.authorized) return res.status(auth.status).json({ error: auth.error });
+
+    const { slides } = req.body || {};
+    if (!Array.isArray(slides) || slides.length !== 4) {
+      return res.status(400).json({ error: "slides must be an array of exactly 4 items" });
+    }
+
+    const cleaned = slides.map((s) => ({
+      imageUrl: typeof s.imageUrl === "string" ? s.imageUrl.trim() : "",
+      heading: typeof s.heading === "string" ? s.heading.trim().toUpperCase().slice(0, 40) : "",
+      productId: s.productId ? String(s.productId) : null,
+    }));
+
+    await configCol.replaceOne(
+      { _id: "slider" },
+      { _id: "slider", slides: cleaned, updatedAt: new Date() },
+      { upsert: true }
+    );
+
+    return res.status(200).json({ message: "Slider config saved", slides: cleaned });
+  }
+
+  res.setHeader("Allow", ["GET", "PUT"]);
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+// ---------------------------------------------------------------------------
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ error: "Method not allowed" });
-  }
 
   let db;
   try {
     db = await getDb();
   } catch (err) {
-    console.error("ANALYTICS API ERROR (db):", err.message);
+    console.error("ADMIN API ERROR (db):", err.message);
     return res.status(500).json({ error: "Database unavailable" });
+  }
+
+  // Route: /api/slider (via vercel rewrite ?subpath=slider, or Express path match)
+  const subpath = req.query.subpath || "";
+  if (subpath === "slider" || req.path === "/slider" || req.url?.startsWith("/slider")) {
+    return handleSlider(req, res, db);
+  }
+
+  // Route: /api/admin/analytics (default)
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const auth = await checkAdminAuth(req, db);

@@ -65,6 +65,10 @@
       "destination": "/api/admin"
     },
     {
+      "source": "/api/slider",
+      "destination": "/api/admin?subpath=slider"
+    },
+    {
       "source": "/api/orders/:sub(create|cancel|manage)",
       "destination": "/api/orders?subpath=:sub"
     },
