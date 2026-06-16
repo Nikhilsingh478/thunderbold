@@ -9,7 +9,7 @@
  * Policy enforced here:
  *   - Return can only be raised for an order whose status is 'delivered'
  *   - One return request per order (idempotency)
- *   - Approve: sets refundAmount = totalAmount − SHIPPING_CHARGES, admin can override
+ *   - Approve: sets refundAmount = totalAmount − shippingCharges (admin sets cost), admin can override
  *   - Reject: stores adminNotes; no refund issued
  *   - On approve/reject: order status is updated to 'return_approved'/'return_rejected'
  */
@@ -154,7 +154,7 @@ async function handleCreate(req, res) {
     message: "Return request submitted successfully",
     returnId: result.insertedId,
     suggestedRefundAmount: suggestedRefund,
-    shippingDeduction: SHIPPING_CHARGES,
+    shippingDeduction: DEFAULT_SHIPPING,
   });
 }
 
