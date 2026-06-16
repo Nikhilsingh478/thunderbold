@@ -26,9 +26,11 @@ interface Order {
   status: string;
   createdAt: string;
   orderNumber?: string;
+  returnShippingCharges?: number;
+  returnRefundAmount?: number;
 }
 
-const RETURN_STATUSES = ['return_requested', 'return_approved', 'return_rejected'];
+const RETURN_STATUSES = ['return_requested', 'return_approved', 'return_rejected', 'refund_issued'];
 
 const Orders = () => {
   const { user, loading: authLoading } = useAuth();
@@ -228,6 +230,7 @@ const Orders = () => {
       case 'return_requested':  return 'text-amber-400 bg-amber-400/10 border-amber-400/30';
       case 'return_approved':   return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
       case 'return_rejected':   return 'text-rose-400 bg-rose-400/10 border-rose-400/30';
+      case 'refund_issued':     return 'text-teal-400 bg-teal-400/10 border-teal-400/30';
       default:                  return 'text-sv-mid bg-white/5 border-white/10';
     }
   };
@@ -243,6 +246,7 @@ const Orders = () => {
       case 'return_requested':  return <RotateCcw className="w-4 h-4" />;
       case 'return_approved':   return <CheckCircle className="w-4 h-4" />;
       case 'return_rejected':   return <X className="w-4 h-4" />;
+      case 'refund_issued':     return <CheckCircle className="w-4 h-4" />;
       default:                  return <Package className="w-4 h-4" />;
     }
   };
@@ -252,6 +256,7 @@ const Orders = () => {
       case 'return_requested': return 'Return Pending';
       case 'return_approved':  return 'Return Approved';
       case 'return_rejected':  return 'Return Rejected';
+      case 'refund_issued':    return 'Refund Issued';
       default:                 return status;
     }
   };
@@ -415,6 +420,12 @@ const Orders = () => {
                             Refund in 5–7 days
                           </span>
                         )}
+                        {/* Refund issued badge */}
+                        {order.status === 'refund_issued' && (
+                          <span className="font-condensed text-[10px] text-teal-400/70 tracking-wider">
+                            Refund done
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -423,10 +434,12 @@ const Orders = () => {
                       <div className={`mb-4 px-4 py-2.5 rounded-lg border text-xs font-condensed tracking-wider ${
                         order.status === 'return_requested' ? 'bg-amber-500/5 border-amber-500/20 text-amber-300/80' :
                         order.status === 'return_approved'  ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300/80' :
+                        order.status === 'refund_issued'    ? 'bg-teal-500/5 border-teal-500/20 text-teal-300/80' :
                         'bg-rose-500/5 border-rose-500/20 text-rose-300/80'
                       }`}>
                         {order.status === 'return_requested' && 'Your return request is under review. We\'ll contact you within 2–3 business days.'}
-                        {order.status === 'return_approved'  && 'Return approved! Your refund (order total − ₹50 shipping) will be processed within 5–7 business days.'}
+                        {order.status === 'return_approved'  && `Return approved! Your refund (order total − ₹${order.returnShippingCharges ?? 50} shipping) will be processed within 5–7 business days.`}
+                        {order.status === 'refund_issued'    && `Your refund of ₹${(order.returnRefundAmount ?? 0).toLocaleString('en-IN')} has been issued to your original payment method.`}
                         {order.status === 'return_rejected'  && 'Your return request was not approved. Contact us at +91 95611 72681 if you have questions.'}
                       </div>
                     )}

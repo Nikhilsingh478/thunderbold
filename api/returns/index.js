@@ -19,8 +19,6 @@ import { ObjectId } from "mongodb";
 import { verifyFirebaseToken } from "../_lib/firebaseAdmin.js";
 import { isAdmin } from "../_lib/adminHelper.js";
 
-/** ₹50 is deducted from every approved refund to cover shipping / handling costs. */
-const SHIPPING_CHARGES = 50;
 
 const RETURN_REASONS = [
   'defective',
@@ -124,7 +122,8 @@ async function handleCreate(req, res) {
   }
 
   // ── Create return document ─────────────────────────────────────────────────
-  const suggestedRefund = Math.max(0, (order.totalAmount || 0) - SHIPPING_CHARGES);
+  const DEFAULT_SHIPPING = 50;
+  const suggestedRefund = Math.max(0, (order.totalAmount || 0) - DEFAULT_SHIPPING);
 
   const returnDoc = {
     orderId: orderId,
@@ -132,7 +131,7 @@ async function handleCreate(req, res) {
     userId: user.email,
     products: order.products || [],
     totalAmount: order.totalAmount || 0,
-    shippingCharges: SHIPPING_CHARGES,
+    shippingCharges: DEFAULT_SHIPPING,
     suggestedRefundAmount: suggestedRefund,
     reason,
     description: cleanDesc,
@@ -179,12 +178,32 @@ async function handleManage(req, res) {
 
   const returnDoc = await db.collection("returns").findOne({ _id: objectId });
   if (!returnDoc) return res.status(404).json({ error: "Return request not found" });
+
+  const body = await parseBody(req);
+  const { action, refundAmount, shippingCharges, adminNotes } = body;
+
+  // ── Issue refund (after approval) ─────────────────────────────────────────
+  if (action === "issue_refund") {
+    if (returnDoc.status !== "approved") {
+      return res.status(400).json({ error: "Return must be approved before issuing a refund" });
+    }
+    await db.collection("returns").updateOne(
+      { _id: objectId },
+      { $set: { status: "refund_issued", refundIssuedAt: new Date(), updatedAt: new Date() } }
+    );
+    let orderObjectId;
+    try { orderObjectId = new ObjectId(returnDoc.orderId); }
+    catch { orderObjectId = returnDoc.orderId; }
+    await db.collection("orders").updateOne(
+      { _id: orderObjectId },
+      { $set: { status: "refund_issued", updatedAt: new Date() } }
+    );
+    return res.status(200).json({ message: "Refund marked as issued." });
+  }
+
   if (returnDoc.status !== "pending") {
     return res.status(400).json({ error: `Return request is already ${returnDoc.status}` });
   }
-
-  const body = await parseBody(req);
-  const { action, refundAmount, adminNotes } = body;
 
   if (!["approve", "reject"].includes(action)) {
     return res.status(400).json({ error: "action must be 'approve' or 'reject'" });
@@ -195,16 +214,23 @@ async function handleManage(req, res) {
     : "";
 
   if (action === "approve") {
-    // Refund amount: admin can override, default = suggestedRefundAmount
+    // Shipping cost: admin provides it; fall back to what was stored at request time
+    const finalShipping = typeof shippingCharges === "number" && shippingCharges >= 0
+      ? shippingCharges
+      : returnDoc.shippingCharges;
+
+    // Refund amount: admin can override, default = totalAmount − finalShipping
+    const computedRefund = Math.max(0, (returnDoc.totalAmount || 0) - finalShipping);
     const finalRefund = typeof refundAmount === "number" && refundAmount >= 0
       ? refundAmount
-      : returnDoc.suggestedRefundAmount;
+      : computedRefund;
 
     await db.collection("returns").updateOne(
       { _id: objectId },
       {
         $set: {
           status: "approved",
+          shippingCharges: finalShipping,
           refundAmount: finalRefund,
           adminNotes: cleanNotes || null,
           updatedAt: new Date(),
@@ -212,13 +238,13 @@ async function handleManage(req, res) {
       }
     );
 
-    // Update order status
+    // Update order status + store refund details so the orders page can display them
     let orderObjectId;
     try { orderObjectId = new ObjectId(returnDoc.orderId); }
     catch { orderObjectId = returnDoc.orderId; }
     await db.collection("orders").updateOne(
       { _id: orderObjectId },
-      { $set: { status: "return_approved", updatedAt: new Date() } }
+      { $set: { status: "return_approved", returnShippingCharges: finalShipping, returnRefundAmount: finalRefund, updatedAt: new Date() } }
     );
 
     // ── Restore stock for each item (size-aware) ─────────────────────────────

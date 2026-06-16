@@ -1,0 +1,168 @@
+# Thunderbold Performance Fix — Antigravity Prompt
+### Model: Claude Opus 4.6 Thinking
+
+---
+
+## CONTEXT & GOAL
+
+This is a production e-commerce PWA called **Thunderbold** (thunderbold.shop), built with React + Vite, deployed on Vercel with serverless functions handling the backend API. The site is currently laggy, jittery, and gives users a bad experience — especially on first load and hard refresh.
+
+**The goal is NOT a perfect Lighthouse score. The goal is a smooth, non-laggy, non-glitchy, non-jittery user experience for real customers on mobile.**
+
+Do NOT make any changes to the visual design, color scheme, fonts, branding, or UI layout. Only fix performance, loading behavior, and smoothness issues.
+
+---
+
+## DIAGNOSED PROBLEMS (from two Lighthouse audits)
+
+### 🔴 CRITICAL — Fix These First
+
+**1. Vercel Serverless Cold Start — Multiple Simultaneous API Calls**
+
+On hard refresh, `/api/products` is taking up to **32 seconds** to respond. This is a Vercel serverless cold start problem compounded by the fact that multiple API endpoints (`/api/products`, `/api/categories`, `/api/slider`) are all being called **simultaneously on page mount with no coordination**. When the function is cold, every single one of them waits, blocking the entire page.
+
+- Find every `useEffect` or data-fetching call that fires on homepage mount
+- Identify if `/api/products` is being called more than once (Lighthouse shows it being called 4+ times in one session — likely different components each fetching independently)
+- **Fix:** Implement request deduplication — if the same endpoint is already in-flight, don't fire another call. Use a simple module-level cache or React Query / SWR if already in the project. If not, implement a lightweight fetch cache manually.
+- **Fix:** Waterfall the non-critical calls. Only `/api/products` (above-the-fold products) should fire immediately. `/api/categories` and `/api/slider` can fire after first paint.
+- **Fix:** Add stale-while-revalidate caching — store API responses in memory (or sessionStorage) so navigating back to home doesn't re-fetch everything. A 60-second cache is fine for product listings.
+
+**2. Firebase Auth iframe Blocking Render**
+
+`thunderbolt-auth.firebaseapp.com/auth/iframe.js` (90 KiB) is loading on the critical render path. It's initializing Firebase Auth before the user has done anything auth-related.
+
+- Find where Firebase is initialized (likely `firebase.ts` or `firebaseConfig.ts` or inside `App.tsx`)
+- **Fix:** Lazy initialize Firebase Auth — don't call `getAuth()` or `initializeApp()` on app load. Only initialize when the user clicks Login/Signup or when a protected route is accessed
+- Move Firebase auth initialization behind a dynamic `import()` that only triggers on demand
+- The Firebase iframe should not appear in the network dependency tree on the homepage at all
+
+**3. Main JS Bundle Too Large + No Code Splitting**
+
+`/assets/index-H7NeUSZd.js` is a single 224 KiB bundle with ~95-102 KiB unused on initial load. Everything is being bundled together.
+
+- Check `vite.config.ts` — if there's no `build.rollupOptions.output.manualChunks` configuration, add it
+- **Fix:** Split the bundle at minimum into: `vendor` (React, React DOM), `firebase` (all firebase/* imports), `ui` (component library if any), and `app` (your actual code)
+- **Fix:** All page-level components should use React.lazy() + Suspense if not already done. Every route that isn't the homepage should be lazy loaded.
+- Example vite config addition:
+```js
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'vendor': ['react', 'react-dom', 'react-router-dom'],
+        'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+      }
+    }
+  }
+}
+```
+
+---
+
+### 🟡 HIGH IMPACT — Fix After Critical
+
+**4. Cloudinary Images Not Using Responsive Transforms**
+
+Every product image is being served at full resolution (e.g., 1000×1500px) and displayed at ~123×185px. Cloudinary supports on-the-fly transformations via URL parameters — this is free and already available since the images are hosted on Cloudinary.
+
+- Find all places where Cloudinary image URLs are constructed or used (look for `res.cloudinary.com` URLs in components like product cards, sliders, banners)
+- **Fix:** Create a utility function `getCloudinaryUrl(originalUrl, width, height, quality)` that transforms the URL by injecting Cloudidity transformation params:
+  - Replace `/upload/` with `/upload/w_{width},h_{height},c_fill,q_auto,f_auto/` in the URL
+  - `q_auto` = automatic quality optimization
+  - `f_auto` = serve WebP/AVIF automatically based on browser support
+  - `c_fill` = crop to exact dimensions
+- Apply this utility everywhere product images are rendered — product cards, category grids, homepage sections
+- For the banner images (`/banner.webp`, `/banner2.webp`, `/banners/under-999.webp`, `/under699new.webp`) — these are 1020px wide being displayed at ~429px. Resize them at build time or serve them through Cloudinary as well. If they're local files on Vercel, add them to Cloudinary or use Vercel's built-in image optimization via `<img>` with proper `width` and `height` attributes.
+- **Estimated savings: 813 KiB** — this is the single biggest bandwidth win on the page
+
+**5. LCP Image Not Prioritized**
+
+The Largest Contentful Paint element (likely the hero image or first product image) is being discovered late and has no `fetchpriority="high"`.
+
+- Identify what the LCP element is — it's likely the first banner image or hero section image
+- **Fix:** Add `fetchpriority="high"` and remove `loading="lazy"` from ONLY the LCP image
+- **Fix:** Add a `<link rel="preload" as="image" href="...">` in the HTML `<head>` for the LCP image if it's a static/known URL
+
+---
+
+### 🟠 SMOOTHNESS & JITTER FIXES
+
+**6. Non-Composited Animations Causing Jank**
+
+Lighthouse detected 3 animated elements using CSS properties that trigger layout/paint instead of just composite:
+- The carousel dot buttons (`button.rounded-full...`) are animating `width` and `background-color` — these are not GPU-composited
+- The heading animation (`h1.tb-heading-anim` with `tbheadingsplit-in`) uses `letter-spacing` which also triggers layout
+
+- **Fix for carousel dots:** Replace `width` animation with `transform: scaleX()` and `background-color` with `opacity` changes. This keeps animation on the compositor thread — no layout thrashing.
+- **Fix for heading animation:** If `letter-spacing` animation is used for a split-text reveal effect, replace it with `transform: translateY()` or `opacity` — these are the only two properties that are truly compositor-only and will be perfectly smooth.
+- General rule: **only animate `transform` and `opacity`.** Everything else causes jank.
+
+**7. Forced Reflows from JavaScript**
+
+`index-H7NeUSZd.js:27` is causing forced reflows by reading layout properties (like `offsetWidth`) after DOM mutations.
+
+- Search the codebase for any place where layout-reading properties are accessed inside loops or immediately after DOM changes: `offsetWidth`, `offsetHeight`, `getBoundingClientRect()`, `scrollTop`, `clientHeight`
+- **Fix:** Batch all DOM reads before DOM writes. Read layout values first, store them in variables, then apply changes. Never interleave reads and writes.
+- If there's a scroll handler or resize handler, make sure it's debounced (at minimum 16ms / one frame)
+
+**8. Too Many Long Main Thread Tasks (20 found)**
+
+The main thread has 20 tasks exceeding 50ms, with some running 487ms+. This is what causes the UI to feel frozen/unresponsive during load.
+
+- The root cause is the large unsplit bundle executing everything at once
+- After fixing bundle splitting (#3 above), these should reduce significantly
+- Additionally: check if there are any `Array.map()` operations over large product arrays happening synchronously on render. If the product list has 50+ items, consider virtualizing the list or paginating the initial render to 12-16 items
+
+---
+
+### 🟢 QUICK WINS (Do These Too)
+
+**9. Preconnect to Critical Origins**
+
+Add these to the `<head>` in `index.html`:
+```html
+<link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+```
+Remove the unused preconnect to `https://fonts.gstatic.com` that currently exists without `crossorigin` — fix it or remove it.
+
+**10. Duplicate Fonts Preconnect**
+
+There are currently TWO duplicate `<link rel="preconnect">` tags for both `fonts.googleapis.com` and `fonts.gstatic.com`. Remove the duplicates — keep only one of each.
+
+**11. version.json Being Fetched 4 Times**
+
+`/version.json` is appearing 4 times in the network tree with different timestamps. This is likely the PWA service worker checking for updates. It should check once, not on every single request cycle. Find the workbox/PWA registration config and set a reasonable update check interval (e.g., every 60 seconds, not on every navigation).
+
+**12. Back/Forward Cache Disabled**
+
+`Cache-Control: no-store` on the main document or an API response is preventing bfcache, meaning every back-navigation is a full reload. 
+
+- Check your Vercel API routes (`/api/*.ts`) — if any of them set `Cache-Control: no-store` on the response, reconsider. Product listings can be `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`
+- Check if the main HTML document has `no-store` — it shouldn't
+
+---
+
+## WHAT NOT TO TOUCH
+
+- Do not change any colors, fonts, spacing, or visual design
+- Do not change any component structure unless directly related to performance
+- Do not add new UI features
+- Do not change routing structure
+- Do not modify any checkout, cart, or payment-related code
+- Do not touch anything in the admin or order management flow
+
+---
+
+## EXPECTED OUTCOME
+
+After these fixes, the site should:
+- Load visible content (FCP) under 3 seconds on slow 4G
+- Never show a blank white screen for 10+ seconds on hard refresh
+- Have no jank or stutter during scroll
+- Have smooth animations (carousel, heading reveals)
+- Feel instant when navigating between pages (due to caching + code splitting)
+- Not freeze the UI while loading product data
+
+Start with the Critical fixes (#1, #2, #3) in that order. Then move to High Impact (#4, #5). Then Smoothness (#6, #7, #8). Quick wins (#9-12) can be done anytime.

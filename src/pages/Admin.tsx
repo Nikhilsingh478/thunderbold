@@ -791,6 +791,10 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   shipped: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   delivered: 'bg-green-500/20 text-green-400 border-green-500/30',
+  return_requested: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  return_approved: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  return_rejected: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+  refund_issued: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
 };
 
 export default function Admin() {
@@ -847,9 +851,10 @@ export default function Admin() {
     suggestedRefundAmount: number;
     reason: string;
     description: string;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'pending' | 'approved' | 'rejected' | 'refund_issued';
     refundAmount?: number | null;
     adminNotes?: string | null;
+    refundIssuedAt?: string | null;
     createdAt: string;
     updatedAt: string;
   }
@@ -857,15 +862,17 @@ export default function Admin() {
   const [returnsLoading, setReturnsLoading] = useState(false);
   const [managingReturn, setManagingReturn] = useState<ReturnRequest | null>(null);
   const [returnAction, setReturnAction] = useState<'approve' | 'reject' | null>(null);
+  const [returnShippingCharges, setReturnShippingCharges] = useState('');
   const [returnRefundAmount, setReturnRefundAmount] = useState('');
   const [returnAdminNotes, setReturnAdminNotes] = useState('');
   const [returnSubmitting, setReturnSubmitting] = useState(false);
   const [returnError, setReturnError] = useState('');
+  const [issuingRefundId, setIssuingRefundId] = useState<string | null>(null);
 
   const handleManageReturn = async () => {
     if (!user || !managingReturn || !returnAction) return;
-    if (returnAction === 'approve' && !returnRefundAmount) {
-      setReturnError('Please enter a refund amount.');
+    if (returnAction === 'approve' && !returnShippingCharges) {
+      setReturnError('Please enter the shipping cost.');
       return;
     }
     setReturnSubmitting(true);
@@ -877,7 +884,11 @@ export default function Admin() {
         adminNotes: returnAdminNotes.trim() || undefined,
       };
       if (returnAction === 'approve') {
-        body.refundAmount = parseFloat(returnRefundAmount) || 0;
+        const shipping = parseFloat(returnShippingCharges) || 0;
+        body.shippingCharges = shipping;
+        if (returnRefundAmount) {
+          body.refundAmount = parseFloat(returnRefundAmount) || 0;
+        }
       }
       const r = await fetch(`/api/returns?id=${managingReturn._id}`, {
         method: 'PATCH',
@@ -886,13 +897,16 @@ export default function Admin() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d?.error || 'Failed to update return');
-      // Update local state
+      const shipping = parseFloat(returnShippingCharges) || 0;
+      const computedRefund = Math.max(0, managingReturn.totalAmount - shipping);
+      const finalRefund = returnRefundAmount ? (parseFloat(returnRefundAmount) || 0) : computedRefund;
       setReturns(prev => prev.map(ret =>
         ret._id === managingReturn._id
           ? {
               ...ret,
               status: returnAction === 'approve' ? 'approved' : 'rejected',
-              refundAmount: returnAction === 'approve' ? (parseFloat(returnRefundAmount) || 0) : null,
+              shippingCharges: returnAction === 'approve' ? shipping : ret.shippingCharges,
+              refundAmount: returnAction === 'approve' ? finalRefund : null,
               adminNotes: returnAdminNotes.trim() || null,
             }
           : ret
@@ -903,6 +917,28 @@ export default function Admin() {
       setReturnError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setReturnSubmitting(false);
+    }
+  };
+
+  const handleIssueRefund = async (returnId: string) => {
+    if (!user) return;
+    setIssuingRefundId(returnId);
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch(`/api/returns?id=${returnId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'issue_refund' }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.error || 'Failed to issue refund');
+      setReturns(prev => prev.map(ret =>
+        ret._id === returnId ? { ...ret, status: 'refund_issued', refundIssuedAt: new Date().toISOString() } : ret
+      ));
+    } catch (err: unknown) {
+      console.error('Issue refund error:', err);
+    } finally {
+      setIssuingRefundId(null);
     }
   };
 
@@ -2233,7 +2269,8 @@ export default function Admin() {
                                   onClick={() => {
                                     setManagingReturn(ret);
                                     setReturnAction('approve');
-                                    setReturnRefundAmount(String(ret.suggestedRefundAmount));
+                                    setReturnShippingCharges(String(ret.shippingCharges));
+                                    setReturnRefundAmount('');
                                     setReturnAdminNotes('');
                                     setReturnError('');
                                   }}
@@ -2246,6 +2283,7 @@ export default function Admin() {
                                   onClick={() => {
                                     setManagingReturn(ret);
                                     setReturnAction('reject');
+                                    setReturnShippingCharges('');
                                     setReturnRefundAmount('');
                                     setReturnAdminNotes('');
                                     setReturnError('');
@@ -2255,6 +2293,32 @@ export default function Admin() {
                                   <X className="w-3.5 h-3.5" />
                                   Reject
                                 </button>
+                              </div>
+                            )}
+
+                            {/* Mark Refund Issued — only for approved returns */}
+                            {ret.status === 'approved' && (
+                              <button
+                                onClick={() => handleIssueRefund(ret._id)}
+                                disabled={issuingRefundId === ret._id}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 bg-teal-500/10 border border-teal-500/40 rounded-lg text-teal-400 text-xs font-condensed uppercase tracking-wider hover:bg-teal-500/20 transition-colors disabled:opacity-50"
+                              >
+                                {issuingRefundId === ret._id ? (
+                                  <><span className="w-3 h-3 border-2 border-teal-400/30 border-t-teal-400 rounded-full animate-spin" /> Processing…</>
+                                ) : (
+                                  <><CheckCircle2 className="w-3.5 h-3.5" /> Mark Refund Issued</>
+                                )}
+                              </button>
+                            )}
+
+                            {/* Refund issued confirmation */}
+                            {ret.status === 'refund_issued' && (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-teal-500/5 border border-teal-500/20 rounded-lg">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                <p className="font-condensed text-xs text-teal-400">
+                                  Refund of ₹{(ret.refundAmount ?? 0).toLocaleString('en-IN')} issued
+                                  {ret.refundIssuedAt && ` · ${new Date(ret.refundIssuedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -2534,22 +2598,44 @@ export default function Admin() {
               </div>
 
               {returnAction === 'approve' && (
-                <div>
-                  <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
-                    Refund Amount (₹) <span className="text-brass">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={returnRefundAmount}
-                    onChange={(e) => { setReturnRefundAmount(e.target.value); setReturnError(''); }}
-                    placeholder={String(managingReturn.suggestedRefundAmount)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
-                  />
-                  <p className="font-condensed text-[10px] text-sv-dim mt-1">
-                    Suggested: ₹{managingReturn.suggestedRefundAmount.toLocaleString('en-IN')} (order − ₹{managingReturn.shippingCharges} shipping)
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+                      Shipping Cost Deduction (₹) <span className="text-brass">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={returnShippingCharges}
+                      onChange={(e) => {
+                        setReturnShippingCharges(e.target.value);
+                        setReturnRefundAmount('');
+                        setReturnError('');
+                      }}
+                      placeholder="e.g. 50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+                    />
+                    <p className="font-condensed text-[10px] text-sv-dim mt-1">
+                      Refund will be: ₹{managingReturn.totalAmount.toLocaleString('en-IN')} − ₹{returnShippingCharges || '?'} = ₹{returnShippingCharges ? Math.max(0, managingReturn.totalAmount - (parseFloat(returnShippingCharges) || 0)).toLocaleString('en-IN') : '?'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+                      Override Refund Amount (₹) <span className="text-sv-dim normal-case tracking-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={returnRefundAmount}
+                      onChange={(e) => { setReturnRefundAmount(e.target.value); setReturnError(''); }}
+                      placeholder={returnShippingCharges ? String(Math.max(0, managingReturn.totalAmount - (parseFloat(returnShippingCharges) || 0))) : 'Auto-computed'}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+                    />
+                    <p className="font-condensed text-[10px] text-sv-dim mt-1">
+                      Leave blank to use the auto-computed amount above.
+                    </p>
+                  </div>
+                </>
               )}
 
               <div>
@@ -2579,7 +2665,7 @@ export default function Admin() {
               </button>
               <button
                 onClick={handleManageReturn}
-                disabled={returnSubmitting || (returnAction === 'approve' && !returnRefundAmount)}
+                disabled={returnSubmitting || (returnAction === 'approve' && !returnShippingCharges)}
                 className={`flex-1 py-3 rounded-lg text-white text-sm font-condensed font-bold uppercase tracking-wider transition-colors disabled:opacity-40 flex items-center justify-center gap-2 ${
                   returnAction === 'approve'
                     ? 'bg-emerald-600 hover:bg-emerald-500'

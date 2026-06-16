@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import fs from "fs";
@@ -28,9 +28,9 @@ export default defineConfig(() => ({
   },
   build: {
     sourcemap: false,
-    rollupOptions: {
-      external: ['lucide-react/dist/esm/icons/wallet-minimal.js.map'],
-    },
+  },
+  optimizeDeps: {
+    exclude: ['lucide-react'],
   },
   server: {
     host: "0.0.0.0",
