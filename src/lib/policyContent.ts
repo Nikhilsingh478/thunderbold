@@ -72,8 +72,12 @@ export const policyData: PolicyData[] = [
         text: 'All prices listed are in Indian Rupees (₹) and are inclusive of applicable taxes. We reserve the right to modify pricing at any time without prior notice. Prices at the time of order confirmation are final.',
       },
       {
-        heading: 'Order Processing & Refunds',
-        text: 'Every order goes through a manual confirmation step before processing. Refunds, where applicable, are processed within 5–7 business days of approval. A nominal ₹50 handling fee applies to accepted returns or post-confirmation cancellations, deducted from the refund amount. Refunds are issued to the original payment method or as agreed store credit.',
+        heading: 'Order Confirmation Process',
+        text: 'Every order goes through a manual confirmation step before processing. After placing your order, our team will call you to confirm the details. You may cancel at any time before receiving the confirmation call. Once confirmed, the order moves to fulfilment and cannot be cancelled.',
+      },
+      {
+        heading: 'Refund Policy',
+        text: 'Refunds for approved returns are processed within 5–7 business days. A ₹50 shipping deduction applies to all approved refunds to cover delivery handling costs. Refunds are issued to the original payment method or as agreed with the customer.',
       },
       {
         heading: 'Governing Law',
@@ -87,26 +91,44 @@ export const policyData: PolicyData[] = [
     subtitle: 'Our commitment to a fair and transparent process',
     sections: [
       {
-        heading: 'Order Confirmation',
-        text: 'Every order placed on Thunderbold goes through a manual verification step. Our team will reach out to you via a confirmation call before your order is processed. This gives you one final opportunity to review or amend your order.',
+        heading: 'How Every Order Works',
+        text: 'After you place an order, our team will call you on the phone number provided to confirm the details. This call is mandatory before any order is processed or shipped. Please keep your phone reachable after placing an order.',
       },
       {
-        heading: 'Cancellation Before Confirmation',
-        text: 'You may cancel your order at any time before you receive the confirmation call from our team. Once the order has been confirmed and moved to processing or shipping, cancellations are no longer accepted.',
-      },
-      {
-        heading: 'Returns After Delivery',
-        text: 'If you\'ve received your order and have a valid concern — such as a manufacturing defect, incorrect item, or significant sizing discrepancy — you may raise a return request within 24 hours of delivery.',
-        list: ['Manufacturing defects', 'Wrong item delivered', 'Significant difference from product listing'],
-      },
-      {
-        heading: 'Refund Processing',
-        text: 'Once your return is approved, refunds are processed within 5–7 business days. A nominal ₹50 processing fee applies to all accepted returns or post-confirmation cancellations, covering handling and restocking costs, deducted from the refund amount.',
-      },
-      {
-        heading: 'How to Raise a Request',
-        text: 'Contact us at adminthunderbold@gmail.com or call +91 95611 72681. Please have your order ID ready when reaching out.',
+        heading: 'Cancellation — Before Confirmation',
+        text: 'You may cancel your order at any time while it is in "Pending" status — before you receive the confirmation call from our team. Simply go to My Orders in the app and tap Cancel. No questions asked.',
         highlight: true,
+      },
+      {
+        heading: 'Cancellation — After Confirmation',
+        text: 'Once our team has confirmed your order and the status changes to "Confirmed" or beyond (Shipped, Out for Delivery), cancellation is no longer possible through the app. Please contact us immediately on +91 95611 72681 for urgent cases — we will try to help within our operational limits.',
+      },
+      {
+        heading: 'Delivery Attempts',
+        text: 'Our delivery partner makes up to 3 attempts to deliver your order. If delivery fails on all 3 attempts due to unavailability at the address, the package is returned to us. In this case, any loss (return shipping, restocking) is borne by us — you will not be charged. However, please ensure someone is available to receive the order.',
+      },
+      {
+        heading: 'Return Eligibility — After Delivery',
+        text: 'Once you receive your order and make the payment, you may raise a return request if:',
+        list: [
+          'The product has a manufacturing defect',
+          'The wrong item was delivered',
+          'There is a significant size discrepancy (e.g. received 32 instead of 30)',
+          'The product is materially different from its description or images',
+        ],
+      },
+      {
+        heading: 'How to Request a Return',
+        text: 'Go to My Orders → find the delivered order → tap "Request Return". Select the reason and describe the issue clearly. Our team will review your request and contact you within 2–3 business days. You can track the status of your request directly in the app.',
+        highlight: true,
+      },
+      {
+        heading: 'Refund Calculation',
+        text: 'Approved refunds are calculated as: Order Total − ₹50 shipping charges. The ₹50 deduction covers the cost of reverse logistics. Example: if your order was ₹1,299, your refund will be ₹1,249. Refunds are processed within 5–7 business days after approval.',
+      },
+      {
+        heading: 'What Is NOT Covered',
+        text: 'Returns are not accepted for: change of mind, incorrect size ordered by the customer (size chart is provided), minor colour variations due to screen calibration, or items that have been used, washed, or damaged after delivery.',
       },
     ],
   },

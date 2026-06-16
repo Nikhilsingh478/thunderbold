@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell, RotateCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
 import AnalyticsTab from '../components/Analytics/AnalyticsTab';
 import Navbar from '../components/Navbar';
@@ -796,7 +796,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews' | 'brands' | 'slider' | 'notifications'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'categories' | 'reviews' | 'brands' | 'slider' | 'notifications' | 'returns'>('analytics');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -835,6 +835,91 @@ export default function Admin() {
   const [sliderSaving, setSliderSaving] = useState(false);
   const [sliderSaved, setSliderSaved] = useState(false);
 
+  // Returns tab state
+  interface ReturnRequest {
+    _id: string;
+    orderId: string;
+    orderNumber?: string | null;
+    userId: string;
+    products: Array<{ name: string; quantity: number; size?: string; price?: number }>;
+    totalAmount: number;
+    shippingCharges: number;
+    suggestedRefundAmount: number;
+    reason: string;
+    description: string;
+    status: 'pending' | 'approved' | 'rejected';
+    refundAmount?: number | null;
+    adminNotes?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [returnsLoading, setReturnsLoading] = useState(false);
+  const [managingReturn, setManagingReturn] = useState<ReturnRequest | null>(null);
+  const [returnAction, setReturnAction] = useState<'approve' | 'reject' | null>(null);
+  const [returnRefundAmount, setReturnRefundAmount] = useState('');
+  const [returnAdminNotes, setReturnAdminNotes] = useState('');
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
+  const [returnError, setReturnError] = useState('');
+
+  const handleManageReturn = async () => {
+    if (!user || !managingReturn || !returnAction) return;
+    if (returnAction === 'approve' && !returnRefundAmount) {
+      setReturnError('Please enter a refund amount.');
+      return;
+    }
+    setReturnSubmitting(true);
+    setReturnError('');
+    try {
+      const token = await user.getIdToken();
+      const body: Record<string, unknown> = {
+        action: returnAction,
+        adminNotes: returnAdminNotes.trim() || undefined,
+      };
+      if (returnAction === 'approve') {
+        body.refundAmount = parseFloat(returnRefundAmount) || 0;
+      }
+      const r = await fetch(`/api/returns?id=${managingReturn._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.error || 'Failed to update return');
+      // Update local state
+      setReturns(prev => prev.map(ret =>
+        ret._id === managingReturn._id
+          ? {
+              ...ret,
+              status: returnAction === 'approve' ? 'approved' : 'rejected',
+              refundAmount: returnAction === 'approve' ? (parseFloat(returnRefundAmount) || 0) : null,
+              adminNotes: returnAdminNotes.trim() || null,
+            }
+          : ret
+      ));
+      setManagingReturn(null);
+      setReturnAction(null);
+    } catch (err: unknown) {
+      setReturnError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setReturnSubmitting(false);
+    }
+  };
+
+  const fetchReturns = async (silent = false) => {
+    if (!user) return;
+    if (!silent) setReturnsLoading(true);
+    try {
+      const token = await user.getIdToken();
+      const r = await fetch('/api/returns', { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) {
+        const d = await r.json();
+        setReturns(d.returns ?? []);
+      }
+    } catch { console.error('Failed to fetch returns'); }
+    finally { if (!silent) setReturnsLoading(false); }
+  };
+
   useEffect(() => {
     if (user && !ADMIN_EMAILS.includes(user.email)) navigate('/');
   }, [user, navigate]);
@@ -849,6 +934,7 @@ export default function Admin() {
       else if (activeTab === 'reviews') fetchProducts(silent);
       else if (activeTab === 'brands') fetchBrands(silent);
       else if (activeTab === 'slider') fetchSliderConfig(silent);
+      else if (activeTab === 'returns') fetchReturns(silent);
     };
 
     loadData(false); // Initial load (not silent)
@@ -1322,6 +1408,7 @@ export default function Admin() {
     { key: 'reviews' as const, label: 'Reviews', Icon: MessageSquare },
     { key: 'slider' as const, label: 'Slider', Icon: SlidersHorizontal },
     { key: 'notifications' as const, label: 'Notify', Icon: Bell },
+    { key: 'returns' as const, label: 'Returns', Icon: RotateCcw },
   ];
 
   return (
@@ -2017,6 +2104,167 @@ export default function Admin() {
                 </motion.div>
               )}
 
+              {/* ── RETURNS ── */}
+              {activeTab === 'returns' && (
+                <motion.div key="returns" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h2 className="font-display text-xl sm:text-2xl tracking-[0.06em] text-tb-white uppercase">Return Requests</h2>
+                      <p className="font-condensed text-xs text-sv-mid mt-0.5">Review and approve or reject customer return requests.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-condensed text-xs text-amber-400 bg-amber-400/10 border border-amber-400/30 rounded px-2 py-1">
+                        {returns.filter(r => r.status === 'pending').length} pending
+                      </span>
+                      <span className="font-condensed text-xs text-sv-mid bg-white/5 border border-white/10 rounded px-2 py-1">
+                        {returns.length} total
+                      </span>
+                    </div>
+                  </div>
+
+                  {returnsLoading ? (
+                    <div className="flex justify-center py-16">
+                      <div className="animate-spin rounded-full h-7 w-7 border-2 border-white/10 border-t-white/60" />
+                    </div>
+                  ) : returns.length === 0 ? (
+                    <EmptyState message="No return requests yet." />
+                  ) : (
+                    <div className="space-y-4">
+                      {returns.map((ret) => {
+                        const statusColor =
+                          ret.status === 'pending'  ? 'text-amber-400 bg-amber-400/10 border-amber-400/30' :
+                          ret.status === 'approved' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30' :
+                          'text-rose-400 bg-rose-400/10 border-rose-400/30';
+                        const StatusIcon =
+                          ret.status === 'pending'  ? Clock :
+                          ret.status === 'approved' ? CheckCircle2 :
+                          X;
+                        const reasonLabel: Record<string, string> = {
+                          defective: 'Defective Product',
+                          wrong_item: 'Wrong Item',
+                          size_issue: 'Size Issue',
+                          not_as_described: 'Not As Described',
+                          other: 'Other',
+                        };
+                        const shortId = (ret.orderId || '').slice(-8).toUpperCase();
+
+                        return (
+                          <div key={ret._id} className="bg-white/[0.03] border border-white/10 rounded-xl p-5">
+                            {/* Header row */}
+                            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-condensed text-xs text-sv-mid uppercase tracking-wider">
+                                    Order #{ret.orderNumber || shortId}
+                                  </span>
+                                  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-condensed uppercase tracking-wider ${statusColor}`}>
+                                    <StatusIcon className="w-2.5 h-2.5" />
+                                    {ret.status}
+                                  </span>
+                                </div>
+                                <p className="font-condensed text-[10px] text-sv-dim tracking-wider">{ret.userId}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-condensed text-xs text-sv-mid">Order Total</p>
+                                <p className="font-condensed text-lg text-tb-white">₹{ret.totalAmount.toLocaleString('en-IN')}</p>
+                              </div>
+                            </div>
+
+                            {/* Reason & Description */}
+                            <div className="mb-4 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-wider">Reason:</span>
+                                <span className="font-condensed text-xs text-brass">{reasonLabel[ret.reason] || ret.reason}</span>
+                              </div>
+                              <p className="font-condensed text-sm text-sv-mid leading-relaxed bg-white/[0.03] border border-white/8 rounded-lg px-3 py-2.5">
+                                {ret.description}
+                              </p>
+                            </div>
+
+                            {/* Products */}
+                            <div className="mb-4">
+                              <p className="font-condensed text-[10px] text-sv-dim uppercase tracking-wider mb-2">Items in this order:</p>
+                              <div className="space-y-1">
+                                {ret.products.slice(0, 3).map((p, i) => (
+                                  <div key={i} className="flex items-center justify-between text-xs">
+                                    <span className="text-sv-mid font-condensed">{p.name}{p.size ? ` (${p.size})` : ''} × {p.quantity}</span>
+                                    {p.price && <span className="text-sv-dim font-condensed">₹{(p.price * p.quantity).toLocaleString('en-IN')}</span>}
+                                  </div>
+                                ))}
+                                {ret.products.length > 3 && (
+                                  <p className="font-condensed text-[10px] text-sv-dim">+{ret.products.length - 3} more items</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Approved/Rejected details */}
+                            {ret.status === 'approved' && (
+                              <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+                                <p className="font-condensed text-xs text-emerald-400 font-semibold mb-0.5">Approved — Refund: ₹{(ret.refundAmount ?? 0).toLocaleString('en-IN')}</p>
+                                {ret.adminNotes && <p className="font-condensed text-xs text-sv-mid">{ret.adminNotes}</p>}
+                              </div>
+                            )}
+                            {ret.status === 'rejected' && (
+                              <div className="mb-4 p-3 bg-rose-500/5 border border-rose-500/20 rounded-lg">
+                                <p className="font-condensed text-xs text-rose-400 font-semibold mb-0.5">Rejected</p>
+                                {ret.adminNotes && <p className="font-condensed text-xs text-sv-mid">{ret.adminNotes}</p>}
+                              </div>
+                            )}
+
+                            {/* Refund info */}
+                            {ret.status === 'pending' && (
+                              <div className="mb-4 flex items-center justify-between text-xs p-3 bg-white/[0.02] border border-white/8 rounded-lg">
+                                <span className="font-condensed text-sv-mid">
+                                  Suggested refund (order − ₹{ret.shippingCharges} shipping)
+                                </span>
+                                <span className="font-condensed text-brass font-semibold">₹{ret.suggestedRefundAmount.toLocaleString('en-IN')}</span>
+                              </div>
+                            )}
+
+                            {/* Submitted date */}
+                            <p className="font-condensed text-[10px] text-sv-dim tracking-wider mb-4">
+                              Submitted: {new Date(ret.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+
+                            {/* Actions — only for pending */}
+                            {ret.status === 'pending' && (
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => {
+                                    setManagingReturn(ret);
+                                    setReturnAction('approve');
+                                    setReturnRefundAmount(String(ret.suggestedRefundAmount));
+                                    setReturnAdminNotes('');
+                                    setReturnError('');
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-500/10 border border-emerald-500/40 rounded-lg text-emerald-400 text-xs font-condensed uppercase tracking-wider hover:bg-emerald-500/20 transition-colors"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setManagingReturn(ret);
+                                    setReturnAction('reject');
+                                    setReturnRefundAmount('');
+                                    setReturnAdminNotes('');
+                                    setReturnError('');
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-rose-500/10 border border-rose-500/40 rounded-lg text-rose-400 text-xs font-condensed uppercase tracking-wider hover:bg-rose-500/20 transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
               {/* ── NOTIFICATIONS ── */}
               {activeTab === 'notifications' && (
                 <motion.div key="notifications" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
@@ -2265,6 +2513,89 @@ export default function Admin() {
             onSubmit={updateProduct}
             onClose={() => setEditingProduct(null)}
           />
+        )}
+        {/* Manage Return Modal (approve / reject) */}
+        {managingReturn && returnAction && (
+          <ModalShell onClose={() => { if (!returnSubmitting) { setManagingReturn(null); setReturnAction(null); setReturnError(''); } }}>
+            <div className="px-6 pt-6 pb-2 border-b border-white/10 shrink-0">
+              <p className={`font-condensed text-xs uppercase tracking-widest mb-0.5 ${returnAction === 'approve' ? 'text-emerald-400/70' : 'text-rose-400/70'}`}>
+                {returnAction === 'approve' ? 'Approve Return' : 'Reject Return'}
+              </p>
+              <h3 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase pr-8">
+                {returnAction === 'approve' ? 'Issue Refund' : 'Decline Request'}
+              </h3>
+            </div>
+            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+              {/* Return summary */}
+              <div className="p-3 bg-white/[0.03] border border-white/8 rounded-lg space-y-1">
+                <p className="font-condensed text-xs text-sv-mid">Customer: <span className="text-tb-white">{managingReturn.userId}</span></p>
+                <p className="font-condensed text-xs text-sv-mid">Order Total: <span className="text-tb-white">₹{managingReturn.totalAmount.toLocaleString('en-IN')}</span></p>
+                <p className="font-condensed text-xs text-sv-mid">Reason: <span className="text-brass">{managingReturn.reason.replace(/_/g, ' ')}</span></p>
+              </div>
+
+              {returnAction === 'approve' && (
+                <div>
+                  <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+                    Refund Amount (₹) <span className="text-brass">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={returnRefundAmount}
+                    onChange={(e) => { setReturnRefundAmount(e.target.value); setReturnError(''); }}
+                    placeholder={String(managingReturn.suggestedRefundAmount)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-mid/40 focus:outline-none focus:border-white/30 transition-colors"
+                  />
+                  <p className="font-condensed text-[10px] text-sv-dim mt-1">
+                    Suggested: ₹{managingReturn.suggestedRefundAmount.toLocaleString('en-IN')} (order − ₹{managingReturn.shippingCharges} shipping)
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">
+                  Admin Notes <span className="text-sv-dim normal-case tracking-normal">(Optional — shown to customer)</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={returnAdminNotes}
+                  onChange={(e) => setReturnAdminNotes(e.target.value.slice(0, 500))}
+                  placeholder={returnAction === 'approve' ? 'e.g. Approved — refund will be processed in 5 working days.' : 'e.g. Item appears used based on photos provided. Unable to process return.'}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-tb-white text-sm placeholder:text-sv-dim/40 focus:outline-none focus:border-white/30 transition-colors resize-none"
+                />
+              </div>
+
+              {returnError && (
+                <p className="font-condensed text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">{returnError}</p>
+              )}
+            </div>
+            <div className="px-6 pb-6 pt-3 flex gap-3 shrink-0 border-t border-white/10">
+              <button
+                onClick={() => { setManagingReturn(null); setReturnAction(null); setReturnError(''); }}
+                disabled={returnSubmitting}
+                className="flex-1 py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleManageReturn}
+                disabled={returnSubmitting || (returnAction === 'approve' && !returnRefundAmount)}
+                className={`flex-1 py-3 rounded-lg text-white text-sm font-condensed font-bold uppercase tracking-wider transition-colors disabled:opacity-40 flex items-center justify-center gap-2 ${
+                  returnAction === 'approve'
+                    ? 'bg-emerald-600 hover:bg-emerald-500'
+                    : 'bg-rose-600 hover:bg-rose-500'
+                }`}
+              >
+                {returnSubmitting ? (
+                  <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing…</>
+                ) : returnAction === 'approve' ? (
+                  <><CheckCircle2 className="w-3.5 h-3.5" /> Confirm Approve</>
+                ) : (
+                  <><X className="w-3.5 h-3.5" /> Confirm Reject</>
+                )}
+              </button>
+            </div>
+          </ModalShell>
         )}
       </AnimatePresence>
     </div>

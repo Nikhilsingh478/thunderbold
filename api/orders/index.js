@@ -358,8 +358,26 @@ async function handleCancel(req, res) {
     return res.status(403).json({ error: "You can only cancel your own orders" });
   }
   if (order.status === "cancelled") return res.status(400).json({ error: "Order is already cancelled" });
-  if (order.status === "shipped" || order.status === "delivered") {
-    return res.status(400).json({ error: `Orders that are already ${order.status} cannot be cancelled.` });
+
+  // Policy: customers can only cancel while the order is still pending (before confirmation call).
+  // Admins can cancel any non-delivered, non-return order.
+  const adminUser = await isAdmin(userEmail, db);
+  if (!adminUser && order.status !== "pending") {
+    const statusMessages = {
+      confirmed: "Your order has already been confirmed. Cancellation is no longer possible. Please call +91 95611 72681 if urgent.",
+      packed:    "Your order is being packed and cannot be cancelled.",
+      shipped:   "Your order has already been shipped and cannot be cancelled.",
+      delivered: "Your order has been delivered. Please use the Return option if you have an issue.",
+      return_requested: "A return request is already in progress for this order.",
+      return_approved:  "This order's return has been approved.",
+      return_rejected:  "This order's return was rejected.",
+    };
+    const msg = statusMessages[order.status] || `Orders with status "${order.status}" cannot be cancelled.`;
+    return res.status(400).json({ error: msg });
+  }
+
+  if (adminUser && ["delivered", "return_approved", "return_requested", "return_rejected"].includes(order.status)) {
+    return res.status(400).json({ error: `Orders with status "${order.status}" cannot be cancelled.` });
   }
 
   const result = await ordersCollection.updateOne(
@@ -430,9 +448,9 @@ async function handleManage(req, res) {
   if (req.method === "PATCH") {
     const body = await parseBody(req);
     const { status } = body;
-    const validStatuses = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"];
+    const validStatuses = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled", "return_requested", "return_approved", "return_rejected"];
     if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, packed, shipped, delivered, cancelled" });
+      return res.status(400).json({ error: "Invalid status. Valid: " + validStatuses.join(", ") });
     }
 
     const existingOrder = await orders.findOne({ _id: objectId }, { projection: { status: 1, userId: 1, products: 1 } });

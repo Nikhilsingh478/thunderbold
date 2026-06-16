@@ -81,6 +81,10 @@
       "destination": "/api/notifications?subpath=test-send"
     },
     {
+      "source": "/api/returns",
+      "destination": "/api/returns"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
