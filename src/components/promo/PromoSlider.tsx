@@ -129,9 +129,20 @@ export default function PromoSlider() {
                 }}
                 aria-label={`Go to slide ${i + 1}: ${slide.title}`}
                 aria-current={active ? 'true' : 'false'}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  active ? 'w-8 bg-brass' : 'w-2 bg-white/25 hover:bg-white/50'
-                }`}
+                style={{
+                  width: 32,
+                  height: 6,
+                  borderRadius: 999,
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  background: active ? '#C9A84C' : 'rgba(255,255,255,0.25)',
+                  opacity: active ? 1 : 0.7,
+                  transform: `scaleX(${active ? 1 : 0.25})`,
+                  transformOrigin: 'center',
+                  transition: 'transform 300ms ease, opacity 300ms ease, background-color 300ms ease',
+                  willChange: 'transform, opacity',
+                }}
               />
             );
           })}

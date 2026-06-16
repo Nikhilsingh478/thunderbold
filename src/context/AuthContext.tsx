@@ -7,7 +7,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { getFirebaseAuth, googleProvider } from '../lib/firebase';
 import { schedulePrefetchOrders, clearOrdersCache } from '../lib/ordersCache';
 
 interface AuthContextType {
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const auth = getFirebaseAuth();
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const loginWithGoogle = async (): Promise<User> => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
       const user = result.user;
       
       // Sync user with database
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const loginWithEmail = async (email: string, password: string): Promise<User> => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
       const user = result.user;
       
       // Sync user with database
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signupWithEmail = async (email: string, password: string): Promise<User> => {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
       const user = result.user;
       
       // Sync user with database
@@ -92,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async (): Promise<void> => {
     try {
-      await firebaseSignOut(auth);
+      await firebaseSignOut(getFirebaseAuth());
     } catch (error) {
       console.error('Logout error:', error);
       throw error;

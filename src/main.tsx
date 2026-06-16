@@ -2,9 +2,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Suppress browser context menu on images — prevents "Save / Open image"
-// sheet in Android WebView and mobile browsers, preserving native-app feel.
-// Only suppresses on <img> targets; right-click on text/links still works.
 document.addEventListener('contextmenu', (e) => {
   if (e.target instanceof HTMLImageElement) {
     e.preventDefault();
@@ -14,11 +11,9 @@ document.addEventListener('contextmenu', (e) => {
 createRoot(document.getElementById("root")!).render(<App />);
 
 if ('serviceWorker' in navigator) {
-  // Clean up legacy or conflicting service workers registered previously
   navigator.serviceWorker.getRegistrations().then((registrations) => {
     for (const reg of registrations) {
       const scriptURL = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || '';
-      // Keep only our main Workbox SW (/sw.js). Remove others to prevent messaging conflicts.
       if (scriptURL && !scriptURL.endsWith('/sw.js')) {
         console.log('[PWA] Unregistering stale service worker:', scriptURL);
         reg.unregister().catch((e) => console.warn('[PWA] Failed to unregister sw:', e));
@@ -29,8 +24,7 @@ if ('serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => {
     const updateSW = registerSW({
       onNeedRefresh() {
-        console.log('[PWA] New content available — auto-reloading to apply update...');
-        // Auto-reload: ensures users never get stuck on stale cached black screen
+        console.log('[PWA] New content available — auto-reloading...');
         updateSW(true);
       },
       onOfflineReady() {
@@ -41,74 +35,49 @@ if ('serviceWorker' in navigator) {
       },
       onRegisteredSW(swUrl, r) {
         if (!r) return;
+        console.log('[PWA] Service worker registered.');
 
-        console.log('[PWA] Service worker registered successfully. Setting up update checks.');
-
-        // 1. Periodically check for service worker updates every 1 hour
-        const swCheckInterval = 60 * 60 * 1000;
+        // 1. Periodic SW update check every 1 hour
         setInterval(() => {
           if (navigator.onLine) {
-            console.log('[PWA] Periodic service worker update check running...');
-            r.update().catch(err => console.warn('[PWA] Periodic service worker update failed:', err));
+            r.update().catch(() => {});
           }
-        }, swCheckInterval);
+        }, 60 * 60 * 1000);
 
-        // 2. Check for service worker updates when window/tab gains focus
+        // 2. SW + version check on tab focus (single consolidated listener)
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible' && navigator.onLine) {
-            console.log('[PWA] Visibility change - checking for service worker update...');
-            r.update().catch(err => console.warn('[PWA] Visibility service worker update failed:', err));
+            r.update().catch(() => {});
+            checkVersionJson(r);
           }
         });
 
-        // 3. Periodically check version.json and compare it with the hardcoded __APP_VERSION__
-        const checkVersionJson = async () => {
+        // 3. Version.json check — once on startup, then every 60 s
+        const checkVersionJson = async (reg: typeof r) => {
           if (import.meta.env.DEV) return;
-          if (('connection' in navigator) && !navigator.onLine) return;
-
+          if (!navigator.onLine) return;
           try {
-            // Fetch version.json with a cache-busting timestamp to avoid intermediate caches
             const response = await fetch(`/version.json?t=${Date.now()}`, {
               cache: 'no-store',
-              headers: {
-                'cache-control': 'no-cache',
-                'pragma': 'no-cache'
-              }
+              headers: { 'cache-control': 'no-cache', 'pragma': 'no-cache' },
             });
             if (response.ok) {
               const data = await response.json();
               if (data.version && data.version !== __APP_VERSION__) {
-                console.log(`[Version] New build detected on server: ${data.version} (Local: ${__APP_VERSION__})`);
-                console.log('[Version] Triggering service worker update immediately...');
-                await r.update();
+                console.log(`[Version] New build: ${data.version} (local: ${__APP_VERSION__})`);
+                await reg.update();
               }
             }
-          } catch (e) {
-            console.warn('[Version] Failed to perform version.json fetch check:', e);
+          } catch {
+            // silently fail — version check is best-effort
           }
         };
 
-        // Run the version.json check immediately on startup
-        checkVersionJson();
-
-        // Also run a backup check 5 seconds later just in case page resources are still loading
-        setTimeout(checkVersionJson, 5000);
-
-        // Run the version.json check on visibility change (focus)
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            checkVersionJson();
-          }
-        });
-
-        // Poll version.json aggressively every 15 seconds in the background to catch updates fast
-        const versionPollInterval = 15 * 1000;
-        setInterval(checkVersionJson, versionPollInterval);
+        checkVersionJson(r);
+        setInterval(() => checkVersionJson(r), 60_000);
       }
     });
   }).catch((err: unknown) => {
     console.warn('[PWA] Could not import pwa-register module:', err);
   });
 }
-// PWA version test trigger comment
-

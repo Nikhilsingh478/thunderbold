@@ -40,6 +40,9 @@ app.use('/api/users', async (req, res) => {
 });
 
 app.use('/api/products', async (req, res) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  }
   try {
     const { default: handler } = await import('./api/products/index.js');
     await handler(req, res);
@@ -70,6 +73,9 @@ app.use('/api/wishlist', async (req, res) => {
 });
 
 app.use('/api/categories', async (req, res) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  }
   try {
     const { default: handler } = await import('./api/categories/index.js');
     await handler(req, res);
@@ -110,6 +116,9 @@ app.use('/api/reviews', async (req, res) => {
 });
 
 app.use('/api/brands', async (req, res) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  }
   try {
     const { default: handler } = await import('./api/brands/index.js');
     await handler(req, res);
@@ -120,6 +129,9 @@ app.use('/api/brands', async (req, res) => {
 });
 
 app.use('/api/slider', async (req, res) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  }
   try {
     req.query.subpath = 'slider';
     const { default: handler } = await import('./api/admin.js');

@@ -44,30 +44,19 @@ export default function LiveSaleSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch('/api/products');
-        if (res.ok) {
-          const data = await res.json();
-          const saleProducts = (data.products || []).filter(
-            (p: Product) => p.section === 'live-sale'
-          );
-          setProducts(prev => {
-            if (JSON.stringify(prev) !== JSON.stringify(saleProducts)) {
-              return saleProducts;
-            }
-            return prev;
-          });
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-    const interval = setInterval(load, 15000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    import('../lib/apiCache').then(({ cachedFetch }) =>
+      cachedFetch<{ products?: Product[] }>('/api/products')
+    ).then(data => {
+      if (cancelled) return;
+      const saleProducts = (data.products || []).filter(
+        (p: Product) => p.section === 'live-sale'
+      );
+      setProducts(saleProducts);
+    }).catch(() => {}).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   return (

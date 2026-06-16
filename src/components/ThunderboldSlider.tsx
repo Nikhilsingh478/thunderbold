@@ -83,14 +83,13 @@ export default function ThunderboldSlider() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/slider')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!cancelled && Array.isArray(data?.slides)) {
-          setSlides(data.slides);
-        }
-      })
-      .catch(() => {});
+    import('../lib/apiCache').then(({ cachedFetch }) =>
+      cachedFetch<{ slides?: SlideData[] }>('/api/slider')
+    ).then(data => {
+      if (!cancelled && Array.isArray(data?.slides)) {
+        setSlides(data.slides);
+      }
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
@@ -168,9 +167,9 @@ export default function ThunderboldSlider() {
     >
       <style>{`
         @keyframes tb-heading-split-in {
-          0%   { opacity: 0; transform: scale(1.35) translateY(-6%); filter: blur(20px); letter-spacing: 0.25em; }
+          0%   { opacity: 0; transform: scale(1.35) translateY(-6%); filter: blur(20px); }
           60%  { opacity: 1; filter: blur(0px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); letter-spacing: -0.02em; }
+          100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
         }
         .tb-heading-anim { animation: tb-heading-split-in 850ms cubic-bezier(0.22, 1, 0.36, 1) both; }
       `}</style>
@@ -217,7 +216,8 @@ export default function ThunderboldSlider() {
                   alt={slide.heading || `Slide ${i + 1}`}
                   draggable={false}
                   loading={i === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
+                  fetchPriority={i === 0 ? 'high' : 'low'}
+                  decoding={i === 0 ? 'sync' : 'async'}
                   style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom center', display: 'block', userSelect: 'none' }}
                 />
               ) : (
@@ -246,14 +246,18 @@ export default function ThunderboldSlider() {
                   window.setTimeout(() => { animatingRef.current = false; }, DURATION);
                 }}
                 style={{
-                  width: i === activeIndex ? 24 : 6,
+                  width: 24,
                   height: 6,
                   borderRadius: 3,
-                  background: i === activeIndex ? 'white' : 'rgba(255,255,255,0.3)',
+                  background: 'white',
                   border: 'none',
                   padding: 0,
                   cursor: 'pointer',
-                  transition: `width ${DURATION}ms cubic-bezier(0.4,0,0.2,1), background ${DURATION}ms`,
+                  opacity: i === activeIndex ? 1 : 0.3,
+                  transform: `scaleX(${i === activeIndex ? 1 : 0.25})`,
+                  transformOrigin: 'center',
+                  transition: `transform ${DURATION}ms cubic-bezier(0.4,0,0.2,1), opacity ${DURATION}ms cubic-bezier(0.4,0,0.2,1)`,
+                  willChange: 'transform, opacity',
                 }}
               />
             ))}

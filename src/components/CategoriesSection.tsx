@@ -117,38 +117,23 @@ export default function CategoriesSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [catRes, prodRes] = await Promise.all([fetch('/api/categories'), fetch('/api/products')]);
-        if (catRes.ok) {
-          const data = await catRes.json();
-          const freshCats = data.categories || [];
-          setCategories(prev => {
-            if (JSON.stringify(prev) !== JSON.stringify(freshCats)) {
-              return freshCats;
-            }
-            return prev;
-          });
-        }
-        if (prodRes.ok) {
-          const data = await prodRes.json();
-          const freshProds = (data.products || []).filter((p: { section?: string }) => p.section === 'kurta' || p.section === 'outfits');
-          setProducts(prev => {
-            if (JSON.stringify(prev) !== JSON.stringify(freshProds)) {
-              return freshProds;
-            }
-            return prev;
-          });
-        }
-      } catch {
-        // silently fail — skeleton stays until categories load
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-    const interval = setInterval(load, 15000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    import('../lib/apiCache').then(({ cachedFetch }) =>
+      Promise.all([
+        cachedFetch<{ categories?: Category[] }>('/api/categories'),
+        cachedFetch<{ products?: { section?: string }[] }>('/api/products'),
+      ])
+    ).then(([catData, prodData]) => {
+      if (cancelled) return;
+      setCategories(catData.categories || []);
+      const freshProds = (prodData.products || []).filter(
+        (p: { section?: string }) => p.section === 'kurta' || p.section === 'outfits'
+      );
+      setProducts(freshProds as ProductTile[]);
+    }).catch(() => {}).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const denimCategories = useMemo(

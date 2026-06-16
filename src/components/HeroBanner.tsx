@@ -146,11 +146,21 @@ export default function HeroBanner() {
             key={i}
             onClick={() => go(i, i > current ? 1 : -1)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`rounded-full transition-all duration-300 focus:outline-none ${
-              i === current
-                ? 'w-5 h-[3px] bg-white'
-                : 'w-[3px] h-[3px] bg-white/40 hover:bg-white/70'
-            }`}
+            className="focus:outline-none"
+            style={{
+              width: 20,
+              height: 3,
+              borderRadius: 999,
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              background: 'white',
+              opacity: i === current ? 1 : 0.35,
+              transform: `scaleX(${i === current ? 1 : 0.15})`,
+              transformOrigin: 'center',
+              transition: 'transform 300ms ease, opacity 300ms ease',
+              willChange: 'transform, opacity',
+            }}
           />
         ))}
       </div>
