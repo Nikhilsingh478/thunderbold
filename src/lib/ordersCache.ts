@@ -3,7 +3,7 @@ import type { User } from 'firebase/auth';
 interface Order {
   _id: string;
   userId: string;
-  products: Array<{ name: string; quantity: number; size: string; price: number; productId?: string; image?: string }>;
+  products: Array<{ name: string; quantity: number; size: string; price: number }>;
   totalAmount: number;
   status: string;
   createdAt: string;

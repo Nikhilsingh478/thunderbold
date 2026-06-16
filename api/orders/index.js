@@ -430,9 +430,9 @@ async function handleManage(req, res) {
   if (req.method === "PATCH") {
     const body = await parseBody(req);
     const { status } = body;
-    const validStatuses = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled", "return_requested", "return_approved", "return_rejected", "refunded"];
+    const validStatuses = ["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"];
     if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, packed, shipped, delivered, cancelled, return_requested, return_approved, return_rejected, refunded" });
+      return res.status(400).json({ error: "Invalid status. Valid: pending, confirmed, packed, shipped, delivered, cancelled" });
     }
 
     const existingOrder = await orders.findOne({ _id: objectId }, { projection: { status: 1, userId: 1, products: 1 } });
@@ -455,10 +455,6 @@ async function handleManage(req, res) {
         shipped:   { title: 'On Its Way', body: `Your order for ${productDisplay} is on its way. Hang tight!` },
         delivered: { title: 'Delivered', body: `Your order for ${productDisplay} has been delivered. Enjoy!` },
         cancelled: { title: 'Order Cancelled', body: `Your order for ${productDisplay} has been cancelled.` },
-        return_requested: { title: 'Return Requested 📦', body: `Your return request for ${productDisplay} has been submitted.` },
-        return_approved:  { title: 'Return Approved ✅', body: `Your return request for ${productDisplay} has been approved.` },
-        return_rejected:  { title: 'Return Rejected ❌', body: `Your return request for ${productDisplay} was not approved.` },
-        refunded:         { title: 'Refund Processed 💰', body: `Your refund for ${productDisplay} has been processed.` },
       };
       const notif = notifMap[status];
       if (notif) {
@@ -485,61 +481,6 @@ async function handleManage(req, res) {
 
   res.setHeader("Allow", ["PATCH", "DELETE"]);
   return res.status(405).json({ error: "Method not allowed" });
-}
-
-// ─────────────────────────── POST /return-request ────────────────────────────
-
-async function handleReturnRequest(req, res) {
-  const user = await authUser(req);
-  if (user.error) return res.status(user.status).json({ error: user.error });
-  const userEmail = user.email;
-
-  const body = await parseBody(req);
-  const { orderId, reason, problems, refundDetails } = body;
-
-  if (!orderId || !reason || !refundDetails) {
-    return res.status(400).json({ error: "Order ID, reason, and refund details are required." });
-  }
-
-  const db = await getDb();
-  const ordersCollection = db.collection("orders");
-
-  let orderObjectId;
-  try { orderObjectId = new ObjectId(orderId); }
-  catch { return res.status(400).json({ error: "Invalid order ID format" }); }
-
-  const order = await ordersCollection.findOne({ _id: orderObjectId });
-  if (!order) return res.status(404).json({ error: "Order not found" });
-
-  if (order.userId !== userEmail) {
-    return res.status(403).json({ error: "You can only request returns for your own orders" });
-  }
-
-  if (order.status !== "delivered") {
-    return res.status(400).json({ error: "Returns can only be requested for delivered orders" });
-  }
-
-  const result = await ordersCollection.updateOne(
-    { _id: orderObjectId },
-    {
-      $set: {
-        status: "return_requested",
-        updatedAt: new Date(),
-        returnDetails: {
-          reason: String(reason).trim().slice(0, 100),
-          problems: String(problems || "").trim().slice(0, 300),
-          refundDetails: String(refundDetails).trim().slice(0, 200),
-          requestedAt: new Date(),
-        }
-      }
-    }
-  );
-
-  if (result.modifiedCount === 0) {
-    return res.status(400).json({ error: "Return request could not be processed" });
-  }
-
-  return res.status(200).json({ success: true, message: "Return requested successfully", orderId });
 }
 
 // ─────────────────────────── Dispatcher ──────────────────────────────────────
@@ -576,14 +517,6 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: "Method not allowed" });
       }
       return await handleManage(req, res);
-    }
-
-    if (sub === "return-request") {
-      if (req.method !== "POST") {
-        res.setHeader("Allow", ["POST"]);
-        return res.status(405).json({ error: "Method not allowed" });
-      }
-      return await handleReturnRequest(req, res);
     }
 
     // Default: list orders (sub === "" or unknown)

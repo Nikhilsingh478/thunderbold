@@ -1,8 +1,8 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell, AlertTriangle } from 'lucide-react';
+import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
 import AnalyticsTab from '../components/Analytics/AnalyticsTab';
 import Navbar from '../components/Navbar';
@@ -11,7 +11,6 @@ import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
 import { printInvoice } from '../utils/printInvoice';
 import { formatOrderId } from '../lib/utils';
-import { toast } from 'sonner';
 
 const ADMIN_EMAILS = [
   "adminthunderbold@gmail.com",
@@ -23,7 +22,7 @@ interface OrderProduct {
   name: string;
   quantity: number;
   size?: string;
-  price: number;
+  price?: number;
   image?: string;
   productId?: string;
 }
@@ -47,12 +46,6 @@ interface Order {
   paymentMethod?: string;
   giftMessage?: string;
   orderNumber?: string;
-  returnDetails?: {
-    reason: string;
-    problems?: string;
-    refundDetails: string;
-    requestedAt?: string;
-  };
 }
 
 interface AdminReview {
@@ -798,11 +791,6 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   shipped: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   delivered: 'bg-green-500/20 text-green-400 border-green-500/30',
-  return_requested: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  return_approved: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-  return_rejected: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
-  refunded: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
 export default function Admin() {
@@ -1456,31 +1444,6 @@ export default function Admin() {
                                 </button>
                               </div>
                             )}
-                            {/* Return Details Alert */}
-                            {order.returnDetails && (
-                              <div className="mb-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs space-y-1.5">
-                                <div className="flex items-center gap-1.5 text-amber-400 font-bold uppercase tracking-wider">
-                                  <AlertTriangle className="w-3.5 h-3.5" />
-                                  <span>Return Request Details</span>
-                                </div>
-                                <div className="text-sv-mid leading-relaxed space-y-1">
-                                  <p><strong>Reason:</strong> {order.returnDetails.reason}</p>
-                                  {order.returnDetails.problems && <p><strong>Problems:</strong> {order.returnDetails.problems}</p>}
-                                  <div className="pt-1.5 flex items-center justify-between border-t border-amber-500/20 mt-1">
-                                    <span className="truncate mr-2"><strong>Refund To:</strong> <code className="bg-black/30 px-1 py-0.5 rounded font-mono text-[11px] text-tb-white select-all">{order.returnDetails.refundDetails}</code></span>
-                                    <button
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(order.returnDetails?.refundDetails || '');
-                                        toast.success('Refund details copied');
-                                      }}
-                                      className="text-amber-400 hover:text-amber-300 font-condensed uppercase tracking-wider font-semibold hover:underline shrink-0"
-                                    >
-                                      Copy
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                             {/* Total + Date + Update */}
                             <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
                               <div>
@@ -1494,13 +1457,9 @@ export default function Admin() {
                                 <select
                                   value={order.status ?? 'pending'}
                                   onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                                  className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none animate-none"
+                                  className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
                                 >
-                                  {['pending','confirmed','shipped','delivered','return_requested','return_approved','return_rejected','refunded','cancelled'].map(s => (
-                                    <option key={s} value={s} className="bg-zinc-900">
-                                      {s.replace('_', ' ').charAt(0).toUpperCase() + s.replace('_', ' ').slice(1)}
-                                    </option>
-                                  ))}
+                                  {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                                 </select>
                                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                               </div>
@@ -1537,8 +1496,7 @@ export default function Admin() {
                           </thead>
                           <tbody>
                             {orders.map((order) => (
-                              <Fragment key={order._id}>
-                                <tr className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors align-top">
+                              <tr key={order._id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.02] transition-colors align-top">
                                 {/* Order ID */}
                                 <td className="px-4 py-4 text-xs text-sv-mid font-mono whitespace-nowrap">
                                   {formatOrderId(order)}
@@ -1607,11 +1565,7 @@ export default function Admin() {
                                       onChange={(e) => updateOrderStatus(order._id, e.target.value)}
                                       className="pl-3 pr-8 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
                                     >
-                                      {['pending','confirmed','shipped','delivered','return_requested','return_approved','return_rejected','refunded','cancelled'].map(s => (
-                                        <option key={s} value={s} className="bg-zinc-900">
-                                          {s.replace('_', ' ').charAt(0).toUpperCase() + s.replace('_', ' ').slice(1)}
-                                        </option>
-                                      ))}
+                                      {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                                     </select>
                                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-sv-mid pointer-events-none" />
                                   </div>
@@ -1636,40 +1590,7 @@ export default function Admin() {
                                   </div>
                                 </td>
                               </tr>
-                              {order.returnDetails && (
-                                <tr key={`${order._id}-return`} className="bg-amber-500/[0.02] border-b border-white/10 align-middle">
-                                  <td colSpan={9} className="px-4 py-3 text-xs">
-                                    <div className="flex items-start gap-4">
-                                      <div className="flex items-center gap-1.5 text-amber-400 font-bold uppercase tracking-wider shrink-0 mt-0.5">
-                                        <AlertTriangle className="w-3.5 h-3.5" />
-                                        <span>Return Details:</span>
-                                      </div>
-                                      <div className="flex-1 space-y-1">
-                                        <p className="text-sv-mid text-xs">
-                                          <strong>Reason:</strong> {order.returnDetails.reason}
-                                          {order.returnDetails.problems && <span className="ml-4"><strong>Problems:</strong> {order.returnDetails.problems}</span>}
-                                        </p>
-                                        <div className="flex items-center gap-3 mt-1">
-                                          <span className="text-sv-mid text-xs">
-                                            <strong>Refund To:</strong> <code className="bg-black/30 px-1 py-0.5 rounded font-mono text-[11px] text-tb-white select-all">{order.returnDetails.refundDetails}</code>
-                                          </span>
-                                          <button
-                                            onClick={() => {
-                                              navigator.clipboard.writeText(order.returnDetails?.refundDetails || '');
-                                              toast.success('Refund details copied');
-                                            }}
-                                            className="text-amber-400 hover:text-amber-300 font-condensed uppercase tracking-wider font-semibold hover:underline text-xs"
-                                          >
-                                            Copy Refund Details
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
-                          ))}
+                            ))}
                           </tbody>
                         </table>
                       </div>

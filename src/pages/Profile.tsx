@@ -100,12 +100,6 @@ export default function Profile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
-  const [returnOrder, setReturnOrder] = useState<any | null>(null);
-  const [returnReason, setReturnReason] = useState('Size/Fit Issue');
-  const [returnProblems, setReturnProblems] = useState('');
-  const [returnRefundDetails, setReturnRefundDetails] = useState('');
-  const [submittingReturn, setSubmittingReturn] = useState(false);
-
   useEffect(() => {
     if (!user) { navigate('/'); return; }
     fetchProfile();
@@ -203,61 +197,6 @@ export default function Profile() {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setCancellingOrder(null);
-    }
-  };
-
-  const handleRequestReturn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!returnOrder) return;
-    if (!returnRefundDetails.trim()) {
-      toast.error('Please provide refund details (UPI ID or Bank Details).');
-      return;
-    }
-    setSubmittingReturn(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/orders/return-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          orderId: returnOrder._id,
-          reason: returnReason,
-          problems: returnProblems,
-          refundDetails: returnRefundDetails,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Return requested successfully');
-        setOrders(prev =>
-          prev.map(o =>
-            o._id === returnOrder._id
-              ? {
-                  ...o,
-                  status: 'return_requested',
-                  returnDetails: {
-                    reason: returnReason,
-                    problems: returnProblems,
-                    refundDetails: returnRefundDetails,
-                  },
-                }
-              : o
-          )
-        );
-        setReturnOrder(null);
-        setReturnProblems('');
-        setReturnRefundDetails('');
-      } else {
-        toast.error(data.error || 'Failed to request return');
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Network error. Failed to request return.');
-    } finally {
-      setSubmittingReturn(false);
     }
   };
 
@@ -416,10 +355,6 @@ export default function Profile() {
       case 'shipped': return 'text-orange-400 bg-orange-400/10 border-orange-400/30';
       case 'delivered': return 'text-green-400 bg-green-400/10 border-green-400/30';
       case 'cancelled': return 'text-red-400 bg-red-400/10 border-red-400/30';
-      case 'return_requested': return 'text-amber-400 bg-amber-400/10 border-amber-400/30';
-      case 'return_approved': return 'text-indigo-400 bg-indigo-400/10 border-indigo-400/30';
-      case 'return_rejected': return 'text-sv-mid bg-white/5 border-white/10';
-      case 'refunded': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
       default: return 'text-sv-mid bg-white/5 border-white/10';
     }
   };
@@ -430,10 +365,6 @@ export default function Profile() {
       case 'confirmed': return <CheckCircle className="w-3 h-3" />;
       case 'shipped': return <Truck className="w-3 h-3" />;
       case 'delivered': return <CheckCircle className="w-3 h-3" />;
-      case 'return_requested': return <Clock className="w-3 h-3" />;
-      case 'return_approved': return <CheckCircle className="w-3 h-3" />;
-      case 'return_rejected': return <X className="w-3 h-3" />;
-      case 'refunded': return <CheckCircle className="w-3 h-3" />;
       default: return <Package className="w-3 h-3" />;
     }
   };
@@ -925,36 +856,25 @@ export default function Profile() {
                               ))}
                             </div>
 
-                            {(order.status === 'delivered' || !['cancelled', 'delivered', 'shipped', 'return_requested', 'return_approved', 'return_rejected', 'refunded'].includes(order.status)) && (
-                              <div className="mt-4 pt-4 border-t border-white/[0.06] flex justify-end gap-3">
-                                {!['cancelled', 'delivered', 'shipped', 'return_requested', 'return_approved', 'return_rejected', 'refunded'].includes(order.status) && (
-                                  <button
-                                    onClick={() => cancelOrder(order._id)}
-                                    disabled={cancellingOrder === order._id}
-                                    className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-400/80 hover:text-red-400 hover:border-red-500/60 hover:bg-red-500/5 font-condensed text-[0.65rem] tracking-[0.16em] uppercase transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                                  >
-                                    {cancellingOrder === order._id ? (
-                                      <>
-                                        <span className="w-3 h-3 border border-red-400/40 border-t-red-400 rounded-full animate-spin" />
-                                        Cancelling...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <X className="w-3 h-3" />
-                                        Cancel Order
-                                      </>
-                                    )}
-                                  </button>
-                                )}
-                                {order.status === 'delivered' && (
-                                  <button
-                                    onClick={() => setReturnOrder(order)}
-                                    className="flex items-center gap-2 px-4 py-2 border border-brass/35 text-brass hover:text-brass-bright hover:border-brass/65 hover:bg-brass/5 font-condensed text-[0.65rem] tracking-[0.16em] uppercase transition-all duration-200"
-                                  >
-                                    <RefreshCw className="w-3 h-3" />
-                                    Request Return
-                                  </button>
-                                )}
+                            {!['cancelled', 'delivered', 'shipped'].includes(order.status) && (
+                              <div className="mt-4 pt-4 border-t border-white/[0.06] flex justify-end">
+                                <button
+                                  onClick={() => cancelOrder(order._id)}
+                                  disabled={cancellingOrder === order._id}
+                                  className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-400/80 hover:text-red-400 hover:border-red-500/60 hover:bg-red-500/5 font-condensed text-[0.65rem] tracking-[0.16em] uppercase transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                  {cancellingOrder === order._id ? (
+                                    <>
+                                      <span className="w-3 h-3 border border-red-400/40 border-t-red-400 rounded-full animate-spin" />
+                                      Cancelling...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="w-3 h-3" />
+                                      Cancel Order
+                                    </>
+                                  )}
+                                </button>
                               </div>
                             )}
                           </motion.div>
@@ -1053,105 +973,6 @@ export default function Profile() {
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Return Request Modal */}
-      <AnimatePresence>
-        {returnOrder && (
-          <div className="fixed inset-0 z-[9000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-[500px] bg-[#0c0c0c] border border-white/10 rounded-xl overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                <h3 className="font-display text-lg tracking-[0.06em] text-tb-white uppercase">
-                  Request Return
-                </h3>
-                <button
-                  onClick={() => setReturnOrder(null)}
-                  className="text-sv-dim hover:text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleRequestReturn} className="p-6 space-y-5">
-                {/* Warning / Policy note */}
-                <div className="p-3.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs space-y-1">
-                  <p className="text-yellow-400 font-bold uppercase tracking-wider">Policy Notice</p>
-                  <p className="text-sv-mid leading-relaxed">
-                    A non-refundable return logistics fee of <strong>₹100</strong> will be deducted from your refund amount.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-2">
-                    Reason for Return
-                  </label>
-                  <select
-                    value={returnReason}
-                    onChange={(e) => setReturnReason(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/15 rounded-lg text-tb-white text-sm focus:outline-none focus:border-brass appearance-none font-body"
-                  >
-                    <option value="Size/Fit Issue" className="bg-zinc-950">Size/Fit Issue</option>
-                    <option value="Quality Check" className="bg-zinc-950">Quality Check / Fabric Issue</option>
-                    <option value="Wrong Item Delivered" className="bg-zinc-950">Wrong Item Delivered</option>
-                    <option value="Damaged Product" className="bg-zinc-950">Damaged Product</option>
-                    <option value="Other" className="bg-zinc-950">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-2">
-                    What problems did you face?
-                  </label>
-                  <textarea
-                    value={returnProblems}
-                    onChange={(e) => setReturnProblems(e.target.value)}
-                    placeholder="Provide details about the issue..."
-                    maxLength={300}
-                    rows={3}
-                    className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-sm placeholder-white/20 focus:outline-none focus:border-brass font-body resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-condensed text-xs text-sv-mid uppercase tracking-wider mb-2">
-                    Refund Details (UPI ID or Bank Details)
-                  </label>
-                  <input
-                    type="text"
-                    value={returnRefundDetails}
-                    onChange={(e) => setReturnRefundDetails(e.target.value)}
-                    placeholder="UPI ID (e.g. name@okaxis) or Account No + IFSC"
-                    required
-                    className="w-full px-3 py-2.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-sm placeholder-white/20 focus:outline-none focus:border-brass font-mono"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setReturnOrder(null)}
-                    className="flex-1 py-3 bg-white/5 border border-white/10 rounded-lg text-sv-mid text-sm font-condensed uppercase tracking-wider hover:bg-white/10 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingReturn}
-                    className="flex-1 py-3 bg-brass text-void font-condensed font-bold text-sm tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
-                  >
-                    {submittingReturn ? 'Submitting...' : 'Submit Request'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
         )}
       </AnimatePresence>
 
