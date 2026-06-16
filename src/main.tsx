@@ -29,13 +29,12 @@ if ('serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => {
     const updateSW = registerSW({
       onNeedRefresh() {
-        console.log('[PWA] Service worker update available - dispatching event');
-        window.dispatchEvent(
-          new CustomEvent('pwa-update-available', { detail: { updateSW } })
-        );
+        console.log('[PWA] New content available — auto-reloading to apply update...');
+        // Auto-reload: ensures users never get stuck on stale cached black screen
+        updateSW(true);
       },
       onOfflineReady() {
-        window.dispatchEvent(new CustomEvent('pwa-offline-ready'));
+        console.log('[PWA] App ready to work offline.');
       },
       onRegisterError(error: unknown) {
         console.warn('[PWA] Service worker registration failed:', error);

@@ -55,7 +55,7 @@ export default defineConfig(() => ({
        * Simpler and more reliable than injectManifest for this use case.
        */
       strategies: 'generateSW',
-      registerType: 'prompt', // Prompt user before applying updates to prevent route breaks
+      registerType: 'autoUpdate', // Auto-activate new SW immediately — prevents stale cache black screens
       injectRegister: null,      // We register manually in main.tsx via virtual:pwa-register
 
       /**
@@ -281,7 +281,7 @@ export default defineConfig(() => ({
          * The prompt component triggers activation, and clientsClaim ensures it immediately
          * takes control of all pages to trigger page reloads reliably.
          */
-        skipWaiting: false,
+        skipWaiting: true,
         clientsClaim: true,
 
         importScripts: ['/firebase-messaging-sw-part.js'],
