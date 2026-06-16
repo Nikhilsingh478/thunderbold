@@ -144,9 +144,16 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                       <h3 className="font-condensed text-sm md:text-base tracking-[0.1em] text-tb-white group-hover:text-brass uppercase transition-colors">
                         {prod.name}
                       </h3>
-                      <p className="font-condensed text-xs md:text-sm tracking-widest text-sv-mid mt-1">
-                        {prod.price}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="font-condensed text-xs md:text-sm tracking-widest text-brass">
+                          ₹{prod.price}
+                        </span>
+                        {prod.mrp && prod.mrp > prod.price && (
+                          <span className="font-condensed text-xs tracking-widest text-sv-mid line-through">
+                            ₹{prod.mrp}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 ))
