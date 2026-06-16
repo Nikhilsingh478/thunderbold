@@ -23,7 +23,7 @@ interface OrderProduct {
   name: string;
   quantity: number;
   size?: string;
-  price?: number;
+  price: number;
   image?: string;
   productId?: string;
 }
