@@ -2,6 +2,14 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Disable browser's built-in scroll restoration so we fully control where
+// the page lands on every navigation (forward, back, or refresh).
+// Without this, the browser tries to restore the old scroll position and —
+// combined with CSS scroll-behavior:smooth — animates there visibly on mobile.
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
 document.addEventListener('contextmenu', (e) => {
   if (e.target instanceof HTMLImageElement) {
     e.preventDefault();
