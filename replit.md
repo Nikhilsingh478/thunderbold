@@ -2,7 +2,7 @@
 
 ## Overview
 
-Thunderbold is a production-grade premium fashion e-commerce storefront for a real retail brand. The platform is a full-stack Progressive Web App (PWA) built on React 18 + Vite (frontend), Node.js/Express (backend API), Firebase Authentication, and MongoDB Atlas. It supports end-to-end retail operations: product browsing by category/brand, cart management, wishlist, checkout with gift messaging, order tracking, return/refund requests, customer reviews, push notifications, and a full admin panel.
+Thunderbold is a production-grade premium fashion e-commerce storefront for a real retail brand. The platform is a full-stack Progressive Web App (PWA) built on React 18 + Vite (frontend), Node.js/Express (backend API), Firebase Authentication, and MongoDB Atlas. It supports end-to-end retail operations: product browsing by category/brand, cart management, wishlist, checkout with gift messaging, order tracking with server-side pagination, return/refund requests, customer reviews, push notifications, an Instagram-browser-compatible layout, and a full admin panel with hero banner management.
 
 ---
 
@@ -64,11 +64,12 @@ This runs two concurrent processes:
 
 ## Environment Variables
 
-All secrets are stored in **Replit Secrets** (never committed to source). The server reads them via `process.env.*` at runtime. The Replit platform makes secret *names* visible to the agent for planning purposes — the actual values are never accessible and remain encrypted.
+All secrets are stored in **Replit Secrets** (never committed to source). The server reads them via `process.env.*` at runtime.
 
 | Variable | Used By | Purpose |
 |---|---|---|
 | `MONGO_URI` | Backend | MongoDB Atlas connection string (`mongodb+srv://...`) |
+| `FIREBASE_SERVICE_ACCOUNT` | Backend | Firebase Admin SDK service account JSON (stringified) |
 | `VITE_FIREBASE_API_KEY` | Frontend + Backend | Firebase project API key |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Frontend | Firebase Auth domain (`project.firebaseapp.com`) |
 | `VITE_FIREBASE_PROJECT_ID` | Frontend + Backend | Firebase project ID |
@@ -90,8 +91,10 @@ All secrets are stored in **Replit Secrets** (never committed to source). The se
 ```
 src/
 ├── App.tsx                        — Root: wraps AuthProvider, CartProvider, WishlistProvider, QueryClientProvider
-├── AppContent.tsx                 — Router, SplashScreen, PageLoader, Login modal, AnnouncementBar
-├── index.css                      — Global styles, Tailwind directives, custom CSS variables
+├── AppContent.tsx                 — BrowserRouter, SplashScreen, AnnouncementBar, ScrollToTop, PageLoader,
+│                                    Login modal, route definitions
+├── index.css                      — Global styles, Tailwind directives, --tb-banner-h CSS variable,
+│                                    Instagram browser compatibility rules
 │
 ├── context/
 │   ├── AuthContext.tsx            — Firebase onAuthStateChanged; exposes user, loading, login, logout
@@ -106,10 +109,10 @@ src/
 │   ├── Cart.tsx                   — Cart page
 │   ├── Wishlist.tsx               — Wishlist page
 │   ├── Checkout.tsx               — Checkout: address form + order summary + optional gift message
-│   ├── Orders.tsx                 — Customer order history: statuses, cancel (pending only),
-│   │                                request return (delivered only), review delivered items
+│   ├── Orders.tsx                 — Customer order history: server-side pagination (10/page), statuses,
+│   │                                cancel (pending only), request return (delivered only), review items
 │   ├── Admin.tsx                  — Full admin panel (tabs: Analytics, Orders, Products,
-│   │                                Categories, Brands, Reviews, Slider, Notify, Returns)
+│   │                                Categories, Brands, Reviews, Slider + Hero Banner, Notify, Returns)
 │   ├── Profile.tsx                — User profile + saved addresses + account deletion
 │   ├── BrandsPage.tsx             — All brands listing
 │   ├── BrandView.tsx              — Products filtered by brandId
@@ -117,20 +120,29 @@ src/
 │   └── NotFound.tsx               — 404 page
 │
 ├── components/
+│   ├── ScrollToTop.tsx            — Fires window.scrollTo({top:0,behavior:'instant'}) on every route
+│   │                                change; mounted inside <BrowserRouter> in AppContent.tsx
 │   ├── SplashScreen.tsx           — Cinematic branded intro (once per session via sessionStorage)
-│   ├── AnnouncementBar.tsx        — Fixed marquee bar, top-0, z-[120], h-9 (36px)
-│   ├── Navbar.tsx                 — Fixed navbar, auth skeleton (no flicker), mobile full-screen menu
+│   ├── AnnouncementBar.tsx        — Fixed marquee bar, id="tb-announcement-bar", z-[120], h-9 (36px),
+│   │                                top: var(--tb-banner-h)
+│   ├── Navbar.tsx                 — Fixed navbar, id="tb-navbar", z-[100], top: calc(36px + var(--tb-banner-h));
+│   │                                auth skeleton (no flicker), mobile full-screen menu
 │   ├── Footer.tsx                 — Customer pages only (not admin); policy modals
-│   ├── HeroBanner.tsx             — Full-width hero/sale image
+│   ├── HeroBanner.tsx             — Full-width hero image; fetches up to 3 URLs from /api/slider?type=hero;
+│   │                                falls back to hardcoded defaults if API returns no images
 │   ├── BrandsSection.tsx          — Horizontal logo marquee
-│   ├── LiveSaleSection.tsx        — "Live Sale" highlighted product grid
-│   ├── CategoriesSection.tsx      — Master homepage section: categories, PromoBanner, ThunderboltSlider
+│   ├── LiveSaleSection.tsx        — "Live Sale" highlighted product grid (section === 'live-sale')
+│   ├── CategoriesSection.tsx      — Homepage composite section: Denim category cards, PromoBanner,
+│   │                                ThunderboltSlider, T-Shirt category cards, Kurta product grid
+│   │                                (Thunder Looks / outfits grid removed — ThunderboltSlider remains)
 │   ├── ThunderboltSlider.tsx      — Editorial 3D coverflow outfit carousel (swipe-only, no arrows)
 │   ├── PriceDisplay.tsx           — Unified price renderer: selling + strikethrough MRP + discount badge
 │   ├── CustomCursor.tsx           — Custom cursor for desktop
 │   ├── ScrollProgress.tsx         — Top scroll progress bar
 │   ├── PWAUpdatePrompt.tsx        — Toast prompting user to reload when a new SW version is available
 │   ├── ReturnRequestModal.tsx     — Customer return request form: reason picker + description + refund estimate
+│   ├── ApkBanner.tsx              — UNUSED / dead component — APK download banner; exists but is not
+│   │                                imported anywhere; --tb-banner-h is 0px to reflect this
 │   │
 │   ├── promo/
 │   │   ├── PromoBanner.tsx        — Side-by-side static deal banners (Under ₹999, Under ₹699)
@@ -176,7 +188,7 @@ Each file is a Vercel Serverless Function. The same files are mounted as Express
 |---|---|
 | `api/products/index.js` | `GET /api/products` (list + filter), `POST` (create), `PUT` (update), `DELETE` |
 | `api/products/[id].js` | `GET /api/products/:id` (single product detail) |
-| `api/orders/index.js` | `GET /api/orders` (user or all-admin), `POST .../create`, `PUT .../cancel`, `PATCH/DELETE .../manage` |
+| `api/orders/index.js` | `GET /api/orders` (paginated 10/page for customers; all for admin), `POST .../create`, `PUT .../cancel`, `PATCH/DELETE .../manage` |
 | `api/returns/index.js` | `GET /api/returns` (user: own; admin: all), `POST` (create request), `PATCH?id=` (admin approve/reject) |
 | `api/users/index.js` | `POST /api/users/create`, profile read/update, address sub-routes, FCM token registration, account deletion |
 | `api/cart/index.js` | `GET/POST/DELETE /api/cart` |
@@ -184,9 +196,8 @@ Each file is a Vercel Serverless Function. The same files are mounted as Express
 | `api/categories/index.js` | `GET/POST/PUT/DELETE /api/categories` |
 | `api/address/index.js` | `GET/POST/PUT/DELETE /api/address` |
 | `api/reviews/index.js` | `GET /api/reviews` (by product or mine=true), `POST` (create), `PUT?id=` (update), `DELETE?id=` |
-| `api/admin.js` | `GET /api/admin/analytics` — all KPIs + charts in one payload |
+| `api/admin.js` | `GET /api/admin/analytics` — KPIs + charts; also handles `GET/PUT /api/slider` (ThunderboltSlider + Hero Banner config) — merged here to stay within Vercel's 12-function cap |
 | `api/brands/index.js` | `GET/POST/PUT/DELETE /api/brands` |
-| `api/slider/index.js` | `GET /api/slider` (public), `POST /api/slider` (admin-only) |
 | `api/notifications/index.js` | `POST .../broadcast` (admin), `POST .../test-send` (admin) |
 
 ### Shared Backend Helpers (`api/_lib/`)
@@ -220,7 +231,9 @@ Each file is a Vercel Serverless Function. The same files are mounted as Express
 | `brands` | Brand records (name, logoUrl) |
 | `addresses` | Saved delivery addresses per user |
 | `reviews` | Per-product customer reviews (rating + comment) |
-| `slider` | ThunderboltSlider editorial config — always 4 slots, admin-managed |
+| `config` | Site-wide admin configuration — currently holds two documents: `_id: "slider"` (ThunderboltSlider 4-slot editorial config) and `_id: "hero-banner"` (homepage hero image URLs) |
+
+> **Note:** A legacy `slider` collection may exist in Atlas from before the `config` collection consolidation. The application reads exclusively from `config` — the `slider` collection is no longer used.
 
 ---
 
@@ -314,6 +327,39 @@ Each file is a Vercel Serverless Function. The same files are mounted as Express
 }
 ```
 
+### Config Documents (`config` collection)
+
+#### ThunderboltSlider — `_id: "slider"`
+
+```js
+{
+  _id: "slider",
+  slides: [                // Always exactly 4 elements
+    {
+      imageUrl: string,    // Cloudinary or external URL for the editorial card image
+      heading: string,     // Large ghost text e.g. "SHARP", "REBEL", "WILD", "NOIR"
+      productId: string | null,    // Links to a product page via /product/:id
+      productName: string | null,
+      productImage: string | null
+    }
+    // × 4
+  ],
+  updatedAt: Date
+}
+```
+
+#### Hero Banner — `_id: "hero-banner"`
+
+```js
+{
+  _id: "hero-banner",
+  images: [url1, url2, url3],  // Up to 3 full-width banner image URLs
+  updatedAt: Date
+}
+```
+
+`HeroBanner.tsx` fetches `GET /api/slider?type=hero` and renders whichever images are configured. If the array is empty or the API fails, the component falls back to hardcoded default images so the homepage is never blank.
+
 ---
 
 ## Order Status Flow
@@ -363,6 +409,47 @@ approved   rejected
 | One return per order | Enforced: duplicate POST returns `409 Conflict` |
 | Refund amount | `totalAmount − ₹50 shipping charges` — admin can override when approving |
 | 3 delivery attempts | If undeliverable after 3 attempts, package returns to us — customer is not charged |
+
+---
+
+## Orders — Server-Side Pagination
+
+### Backend (`api/orders/index.js`)
+
+Customers receive paginated results; admins always receive all orders (no pagination).
+
+```
+CUSTOMER_PAGE_SIZE = 10  (orders per page — constant)
+
+GET /api/orders?page=N   (customer)
+  → { orders: Order[], total: number, page: number, totalPages: number, limit: 10 }
+
+GET /api/orders          (admin — no page param, or isAdmin === true)
+  → { orders: Order[] }  (full list, no pagination wrapper)
+```
+
+Pipeline for customer fetch:
+```
+1. Filter by userId === email (customer's own orders only)
+2. Sort by createdAt descending (newest first)
+3. Count total matching documents (for totalPages calculation)
+4. Skip (page - 1) × 10 documents
+5. Limit to 10 documents
+6. Return both results in a Promise.all (parallel execution)
+```
+
+`totalPages = Math.max(1, Math.ceil(total / CUSTOMER_PAGE_SIZE))`
+
+### Frontend (`src/pages/Orders.tsx`)
+
+The `Pagination` component renders when `totalPages > 1`:
+
+- **Chevron buttons** — Previous / Next; disabled at boundaries
+- **Page number boxes** — up to 7 page buttons before ellipsis logic kicks in
+- **Ellipsis (`…`)** — shown when current page is far from the end
+- **Status line** — "Page N of M · X orders" always visible
+
+Page changes trigger a fresh `GET /api/orders?page=N` fetch; the order list re-renders with the new slice.
 
 ---
 
@@ -483,11 +570,39 @@ To add an admin: update both files.
 | Categories | Folder | Create/edit/delete categories (name, image URL, section) |
 | Brands | Tag | Create/edit/delete brand names + logo URLs |
 | Reviews | MessageSquare | Per-product review listing with admin delete |
-| Slider | SlidersHorizontal | Configure all 4 ThunderboltSlider slides (image URL, heading text, linked outfit product) |
+| Slider | SlidersHorizontal | Two sub-sections: (1) **Hero Banner** — 3 full-width image URL inputs with live preview + "Save Banner" button; (2) **ThunderboltSlider** — configure all 4 editorial carousel slides (image URL, heading text, linked outfit product) |
 | Notify | Bell | Broadcast push notification to all subscribed users (title, body, optional image URL) |
 | Returns | RotateCcw | Review pending return requests; approve with custom refund amount; reject with notes |
 
 The admin panel has **no footer** — `Footer.tsx` is only rendered on customer-facing pages.
+
+---
+
+## Hero Banner System
+
+`src/components/HeroBanner.tsx` + `GET /api/slider?type=hero`
+
+### How It Works
+
+1. `HeroBanner.tsx` calls `GET /api/slider?type=hero` on mount
+2. The backend reads `config.findOne({ _id: "hero-banner" })` and returns `{ images: string[] }`
+3. The component renders up to 3 full-width images from the array
+4. **Fallback:** if the API returns no images (empty array, network error, or first-time load before any admin config), hardcoded default images are used so the homepage is never blank
+
+### Admin Configuration
+
+Admin Slider tab → Hero Banner section:
+- 3 URL input fields (one per image slot)
+- Live image preview per slot
+- "Save Banner" button → `PUT /api/slider?type=hero` with `{ images: [url1, url2, url3] }`
+- The config is persisted in the `config` collection under `_id: "hero-banner"`
+
+### Storage
+
+```js
+// Stored in config collection
+{ _id: "hero-banner", images: ["https://...", "https://...", "https://..."], updatedAt: Date }
+```
 
 ---
 
@@ -547,22 +662,6 @@ Revenue and order volume for the last 12 months. Months with zero activity are a
 
 `src/components/PWAUpdatePrompt.tsx` — listens for `onNeedRefresh` from Workbox. When a new service worker is waiting, shows a toast: "Update available" with a "Reload" button that calls `updateServiceWorker(true)`.
 
-### Display Mode Detection
-
-A CSS custom property `--tb-banner-h` adapts the layout for PWA mode:
-
-```css
-/* Browser: APK download banner is visible */
---tb-banner-h: 36px;
-
-/* Standalone / PWA / fullscreen: banner is hidden */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  --tb-banner-h: 0px;
-}
-```
-
-All page top-padding uses `calc(base + var(--tb-banner-h))` so content always clears the stacked fixed bars correctly in both contexts.
-
 ---
 
 ## Push Notifications (FCM)
@@ -570,7 +669,7 @@ All page top-padding uses `calc(base + var(--tb-banner-h))` so content always cl
 ### How It Works
 
 1. User opens the app in a browser that supports notifications
-2. `src/context/AuthContext.tsx` (or equivalent) requests notification permission after login
+2. `src/context/AuthContext.tsx` requests notification permission after login
 3. Firebase `getToken(messaging, { vapidKey })` registers a device token — requires `VITE_FIREBASE_VAPID_KEY`
 4. Token is sent to `POST /api/users/fcm-token` and stored in the user's `users` document in MongoDB
 5. Admin visits **Notify** tab in the admin panel → enters title, body, optional banner image URL → clicks "Send to All Subscribers"
@@ -590,28 +689,55 @@ All page top-padding uses `calc(base + var(--tb-banner-h))` so content always cl
 
 Components render in this exact order:
 
-1. **`AnnouncementBar`** — `position: fixed`, `top: 0`, `z-index: 120`, `height: 36px` — animated marquee promotional text
-2. **APK Banner** — `position: fixed`, `z-index: 99999`, `height: 36px` — "Download our app" strip; hidden in standalone/PWA/WebView via `display-mode` media query
-3. **`Navbar`** — `position: fixed`, `top: calc(36px + var(--tb-banner-h))`, `z-index: 100`
-4. **`HeroBanner`** — Full-width hero or sale image (first visible element below fixed bars)
-5. **`BrandsSection`** — Horizontal auto-scrolling logo marquee
-6. **`LiveSaleSection`** — Products with `section === 'live-sale'`
-7. **`CategoriesSection`** — Composite section containing:
+1. **`AnnouncementBar`** — `position: fixed`, `top: var(--tb-banner-h)` (= `0px`), `z-index: 120`, `height: 36px`, `id="tb-announcement-bar"` — animated marquee promotional text
+2. **`Navbar`** — `position: fixed`, `top: calc(36px + var(--tb-banner-h))` (= `36px`), `z-index: 100`, `id="tb-navbar"`
+3. **`HeroBanner`** — Full-width hero image(s), admin-configurable; falls back to defaults
+4. **`BrandsSection`** — Horizontal auto-scrolling logo marquee
+5. **`LiveSaleSection`** — Products with `section === 'live-sale'`
+6. **`CategoriesSection`** — Composite section containing:
    - Denim Collection category cards (grid)
    - **`PromoBanner`** — Under ₹999 + Under ₹699 side-by-side deal banners
    - **`ThunderboltSlider`** — 3D coverflow editorial outfit carousel
    - T-Shirt Collection category cards (if any exist)
    - Kurta Collection product grid
-   - Thunder Looks / Outfits product grid
-8. **`Footer`**
+   - ~~Thunder Looks / Outfits product grid~~ — **removed from homepage** (section `outfits` products still exist in the DB but are no longer displayed as a grid on the index page; the ThunderboltSlider and its "Shop This Look" links remain)
+7. **`Footer`**
+
+> **APK Banner:** The `ApkBanner.tsx` component exists in the codebase but is not mounted anywhere. There is no APK download banner currently rendered in the app. `--tb-banner-h` is set to `0px` to match this.
 
 ### Page Top-Padding Formula
 
+All customer pages use `--tb-banner-h` in their padding so content always clears the stacked fixed bars:
+
 ```css
-/* All customer pages */
-pt-[calc(100px + var(--tb-banner-h))]   /* mobile */
-pt-[calc(108px + var(--tb-banner-h))]   /* md+ */
+/* --tb-banner-h is 0px (no APK banner active), so these resolve to: */
+pt-[calc(100px + var(--tb-banner-h))]   /* mobile  → 100px  */
+pt-[calc(108px + var(--tb-banner-h))]   /* md+     → 108px  */
+pt-[calc(164px + var(--tb-banner-h))]   /* pages with filter bars → 164px */
 ```
+
+If the APK banner is ever re-enabled (mounted in AppContent.tsx), set `--tb-banner-h: 36px` in `:root` inside `index.css` and all paddings adjust automatically — no per-page edits needed.
+
+---
+
+## CSS Layout Variable: `--tb-banner-h`
+
+Defined in `src/index.css` within `:root`:
+
+```css
+:root {
+  --tb-banner-h: 0px;  /* Height of the APK download banner — 0px = banner not shown */
+}
+```
+
+**Why it exists:** The layout was designed to accommodate an optional APK download banner (`ApkBanner.tsx`) that sits above the AnnouncementBar. All fixed-bar `top:` positions and all page `padding-top` values reference `--tb-banner-h` so changing this one variable re-stacks the entire header in every context.
+
+**Current state:** `0px` — `ApkBanner.tsx` is not mounted.
+
+**If APK banner is re-enabled:**
+1. Import and render `<ApkBanner />` as the first child of `AppContent.tsx` (before `<AnnouncementBar />`)
+2. Change `--tb-banner-h` in `index.css` from `0px` to `36px`
+3. Ensure `ApkBanner.tsx` has `position: fixed; top: 0; height: 36px; z-index: 130` — it should already be correct
 
 ---
 
@@ -642,6 +768,103 @@ Opens via a clip-path circle animation anchored to the hamburger button. Closes 
 
 ---
 
+## Mobile Scroll Behaviour (Back-Button Fix)
+
+### Problem
+
+The browser's native scroll restoration (`history.scrollRestoration = 'auto'`) remembers scroll position on page A. When the user presses back, the browser tries to restore that position. Combined with CSS `scroll-behavior: smooth`, this animates the page visibly sliding down on mobile — a jarring back-navigation experience.
+
+### Solution (three-part)
+
+#### 1. `src/main.tsx` — Disable native restoration (runs before React)
+
+```js
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+```
+
+Tells every browser to stop saving and restoring scroll positions — the app takes full ownership.
+
+#### 2. `src/components/ScrollToTop.tsx` — Instant scroll to top on every route change
+
+```ts
+// Fires on every pathname change — forward nav, back button, forward button, programmatic push
+window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+```
+
+`behavior: 'instant'` explicitly overrides CSS `scroll-behavior: smooth` so there is zero animation between pages.
+
+#### 3. `src/AppContent.tsx` — Mounting position
+
+`<ScrollToTop />` is the first child inside `<BrowserRouter>` so it has router context and fires before any page component mounts.
+
+**What is unaffected:** In-page smooth scrolls (`scrollIntoView` on size selectors in ProductView, `#live-sale` anchor in HeroBanner, address form in Checkout) use their own element-level scroll calls — entirely independent from route-level navigation.
+
+---
+
+## Instagram Browser Compatibility
+
+### Background
+
+Most Thunderbold traffic arrives via the Instagram bio link. Instagram's iOS in-app browser uses `WKWebView`, which has two known issues:
+
+1. **`position: fixed` bug** — Fixed elements scroll with the page content instead of staying pinned to the viewport. This makes the navbar and announcement bar appear to "scroll away" with the content rather than staying fixed at the top.
+
+2. **Dynamic viewport height** — Instagram's address bar collapses when scrolling, changing the actual visible viewport height. Elements using `100vh` can overflow behind the address bar.
+
+### Detection
+
+`src/main.tsx` — runs before `createRoot()` so the class is active on the very first paint:
+
+```js
+if (/Instagram/.test(navigator.userAgent)) {
+  document.documentElement.classList.add('instagram-browser');
+}
+```
+
+The `instagram-browser` class on `<html>` is the single selector all CSS fixes target.
+
+### CSS Fixes (`src/index.css`)
+
+```css
+.instagram-browser #tb-announcement-bar,
+.instagram-browser #tb-navbar {
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);   /* promotes element to its own GPU compositing layer,
+                                 which forces WKWebView to treat it as a true
+                                 viewport overlay rather than a scrollable node */
+}
+
+@supports (height: 100dvh) {
+  .instagram-browser .min-h-screen {
+    min-height: 100dvh;   /* accounts for Instagram's collapsible address bar */
+  }
+}
+```
+
+### Target Elements
+
+| Element | id | z-index |
+|---|---|---|
+| `AnnouncementBar` outer div | `tb-announcement-bar` | 120 |
+| `Navbar` `motion.nav` | `tb-navbar` | 100 |
+
+### Why `translateZ(0)` Works
+
+`transform: translateZ(0)` is a zero-op 3D transform that promotes the element to its own GPU compositing layer. In WKWebView, elements on a dedicated compositing layer are handled by the OS compositor rather than the browser's software renderer — the compositor correctly pins the element to the viewport regardless of scroll position, bypassing the WKWebView position:fixed bug.
+
+`will-change: transform` signals the intent ahead of time so the browser can pre-allocate the compositing layer before the first paint.
+
+### Android
+
+Instagram's Android browser uses a Chrome-based WebView where `position: fixed` works correctly. The CSS rules are harmless on Android — GPU compositing is always on for transform elements anyway.
+
+---
+
 ## ThunderboltSlider (Outfit Carousel)
 
 `src/components/ThunderboltSlider.tsx`
@@ -652,7 +875,7 @@ Inside `CategoriesSection.tsx`, between the `PromoBanner` and T-Shirt Collection
 
 ### Data
 
-`GET /api/slider` → `{ slides: SlideData[4] }`. Admin-managed. If all 4 slots have neither `imageUrl` nor `heading`, the component renders nothing.
+`GET /api/slider` → `{ slides: SlideData[4] }`. Admin-managed via the Slider tab. If all 4 slots have neither `imageUrl` nor `heading`, the component renders nothing.
 
 ### Slide Shape
 
@@ -850,13 +1073,13 @@ npm run dev
 - **Build command:** `npm run build` → output to `dist/`
 - **Serverless functions:** Files in `api/` become functions automatically
 - **Sub-route pattern:** Sub-paths (e.g. `/api/orders/create`) are routed via `vercel.json` rewrites using `?subpath=create` — the handler switches on `req.query.subpath` (Vercel) or URL path (Express). Same code, zero duplication.
-- **Function limit:** Vercel Hobby plan — 12 serverless functions max
+- **Function limit:** Vercel Hobby plan — 12 serverless functions max. The slider + hero banner config handler was merged into `api/admin.js` to avoid exceeding this limit.
 
 ### `vercel.json` Key Rewrites
 
 ```json
 { "source": "/api/orders/:sub(create|cancel|manage)", "destination": "/api/orders?subpath=:sub" },
-{ "source": "/api/returns", "destination": "/api/returns" },
+{ "source": "/api/slider", "destination": "/api/admin?handler=slider" },
 { "source": "/api/notifications/broadcast", "destination": "/api/notifications?subpath=broadcast" },
 { "source": "/api/(.*)", "destination": "/api/$1" },
 { "source": "/(.*)", "destination": "/index.html" }
@@ -895,16 +1118,23 @@ npm run dev
 | Orders without `giftMessage` | No field in DB — admin modal and packing slip show nothing, no empty sections |
 | Swipe vs click on ThunderboltSlider | `isDragging` ref checked in CTA handler — swipes never accidentally trigger navigation |
 | Auth loading state | Navbar skeleton + menu suppression while Firebase resolves — zero layout shift |
-| PWA / standalone display mode | `--tb-banner-h: 0px` collapses APK banner space; navbar top recalculated |
+| `--tb-banner-h` undefined | Now defined as `0px` in `:root`; previously undefined, causing all calc() expressions to resolve to 0 silently |
+| Instagram browser position:fixed | GPU compositing via `translateZ(0)` + `will-change: transform` on `#tb-announcement-bar` and `#tb-navbar`; `instagram-browser` class set by main.tsx before React mounts |
+| Instagram browser viewport height | `@supports (height: 100dvh)` block switches `min-h-screen` to `100dvh` to account for collapsible address bar |
+| Mobile back-button scroll animation | `history.scrollRestoration = 'manual'` + `ScrollToTop.tsx` fires `behavior:'instant'` on every route change |
+| Orders pagination — page out of range | `page` clamped to `Math.max(1, ...)` on backend; Prev/Next buttons disabled at boundaries on frontend |
+| Hero banner API failure | `HeroBanner.tsx` falls back to hardcoded default images — homepage never blank |
+| Orders without `orderNumber` | `formatOrderId()` utility formats `_id` as fallback — always something human-readable to display |
 | Duplicate order submissions | `clientOrderId` UUID idempotency key — safe retries |
 | Stale FCM tokens | Invalid/expired tokens (FCM 404/410) auto-removed from DB on next broadcast |
 | Return statuses in analytics | `return_approved` orders excluded from cancellation count; treated as delivered for revenue |
+| ThunderboltSlider with no config | Component renders nothing if all 4 slides have empty `imageUrl` and `heading` |
 
 ---
 
 ## Admin Email Note
 
-The admin email in code (`adminthunderbold@gmail.com`) uses "bold" — matching the brand name **Thunderbold**. The APK download link in the banner points to `/Thunderbolt.apk` (with a "t") — this is a deliberate legacy filename, not a bug.
+The admin email in code (`adminthunderbold@gmail.com`) uses "bold" — matching the brand name **Thunderbold**.
 
 ---
 
@@ -919,3 +1149,6 @@ The admin email in code (`adminthunderbold@gmail.com`) uses "bold" — matching 
 - Cancel button only appears for `pending` orders
 - Return button only appears for `delivered` orders
 - Shipping deduction on refunds is ₹50 (hardcoded as `SHIPPING_CHARGES` in `api/returns/index.js`)
+- `--tb-banner-h` is `0px` — `ApkBanner.tsx` is not mounted; change to `36px` only if the banner is re-enabled
+- `history.scrollRestoration = 'manual'` must remain in `main.tsx` — removing it re-introduces the back-button scroll animation bug on mobile
+- Instagram browser fixes rely on `id="tb-announcement-bar"` and `id="tb-navbar"` — do not remove these ids
