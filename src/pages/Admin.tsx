@@ -851,6 +851,7 @@ export default function Admin() {
     suggestedRefundAmount: number;
     reason: string;
     description: string;
+    upiId?: string | null;
     status: 'pending' | 'approved' | 'rejected' | 'refund_issued';
     refundAmount?: number | null;
     adminNotes?: string | null;
@@ -1583,7 +1584,9 @@ export default function Admin() {
                                 <select
                                   value={order.status ?? 'pending'}
                                   onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                                  className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
+                                  disabled={['return_requested','return_approved','return_rejected','refund_issued'].includes(order.status ?? '')}
+                                  title={['return_requested','return_approved','return_rejected','refund_issued'].includes(order.status ?? '') ? 'Status locked — manage via Returns tab' : undefined}
+                                  className="pl-3 pr-7 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                   {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                                 </select>
@@ -1689,7 +1692,9 @@ export default function Admin() {
                                     <select
                                       value={order.status ?? 'pending'}
                                       onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                                      className="pl-3 pr-8 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none"
+                                      disabled={['return_requested','return_approved','return_rejected','refund_issued'].includes(order.status ?? '')}
+                                      title={['return_requested','return_approved','return_rejected','refund_issued'].includes(order.status ?? '') ? 'Status locked — manage via Returns tab' : undefined}
+                                      className="pl-3 pr-8 py-1.5 bg-white/5 border border-white/15 rounded-lg text-tb-white text-xs font-condensed focus:outline-none focus:border-white/30 appearance-none disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                       {['pending','confirmed','shipped','delivered'].map(s => <option key={s} value={s} className="bg-zinc-900">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                                     </select>
@@ -2220,6 +2225,13 @@ export default function Admin() {
                               <p className="font-condensed text-sm text-sv-mid leading-relaxed bg-white/[0.03] border border-white/8 rounded-lg px-3 py-2.5">
                                 {ret.description}
                               </p>
+                              {/* UPI ID for refund payout */}
+                              {ret.upiId && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-brass/5 border border-brass/20 rounded-lg">
+                                  <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-wider shrink-0">Refund UPI:</span>
+                                  <span className="font-mono text-xs text-brass font-semibold tracking-wide">{ret.upiId}</span>
+                                </div>
+                              )}
                             </div>
 
                             {/* Products */}

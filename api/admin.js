@@ -20,8 +20,23 @@ async function checkAdminAuth(req, db) {
   }
 }
 
-/** Treat orders as cancelled if status is 'cancelled' (case-insensitive). */
-const NON_REVENUE_STATUSES = ["cancelled", "canceled", "refunded"];
+/**
+ * Statuses that must NOT count toward revenue.
+ * - cancelled / canceled / refunded  — order never completed
+ * - return_requested  — customer has initiated a return; revenue is disputed
+ * - return_approved   — return accepted; money is being refunded
+ * - refund_issued     — money was already returned to customer
+ *
+ * NOT excluded: return_rejected (return denied → sale stands)
+ */
+const NON_REVENUE_STATUSES = [
+  "cancelled",
+  "canceled",
+  "refunded",
+  "return_requested",
+  "return_approved",
+  "refund_issued",
+];
 const revenueOrderMatch = {
   $or: [
     { status: { $exists: false } },

@@ -79,7 +79,7 @@ async function handleCreate(req, res) {
 
   const db = await getDb();
   const body = await parseBody(req);
-  const { orderId, reason, description } = body;
+  const { orderId, reason, description, upiId } = body;
 
   // ── Validate inputs ────────────────────────────────────────────────────────
   if (!orderId) return res.status(400).json({ error: "Order ID is required" });
@@ -89,6 +89,15 @@ async function handleCreate(req, res) {
   const cleanDesc = typeof description === "string" ? description.replace(/<[^>]*>/g, "").trim().slice(0, 500) : "";
   if (cleanDesc.length < 10) {
     return res.status(400).json({ error: "Please provide a description (at least 10 characters)" });
+  }
+
+  // UPI ID — required; basic format check: localpart@provider
+  const cleanUpi = typeof upiId === "string" ? upiId.trim().toLowerCase() : "";
+  if (!cleanUpi) {
+    return res.status(400).json({ error: "UPI ID is required for the refund" });
+  }
+  if (!/^[a-zA-Z0-9._\-+]{2,}@[a-zA-Z]{2,}$/.test(cleanUpi)) {
+    return res.status(400).json({ error: "Invalid UPI ID format (e.g. 9876543210@upi or name@okhdfcbank)" });
   }
 
   // ── Fetch the order ────────────────────────────────────────────────────────
@@ -135,6 +144,7 @@ async function handleCreate(req, res) {
     suggestedRefundAmount: suggestedRefund,
     reason,
     description: cleanDesc,
+    upiId: cleanUpi,       // customer's UPI ID for refund payout
     status: "pending",
     refundAmount: null,    // set by admin on approval
     adminNotes: null,

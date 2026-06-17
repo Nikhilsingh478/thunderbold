@@ -603,7 +603,18 @@ export default function ProductView() {
                             <button
                               key={size}
                               type="button"
-                              onClick={() => { setSizeError(false); !oos && setSelectedTopwearSize(size); }}
+                              onClick={() => {
+                                setSizeError(false);
+                                if (!oos) {
+                                  setSelectedTopwearSize(size);
+                                  // Clamp qty to the chosen topwear size's available stock
+                                  const maxTop = product?.topwear?.sizeStock?.[size] ?? 1;
+                                  const maxBot = selectedBottomwearSize
+                                    ? (product?.bottomwear?.sizeStock?.[selectedBottomwearSize] ?? 1)
+                                    : 99;
+                                  setQuantity(q => Math.min(q, Math.min(maxTop, maxBot)));
+                                }
+                              }}
                               disabled={oos}
                               title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
                               className={`h-12 flex-1 md:flex-initial md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
@@ -633,7 +644,18 @@ export default function ProductView() {
                             <button
                               key={size}
                               type="button"
-                              onClick={() => { setSizeError(false); !oos && setSelectedBottomwearSize(size); }}
+                              onClick={() => {
+                                setSizeError(false);
+                                if (!oos) {
+                                  setSelectedBottomwearSize(size);
+                                  // Clamp qty to the chosen bottomwear size's available stock
+                                  const maxBot = product?.bottomwear?.sizeStock?.[size] ?? 1;
+                                  const maxTop = selectedTopwearSize
+                                    ? (product?.topwear?.sizeStock?.[selectedTopwearSize] ?? 1)
+                                    : 99;
+                                  setQuantity(q => Math.min(q, Math.min(maxTop, maxBot)));
+                                }
+                              }}
                               disabled={oos}
                               title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
                               className={`h-12 flex-1 md:flex-initial md:w-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
@@ -674,7 +696,15 @@ export default function ProductView() {
                           <button
                             key={size}
                             type="button"
-                            onClick={() => { setSizeError(false); !oos && setSelectedSize(size); }}
+                            onClick={() => {
+                              setSizeError(false);
+                              if (!oos) {
+                                setSelectedSize(size);
+                                // Clamp quantity to available stock for this size
+                                const maxForSize = product?.sizeStock?.[size] ?? 1;
+                                setQuantity(q => Math.min(q, maxForSize));
+                              }
+                            }}
                             disabled={oos}
                             title={oos ? `Size ${size} — out of stock` : `Size ${size}`}
                             className={`h-12 flex-1 md:flex-initial md:w-14 md:h-14 flex flex-col items-center justify-center font-condensed text-sm tracking-wider uppercase border transition-all duration-300 relative ${
@@ -700,25 +730,48 @@ export default function ProductView() {
                 <div className="font-condensed text-xs tracking-[0.2em] uppercase text-tb-white mb-5">
                   Quantity
                 </div>
-                <div className="flex items-center w-[140px] h-12 border border-white/10 text-tb-white font-condensed text-lg">
-                  <button 
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-r border-white/10"
-                  >
-                    -
-                  </button>
-                  <div className="flex-[1.5] h-full flex items-center justify-center">
-                    {quantity}
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-l border-white/10"
-                  >
-                    +
-                  </button>
-                </div>
+                {(() => {
+                  // Compute max orderable quantity for the currently selected size(s)
+                  let maxQty = 99;
+                  if (isOutfit && selectedTopwearSize && selectedBottomwearSize) {
+                    maxQty = Math.min(
+                      product?.topwear?.sizeStock?.[selectedTopwearSize] ?? 99,
+                      product?.bottomwear?.sizeStock?.[selectedBottomwearSize] ?? 99
+                    );
+                  } else if (!isOutfit && selectedSize && product?.sizeStock) {
+                    maxQty = product.sizeStock[selectedSize] ?? 99;
+                  }
+                  const atMax = quantity >= maxQty;
+                  return (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center w-[140px] h-12 border border-white/10 text-tb-white font-condensed text-lg">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-r border-white/10"
+                        >
+                          −
+                        </button>
+                        <div className="flex-[1.5] h-full flex items-center justify-center">
+                          {quantity}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+                          disabled={atMax}
+                          className="flex-1 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-l border-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          +
+                        </button>
+                      </div>
+                      {atMax && maxQty < 99 && (
+                        <p className="font-condensed text-[10px] text-amber-400/80 tracking-wider uppercase">
+                          Max {maxQty} available in this size
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Conversion Optimized Checkout Dashboard */}

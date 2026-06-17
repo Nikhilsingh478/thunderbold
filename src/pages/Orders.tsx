@@ -39,28 +39,23 @@ const Orders = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Compute cache dynamically inside render so that on the frame the user object resolves,
-  // we instantly pull the cached orders instead of rendering a spinner.
   const cachedOnRender = user ? getStaleOrders(user.uid) : null;
   const displayOrders = orders.length > 0 ? orders : (cachedOnRender || []);
   const isCurrentlyLoading = authLoading || (ordersLoading && !cachedOnRender);
 
-  // ── Reviews state ────────────────────────────────────────────────────────
+  // ── Reviews state ─────────────────────────────────────────────────────────
   const [myReviews, setMyReviews] = useState<Record<string, ReviewData>>({});
   const [reviewTarget, setReviewTarget] = useState<{
     product: { id: string; name: string; image?: string };
     existing: ReviewData | null;
   } | null>(null);
 
-  // ── Return request state ─────────────────────────────────────────────────
+  // ── Return request state ──────────────────────────────────────────────────
   const [returnTarget, setReturnTarget] = useState<Order | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setOrdersLoading(false);
-      return;
-    }
+    if (!user) { setOrdersLoading(false); return; }
 
     const fetchOrders = async (isPoll = false) => {
       try {
@@ -68,7 +63,6 @@ const Orders = () => {
         const response = await fetch('/api/orders', {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         if (response.ok) {
           const data = await response.json();
           const fresh: Order[] = data.orders || [];
@@ -91,38 +85,28 @@ const Orders = () => {
     };
 
     const cached = getStaleOrders(user.uid);
-    if (cached) {
-      setOrders(cached);
-      setOrdersLoading(false);
-    } else {
-      setOrdersLoading(true);
-    }
+    if (cached) { setOrders(cached); setOrdersLoading(false); }
+    else setOrdersLoading(true);
 
     fetchOrders(false);
-
     const interval = setInterval(() => { fetchOrders(true); }, 10000);
     return () => clearInterval(interval);
   }, [user, authLoading]);
 
-  // Fetch the user's existing reviews
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
     (async () => {
       try {
         const token = await user.getIdToken();
-        const r = await fetch('/api/reviews?mine=true', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const r = await fetch('/api/reviews?mine=true', { headers: { Authorization: `Bearer ${token}` } });
         if (!r.ok) return;
         const { reviews } = await r.json();
         if (cancelled) return;
         const map: Record<string, ReviewData> = {};
         for (const rv of reviews ?? []) map[rv.productId] = rv;
         setMyReviews(map);
-      } catch {
-        /* silent */
-      }
+      } catch { /* silent */ }
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -131,9 +115,7 @@ const Orders = () => {
     const set = new Set<string>();
     for (const o of orders) {
       if ((o.status ?? '').toLowerCase() !== 'delivered') continue;
-      for (const p of o.products ?? []) {
-        if (p.productId) set.add(p.productId);
-      }
+      for (const p of o.products ?? []) { if (p.productId) set.add(p.productId); }
     }
     return set;
   }, [orders]);
@@ -173,11 +155,7 @@ const Orders = () => {
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data?.error || 'Failed to delete review');
-    setMyReviews(prev => {
-      const next = { ...prev };
-      delete next[productId];
-      return next;
-    });
+    setMyReviews(prev => { const next = { ...prev }; delete next[productId]; return next; });
   };
 
   const cancelOrder = async (orderId: string) => {
@@ -192,9 +170,7 @@ const Orders = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setOrders(prev =>
-          prev.map(order => order._id === orderId ? { ...order, status: 'cancelled' } : order)
-        );
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o));
       } else {
         alert(data.error || 'Failed to cancel order');
       }
@@ -203,20 +179,17 @@ const Orders = () => {
     }
   };
 
-  const submitReturn = async (orderId: string, reason: string, description: string) => {
+  const submitReturn = async (orderId: string, reason: string, description: string, upiId: string) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
     const r = await fetch('/api/returns', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ orderId, reason, description }),
+      body: JSON.stringify({ orderId, reason, description, upiId }),
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data?.error || 'Failed to submit return request');
-    // Optimistically update order status so the button disappears
-    setOrders(prev =>
-      prev.map(o => o._id === orderId ? { ...o, status: 'return_requested' } : o)
-    );
+    setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'return_requested' } : o));
   };
 
   const getStatusColor = (status: string) => {
@@ -237,17 +210,17 @@ const Orders = () => {
 
   const getStatusIcon = (status: string) => {
     switch ((status ?? '').toLowerCase()) {
-      case 'pending':           return <Clock className="w-4 h-4" />;
-      case 'confirmed':         return <CheckCircle className="w-4 h-4" />;
-      case 'packed':            return <Package className="w-4 h-4" />;
-      case 'shipped':           return <Truck className="w-4 h-4" />;
-      case 'delivered':         return <CheckCircle className="w-4 h-4" />;
-      case 'cancelled':         return <X className="w-4 h-4" />;
-      case 'return_requested':  return <RotateCcw className="w-4 h-4" />;
-      case 'return_approved':   return <CheckCircle className="w-4 h-4" />;
-      case 'return_rejected':   return <X className="w-4 h-4" />;
-      case 'refund_issued':     return <CheckCircle className="w-4 h-4" />;
-      default:                  return <Package className="w-4 h-4" />;
+      case 'pending':           return <Clock className="w-3 h-3" />;
+      case 'confirmed':         return <CheckCircle className="w-3 h-3" />;
+      case 'packed':            return <Package className="w-3 h-3" />;
+      case 'shipped':           return <Truck className="w-3 h-3" />;
+      case 'delivered':         return <CheckCircle className="w-3 h-3" />;
+      case 'cancelled':         return <X className="w-3 h-3" />;
+      case 'return_requested':  return <RotateCcw className="w-3 h-3" />;
+      case 'return_approved':   return <CheckCircle className="w-3 h-3" />;
+      case 'return_rejected':   return <X className="w-3 h-3" />;
+      case 'refund_issued':     return <CheckCircle className="w-3 h-3" />;
+      default:                  return <Package className="w-3 h-3" />;
     }
   };
 
@@ -257,13 +230,12 @@ const Orders = () => {
       case 'return_approved':  return 'Return Approved';
       case 'return_rejected':  return 'Return Rejected';
       case 'refund_issued':    return 'Refund Issued';
-      default:                 return status;
+      default:                 return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Pending';
     }
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   if (authLoading) {
@@ -283,12 +255,8 @@ const Orders = () => {
         <div className="text-center">
           <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-4">Sign In Required</h1>
           <p className="text-sv-mid mb-8">Please sign in to view your orders</p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200"
-          >
-            <Home className="w-4 h-4" />
-            Back to Home
+          <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200">
+            <Home className="w-4 h-4" />Back to Home
           </Link>
         </div>
       </div>
@@ -302,31 +270,30 @@ const Orders = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-4xl mx-auto"
+          className="max-w-2xl mx-auto"
         >
           <div className="mb-8">
             <button
               onClick={() => navigate(-1)}
               className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-brass transition-colors duration-200 mb-8 flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Back
+              <ArrowLeft className="w-4 h-4" />Back
             </button>
-            <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-2">Your Orders</h1>
-            <p className="text-sv-mid">Track and manage your orders</p>
+            <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-1">Your Orders</h1>
+            <p className="text-sv-mid text-sm">Track and manage your orders</p>
           </div>
 
           {isCurrentlyLoading ? (
-            <div className="flex flex-col gap-6 py-4">
+            <div className="flex flex-col gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-surface border border-white/10 rounded-lg p-6 animate-pulse">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="h-4 w-32 bg-white/10 rounded" />
-                    <div className="h-4 w-20 bg-white/10 rounded" />
+                <div key={i} className="bg-surface border border-white/10 rounded-xl p-5 animate-pulse">
+                  <div className="flex justify-between mb-4">
+                    <div className="space-y-2"><div className="h-3 w-28 bg-white/10 rounded" /><div className="h-2.5 w-20 bg-white/5 rounded" /></div>
+                    <div className="h-6 w-20 bg-white/10 rounded-full" />
                   </div>
-                  <div className="space-y-3">
-                    <div className="h-3.5 w-2/3 bg-white/5 rounded" />
-                    <div className="h-3 w-1/2 bg-white/5 rounded" />
+                  <div className="space-y-2 pt-3 border-t border-white/5">
+                    <div className="h-3 w-3/4 bg-white/5 rounded" />
+                    <div className="h-2.5 w-1/2 bg-white/5 rounded" />
                   </div>
                 </div>
               ))}
@@ -334,10 +301,7 @@ const Orders = () => {
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-red-400 mb-4">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-brass text-void rounded hover:bg-yellow-400 transition-colors"
-              >
+              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-brass text-void rounded hover:bg-yellow-400 transition-colors font-condensed text-sm uppercase tracking-wider">
                 Try Again
               </button>
             </div>
@@ -345,133 +309,103 @@ const Orders = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
               <Package className="w-16 h-16 text-sv-mid mx-auto mb-4" />
               <h2 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-2">No Orders Yet</h2>
-              <p className="text-sv-mid mb-8">Your orders will appear here</p>
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200"
-              >
+              <p className="text-sv-mid mb-8 text-sm">Your orders will appear here</p>
+              <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200">
                 Start Shopping
               </Link>
             </motion.div>
           ) : (
-            <div className="space-y-6">
-              {displayOrders.map((order) => {
+            <div className="space-y-4">
+              {displayOrders.map((order, idx) => {
                 const isDelivered = order.status === 'delivered';
                 const isPending   = order.status === 'pending';
                 const isReturn    = RETURN_STATUSES.includes(order.status);
+                const refundAmt   = order.returnRefundAmount ?? 0;
+                const shipCost    = order.returnShippingCharges ?? 50;
 
                 return (
                   <motion.div
                     key={order._id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="bg-surface border border-white/10 rounded-lg p-6"
+                    transition={{ duration: 0.35, delay: idx * 0.04 }}
+                    className="bg-surface border border-white/10 rounded-xl overflow-hidden"
                   >
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                      <div className="flex items-center gap-4 mb-4 md:mb-0">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-5 h-5 text-sv-mid" />
-                          <span className="font-condensed text-sm text-sv-mid">
-                            Order {formatOrderId(order)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sv-mid">
-                          <Calendar className="w-4 h-4" />
-                          <span className="text-sm">{formatDate(order.createdAt)}</span>
-                        </div>
+                    {/* ── Card Header ─────────────────────────────────────── */}
+                    <div className="px-4 py-3.5 flex items-start justify-between gap-3 border-b border-white/8">
+                      <div className="min-w-0">
+                        <p className="font-condensed font-semibold text-tb-white text-xs tracking-[0.12em] uppercase">
+                          {formatOrderId(order)}
+                        </p>
+                        <p className="flex items-center gap-1 mt-0.5 font-condensed text-[11px] text-sv-mid">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(order.createdAt)}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {/* Status badge */}
-                        <div
-                          className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-condensed uppercase tracking-wider ${getStatusColor(order.status)}`}
-                        >
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-condensed uppercase tracking-wider ${getStatusColor(order.status)}`}>
                           {getStatusIcon(order.status)}
                           {getStatusLabel(order.status)}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-condensed text-tb-white">₹{order.totalAmount}</p>
-                        </div>
-
-                        {/* Cancel — only for pending */}
-                        {isPending && (
-                          <button
-                            onClick={() => cancelOrder(order._id)}
-                            className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-xs font-condensed uppercase tracking-wider hover:bg-red-500/30 transition-colors duration-200"
-                          >
-                            Cancel
-                          </button>
-                        )}
-
-                        {/* Request Return — only for delivered, not if return already filed */}
-                        {isDelivered && !isReturn && (
-                          <button
-                            onClick={() => setReturnTarget(order)}
-                            className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/40 rounded text-amber-400 text-xs font-condensed uppercase tracking-wider hover:bg-amber-500/20 transition-colors duration-200"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            Return
-                          </button>
-                        )}
-
-                        {/* Return status info for return_approved — show refund note */}
-                        {order.status === 'return_approved' && (
-                          <span className="font-condensed text-[10px] text-emerald-400/70 tracking-wider">
-                            Refund in 5–7 days
-                          </span>
-                        )}
-                        {/* Refund issued badge */}
-                        {order.status === 'refund_issued' && (
-                          <span className="font-condensed text-[10px] text-teal-400/70 tracking-wider">
-                            Refund done
-                          </span>
-                        )}
+                        </span>
+                        <p className="font-condensed font-semibold text-tb-white text-sm">
+                          ₹{order.totalAmount?.toLocaleString('en-IN') ?? '—'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Return info banner */}
+                    {/* ── Return Status Banner ─────────────────────────────── */}
                     {isReturn && (
-                      <div className={`mb-4 px-4 py-2.5 rounded-lg border text-xs font-condensed tracking-wider ${
-                        order.status === 'return_requested' ? 'bg-amber-500/5 border-amber-500/20 text-amber-300/80' :
-                        order.status === 'return_approved'  ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300/80' :
-                        order.status === 'refund_issued'    ? 'bg-teal-500/5 border-teal-500/20 text-teal-300/80' :
-                        'bg-rose-500/5 border-rose-500/20 text-rose-300/80'
+                      <div className={`px-4 py-2.5 text-[11px] font-condensed tracking-wide leading-relaxed border-b ${
+                        order.status === 'return_requested' ? 'bg-amber-500/5 border-amber-500/15 text-amber-300/80' :
+                        order.status === 'return_approved'  ? 'bg-emerald-500/5 border-emerald-500/15 text-emerald-300/80' :
+                        order.status === 'refund_issued'    ? 'bg-teal-500/5 border-teal-500/15 text-teal-300/80' :
+                        'bg-rose-500/5 border-rose-500/15 text-rose-300/80'
                       }`}>
-                        {order.status === 'return_requested' && 'Your return request is under review. We\'ll contact you within 2–3 business days.'}
-                        {order.status === 'return_approved'  && `Return approved! Your refund (order total − ₹${order.returnShippingCharges ?? 50} shipping) will be processed within 5–7 business days.`}
-                        {order.status === 'refund_issued'    && `Your refund of ₹${(order.returnRefundAmount ?? 0).toLocaleString('en-IN')} has been issued to your original payment method.`}
-                        {order.status === 'return_rejected'  && 'Your return request was not approved. Contact us at +91 95611 72681 if you have questions.'}
+                        {order.status === 'return_requested' && 'Return request submitted. Our team will review and contact you within 2–3 business days.'}
+                        {order.status === 'return_approved'  && (
+                          <>Return approved! Refund of <span className="font-semibold text-emerald-300">₹{refundAmt.toLocaleString('en-IN')}</span> (₹{order.totalAmount?.toLocaleString('en-IN')} order − ₹{shipCost} shipping) will be processed within 5–7 business days.</>
+                        )}
+                        {order.status === 'refund_issued'    && (
+                          <>Refund of <span className="font-semibold text-teal-300">₹{refundAmt.toLocaleString('en-IN')}</span> has been issued to your UPI account.</>
+                        )}
+                        {order.status === 'return_rejected'  && 'Your return request was not approved. Contact support at +91 95611 72681.'}
                       </div>
                     )}
 
-                    <div className="border-t border-white/10 pt-4">
-                      <h3 className="font-condensed text-sm text-sv-mid uppercase tracking-wider mb-3">Items</h3>
-                      <div className="space-y-3">
-                        {(order.products ?? []).map((product, index) => {
-                          const canReview = isDelivered && product.productId && reviewableProducts.has(product.productId);
-                          const existing  = product.productId ? myReviews[product.productId] : undefined;
+                    {/* ── Items ───────────────────────────────────────────── */}
+                    <div className="px-4 py-3.5 space-y-3.5">
+                      {(order.products ?? []).map((product, index) => {
+                        const canReview = isDelivered && !!product.productId && reviewableProducts.has(product.productId);
+                        const existing  = product.productId ? myReviews[product.productId] : undefined;
 
-                          return (
-                            <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-tb-white font-medium">{product.name}</p>
-                                <p className="text-sv-mid text-sm">
-                                  {product.size ? `Size: ${product.size} · ` : ''}Qty: {product.quantity}
+                        return (
+                          <div key={index} className="flex flex-col gap-2">
+                            {/* Product info row */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-tb-white text-sm font-medium leading-snug line-clamp-2">{product.name}</p>
+                                <p className="text-sv-mid text-xs mt-0.5 font-condensed">
+                                  {product.size ? `Size ${product.size} · ` : ''}Qty {product.quantity}
                                 </p>
                                 {existing && (
-                                  <div className="mt-1.5 flex items-center gap-2">
+                                  <div className="mt-1.5 flex items-center gap-1.5">
                                     <LightningRating value={existing.rating} readonly size="sm" />
-                                    <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.14em]">Your review</span>
+                                    <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.1em]">Reviewed</span>
                                   </div>
                                 )}
                               </div>
+                              <p className="font-condensed text-tb-white text-sm shrink-0">
+                                ₹{product.price?.toLocaleString('en-IN') ?? '—'}
+                              </p>
+                            </div>
 
-                              <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                                <p className="text-tb-white">₹{product.price?.toFixed(2) ?? '—'}</p>
+                            {/* Action buttons row */}
+                            {(product.productId || canReview) && (
+                              <div className="flex items-center gap-2 flex-wrap">
                                 {product.productId && (
                                   <Link
                                     to={`/product/${product.productId}`}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/20 rounded text-tb-white text-xs font-condensed uppercase tracking-wider hover:bg-white/10 hover:border-white/30 transition-colors duration-200 whitespace-nowrap"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/15 rounded-md text-[11px] font-condensed uppercase tracking-wider text-sv-mid hover:text-tb-white hover:border-white/30 transition-colors"
                                   >
                                     <Eye className="w-3 h-3" />
                                     View Product
@@ -483,18 +417,42 @@ const Orders = () => {
                                       product: { id: product.productId!, name: product.name, image: product.image },
                                       existing: existing ?? null,
                                     })}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brass/15 border border-brass/40 rounded text-brass text-xs font-condensed uppercase tracking-wider hover:bg-brass/25 transition-colors duration-200 whitespace-nowrap"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-brass/10 border border-brass/30 rounded-md text-[11px] font-condensed uppercase tracking-wider text-brass hover:bg-brass/20 transition-colors"
                                   >
                                     <Pencil className="w-3 h-3" />
-                                    {existing ? 'Edit Review' : 'Review Product'}
+                                    {existing ? 'Edit Review' : 'Review'}
                                   </button>
                                 )}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
+
+                    {/* ── Footer: Cancel / Return actions ─────────────────── */}
+                    {(isPending || (isDelivered && !isReturn)) && (
+                      <div className="px-4 py-3 border-t border-white/8 flex items-center gap-2">
+                        {isPending && (
+                          <button
+                            onClick={() => cancelOrder(order._id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/30 rounded-md text-red-400 text-xs font-condensed uppercase tracking-wider hover:bg-red-500/20 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                            Cancel Order
+                          </button>
+                        )}
+                        {isDelivered && !isReturn && (
+                          <button
+                            onClick={() => setReturnTarget(order)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-md text-amber-400 text-xs font-condensed uppercase tracking-wider hover:bg-amber-500/20 transition-colors"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            Request Return
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
@@ -507,31 +465,26 @@ const Orders = () => {
       <ReviewModal
         open={!!reviewTarget}
         onClose={() => setReviewTarget(null)}
-        product={reviewTarget?.product ?? { id: '', name: '' }}
-        existingReview={reviewTarget?.existing ?? null}
-        onSubmit={async (input) => {
-          if (!reviewTarget) return;
-          await submitReview(reviewTarget.product.id, input);
-        }}
-        onUpdate={async (input) => {
-          if (!reviewTarget?.existing) return;
-          await updateReview(reviewTarget.existing._id, reviewTarget.product.id, input);
-        }}
-        onDelete={async () => {
-          if (!reviewTarget?.existing) return;
-          await deleteReview(reviewTarget.existing._id, reviewTarget.product.id);
-        }}
+        productId={reviewTarget?.product.id ?? ''}
+        productName={reviewTarget?.product.name ?? ''}
+        productImage={reviewTarget?.product.image}
+        existing={reviewTarget?.existing ?? null}
+        onSubmit={submitReview}
+        onUpdate={updateReview}
+        onDelete={deleteReview}
       />
 
       {/* Return Request Modal */}
-      <ReturnRequestModal
-        open={!!returnTarget}
-        onClose={() => setReturnTarget(null)}
-        orderId={returnTarget?._id ?? ''}
-        orderNumber={returnTarget?.orderNumber ?? formatOrderId(returnTarget ?? { _id: '', userId: '', products: [], totalAmount: 0, status: '', createdAt: '' })}
-        totalAmount={returnTarget?.totalAmount ?? 0}
-        onSubmit={submitReturn}
-      />
+      {returnTarget && (
+        <ReturnRequestModal
+          open={!!returnTarget}
+          onClose={() => setReturnTarget(null)}
+          orderId={returnTarget._id}
+          orderNumber={formatOrderId(returnTarget)}
+          totalAmount={returnTarget.totalAmount}
+          onSubmit={submitReturn}
+        />
+      )}
     </div>
   );
 };
