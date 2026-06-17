@@ -10,6 +10,14 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
+// ── Instagram in-app browser detection ──────────────────────────────────────
+// Instagram's iOS WKWebView has a known bug where position:fixed elements
+// scroll with page content instead of staying pinned. We detect this early
+// (before React mounts) so the CSS class is active on the very first paint.
+if (/Instagram/.test(navigator.userAgent)) {
+  document.documentElement.classList.add('instagram-browser');
+}
+
 document.addEventListener('contextmenu', (e) => {
   if (e.target instanceof HTMLImageElement) {
     e.preventDefault();

@@ -143,6 +143,7 @@ const Navbar = () => {
   return (
     <>
       <motion.nav
+        id="tb-navbar"
         variants={navVariants}
         initial="hidden"
         animate="visible"

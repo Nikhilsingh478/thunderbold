@@ -16,6 +16,7 @@ const AnnouncementBar = () => {
 
   return (
     <div
+      id="tb-announcement-bar"
       className="fixed left-0 w-full z-[120] h-9 flex items-center overflow-hidden"
       style={{ top: 'var(--tb-banner-h)', background: 'linear-gradient(90deg, #0a0a0a 0%, #111008 50%, #0a0a0a 100%)' }}
     >

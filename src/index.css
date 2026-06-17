@@ -13,6 +13,9 @@
 @layer base {
   :root {
     --background: 0 0% 4.3%;
+    /* APK banner height offset — 0px because the banner is not currently shown.
+       Set to 36px if/when ApkBanner is re-enabled in AppContent.tsx           */
+    --tb-banner-h: 0px;
     --foreground: 40 7% 93%;
     --card: 0 0% 6.7%;
     --card-foreground: 40 7% 93%;
@@ -187,4 +190,30 @@ img {
   -webkit-user-select: none;
   user-select: none;
   draggable: false;
+}
+
+/* ── Instagram in-app browser compatibility ─────────────────────────────────
+   Instagram's iOS WKWebView has a known bug where position:fixed elements
+   scroll with page content instead of staying pinned to the viewport.
+   Promoting fixed bars to their own GPU compositing layer (will-change)
+   forces the OS compositor to treat them as true viewport overlays.
+   The 'instagram-browser' class is applied to <html> by main.tsx before
+   React mounts, so this rule is active from the very first paint.
+   ──────────────────────────────────────────────────────────────────────── */
+.instagram-browser #tb-announcement-bar,
+.instagram-browser #tb-navbar {
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Force 3-D compositing layer — the most reliable WKWebView fixed fix */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Ensure dynamic viewport height is used where available so Instagram's
+   collapsible address bar doesn't cause layout overflow               */
+@supports (height: 100dvh) {
+  .instagram-browser .min-h-screen {
+    min-height: 100dvh;
+  }
 }
