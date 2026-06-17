@@ -1,0 +1,110 @@
+# Thunderbold Performance Fix — Round 2
+### For Replit Agent
+
+---
+
+## CONTEXT
+
+This is a follow-up performance pass on the Thunderbold e-commerce PWA (thunderbold.shop). A previous round of fixes already happened — API call deduplication and JS bundle splitting (vendor/motion/firebase/index are now separate chunks). That worked: FCP went from 9.4s → 2.8s, LCP went from 10.0s → 4.5s, performance score went from 55 → 69.
+
+This round is about closing the remaining gap. **Goal is still the same: smooth, non-laggy, non-jittery experience for customers — not a perfect Lighthouse score.**
+
+Do NOT touch visual design, colors, fonts, layout, checkout, cart, or payment code. Performance and loading behavior only.
+
+---
+
+## 🔴 BIGGEST REMAINING ISSUE: Images (903 KiB wasted)
+
+This is by far the largest opportunity left. Two separate image problems:
+
+**1. Cloudinary product images are not using responsive transforms.**
+Example: a 1000×1500px image is being displayed at 371×556px and downloaded at full size — 189 KiB wasted on that one image alone. This pattern repeats across every single product image on the page.
+
+- Find wherever Cloudinary image URLs are used/constructed in the codebase (product cards, sliders, category grids — search for `res.cloudinary.com`)
+- Create a utility function, e.g. `getOptimizedImageUrl(url, width, height)`, that injects Cloudinary transformation parameters into the URL by replacing `/upload/` with `/upload/w_{width},h_{height},c_fill,q_auto,f_auto/`
+  - `q_auto` = automatic quality compression
+  - `f_auto` = auto-serve WebP/AVIF based on browser support
+  - `c_fill` = crop to exact display size
+- Apply this everywhere a Cloudinary image is rendered, passing in the actual rendered width/height (×2 for retina if needed, but don't over-fetch)
+- This single fix should save roughly 700+ KiB based on current numbers
+
+**2. Local banner images are wildly oversized.**
+`/banners/under-999.webp` and `/under699new.webp` are both 1536×1024px source files being displayed at only 258×172px — that's 93.9 KiB and 91.6 KiB wasted on two banners alone. `/banner.webp` and `/banner2.webp` have the same problem at smaller scale.
+
+- Find these banner image files in the project (likely in `/public` folder)
+- Resize them at the source to roughly match their actual display dimensions (account for 2x for retina displays, so ~520×344 for a 258×172 display size is plenty — no need for 1536px wide images here)
+- Re-export as WebP at reasonable quality (80-85%)
+- Replace the files, keeping the same filenames so no code references need to change
+
+---
+
+## 🟡 SECOND PRIORITY: Firebase Auth Still Blocking (90 KiB, 1.67s)
+
+`thunderbolt-auth.firebaseapp.com/auth/iframe.js` is still appearing in the critical path on initial load (1,677ms), and `getProjectConfig` is taking 2,625ms — this is currently the longest item in the entire critical path chain.
+
+**Important: do this carefully and test thoroughly — auth is sensitive functionality. The login popup and all auth flows must continue to work exactly as before. The only change is WHEN Firebase Auth code starts loading, not how it behaves.**
+
+- Find where Firebase is initialized (likely `firebase.ts`, `firebaseConfig.ts`, or in a top-level provider/context)
+- Instead of calling `initializeApp()` / `getAuth()` immediately when the app loads, wrap Firebase Auth initialization in a function that only runs when:
+  - The user clicks Login/Signup, OR
+  - The app needs to check existing auth state (e.g. on a protected route)
+- Use dynamic `import()` for the firebase auth module so it's not even downloaded until needed
+- After this change, test thoroughly: login, signup, logout, persisted sessions on refresh, protected routes — all of it. If anything breaks, revert this specific change and leave Firebase as-is; this is a nice-to-have, not worth breaking auth over.
+
+---
+
+## 🟠 THIRD PRIORITY: Forced Reflow Still Present
+
+Lighthouse is showing a forced reflow originating in `vendor-EzGZUUfk.js:18` and `index-BV8EbysM.js:726`, plus contributions from the motion library (`motion-Z2Znb5Xn.js`).
+
+- Search the codebase for places reading layout properties (`offsetWidth`, `offsetHeight`, `getBoundingClientRect()`, `scrollTop`, `scrollHeight`, `clientWidth`) — especially inside component render logic, `useLayoutEffect`, or animation setup code
+- If using Framer Motion (the `motion-*.js` chunk suggests this), check for any custom measurement logic that reads DOM dimensions before an animation starts — this is a common cause of forced reflow with Framer Motion when measuring elements for layout animations
+- Fix: batch all reads before writes. If measuring an element's size for an animation, read it once, store in state/ref, then apply animation values — don't interleave reads and writes in the same tick
+- If this is from a `layout` prop on a `motion.div` that's triggering measurement, consider whether `layout` animation is necessary there or if a simpler transform-based animation would achieve the same visual effect without the measurement cost
+
+---
+
+## 🟢 SMALLER WINS
+
+**4. CSS file blocking render (450ms)**
+`/assets/index-FcHbvx_d.css` (20.4 KiB) is render-blocking and taking 450ms in the critical path.
+- Check if Vite's CSS code-splitting is enabled — if there's global CSS that isn't needed for above-the-fold content, consider whether critical CSS can be inlined and the rest deferred
+- This is a smaller win (~130ms estimated savings per Lighthouse) — only pursue after the image and Firebase fixes above
+
+**5. Unused JS still present (68 KiB)**
+`/assets/index-BV8EbysM.js` (43.5 KiB unused) and `/assets/motion-Z2Znb5Xn.js` (24.7 KiB unused).
+- Check if Framer Motion is being imported in full rather than tree-shaken — use named imports like `import { motion } from 'framer-motion'` rather than importing the whole library
+- Check if any homepage-only components are being bundled into the main chunk that should be route-split instead
+
+**6. Cache lifetime on Firebase iframe**
+The Firebase auth iframe has only a 30-minute cache TTL (78 KiB potential savings on repeat visits). This is controlled by Firebase/Google's own headers, not something fixable in your code — skip this one.
+
+**7. Back/forward cache still disabled**
+Same as before — `Cache-Control: no-store` somewhere is preventing bfcache. Check Vercel API route headers on `/api/products`, `/api/categories` etc. Product listing endpoints can safely use `Cache-Control: public, s-maxage=60, stale-while-revalidate=300` instead of `no-store`. This makes back-navigation instant for users browsing between product pages and home.
+
+---
+
+## WHAT NOT TO TOUCH
+
+- No visual/design changes
+- No changes to checkout, cart, or payment flow
+- No changes to routing structure
+- No new features
+- Auth functionality must remain 100% identical in behavior — only its load timing should change, and only if it can be done without risk
+
+---
+
+## PRIORITY ORDER
+
+1. **Images** (Cloudinary transforms + banner resizing) — biggest win, lowest risk, do this first
+2. **Back/forward cache headers** — easy win, very low risk
+3. **Forced reflow fix** — moderate effort, improves scroll/animation smoothness directly
+4. **Firebase Auth lazy load** — do last, test extensively, skip if risky
+5. **CSS/JS trimming** — only if time permits, smallest impact
+
+## EXPECTED OUTCOME
+
+- LCP should drop meaningfully since the biggest images on the page (the ones likely being measured as LCP) will be properly sized
+- Total page weight should drop by roughly 900 KiB - 1 MB
+- Scroll and animation smoothness should improve due to forced reflow fix
+- Back-navigation between pages should feel instant

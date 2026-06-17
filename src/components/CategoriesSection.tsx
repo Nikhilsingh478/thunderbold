@@ -127,7 +127,7 @@ export default function CategoriesSection() {
       if (cancelled) return;
       setCategories(catData.categories || []);
       const freshProds = (prodData.products || []).filter(
-        (p: { section?: string }) => p.section === 'kurta' || p.section === 'outfits'
+        (p: { section?: string }) => p.section === 'kurta'
       );
       setProducts(freshProds as ProductTile[]);
     }).catch(() => {}).finally(() => {
@@ -148,14 +148,9 @@ export default function CategoriesSection() {
     () => products.filter(p => p.section === 'kurta'),
     [products]
   );
-  const outfitsProducts = useMemo(
-    () => products.filter(p => p.section === 'outfits'),
-    [products]
-  );
 
   const showTshirts = loading || tshirtCategories.length > 0;
   const showKurta = true;
-  const showOutfits = loading || outfitsProducts.length > 0;
 
   return (
     <section className="min-h-screen pt-12 md:pt-20 pb-24 px-6 md:px-16" id="categories">
@@ -253,42 +248,6 @@ export default function CategoriesSection() {
           </div>
         )}
 
-        {/* ── Thunder Looks (Outfits) ───────────────────────────────── */}
-        {showOutfits && (
-          <div className="mt-12 md:mt-20" id="thunder-looks">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-12 md:mb-16 text-center"
-            >
-              <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-                Thunder Looks
-              </h2>
-              <p className="font-condensed text-sv text-sm md:text-base tracking-[0.12em] mt-4">
-                Head-to-toe fits. Curated for the bold.
-              </p>
-            </motion.div>
-
-            {outfitsProducts.length === 0 && !loading ? (
-              <div className="flex flex-col items-center justify-center py-16 border border-white/[0.06] rounded-sm">
-                <p className="font-condensed text-sm uppercase tracking-[0.22em] text-sv-mid">
-                  Coming Soon
-                </p>
-                <p className="font-condensed text-xs tracking-[0.14em] text-sv-dim mt-2">
-                  New looks being added
-                </p>
-              </div>
-            ) : (
-              <ProductGrid
-                products={outfitsProducts}
-                loading={loading}
-                skeletonCount={4}
-              />
-            )}
-          </div>
-        )}
 
       </div>
     </section>
