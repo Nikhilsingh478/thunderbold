@@ -1,0 +1,150 @@
+Vercel deployment is failing during dependency installation, NOT during the build step.
+
+Current Vercel log:
+
+01:47:27 Installing dependencies...
+01:48:40 npm error Exit handler never called!
+Error: Command "npm install" exited with 1
+
+Important observations:
+
+* Build never reaches npm run build
+* Failure occurs during npm install
+* This started after recent performance optimization changes
+* Vercel restored build cache before attempting install
+* Repository: thunderbold
+* Latest commit: 5d955be
+
+I do NOT want guesses or random fixes.
+
+I want a senior-level root cause investigation.
+
+Perform the following steps IN ORDER:
+
+STEP 1 — Diagnose locally first
+
+Run and inspect:
+
+npm install
+
+Capture the COMPLETE error output.
+
+Do not stop at the first message.
+
+Find the actual package, dependency, script, or lockfile causing the failure.
+
+STEP 2 — Audit package.json
+
+Review package.json completely and identify:
+
+* Invalid dependencies
+* Invalid versions
+* Deprecated packages
+* Packages added recently
+* Duplicate dependencies
+* Peer dependency conflicts
+* Dependencies that exist in package.json but are never used
+
+Show findings before making changes.
+
+STEP 3 — Audit package-lock.json
+
+Check for:
+
+* Corruption
+* Invalid entries
+* References to missing packages
+* Mismatched dependency tree
+* Version conflicts
+
+If lockfile corruption exists:
+
+Explain why.
+
+STEP 4 — Compare recent changes
+
+Inspect recent commits and determine:
+
+* Which dependency-related files changed
+* Whether vite.config.ts changes introduced package requirements
+* Whether firebase changes introduced new package requirements
+* Whether any optimization work modified package.json
+
+Show exact findings.
+
+STEP 5 — Verify Node compatibility
+
+Determine:
+
+* Node version used by Vercel
+* npm version used by Vercel
+* Required version ranges for all major packages
+
+Identify incompatibilities.
+
+STEP 6 — Investigate Vercel-specific issues
+
+Check:
+
+* Build cache corruption
+* Unsupported postinstall scripts
+* Native module compilation failures
+* Memory issues
+* Workspace/package manager misconfiguration
+* Lockfile version compatibility
+
+Determine whether the problem is local or Vercel-only.
+
+STEP 7 — Produce root cause report
+
+Before changing anything provide:
+
+ROOT CAUSE
+WHY IT FAILS
+FILES INVOLVED
+RISK LEVEL
+RECOMMENDED FIX
+
+STEP 8 — Implement only necessary fixes
+
+Make the minimum required changes.
+
+Avoid unrelated refactors.
+
+Do not touch application logic.
+
+Do not touch returns system.
+
+Do not touch performance optimizations unless they are directly responsible.
+
+STEP 9 — Verify
+
+After fixes:
+
+Delete node_modules
+Delete package-lock.json ONLY if necessary
+Reinstall dependencies
+Run build locally
+
+Verify:
+
+npm install
+npm run build
+
+both succeed.
+
+STEP 10 — Final report
+
+Provide:
+
+* Exact root cause
+* Files modified
+* Why each modification was required
+* Whether future deployments are safe
+* Any remaining risks
+
+DO NOT blindly regenerate package-lock.json.
+DO NOT randomly downgrade packages.
+DO NOT make speculative changes.
+
+Act like a senior build engineer performing a production deployment incident investigation.
