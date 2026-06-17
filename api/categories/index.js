@@ -37,6 +37,8 @@ export default async function handler(req, res) {
 
     switch (req.method) {
       case 'GET': {
+        // Categories are public and change infrequently — safe to cache
+        res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
         const categories = await categoriesCollection.find({}).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ categories, count: categories.length, source: 'database' });
       }

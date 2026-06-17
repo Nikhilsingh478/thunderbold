@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 
 interface Slide {
   src: string;
@@ -33,7 +34,7 @@ export default function HeroBanner() {
         if (Array.isArray(data?.images) && data.images.length > 0) {
           setSlides(
             data.images.map((src: string, i: number) => ({
-              src,
+              src: optimizeCloudinaryUrl(src, IMG_SIZES.hero),
               alt: `Banner ${i + 1}`,
               href: null,
             }))

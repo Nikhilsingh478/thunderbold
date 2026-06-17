@@ -3,25 +3,32 @@ export const CLOUD_NAME_2 = 'dyyjowb8g';
 
 /**
  * Transforms a raw Cloudinary URL into an optimised one.
- * - Adds f_auto  → best format for the browser (WebP / AVIF)
- * - Adds q_auto  → automatic quality (Cloudinary picks the sweet-spot)
- * - Adds w_<n>   → resize to requested width
+ * - f_auto  → best format for browser (WebP / AVIF)
+ * - q_auto  → automatic quality compression
+ * - w_<n>   → resize to requested width
+ * - h_<n>,c_fill → optional: crop to exact height (for fixed-ratio cards)
  *
  * Non-Cloudinary URLs are returned unchanged so the function is safe
  * to call on any image source (local paths, external CDNs, etc.).
  *
- * Already-optimised URLs (containing /upload/f_auto) are also returned
- * unchanged to prevent double transformation.
+ * URLs already transformed by this function (identified by the f_auto,q_auto,w_
+ * prefix) are returned as-is to prevent double transformation.
  */
 export function optimizeCloudinaryUrl(
   url: string | null | undefined,
   width: number = 800,
+  height?: number,
 ): string {
   if (!url) return '/placeholder.png';
   if (!url.includes('res.cloudinary.com')) return url;
-  if (url.includes('/upload/f_auto')) return url;  // already optimised
+  // Already transformed by this function — skip to avoid duplicating params
+  if (url.includes('/upload/f_auto,q_auto,w_')) return url;
 
-  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+  const params = height
+    ? `f_auto,q_auto,w_${width},h_${height},c_fill`
+    : `f_auto,q_auto,w_${width}`;
+
+  return url.replace('/upload/', `/upload/${params}/`);
 }
 
 /**
@@ -42,9 +49,11 @@ export function buildCloudinaryUrl(
  *  thumbnail  → admin previews, cart items, checkout summary (80–200 px)
  *  card       → product / category cards                     (400–500 px)
  *  detail     → product detail page hero                     (1000 px)
+ *  hero       → full-width banner images                     (1200 px)
  */
 export const IMG_SIZES = {
   thumbnail: 200,
   card: 500,
   detail: 1000,
+  hero: 1200,
 } as const;

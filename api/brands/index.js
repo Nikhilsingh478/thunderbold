@@ -48,6 +48,8 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case "GET": {
+        // Brands are public and rarely change — safe to cache aggressively
+        res.setHeader("Cache-Control", "public, s-maxage=120, stale-while-revalidate=600");
         // No projection — return all fields including logoUrl
         const brands = await col
           .find({})

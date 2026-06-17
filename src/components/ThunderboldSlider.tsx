@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { optimizeCloudinaryUrl } from '../lib/cloudinary';
 
 interface SlideData {
   imageUrl: string;
@@ -212,7 +213,7 @@ export default function ThunderboldSlider() {
             <div key={i} style={roleStyle(role, isMobile)}>
               {slide.imageUrl ? (
                 <img
-                  src={slide.imageUrl}
+                  src={optimizeCloudinaryUrl(slide.imageUrl, 600)}
                   alt={slide.heading || `Slide ${i + 1}`}
                   draggable={false}
                   loading={i === 0 ? 'eager' : 'lazy'}

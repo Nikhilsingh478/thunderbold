@@ -93,6 +93,11 @@ export default async function handler(req, res) {
 
       case 'GET': {
         const isAdminRequest = await tryAdminAuth(req, database);
+        // Cache public product listings — safe for CDN + bfcache
+        // Admin requests (which include purchasePrice) are never cached publicly
+        if (!isAdminRequest) {
+          res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        }
 
         const filter = {};
 
