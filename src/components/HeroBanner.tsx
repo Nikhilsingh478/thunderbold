@@ -2,27 +2,49 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const slides = [
-  {
-    src: '/banner.webp',
-    alt: 'Get an extra 40% off — Live Now',
-    href: null,
-  },
-  {
-    src: '/banner2.webp',
-    alt: 'Buy Three Jeans at Only ₹1399 — Limited Offer',
-    href: '#live-sale',
-  },
+interface Slide {
+  src: string;
+  alt: string;
+  href: string | null;
+}
+
+const DEFAULT_SLIDES: Slide[] = [
+  { src: '/banner.webp',  alt: 'Get an extra 40% off — Live Now',               href: null },
+  { src: '/banner2.webp', alt: 'Buy Three Jeans at Only ₹1399 — Limited Offer', href: '#live-sale' },
 ];
 
 const INTERVAL = 3000;
 const SWIPE_THRESHOLD = 40;
 
 export default function HeroBanner() {
+  const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState(1);
   const touchStartX = useRef<number | null>(null);
+
+  // Fetch admin-configured banner images; fall back to defaults if none saved
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/slider?type=hero')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (cancelled) return;
+        if (Array.isArray(data?.images) && data.images.length > 0) {
+          setSlides(
+            data.images.map((src: string, i: number) => ({
+              src,
+              alt: `Banner ${i + 1}`,
+              href: null,
+            }))
+          );
+          // Reset to first slide whenever banners are refreshed
+          setCurrent(0);
+        }
+      })
+      .catch(() => {}); // silent — use defaults on any error
+    return () => { cancelled = true; };
+  }, []);
 
   const go = useCallback((index: number, dir: number) => {
     setDirection(dir);
@@ -31,11 +53,11 @@ export default function HeroBanner() {
 
   const next = useCallback(() => {
     go((current + 1) % slides.length, 1);
-  }, [current, go]);
+  }, [current, slides.length, go]);
 
   const prev = useCallback(() => {
     go((current - 1 + slides.length) % slides.length, -1);
-  }, [current, go]);
+  }, [current, slides.length, go]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -52,11 +74,12 @@ export default function HeroBanner() {
     setPaused(false);
   };
 
+  // Auto-advance only when there's more than 1 slide
   useEffect(() => {
-    if (paused) return;
+    if (paused || slides.length <= 1) return;
     const id = setInterval(next, INTERVAL);
     return () => clearInterval(id);
-  }, [paused, next]);
+  }, [paused, slides.length, next]);
 
   const handleClick = (href: string | null) => {
     if (!href) return;
@@ -65,10 +88,12 @@ export default function HeroBanner() {
   };
 
   const variants = {
-    enter: (dir: number) => ({ opacity: 0, x: dir * 40 }),
+    enter:  (dir: number) => ({ opacity: 0, x: dir * 40 }),
     center: { opacity: 1, x: 0 },
-    exit: (dir: number) => ({ opacity: 0, x: dir * -40 }),
+    exit:   (dir: number) => ({ opacity: 0, x: dir * -40 }),
   };
+
+  const multiSlide = slides.length > 1;
 
   return (
     <div
@@ -89,12 +114,12 @@ export default function HeroBanner() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.42, ease: [0.32, 0, 0.67, 0] }}
-            className={`absolute inset-0 w-full h-full ${slides[current].href ? 'cursor-pointer' : ''}`}
-            onClick={() => handleClick(slides[current].href)}
+            className={`absolute inset-0 w-full h-full ${slides[current]?.href ? 'cursor-pointer' : ''}`}
+            onClick={() => handleClick(slides[current]?.href ?? null)}
           >
             <img
-              src={slides[current].src}
-              alt={slides[current].alt}
+              src={slides[current]?.src}
+              alt={slides[current]?.alt}
               className="w-full h-full object-cover object-center"
               loading={current === 0 ? 'eager' : 'lazy'}
               decoding="async"
@@ -102,9 +127,9 @@ export default function HeroBanner() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Height placeholder */}
+        {/* Height placeholder — always use first slide for stable layout */}
         <img
-          src={slides[0].src}
+          src={slides[0]?.src}
           alt=""
           aria-hidden
           className="w-full block object-cover object-center h-[150px] md:h-auto md:max-h-[260px] invisible"
@@ -121,49 +146,54 @@ export default function HeroBanner() {
         }}
       />
 
-      {/* Prev arrow */}
-      <button
-        onClick={(e) => { e.stopPropagation(); prev(); }}
-        aria-label="Previous slide"
-        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
-      >
-        <ChevronLeft className="w-4 h-4 text-white/80" strokeWidth={2} />
-      </button>
-
-      {/* Next arrow */}
-      <button
-        onClick={(e) => { e.stopPropagation(); next(); }}
-        aria-label="Next slide"
-        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
-      >
-        <ChevronRight className="w-4 h-4 text-white/80" strokeWidth={2} />
-      </button>
-
-      {/* Dot indicators */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-        {slides.map((_, i) => (
+      {/* Prev / Next arrows — only when multiple slides */}
+      {multiSlide && (
+        <>
           <button
-            key={i}
-            onClick={() => go(i, i > current ? 1 : -1)}
-            aria-label={`Go to slide ${i + 1}`}
-            className="focus:outline-none"
-            style={{
-              width: 20,
-              height: 3,
-              borderRadius: 999,
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              background: 'white',
-              opacity: i === current ? 1 : 0.35,
-              transform: `scaleX(${i === current ? 1 : 0.15})`,
-              transformOrigin: 'center',
-              transition: 'transform 300ms ease, opacity 300ms ease',
-              willChange: 'transform, opacity',
-            }}
-          />
-        ))}
-      </div>
+            onClick={(e) => { e.stopPropagation(); prev(); }}
+            aria-label="Previous slide"
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+          >
+            <ChevronLeft className="w-4 h-4 text-white/80" strokeWidth={2} />
+          </button>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); next(); }}
+            aria-label="Next slide"
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+          >
+            <ChevronRight className="w-4 h-4 text-white/80" strokeWidth={2} />
+          </button>
+        </>
+      )}
+
+      {/* Dot indicators — only when multiple slides */}
+      {multiSlide && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => go(i, i > current ? 1 : -1)}
+              aria-label={`Go to slide ${i + 1}`}
+              className="focus:outline-none"
+              style={{
+                width: 20,
+                height: 3,
+                borderRadius: 999,
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                background: 'white',
+                opacity: i === current ? 1 : 0.35,
+                transform: `scaleX(${i === current ? 1 : 0.15})`,
+                transformOrigin: 'center',
+                transition: 'transform 300ms ease, opacity 300ms ease',
+                willChange: 'transform, opacity',
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -56,6 +56,8 @@ function resolveSubRoute(req) {
 
 // ─────────────────────────── GET (list) ──────────────────────────────────────
 
+const CUSTOMER_PAGE_SIZE = 10; // orders per page for customer view
+
 async function handleList(req, res) {
   const user = await authUser(req);
   if (user.error) return res.status(user.status).json({ error: user.error });
@@ -63,9 +65,38 @@ async function handleList(req, res) {
   const db = await getDb();
   const ordersCollection = db.collection("orders");
   const adminUser = await isAdmin(user.email, db);
-  const query = adminUser ? {} : { userId: user.email };
-  const orders = await ordersCollection.find(query).sort({ createdAt: -1 }).toArray();
-  return res.status(200).json({ orders, count: orders.length });
+
+  if (adminUser) {
+    // Admin: return all orders (used by the admin panel — no pagination needed there)
+    const orders = await ordersCollection.find({}).sort({ createdAt: -1 }).toArray();
+    return res.status(200).json({ orders, count: orders.length });
+  }
+
+  // Customer: server-side pagination for scalability
+  const query = { userId: user.email };
+  const page = Math.max(1, parseInt(String(req.query?.page ?? "1"), 10));
+  const skip = (page - 1) * CUSTOMER_PAGE_SIZE;
+
+  const [orders, total] = await Promise.all([
+    ordersCollection
+      .find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(CUSTOMER_PAGE_SIZE)
+      .toArray(),
+    ordersCollection.countDocuments(query),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / CUSTOMER_PAGE_SIZE));
+
+  return res.status(200).json({
+    orders,
+    count: orders.length,
+    total,
+    page,
+    totalPages,
+    limit: CUSTOMER_PAGE_SIZE,
+  });
 }
 
 // ─────────────────────────── POST /create ────────────────────────────────────

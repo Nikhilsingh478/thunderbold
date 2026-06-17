@@ -838,6 +838,9 @@ export default function Admin() {
   const [sliderOutfits, setSliderOutfits] = useState<Product[]>([]);
   const [sliderSaving, setSliderSaving] = useState(false);
   const [sliderSaved, setSliderSaved] = useState(false);
+  const [heroBanners, setHeroBanners] = useState<string[]>(['', '', '']);
+  const [heroBannerSaving, setHeroBannerSaving] = useState(false);
+  const [heroBannerSaved, setHeroBannerSaved] = useState(false);
 
   // Returns tab state
   interface ReturnRequest {
@@ -1003,9 +1006,10 @@ export default function Admin() {
   const fetchSliderConfig = async (silent = false) => {
     if (!user) return;
     try {
-      const [sliderRes, productsRes] = await Promise.all([
+      const [sliderRes, productsRes, heroBannerRes] = await Promise.all([
         fetch('/api/slider'),
         fetch('/api/products?section=outfits'),
+        fetch('/api/slider?type=hero'),
       ]);
       if (sliderRes.ok) {
         const d = await sliderRes.json();
@@ -1024,6 +1028,13 @@ export default function Admin() {
         const d = await productsRes.json();
         const freshOutfits = d.products ?? [];
         setSliderOutfits(prev => JSON.stringify(prev) !== JSON.stringify(freshOutfits) ? freshOutfits : prev);
+      }
+      if (heroBannerRes.ok) {
+        const d = await heroBannerRes.json();
+        if (Array.isArray(d.images)) {
+          const filled = [...d.images, '', '', ''].slice(0, 3);
+          setHeroBanners(prev => JSON.stringify(prev) !== JSON.stringify(filled) ? filled : prev);
+        }
       }
     } catch { console.error('Failed to fetch slider config'); }
   };
@@ -1050,6 +1061,25 @@ export default function Admin() {
       }
     } catch { console.error('Failed to save slider config'); }
     finally { setSliderSaving(false); }
+  };
+
+  const saveHeroBannerConfig = async () => {
+    if (!user) return;
+    setHeroBannerSaving(true);
+    try {
+      const token = await user.getIdToken();
+      const images = heroBanners.filter(url => url.trim() !== '');
+      const r = await fetch('/api/slider?type=hero', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ images }),
+      });
+      if (r.ok) {
+        setHeroBannerSaved(true);
+        setTimeout(() => setHeroBannerSaved(false), 2500);
+      }
+    } catch { console.error('Failed to save hero banner config'); }
+    finally { setHeroBannerSaving(false); }
   };
 
   const addBrand = async (data: BrandFormData): Promise<boolean> => {
@@ -2145,6 +2175,75 @@ export default function Admin() {
                       Add products with section &quot;Thunder Looks&quot; in the Products tab to enable product mapping.
                     </p>
                   )}
+
+                  {/* ── Hero Banner Section ── */}
+                  <div className="mt-10 pt-8 border-t border-white/10">
+                    <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+                      <div>
+                        <h3 className="font-display text-lg tracking-[0.06em] text-brass uppercase">Hero Banner</h3>
+                        <p className="font-condensed text-xs text-sv-mid mt-1 max-w-sm leading-relaxed">
+                          Up to 3 banner images shown at the top of the homepage. Leave a slot empty to skip it.
+                          Falls back to default images until you save new ones.
+                        </p>
+                      </div>
+                      <button
+                        onClick={saveHeroBannerConfig}
+                        disabled={heroBannerSaving}
+                        className={`shrink-0 flex items-center gap-1.5 px-4 py-2 font-condensed font-bold text-xs tracking-[0.15em] uppercase rounded-lg transition-all duration-200 ${
+                          heroBannerSaved
+                            ? 'bg-green-500/20 border border-green-500/30 text-green-400'
+                            : 'bg-brass text-void hover:bg-yellow-400'
+                        } disabled:opacity-50`}
+                      >
+                        {heroBannerSaving ? 'Saving…' : heroBannerSaved ? 'Saved!' : 'Save Banner'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {heroBanners.map((url, i) => (
+                        <div key={i} className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-condensed font-bold text-xs tracking-[0.2em] uppercase text-tb-white">
+                              Banner {i + 1}
+                            </span>
+                            <span className={`font-condensed text-[10px] uppercase tracking-wider ${url.trim() ? 'text-green-400' : 'text-sv-dim'}`}>
+                              {url.trim() ? 'Active' : 'Empty'}
+                            </span>
+                          </div>
+
+                          {url.trim() && (
+                            <img
+                              src={url.trim()}
+                              alt={`Banner ${i + 1} preview`}
+                              className="w-full h-16 object-cover rounded border border-white/10"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          )}
+
+                          <div>
+                            <label className="block font-condensed text-[10px] text-sv-mid uppercase tracking-wider mb-1.5">
+                              Image URL
+                            </label>
+                            <input
+                              type="url"
+                              value={url}
+                              onChange={(e) =>
+                                setHeroBanners(prev => prev.map((v, j) => j === i ? e.target.value : v))
+                              }
+                              placeholder="https://res.cloudinary.com/…"
+                              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-tb-white text-xs placeholder:text-sv-dim/40 focus:outline-none focus:border-white/30 transition-colors"
+                            />
+                          </div>
+
+                          {i === 0 && !url.trim() && (
+                            <p className="font-condensed text-[10px] text-amber-400/70 tracking-wide leading-relaxed">
+                              No URL saved — homepage will use the default banner image.
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </motion.div>
               )}
 

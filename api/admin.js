@@ -457,6 +457,44 @@ async function handleSlider(req, res, db) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const configCol = db.collection("config");
+  const type = req.query?.type || "";
+
+  // ── Hero Banner (/api/slider?type=hero) ────────────────────────────────────
+  if (type === "hero") {
+    if (req.method === "GET") {
+      const doc = await configCol.findOne({ _id: "hero-banner" });
+      return res.status(200).json({ images: doc?.images ?? [] });
+    }
+
+    if (req.method === "PUT") {
+      const auth = await checkAdminAuth(req, db);
+      if (!auth.authorized) return res.status(auth.status).json({ error: auth.error });
+
+      const body = req.body || {};
+      const raw = Array.isArray(body.images) ? body.images : [];
+      const images = raw
+        .map((url) => (typeof url === "string" ? url.trim() : ""))
+        .filter((url) => url.length > 0)
+        .slice(0, 3);
+
+      if (images.length === 0) {
+        return res.status(400).json({ error: "At least 1 image URL is required" });
+      }
+
+      await configCol.replaceOne(
+        { _id: "hero-banner" },
+        { _id: "hero-banner", images, updatedAt: new Date() },
+        { upsert: true }
+      );
+
+      return res.status(200).json({ message: "Hero banner saved", images });
+    }
+
+    res.setHeader("Allow", ["GET", "PUT"]);
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // ── ThunderboltSlider (existing) ───────────────────────────────────────────
 
   if (req.method === "GET") {
     const doc = await configCol.findOne({ _id: "slider" });
