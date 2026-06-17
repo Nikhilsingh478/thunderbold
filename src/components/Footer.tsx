@@ -351,7 +351,7 @@ export default function Footer() {
           {/* Bottom bar */}
           <div className="border-t border-white/[0.07] py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-white/30">
-              © 2026 Thunderbold. All rights reserved.
+              Copyright © 2026 ThunderBold Private Limited. All rights reserved.
             </span>
             <span className="font-condensed text-[0.62rem] tracking-[0.14em] uppercase text-white/20">
               Curated Fashion · Style Within Reach

@@ -1214,6 +1214,16 @@ See `DATABASE.md` for full field-level schemas, indexes, query patterns, integri
 
 ---
 
+## Copyright
+
+Copyright © 2026 ThunderBold Private Limited. All rights reserved.
+
+This repository and its contents are proprietary. No permission is granted to copy, modify, distribute, sublicense, sell, or commercially use any part of this software without prior written permission from ThunderBold Private Limited.
+
+See [LICENSE](LICENSE) for the full proprietary license terms.
+
+---
+
 *Thunderbold — Premium Indian Fashion. Built for the Bold.*
 
-> Last updated: June 16, 2026
+> Last updated: June 18, 2026
