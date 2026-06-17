@@ -82,29 +82,56 @@ export default function Cart() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+      {/* Mobile sticky checkout strip — sits above the bottom nav */}
+      {items.length > 0 && (
+        <div
+          className="md:hidden fixed bottom-[52px] left-0 right-0 z-[75] flex items-center justify-between gap-3 px-4 py-3"
+          style={{
+            background: 'rgba(7,7,7,0.97)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderTop: '1px solid rgba(255,255,255,0.09)',
+          }}
+        >
+          <div className="leading-tight">
+            <p className="text-white/45 text-[10px] font-condensed tracking-[0.12em] uppercase">
+              {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
+            </p>
+            <p className="text-white font-condensed font-bold text-lg leading-none">
+              ₹{typeof getTotalPrice() === 'number' ? getTotalPrice().toFixed(0) : getTotalPrice()}
+            </p>
+          </div>
+          <button
+            onClick={handleCheckout}
+            disabled={isCheckingOut}
+            className="flex items-center gap-2 px-5 py-3 bg-white text-black font-condensed font-bold text-sm tracking-[0.18em] uppercase flex-shrink-0 disabled:opacity-50 active:opacity-75 transition-opacity"
+          >
+            {isCheckingOut
+              ? <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+              : <>Checkout <ArrowRight size={14} /></>
+            }
+          </button>
+        </div>
+      )}
+
+      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 md:pb-24 px-4 md:px-16" style={{ paddingBottom: items.length > 0 ? 'calc(124px + env(safe-area-inset-bottom))' : undefined }}>
         <div className="max-w-[1240px] mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 flex items-center gap-2 group"
-              >
-                <span className="transition-transform duration-300 group-hover:-translate-x-1">Continue Shopping</span>
-              </button>
-              <div className="h-4 w-px bg-white/20"></div>
-              <h1 className="font-display text-4xl md:text-5xl tracking-[0.1em] text-tb-white uppercase">
-                Shopping Cart
-              </h1>
-            </div>
-            
+          <div className="flex items-center justify-between mb-6 md:mb-8">
+            <h1 className="font-display text-3xl md:text-5xl tracking-[0.08em] text-tb-white uppercase">
+              Cart
+              {items.length > 0 && (
+                <span className="font-condensed text-base md:text-xl text-white/35 ml-3 tracking-normal normal-case align-middle">
+                  ({getTotalItems()})
+                </span>
+              )}
+            </h1>
             {items.length > 0 && (
               <button
                 onClick={handleClearCart}
-                className="font-condensed text-sm text-sv-mid hover:text-red-400 transition-colors duration-200"
+                className="font-condensed text-xs text-white/35 hover:text-red-400 transition-colors duration-200 uppercase tracking-widest"
               >
-                Clear Cart
+                Clear
               </button>
             )}
           </div>

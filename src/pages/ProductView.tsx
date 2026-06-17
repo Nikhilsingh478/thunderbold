@@ -977,7 +977,7 @@ export default function ProductView() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-[100] bg-[#0d0d0d]/95 backdrop-blur-lg border-t border-white/[0.08] px-4 py-3 flex items-center justify-between md:hidden gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+            className="fixed bottom-[52px] left-0 right-0 z-[100] bg-[#0d0d0d]/95 backdrop-blur-lg border-t border-white/[0.08] px-4 py-3 flex items-center justify-between md:hidden gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
           >
             <div className="flex items-center gap-3 min-w-0">
               <img

@@ -36,6 +36,7 @@ const Navbar = () => {
 
   const baseLinks = [
     { name: 'Categories', href: '/' },
+    { name: 'Brands', href: '/brands' },
     { name: 'About Us', href: '/about' },
     { name: 'Policies', href: '/policies' },
   ];
@@ -294,55 +295,26 @@ const Navbar = () => {
           </motion.div>
         </div>
 
-        {/* Mobile Header Right */}
-        <div className="md:hidden flex items-center gap-3 z-[110]">
-          <div className="flex items-center gap-1">
-            <Link to="/wishlist" className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200">
-              <Heart size={18} />
-              {wishlistItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
-                  {wishlistItemsCount}
-                </span>
-              )}
-            </Link>
-            <Link to="/cart" className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200">
-              <ShoppingCart size={18} />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
-                  {cartItemsCount}
-                </span>
-              )}
-            </Link>
-          </div>
-
-          {/* Mobile auth — skeleton while loading to prevent shift */}
-          {authLoading ? (
-            <AuthSkeleton size={32} />
-          ) : user ? (
-            <Link
-              to="/profile"
-              className="w-8 h-8 rounded-full bg-brass/20 border border-brass/40 flex items-center justify-center hover:border-brass/70 transition-colors"
-            >
-              <span className="font-display text-[0.65rem] tracking-wide brass-text">{initials}</span>
-            </Link>
-          ) : (
-            <button
-              onClick={handleLogin}
-              className="text-sm px-3 py-1.5 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
-            >
-              Login
-            </button>
-          )}
+        {/* Mobile Header Right — cart / wishlist / account live in the bottom nav */}
+        <div className="md:hidden flex items-center gap-1 z-[110]">
+          {/* Search */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="p-2.5 text-sv-mid hover:text-white transition-colors duration-200"
+            aria-label="Search"
+          >
+            <Search size={19} />
+          </button>
 
           {/* Hamburger */}
           <motion.button
             variants={itemVariants}
             onClick={() => setIsOpen(!isOpen)}
-            className="flex flex-col justify-center items-center w-8 h-8 relative focus:outline-none group"
+            className="flex flex-col justify-center items-center w-9 h-9 relative focus:outline-none group"
             aria-label="Toggle menu"
           >
-            <span className={`w-7 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? 'rotate-45 translate-y-[1px]' : '-translate-y-1 group-hover:bg-brass-bright'}`} />
-            <span className={`w-7 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? '-rotate-45 -translate-y-[1px]' : 'translate-y-1 group-hover:bg-brass-bright'}`} />
+            <span className={`w-6 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? 'rotate-45 translate-y-[1px]' : '-translate-y-[3px] group-hover:bg-brass-bright'}`} />
+            <span className={`w-6 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? '-rotate-45 -translate-y-[1px]' : 'translate-y-[3px] group-hover:bg-brass-bright'}`} />
           </motion.button>
         </div>
       </motion.nav>
@@ -377,44 +349,14 @@ const Navbar = () => {
                 </motion.div>
               ))}
 
+              {/* Logout — only show on mobile where bottom nav handles Profile/Orders/Login */}
               {!authLoading && user && (
-                <>
-                  <motion.div initial="closed" animate="open" exit="closed" variants={linkVariants} custom={links.length}>
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsOpen(false)}
-                      className="font-display text-4xl md:text-5xl tracking-[0.28em] text-tb-white decoration-none hover:opacity-90 transition-opacity"
-                    >
-                      Profile
-                    </Link>
-                  </motion.div>
-                  <motion.div initial="closed" animate="open" exit="closed" variants={linkVariants} custom={links.length + 1}>
-                    <Link
-                      to="/orders"
-                      onClick={() => setIsOpen(false)}
-                      className="font-display text-4xl md:text-5xl tracking-[0.28em] text-tb-white decoration-none hover:opacity-90 transition-opacity"
-                    >
-                      Orders
-                    </Link>
-                  </motion.div>
-                  <motion.div initial="closed" animate="open" exit="closed" variants={linkVariants} custom={links.length + 2}>
-                    <button
-                      onClick={handleLogout}
-                      className="font-display text-4xl md:text-5xl tracking-[0.28em] text-sv-mid hover:text-red-400 transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </motion.div>
-                </>
-              )}
-
-              {!authLoading && !user && (
                 <motion.div initial="closed" animate="open" exit="closed" variants={linkVariants} custom={links.length}>
                   <button
-                    onClick={() => { setIsOpen(false); handleLogin(); }}
-                    className="font-display text-4xl md:text-5xl tracking-[0.28em] brass-text hover:opacity-80 transition-opacity"
+                    onClick={handleLogout}
+                    className="font-display text-4xl md:text-5xl tracking-[0.28em] text-sv-mid hover:text-red-400 transition-colors"
                   >
-                    Login
+                    Logout
                   </button>
                 </motion.div>
               )}

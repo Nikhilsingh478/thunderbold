@@ -13,6 +13,7 @@ import SplashScreen from "./components/SplashScreen";
 import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
 import NotificationPermissionPrompt from "./components/NotificationPermissionPrompt";
 import ScrollToTop from "./components/ScrollToTop";
+import BottomNav from "./components/BottomNav";
 
 // Eagerly loaded (small / always needed on first paint)
 import Index from "./pages/Index.tsx";
@@ -130,6 +131,7 @@ const AppContent = () => {
       <AnnouncementBar />
       <BrowserRouter>
         <ScrollToTop />
+        <BottomNav />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />

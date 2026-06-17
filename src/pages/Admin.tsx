@@ -1504,14 +1504,15 @@ export default function Admin() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-2 px-4 sm:px-6 py-3 font-condensed font-semibold text-xs sm:text-sm tracking-[0.15em] uppercase transition-all duration-200 border-b-2 -mb-px whitespace-nowrap shrink-0 ${
+                title={label}
+                className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-3.5 sm:py-3 font-condensed font-semibold text-xs sm:text-sm tracking-[0.15em] uppercase transition-all duration-200 border-b-2 -mb-px whitespace-nowrap shrink-0 ${
                   activeTab === key
                     ? 'text-tb-white border-tb-white'
                     : 'text-sv-mid hover:text-tb-white border-transparent'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
+                <Icon className="w-[17px] h-[17px] sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>
