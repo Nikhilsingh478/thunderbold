@@ -30,6 +30,7 @@ interface Order {
   orderNumber?: string;
   returnShippingCharges?: number;
   returnRefundAmount?: number;
+  adminNotes?: string;
 }
 
 const RETURN_STATUSES = ['return_requested', 'return_approved', 'return_rejected', 'refund_issued'];
@@ -507,6 +508,17 @@ const Orders = () => {
                               {' '}has been issued to your UPI account.</>
                           )}
                           {order.status === 'return_rejected'  && 'Your return request was not approved. Contact support at +91 95611 72681.'}
+                          {/* Admin message — shown below the status line whenever the admin has written one */}
+                          {order.adminNotes && (
+                            <p className={`mt-1.5 pt-1.5 border-t ${
+                              order.status === 'return_requested' ? 'border-amber-500/15' :
+                              order.status === 'return_approved'  ? 'border-emerald-500/15' :
+                              order.status === 'refund_issued'    ? 'border-teal-500/15' :
+                              'border-rose-500/15'
+                            } text-white/70`}>
+                              <span className="opacity-60">Note from our team: </span>{order.adminNotes}
+                            </p>
+                          )}
                         </div>
                       )}
 

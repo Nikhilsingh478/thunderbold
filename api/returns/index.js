@@ -254,7 +254,15 @@ async function handleManage(req, res) {
     catch { orderObjectId = returnDoc.orderId; }
     await db.collection("orders").updateOne(
       { _id: orderObjectId },
-      { $set: { status: "return_approved", returnShippingCharges: finalShipping, returnRefundAmount: finalRefund, updatedAt: new Date() } }
+      {
+        $set: {
+          status: "return_approved",
+          returnShippingCharges: finalShipping,
+          returnRefundAmount: finalRefund,
+          adminNotes: cleanNotes || null,
+          updatedAt: new Date(),
+        },
+      }
     );
 
     // ── Restore stock for each item (size-aware) ─────────────────────────────
@@ -323,7 +331,7 @@ async function handleManage(req, res) {
   catch { orderObjectId = returnDoc.orderId; }
   await db.collection("orders").updateOne(
     { _id: orderObjectId },
-    { $set: { status: "return_rejected", updatedAt: new Date() } }
+    { $set: { status: "return_rejected", adminNotes: cleanNotes || null, updatedAt: new Date() } }
   );
 
   return res.status(200).json({ message: "Return request rejected." });
