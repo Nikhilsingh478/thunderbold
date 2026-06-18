@@ -20,7 +20,6 @@ import TraitsSection from '../components/TraitsSection';
 import Statement from '../components/Statement';
 import Numbers from '../components/Numbers';
 import Legacy from '../components/Legacy';
-import Footer from '../components/Footer';
 
 const AboutLegacy = () => (
   <div className="noise-overlay">
@@ -37,7 +36,6 @@ const AboutLegacy = () => (
     <Statement />
     <Numbers />
     <Legacy />
-    <Footer />
   </div>
 );
 

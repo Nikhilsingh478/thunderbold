@@ -3,7 +3,6 @@ import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useWishlist } from '../context/WishlistContext';
@@ -53,7 +52,6 @@ export default function Wishlist() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -244,7 +242,6 @@ export default function Wishlist() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

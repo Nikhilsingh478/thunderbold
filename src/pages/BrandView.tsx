@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { type GridProduct } from '../components/products/ProductGrid';
@@ -83,7 +82,6 @@ export default function BrandView() {
             </button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -158,7 +156,6 @@ export default function BrandView() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

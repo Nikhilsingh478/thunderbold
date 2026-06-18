@@ -6,7 +6,6 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { Heart, Share2, ShoppingCart, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import PriceDisplay from '../components/PriceDisplay';
@@ -1216,7 +1215,6 @@ export default function ProductView() {
         )}
       </AnimatePresence>
 
-      <Footer />
     </div>
   );
 }
@@ -1335,7 +1333,6 @@ function ProductViewSkeleton({ onBack }: { onBack: () => void }) {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

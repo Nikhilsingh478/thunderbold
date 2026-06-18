@@ -4,7 +4,6 @@ import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useCart } from '../context/CartContext';
@@ -71,7 +70,6 @@ export default function Cart() {
           </div>
         </main>
         
-        <Footer />
       </div>
     );
   }
@@ -299,7 +297,6 @@ export default function Cart() {
         </div>
       </main>
       
-      <Footer />
     </div>
   );
 }

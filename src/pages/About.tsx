@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, ShieldCheck, Layers, Compass } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import ScrollProgress from '../components/ScrollProgress';
 import CustomCursor from '../components/CustomCursor';
 
@@ -581,7 +580,6 @@ export default function About() {
         <ExperienceValue />
         <ExploreCTA />
       </main>
-      <Footer />
     </div>
   );
 }

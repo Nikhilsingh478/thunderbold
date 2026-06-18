@@ -3,7 +3,6 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertCircle, ChevronLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { GridProduct } from '../components/products/ProductGrid';
@@ -132,7 +131,6 @@ export default function DealsPage() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

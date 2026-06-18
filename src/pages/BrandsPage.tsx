@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { optimizeCloudinaryUrl } from '../lib/cloudinary';
@@ -134,7 +133,6 @@ export default function BrandsPage() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

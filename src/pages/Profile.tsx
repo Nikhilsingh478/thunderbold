@@ -6,7 +6,6 @@ import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
 import { formatOrderId } from '../lib/utils';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import ScrollProgress from '../components/ScrollProgress';
 import CustomCursor from '../components/CustomCursor';
 import {
@@ -976,7 +975,6 @@ export default function Profile() {
         )}
       </AnimatePresence>
 
-      <Footer />
     </div>
   );
 }

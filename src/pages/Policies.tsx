@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Shield } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import ScrollProgress from '../components/ScrollProgress';
 import CustomCursor from '../components/CustomCursor';
 import { policyData, type PolicyData } from '../lib/policyContent';
@@ -171,7 +170,6 @@ export default function Policies() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { GridProduct } from '../components/products/ProductGrid';
@@ -85,7 +84,6 @@ export default function CategoryView() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }
