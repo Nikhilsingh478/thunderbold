@@ -120,8 +120,12 @@ src/
 │   └── NotFound.tsx               — 404 page
 │
 ├── components/
-│   ├── ScrollToTop.tsx            — Fires window.scrollTo({top:0,behavior:'instant'}) on every route
-│   │                                change; mounted inside <BrowserRouter> in AppContent.tsx
+│   ├── ScrollToTop.tsx            — Smart scroll manager. Uses useNavigationType():
+│   │                                • POP (back/forward button) → restores saved position from
+│   │                                  sessionStorage keyed by location.key (double-RAF for DOM paint)
+│   │                                • PUSH / REPLACE → scrolls to top instantly (behavior:'instant')
+│   │                                Positions saved continuously via passive scroll listener.
+│   │                                Mounted as first child inside <BrowserRouter> in AppContent.tsx.
 │   ├── SplashScreen.tsx           — Cinematic branded intro (once per session via sessionStorage)
 │   ├── AnnouncementBar.tsx        — Fixed marquee bar, id="tb-announcement-bar", z-[120], h-9 (36px),
 │   │                                top: var(--tb-banner-h)
@@ -300,8 +304,13 @@ Each file is a Vercel Serverless Function. The same files are mounted as Express
   totalAmount,     // Server-calculated: sum(price × quantity) — never trusted from client
   createdAt,
   updatedAt?,
-  clientOrderId?,  // UUID idempotency key — prevents duplicate orders on network retry
-  giftMessage?     // Optional — HTML-stripped, max 300 chars, stored only when non-empty
+  clientOrderId?,          // UUID idempotency key — prevents duplicate orders on network retry
+  giftMessage?,            // Optional — HTML-stripped, max 300 chars, stored only when non-empty
+  returnShippingCharges?,  // Set on return_approved — ₹ deducted from the approved refund
+  returnRefundAmount?,     // Set on return_approved — final refund amount confirmed by admin
+  adminNotes?,             // Set by admin on return_approved OR return_rejected — written to THIS
+                           //   order doc (in addition to returns doc) so customer sees it directly
+                           //   via GET /api/orders without a separate GET /api/returns call
 }
 ```
 
@@ -490,9 +499,9 @@ Page changes trigger a fresh `GET /api/orders?page=N` fetch; the order list re-r
 - Lists all return requests, newest first
 - Pending count badge shown next to "Returns" tab label
 - Each card shows: order reference, customer email, reason, full description, order total, product list, suggested refund amount
-- **Approve**: Admin enters refund amount (defaults to `totalAmount − ₹50`), adds optional notes → `PATCH /api/returns?id=...` with `{ action: 'approve', refundAmount, adminNotes }`
-- **Reject**: Admin adds notes → `PATCH /api/returns?id=...` with `{ action: 'reject', adminNotes }`
-- On either action: return status updated, corresponding order status updated (`return_approved` or `return_rejected`)
+- **Approve**: Admin enters refund amount (defaults to `totalAmount − ₹50`), adds optional notes → `PATCH /api/returns?id=...` with `{ action: 'approve', refundAmount, adminNotes }`. Backend writes `adminNotes`, `returnShippingCharges`, and `returnRefundAmount` to the **order document** in addition to the return document.
+- **Reject**: Admin adds notes → `PATCH /api/returns?id=...` with `{ action: 'reject', adminNotes }`. Backend writes `adminNotes` to the **order document** in addition to the return document.
+- Both writes happen so customers see the admin note directly in `My Orders` (Orders.tsx renders it in a colour-matched banner) without needing a separate GET /api/returns call.
 
 ### Return Request API (`api/returns/index.js`)
 
@@ -768,11 +777,14 @@ Opens via a clip-path circle animation anchored to the hamburger button. Closes 
 
 ---
 
-## Mobile Scroll Behaviour (Back-Button Fix)
+## Scroll Restoration System
 
 ### Problem
 
-The browser's native scroll restoration (`history.scrollRestoration = 'auto'`) remembers scroll position on page A. When the user presses back, the browser tries to restore that position. Combined with CSS `scroll-behavior: smooth`, this animates the page visibly sliding down on mobile — a jarring back-navigation experience.
+The browser's native scroll restoration (`history.scrollRestoration = 'auto'`) tries to remember and restore positions, but combined with React Router's SPA navigation and CSS `scroll-behavior: smooth`, this causes two problems:
+
+1. **Back-button jank** — page animates visibly sliding down on mobile when the user navigates back.
+2. **Wrong position** — the browser's guess for restored position is often inaccurate after a virtual DOM re-render because the page height may not be settled when the browser fires its restore.
 
 ### Solution (three-part)
 
@@ -786,14 +798,31 @@ if ('scrollRestoration' in history) {
 
 Tells every browser to stop saving and restoring scroll positions — the app takes full ownership.
 
-#### 2. `src/components/ScrollToTop.tsx` — Instant scroll to top on every route change
+#### 2. `src/components/ScrollToTop.tsx` — Navigation-type-aware scroll manager
 
+Behaviour depends on how the user arrived at the current route, detected via `useNavigationType()`:
+
+**PUSH / REPLACE** (forward navigation, programmatic `navigate()`):
 ```ts
-// Fires on every pathname change — forward nav, back button, forward button, programmatic push
 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 ```
+`behavior: 'instant'` explicitly overrides any CSS `scroll-behavior: smooth` — zero animation between pages.
 
-`behavior: 'instant'` explicitly overrides CSS `scroll-behavior: smooth` so there is zero animation between pages.
+**POP** (browser back or forward button):
+```ts
+// 1. Look up the saved Y position for this exact history entry
+const saved = sessionStorage.getItem(`scroll:${location.key}`);
+// 2. Wait two animation frames for the DOM to paint the restored page
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: saved ? parseInt(saved, 10) : 0, behavior: 'instant' });
+  });
+});
+```
+The double-RAF ensures the page's layout has settled (images, sticky headers, etc.) before the scroll position is restored — prevents snapping to the wrong position mid-paint.
+
+**Continuous position saving:**
+A passive `scroll` event listener updates `sessionStorage` with the current Y position on every scroll. Key format: `scroll:<location.key>`. This means the position for every history entry is always current, regardless of how many times the user scrolls that page.
 
 #### 3. `src/AppContent.tsx` — Mounting position
 
@@ -1121,7 +1150,7 @@ npm run dev
 | `--tb-banner-h` undefined | Now defined as `0px` in `:root`; previously undefined, causing all calc() expressions to resolve to 0 silently |
 | Instagram browser position:fixed | GPU compositing via `translateZ(0)` + `will-change: transform` on `#tb-announcement-bar` and `#tb-navbar`; `instagram-browser` class set by main.tsx before React mounts |
 | Instagram browser viewport height | `@supports (height: 100dvh)` block switches `min-h-screen` to `100dvh` to account for collapsible address bar |
-| Mobile back-button scroll animation | `history.scrollRestoration = 'manual'` + `ScrollToTop.tsx` fires `behavior:'instant'` on every route change |
+| Mobile back-button scroll restoration | `history.scrollRestoration = 'manual'` in `main.tsx` disables browser scroll management. `ScrollToTop.tsx` uses `useNavigationType()`: POP → restores saved `sessionStorage` position (keyed by `location.key`, double-RAF before restore); PUSH/REPLACE → `scrollTo({top:0,behavior:'instant'})`. Passive scroll listener saves positions continuously. |
 | Orders pagination — page out of range | `page` clamped to `Math.max(1, ...)` on backend; Prev/Next buttons disabled at boundaries on frontend |
 | Hero banner API failure | `HeroBanner.tsx` falls back to hardcoded default images — homepage never blank |
 | Orders without `orderNumber` | `formatOrderId()` utility formats `_id` as fallback — always something human-readable to display |

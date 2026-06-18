@@ -107,6 +107,7 @@ Set these as Replit secrets (or `.env` locally). **Never commit these values.**
 | `VITE_FIREBASE_STORAGE_BUCKET` | `src/lib/firebase.ts` | Firebase Storage bucket |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | `src/lib/firebase.ts` | Firebase Messaging sender ID |
 | `VITE_FIREBASE_APP_ID` | `src/lib/firebase.ts` | Firebase App ID |
+| `VITE_FIREBASE_VAPID_KEY` | `src/lib/firebaseMessaging.ts` | FCM Web Push VAPID public key — required for push notification token registration |
 
 > `VITE_*` variables are embedded into the frontend bundle at build time by Vite. Firebase client SDK keys are designed to be public — they are not secrets.
 >
@@ -200,6 +201,10 @@ thunderbold/
 │   │   ├── SearchOverlay.tsx         # Full-screen search modal
 │   │   ├── PriceDisplay.tsx          # Price / MRP / discount badge
 │   │   ├── ScrollProgress.tsx        # Page scroll progress bar
+│   │   ├── ScrollToTop.tsx           # Scroll manager — POP navigation restores saved position
+│   │   │                             # from sessionStorage (keyed by location.key); PUSH/REPLACE
+│   │   │                             # scrolls to top instantly. Positions saved via passive scroll
+│   │   │                             # listener. Uses double-RAF for DOM-settled restoration.
 │   │   ├── CustomCursor.tsx          # Custom cursor for desktop
 │   │   ├── ReturnRequestModal.tsx    # Return request submission flow
 │   │   ├── ApkBanner.tsx             # PWA / APK install prompt banner
@@ -589,12 +594,15 @@ Admin reviews via PATCH /api/returns?id=:id
         │
         ├── action: "approve"
         │     ├── Calculates refundAmount = totalAmount − shippingCharges (admin can override)
+        │     ├── Writes adminNotes + returnShippingCharges + returnRefundAmount to order document
+        │     │   (so customer sees the note directly via GET /api/orders — no extra round-trip)
         │     ├── Restores product stock (size-aware, outfit-aware)
         │     ├── Order status: return_requested → return_approved
         │     └── return status: pending → approved
         │
         ├── action: "reject"
-        │     ├── Stores adminNotes
+        │     ├── Stores adminNotes on return document AND writes it to order document
+        │     │   (visible to customer in My Orders return banner)
         │     ├── Order status: return_requested → return_rejected
         │     └── return status: pending → rejected
         │
@@ -1119,19 +1127,22 @@ After generating your signing key fingerprint, create `public/.well-known/assetl
 
 ## 26. Database Schema Summary
 
-**MongoDB Atlas** — database: `thunderbold` — 9 collections
+**MongoDB Atlas** — database: `thunderbold` — 10 collections
 
-| Collection | Description |
+| Collection | Key Fields Added / Notes |
 |---|---|
-| `products` | Product catalogue (standard + outfit variants) |
-| `orders` | Customer orders with embedded product + address snapshots |
-| `returns` | Return requests with admin approval/rejection workflow |
-| `users` | User profiles with embedded addresses + FCM tokens |
-| `cart` | Per-user cart (one document per user) |
-| `wishlist` | Per-user wishlist (one document per user) |
-| `categories` | Category records (admin-managed lookup table) |
-| `brands` | Brand records (admin-managed lookup table) |
-| `reviews` | Per-product customer reviews (soft-deleted) |
+| `products` | Standard + outfit variants; `purchasePrice` admin-only |
+| `orders` | Embedded product + address snapshots; `adminNotes` written on return approve/reject |
+| `returns` | One per order; `adminNotes` + `refundAmount` set by admin |
+| `users` | Embedded `addresses[]` + `fcmTokens[]` |
+| `cart` | One document per user; entire `items[]` replaced on every write |
+| `wishlist` | Same pattern as cart; no size field |
+| `categories` | Lookup table; `name`, `image`, `section` |
+| `brands` | Lookup table; `name`, `image` |
+| `reviews` | Soft-deleted; eligibility gated on delivered order |
+| `config` | Two documents: `_id:"slider"` (ThunderboltSlider 4-slot config) and `_id:"hero-banner"` (homepage hero image URLs); replaces the legacy `slider` collection |
+
+> The `config` collection uses fixed string `_id` values rather than ObjectIds. A legacy `slider` collection may still exist in Atlas — the app reads exclusively from `config`.
 
 See `DATABASE.md` for full field-level schemas, indexes, query patterns, integrity mechanisms, and PostgreSQL migration readiness assessment.
 
@@ -1226,4 +1237,4 @@ See [LICENSE](LICENSE) for the full proprietary license terms.
 
 *Thunderbold — Premium Indian Fashion. Built for the Bold.*
 
-> Last updated: June 18, 2026
+> Last updated: June 19, 2026

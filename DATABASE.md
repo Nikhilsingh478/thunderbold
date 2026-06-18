@@ -17,6 +17,7 @@
    - [2.7 reviews](#27-reviews)
    - [2.8 categories](#28-categories)
    - [2.9 brands](#29-brands)
+   - [2.10 config](#210-config)
 3. [Indexes](#3-indexes)
 4. [Relationships & Access Patterns](#4-relationships--access-patterns)
 5. [Key Query Patterns](#5-key-query-patterns)
@@ -224,11 +225,14 @@ One document per order. `products` and `address` are embedded snapshots — pric
     "pincode":      "string"
   },
   "paymentMethod":  "\"COD\"",
-  "status":         "\"pending\" | \"confirmed\" | \"shipped\" | \"delivered\" | \"cancelled\" | \"return_requested\" | \"return_approved\" | \"return_rejected\" | \"refund_issued\"",
+  "status":         "\"pending\" | \"confirmed\" | \"packed\" | \"shipped\" | \"delivered\" | \"cancelled\" | \"return_requested\" | \"return_approved\" | \"return_rejected\" | \"refund_issued\"",
   "totalAmount":    "number",        // Sum of (price × quantity) for all products at order time
   "giftMessage":    "string | undefined",  // HTML-stripped, trimmed, max 300 chars
   "returnShippingCharges": "number | undefined", // Set on return_approved — ₹ deducted from refund
   "returnRefundAmount":    "number | undefined", // Set on return_approved — final refund amount
+  "adminNotes":            "string | null",       // Written by admin on return_approved or return_rejected
+                                                  // Propagated from the returns doc to this order doc so
+                                                  // the customer sees the message via GET /api/orders alone
   "createdAt":      "Date",
   "updatedAt":      "Date | null"
 }
@@ -404,6 +408,51 @@ Lookup table for brand pages. Admin-managed.
 ```
 
 **Notes:** Products optionally reference brands via `brandId` (stored as string). The `BrandsPage` and `BrandView` pages list brands and filter products by `brandId` respectively.
+
+---
+
+### 2.10 `config`
+
+Site-wide configuration. Uses fixed string `_id` values (not ObjectIds). Currently holds exactly two documents.
+
+#### ThunderboltSlider — `_id: "slider"`
+
+```json
+{
+  "_id": "slider",
+  "slides": [
+    {
+      "imageUrl":     "string",         // Cloudinary or external URL for editorial card image
+      "heading":      "string",         // Large ghost heading e.g. "SHARP", "REBEL", "WILD", "NOIR"
+      "productId":    "string | null",  // Links slide to /product/:id on click; null = no link
+      "productName":  "string | null",
+      "productImage": "string | null"
+    }
+    // × 4 — always exactly 4 elements; admin UI enforces this
+  ],
+  "updatedAt": "Date"
+}
+```
+
+#### Hero Banner — `_id: "hero-banner"`
+
+```json
+{
+  "_id": "hero-banner",
+  "images": ["string", "string", "string"],  // Up to 3 full-width banner image URLs
+  "updatedAt": "Date"
+}
+```
+
+**Access pattern:**
+- `GET /api/slider` — public; returns both documents (client picks `_id` to determine type)
+- `GET /api/slider?type=hero` — public; returns only `_id: "hero-banner"` doc
+- `PUT /api/slider` — admin only; upserts by `_id`
+
+**Notes:**
+- All banner images are served via Cloudinary and transformed through `optimizeCloudinaryUrl()` on the frontend.
+- `HeroBanner.tsx` falls back to hardcoded default images if the API returns an empty array or errors — the homepage is never blank.
+- A legacy `slider` collection may still exist in Atlas. The application reads exclusively from `config`.
 
 ---
 
@@ -661,6 +710,17 @@ Order documents embed product name, price, and image at creation time. Future pr
 
 Before inserting a new FCM token, the backend removes any existing entry for the same `deviceId` or same `token` string. Guarantees exactly one active token per physical device/browser — completely prevents duplicate notification delivery.
 
+### 6.9 Admin Notes Propagation to Order Document
+
+When admin approves or rejects a return via `PATCH /api/returns?id=`, `adminNotes` is written to **both** documents simultaneously:
+
+1. **`returns` document** — `adminNotes` stored on the return record as part of the admin review audit trail.
+2. **`orders` document** — `adminNotes` (and, on approval, `returnShippingCharges` + `returnRefundAmount`) are written to the parent order document using `updateOne({ _id: orderId }, { $set: { adminNotes, ... } })`.
+
+**Why two writes?** The customer fetches their order history via `GET /api/orders` — they never call `GET /api/returns` directly. Writing `adminNotes` to the order document means the customer sees the rejection reason or approval note immediately in `My Orders` without any extra API call. The `Orders.tsx` page renders the note in a colour-matched banner on the return status block.
+
+If the order document update fails (e.g. network error), the error is logged but does not block the returns API response — the return status is authoritative. The note will simply be absent from the order view.
+
 ---
 
 ## 7. Migration Readiness — PostgreSQL / Supabase
@@ -777,13 +837,14 @@ CREATE TABLE orders (
   payment_method  TEXT NOT NULL DEFAULT 'COD',
   status          TEXT NOT NULL DEFAULT 'pending'
                     CHECK (status IN (
-                      'pending','confirmed','shipped','delivered','cancelled',
+                      'pending','confirmed','packed','shipped','delivered','cancelled',
                       'return_requested','return_approved','return_rejected','refund_issued'
                     )),
   total_amount    NUMERIC(10,2) NOT NULL,
   gift_message    TEXT,
   return_shipping_charges NUMERIC(10,2),
   return_refund_amount    NUMERIC(10,2),
+  admin_notes             TEXT,                    -- propagated from returns on approve/reject
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ,
   CONSTRAINT orders_client_order_id_unique UNIQUE NULLS NOT DISTINCT (client_order_id)
@@ -931,4 +992,4 @@ LIMIT 5;
 
 *Thunderbold — Premium Indian Fashion. Built for the Bold.*
 
-> Last updated: June 16, 2026
+> Last updated: June 19, 2026
