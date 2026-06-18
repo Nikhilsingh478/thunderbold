@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
+import { optimizeCloudinaryUrl } from '../lib/cloudinary';
 
 interface Brand {
   _id: string;
@@ -112,7 +113,7 @@ export default function BrandsPage() {
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brass/10 border border-brass/20 flex items-center justify-center overflow-hidden shrink-0 group-hover:bg-brass/20 transition-colors duration-300">
                       {brand.logoUrl ? (
-                        <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-cover" />
+                        <img src={optimizeCloudinaryUrl(brand.logoUrl, 96)} alt={brand.name} className="w-full h-full object-cover" decoding="async" />
                       ) : (
                         <span className="font-display text-base md:text-lg text-brass tracking-widest uppercase">
                           {brand.name.charAt(0)}

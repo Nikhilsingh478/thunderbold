@@ -106,7 +106,7 @@ export default function HeroBanner() {
     >
       {/* Slides */}
       <div className="relative w-full h-[150px] md:h-auto md:max-h-[260px]">
-        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+        <AnimatePresence initial={false} custom={direction} mode="sync">
           <motion.div
             key={current}
             custom={direction}
