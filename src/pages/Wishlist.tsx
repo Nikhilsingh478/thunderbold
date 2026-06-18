@@ -1,39 +1,31 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
-import { motion } from 'framer-motion';
-import { X, Heart, ShoppingBag, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Heart, ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useWishlist } from '../context/WishlistContext';
-import { toast } from 'sonner';
+
+function formatPrice(price: number): string {
+  return `₹${Math.round(price).toLocaleString('en-IN')}`;
+}
 
 export default function Wishlist() {
   const navigate = useNavigate();
-  const { items, removeFromWishlist, clearWishlistData, loading } = useWishlist();
-
-  const handleRemoveItem = async (productId: string) => {
-    await removeFromWishlist(productId);
-  };
+  const { items, removeFromWishlist, clearWishlistData, loading, moveToCart } = useWishlist();
 
   const handleClearWishlist = async () => {
-    if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
+    if (window.confirm('Clear your entire wishlist?')) {
       await clearWishlistData();
     }
   };
 
-  const handleMoveToCart = (productId: string) => {
-    // This will be handled by the event system in WishlistContext
-    const event = new CustomEvent('add-to-cart-from-wishlist', {
-      detail: {
-        productId: productId,
-        // Other details will be handled by the context
-      }
-    });
-    window.dispatchEvent(event);
-  };
+  const totalValue = items.reduce(
+    (sum, item) => sum + (typeof item.price === 'number' ? item.price : 0),
+    0
+  );
 
   if (loading) {
     return (
@@ -41,24 +33,26 @@ export default function Wishlist() {
         <CustomCursor />
         <ScrollProgress />
         <Navbar />
-        
-        <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+        <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-4 md:px-8 lg:px-16">
           <div className="max-w-[1240px] mx-auto">
-            <div className="animate-pulse">
-              <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-white/5 rounded-xl p-4">
-                    <div className="w-full h-48 bg-white/10 rounded-lg mb-4"></div>
-                    <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-white/10 rounded w-1/2"></div>
+            <div className="animate-pulse mb-6">
+              <div className="h-7 bg-white/10 rounded w-32 mb-1" />
+              <div className="h-4 bg-white/5 rounded w-20" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white/5 rounded-xl overflow-hidden">
+                  <div className="aspect-[3/4] bg-white/10" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3 bg-white/10 rounded w-4/5" />
+                    <div className="h-3 bg-white/10 rounded w-1/2" />
+                    <div className="h-8 bg-white/10 rounded-lg mt-2" />
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </main>
-        
         <Footer />
       </div>
     );
@@ -70,171 +64,186 @@ export default function Wishlist() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-28 px-4 md:px-8 lg:px-16">
         <div className="max-w-[1240px] mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-white transition-colors duration-200 flex items-center gap-2 group"
-              >
-                <span className="transition-transform duration-300 group-hover:-translate-x-1">Continue Shopping</span>
-              </button>
-              <div className="h-4 w-px bg-white/20"></div>
-              <h1 className="font-display text-4xl md:text-5xl tracking-[0.1em] text-tb-white uppercase">
-                My Wishlist
-              </h1>
+
+          {/* ── Header ─────────────────────────────────────────── */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex items-center justify-between">
+              {/* Left: back + title */}
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={() => navigate(-1)}
+                  aria-label="Go back"
+                  className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 active:bg-white/15 transition-colors duration-150"
+                >
+                  <ArrowLeft size={16} className="text-tb-white" />
+                </button>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-display text-2xl md:text-4xl tracking-[0.08em] text-tb-white uppercase leading-none">
+                      Wishlist
+                    </h1>
+                    {items.length > 0 && (
+                      <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-white/10 font-condensed text-[11px] text-sv-mid leading-none">
+                        {items.length}
+                      </span>
+                    )}
+                  </div>
+                  {items.length > 0 && (
+                    <p className="font-condensed text-[11px] tracking-[0.12em] text-sv-mid mt-0.5 hidden md:block">
+                      {items.length} {items.length === 1 ? 'item' : 'items'} saved
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: clear */}
+              {items.length > 0 && (
+                <button
+                  onClick={handleClearWishlist}
+                  className="shrink-0 flex items-center gap-1.5 font-condensed text-xs tracking-[0.12em] uppercase text-sv-mid hover:text-red-400 active:text-red-400 transition-colors duration-150"
+                >
+                  <Trash2 size={13} />
+                  <span className="hidden sm:inline">Clear All</span>
+                </button>
+              )}
             </div>
-            
-            {items.length > 0 && (
-              <button
-                onClick={handleClearWishlist}
-                className="font-condensed text-sm text-sv-mid hover:text-red-400 transition-colors duration-200"
-              >
-                Clear Wishlist
-              </button>
-            )}
           </div>
 
+          {/* ── Empty State ────────────────────────────────────── */}
           {items.length === 0 ? (
-            // Empty Wishlist State
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-20"
+              className="flex flex-col items-center justify-center py-24 text-center"
             >
-              <Heart className="w-24 h-24 text-white/20 mx-auto mb-6" />
-              <h2 className="font-display text-2xl text-tb-white mb-4">Your wishlist is empty</h2>
-              <p className="font-condensed text-sv text-sm tracking-[0.10em] mb-8 max-w-md mx-auto">
-                Start adding items you love to your wishlist. They'll be waiting for you here!
+              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-5">
+                <Heart size={32} className="text-white/25" />
+              </div>
+              <h2 className="font-display text-xl tracking-[0.08em] text-tb-white uppercase mb-2">
+                Nothing saved yet
+              </h2>
+              <p className="font-condensed text-sm text-sv tracking-[0.06em] max-w-xs mb-7">
+                Tap the heart on any product to save it here for later.
               </p>
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white transition-colors duration-200"
+                className="inline-flex items-center gap-2 px-7 py-3 bg-tb-white text-void font-condensed font-bold text-xs tracking-[0.22em] uppercase hover:bg-white transition-colors duration-200"
               >
-                Start Shopping
-                <ArrowRight size={16} />
+                Browse Collection
               </Link>
             </motion.div>
           ) : (
-            // Wishlist Items Grid
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {items.map((item, index) => (
-                <motion.div
-                  key={item.productId}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden group"
-                >
-                  {/* Product Image */}
-                  <div className="relative aspect-[4/5] bg-[#0c0c0c] overflow-hidden">
-                    <img
-                      src={optimizeCloudinaryUrl(item.image, IMG_SIZES.card)}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
-                    />
-                    
-                    {/* Remove Button */}
-                    <button
-                      onClick={() => handleRemoveItem(item.productId)}
-                      className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-sm rounded-full text-white/60 hover:text-red-400 hover:bg-red-900/20 transition-all duration-200"
+            <>
+              {/* ── Items Grid ───────────────────────────────── */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+                <AnimatePresence mode="popLayout">
+                  {items.map((item, index) => (
+                    <motion.div
+                      key={item.productId}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.18 } }}
+                      transition={{ delay: index * 0.04, duration: 0.22 }}
+                      className="bg-[#0f0f0f] border border-white/[0.07] rounded-xl overflow-hidden flex flex-col"
                     >
-                      <X size={16} />
-                    </button>
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="p-6">
-                    <h3 className="font-condensed font-semibold text-tb-white mb-2 line-clamp-2">
-                      {item.name}
-                    </h3>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="font-condensed text-lg text-tb-white">
-                        {typeof item.price === 'number' 
-                          ? `₹${item.price.toFixed(2)}`
-                          : item.price
-                        }
-                      </p>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleMoveToCart(item.productId)}
-                        className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white transition-all duration-200 flex items-center justify-center gap-2"
-                      >
-                        <ShoppingBag size={16} />
-                        Add to Cart
-                      </button>
-                      
+                      {/* Image area — tappable → product page */}
                       <Link
                         to={`/product/${item.productId}`}
-                        className="py-3 px-4 bg-white/10 text-tb-white font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white/20 transition-all duration-200"
+                        className="relative block aspect-[3/4] bg-[#0a0a0a] overflow-hidden group"
+                        aria-label={`View ${item.name}`}
                       >
-                        View
-                      </Link>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                        <img
+                          src={optimizeCloudinaryUrl(item.image, IMG_SIZES.card)}
+                          alt={item.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+                        />
 
-          {/* Wishlist Summary */}
-          {items.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-12 p-6 bg-black/50 border border-white/10 rounded-xl"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-2">
-                    Wishlist Summary
-                  </h3>
-                  <p className="font-condensed text-sm text-sv-mid">
-                    {items.length} {items.length === 1 ? 'item' : 'items'} saved
+                        {/* Remove button — always visible */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeFromWishlist(item.productId);
+                          }}
+                          aria-label={`Remove ${item.name} from wishlist`}
+                          className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-black/70 backdrop-blur-sm text-white/60 hover:text-white hover:bg-black/90 active:bg-red-900/60 active:text-red-300 transition-all duration-150 z-10"
+                        >
+                          <X size={12} strokeWidth={2.5} />
+                        </button>
+                      </Link>
+
+                      {/* Details */}
+                      <div className="p-3 flex flex-col flex-1 gap-2">
+                        <Link
+                          to={`/product/${item.productId}`}
+                          className="font-condensed text-[13px] leading-tight text-tb-white line-clamp-2 hover:text-white/80 transition-colors"
+                        >
+                          {item.name}
+                        </Link>
+
+                        <p className="font-condensed font-semibold text-sm text-tb-white">
+                          {typeof item.price === 'number'
+                            ? formatPrice(item.price)
+                            : item.price}
+                        </p>
+
+                        {/* Add to Cart */}
+                        <button
+                          onClick={() => moveToCart(item.productId)}
+                          className="mt-auto w-full py-2.5 bg-tb-white text-void font-condensed font-bold text-[11px] tracking-[0.18em] uppercase flex items-center justify-center gap-1.5 hover:bg-white active:bg-white/90 transition-colors duration-150 rounded-sm"
+                        >
+                          <ShoppingBag size={12} strokeWidth={2.5} />
+                          Add to Cart
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* ── Footer strip ─────────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="mt-8 md:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 border-t border-white/[0.07] pt-6"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-condensed text-[11px] tracking-[0.12em] text-sv-mid uppercase">
+                    Total saved value
+                  </p>
+                  <p className="font-condensed text-xl text-tb-white font-semibold">
+                    {formatPrice(totalValue)}
                   </p>
                 </div>
-                
-                <div className="text-right">
-                  <p className="font-condensed text-sm text-sv-mid mb-1">Total Value</p>
-                  <p className="font-condensed text-2xl text-tb-white">
-                    {typeof items.reduce((total, item) => total + (typeof item.price === 'number' ? item.price : 0), 0) === 'number'
-                      ? `₹${items.reduce((total, item) => total + (typeof item.price === 'number' ? item.price : 0), 0).toFixed(2)}`
-                      : 'Calculate at checkout'
-                    }
-                  </p>
+
+                <div className="flex gap-2 sm:shrink-0">
+                  <Link
+                    to="/"
+                    className="flex-1 sm:flex-none py-3 px-5 text-center font-condensed text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-tb-white border border-white/15 hover:border-white/30 transition-all duration-200 rounded-sm"
+                  >
+                    Keep Shopping
+                  </Link>
+                  <button
+                    onClick={() => navigate('/cart')}
+                    className="flex-1 sm:flex-none py-3 px-5 bg-tb-white text-void font-condensed font-bold text-xs tracking-[0.18em] uppercase hover:bg-white active:bg-white/90 transition-colors duration-150 rounded-sm"
+                  >
+                    View Cart
+                  </button>
                 </div>
-              </div>
-              
-              <div className="flex gap-4 mt-6">
-                <Link
-                  to="/"
-                  className="flex-1 py-3 text-center font-condensed text-sm text-sv-mid hover:text-tb-white transition-colors duration-200 border border-white/20 rounded-lg"
-                >
-                  Continue Shopping
-                </Link>
-                
-                <button
-                  onClick={() => navigate('/cart')}
-                  className="flex-1 py-3 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.2em] uppercase hover:bg-white transition-all duration-200 rounded-lg"
-                >
-                  View Cart ({items.length})
-                </button>
-              </div>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
