@@ -71,9 +71,21 @@ const Navbar = () => {
   };
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // rAF throttle: coalesce rapid scroll events into one paint cycle.
+    // passive:true tells the browser this listener never calls preventDefault()
+    // — allows the browser to begin scrolling immediately without waiting for JS.
+    let rafId = 0;
+    const handleScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 50);
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => {

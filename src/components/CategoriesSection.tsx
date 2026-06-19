@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
@@ -17,11 +16,6 @@ interface Category {
 
 interface ProductTile extends GridProduct {}
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
-};
-
 function CategorySkeleton() {
   return (
     <div className="flex flex-col">
@@ -37,13 +31,10 @@ function CategorySkeleton() {
 
 function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; navigate: ReturnType<typeof useNavigate> }) {
   return (
-    <motion.div
-      variants={itemVariants}
-      initial="hidden"
-      animate="show"
-      transition={{ delay: index * 0.06 }}
+    <div
+      className="group cursor-pointer flex flex-col relative tb-card-appear"
+      style={{ animationDelay: `${Math.min(index, 7) * 50}ms` }}
       onClick={() => navigate(`/category/${cat._id}`)}
-      className="group cursor-pointer flex flex-col relative"
     >
       <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -52,6 +43,8 @@ function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; 
           <img
             src={optimizeCloudinaryUrl(cat.image || '/placeholder.png', IMG_SIZES.card)}
             alt={cat.name}
+            width={500}
+            height={667}
             className="w-full h-full object-cover"
             loading={index < 2 ? 'eager' : 'lazy'}
             decoding="async"
@@ -65,7 +58,7 @@ function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; 
         </h3>
         <div className="w-0 h-px bg-brass mt-3 group-hover:w-8 transition-all duration-500 ease-in-out" />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -81,13 +74,7 @@ interface CollectionSectionProps {
 function CollectionSection({ heading, subtitle, categories, loading, navigate, className = '' }: CollectionSectionProps) {
   return (
     <div className={className}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-12 md:mb-20 text-center"
-      >
+      <div className="mb-12 md:mb-20 text-center tb-heading-reveal">
         <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
           {heading}
         </h2>
@@ -96,7 +83,7 @@ function CollectionSection({ heading, subtitle, categories, loading, navigate, c
             {subtitle}
           </p>
         )}
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
         {loading
@@ -157,16 +144,11 @@ export default function CategoriesSection() {
       <div className="max-w-[1000px] mx-auto">
 
         {/* ── Denim Collection ─────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-12 md:mb-20 text-center"
-        >
+        <div className="mb-12 md:mb-20 text-center tb-heading-reveal">
           <h1 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
             The Denim Collection
           </h1>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 md:gap-x-12 md:gap-y-8 lg:gap-x-16 mx-auto">
           {loading
@@ -184,18 +166,11 @@ export default function CategoriesSection() {
 
         {/* ── Outfit Slider ────────────────────────────────────────── */}
         <div className="-mx-6 md:-mx-16 mt-0">
-          {/* Section heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center pt-4 md:pt-14 pb-3 md:pb-8 px-6 md:px-16"
-          >
+          <div className="text-center pt-4 md:pt-14 pb-3 md:pb-8 px-6 md:px-16 tb-heading-reveal">
             <h2 className="font-display text-3xl md:text-5xl tracking-[0.12em] uppercase metal-text">
               #Outfits of the Week
             </h2>
-          </motion.div>
+          </div>
           <ThunderboldSlider />
         </div>
 
@@ -214,37 +189,33 @@ export default function CategoriesSection() {
         {/* ── Kurta Collection ─────────────────────────────────────── */}
         {showKurta && (
           <div className="mt-12 md:mt-20" id="kurta-products">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-12 md:mb-16 text-center"
-            >
+            <div className="mb-12 md:mb-16 text-center tb-heading-reveal">
               <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
                 The Kurta Collection
               </h2>
               <p className="font-condensed text-sv text-sm md:text-base tracking-[0.12em] mt-4">
                 Crafted tradition. Contemporary style.
               </p>
-            </motion.div>
+            </div>
 
-            {kurtaProducts.length === 0 && !loading ? (
-              <div className="flex flex-col items-center justify-center py-16 border border-white/[0.06] rounded-sm">
-                <p className="font-condensed text-sm uppercase tracking-[0.22em] text-sv-mid">
-                  Coming Soon
-                </p>
-                <p className="font-condensed text-xs tracking-[0.14em] text-sv-dim mt-2">
-                  New arrivals being added
-                </p>
-              </div>
-            ) : (
-              <ProductGrid
-                products={kurtaProducts}
-                loading={loading}
-                skeletonCount={4}
-              />
-            )}
+            {/* Always use ProductGrid so the skeleton→content transition stays stable.
+                Pass a min-h emptyState so the section never collapses to near-zero
+                height when no kurta products exist — that collapse was CLS 0.835.  */}
+            <ProductGrid
+              products={kurtaProducts}
+              loading={loading}
+              skeletonCount={4}
+              emptyState={
+                <div className="min-h-[280px] flex flex-col items-center justify-center py-16 border border-white/[0.06] rounded-sm">
+                  <p className="font-condensed text-sm uppercase tracking-[0.22em] text-sv-mid">
+                    Coming Soon
+                  </p>
+                  <p className="font-condensed text-xs tracking-[0.14em] text-sv-dim mt-2">
+                    New arrivals being added
+                  </p>
+                </div>
+              }
+            />
           </div>
         )}
 

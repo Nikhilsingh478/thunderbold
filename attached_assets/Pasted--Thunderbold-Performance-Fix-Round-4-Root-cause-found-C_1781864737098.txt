@@ -1,0 +1,88 @@
+# Thunderbold Performance Fix — Round 4
+### Root cause found: CLS 0.887 + low-RAM device jank
+### For Replit Agent
+
+---
+
+## REAL-WORLD CONTEXT (read this first)
+
+The owner tested this PWA on actual low/mid-range Android devices (4GB and 6GB RAM) — not just desktop or high-end phones. On those devices the site is laggy, jittery, and visually unstable while it works fine on desktop and flagship phones. This is a critical signal: **the problems below disproportionately affect weaker CPUs**, which is exactly the device tier most of this site's actual customers are likely using. This round is about fixing root causes that explain that gap, not just chasing Lighthouse numbers.
+
+Goal remains: smooth, non-laggy, non-jittery experience — especially on weaker hardware.
+
+---
+
+## 🔴 CRITICAL — CLS Score is 0.887 (should be under 0.1, "poor" starts at 0.25)
+
+This is almost certainly the #1 cause of the "jittery" feeling being reported. A CLS this high means visible elements are physically jumping/shifting on screen during load — and this is exactly the kind of thing that feels much worse on a slow device because the shift happens more slowly and is more visible to the human eye.
+
+**The audit identifies the exact culprit: `div#kurta-products.mt-12.md:mt-20` is responsible for 0.835 of the total 0.887 shift score — almost the entire problem is one section.**
+
+- Locate the component rendering the "kurta products" section (likely a product grid/section component, search for `kurta-products` id or similar naming in the codebase)
+- The near-certain cause: product images in this section do not have reserved space before they load, so when each image finishes downloading, the surrounding layout jumps/reflows
+- **Fix:** Every `<img>` tag in this section (and ideally site-wide) must have explicit `width` and `height` attributes, OR the parent container must have a fixed `aspect-ratio` CSS property set BEFORE the image loads, so the browser reserves the correct space immediately and nothing shifts when the image arrives
+- If using Tailwind: use `aspect-[3/4]` or similar fixed aspect-ratio utility classes on the image container, matching the actual product image aspect ratio
+- If product images have varying aspect ratios, standardize the container aspect ratio site-wide (e.g. all product cards use a 3:4 or 1:1 container) and use `object-cover` (which is already being used per the audit — `object-cover` is correct, the issue is the container has no reserved size, not the object-fit)
+- Check if this same missing-dimension issue exists in other product grids too (the audit flagged "Image elements have explicit width and height" as a CLS issue broadly, not just in kurta-products) — fix this everywhere images render dynamically, not just the one flagged section
+- **This is the single most important fix in this round. Do this first and verify CLS drops below 0.1 before moving to anything else.**
+
+---
+
+## 🔴 CRITICAL — Framer Motion Main Thread Cost (disproportionately hurts low-RAM devices)
+
+`motion-O1PvbSIH.js` consumes 4,244ms total CPU time with 1,198ms of script evaluation — the single largest main-thread consumer on the page. On a fast desktop CPU this is masked. On a 4GB RAM Android device with a much weaker CPU, this same JS workload takes proportionally far longer to execute, which is very likely a direct cause of the jank/lag being felt.
+
+- Audit every use of Framer Motion (`motion.div`, `AnimatePresence`, `useScroll`, `useTransform`, etc.) across the codebase
+- For each animated element, ask: does this need Framer Motion, or would a plain CSS transition/animation achieve the same visual effect with zero JS runtime cost? CSS animations are handled by the browser's compositor and are dramatically cheaper than JS-driven animations, especially on weak CPUs.
+- Prioritize converting these to pure CSS:
+  - Simple hover scale effects (`group-hover:scale-[1.08]` is already CSS via Tailwind — good, keep these as-is)
+  - Fade-ins, slide-ins on scroll — these are prime candidates for Framer Motion but can often be replaced with the `IntersectionObserver` API + CSS transitions, which is far lighter
+  - The heading split-text animation (`h1.tb-heading-anim`) — check what's driving this; if it's Framer Motion, consider a CSS keyframe animation instead
+- Only keep Framer Motion for genuinely complex interactions (drag gestures, physics-based spring animations, shared layout transitions between routes) where CSS truly cannot replicate the effect
+- Goal: reduce the motion bundle's main-thread execution time significantly — every animation moved to CSS is pure win, especially for low-end devices
+
+---
+
+## 🟡 STILL NOT FIXED AFTER THREE ROUNDS — Cloudinary Images (508 KiB wasted)
+
+This has been flagged in every single audit so far and has not been implemented. Confirm directly: search the codebase right now for `res.cloudinary.com` usage and report which specific files contain raw Cloudinary URLs without transformation parameters.
+
+- Same fix as instructed before: every Cloudinary image URL needs `/upload/w_{width},h_{height},c_fill,q_auto,f_auto/` injected before the asset path
+- This round's worst offender: `Gemini_Ge....png` at 182 KiB (likely a hero/banner image) — find and fix this one specifically first, then go through the rest of the flagged list: `How_to_St....jpg`, `100..._inspyrenet_fnpgur.png`, `file_0000000..._xslvcd.png`, `ChatGPT_I....png`, `file_0000000..._krwsik.png`, `mens-white-embroidered...webp`, `momfitjeans_somb0m.jpg`, `-473Wx593....avif`, `2_2ee8f4f6...webp`, and the `178...` series of PNGs
+- **Do not report this as done without showing actual before/after URLs from the rendered DOM.** Open the deployed site, inspect element on a product image, paste the actual `src` URL here as proof the transform is present.
+
+---
+
+## 🟢 Forced Reflow — Still Present, Now Tied to Navbar
+
+The forced reflow insight now points at `nav#tb-navbar` with unsupported CSS properties being flagged (`border-bottom-color`, `border-left-color`, etc. listed as "Unsupported CSS Property" — this usually means a CSS property is being set dynamically via JS in a way that triggers layout recalculation, or a Tailwind class is generating something Lighthouse's simulated environment doesn't fully parse).
+
+- Check the navbar component for any scroll-linked style changes (e.g. changing border color or background on scroll) that's implemented via direct style manipulation or inline style changes rather than a CSS class toggle
+- If the navbar changes appearance on scroll (common pattern — transparent at top, solid background after scrolling), make sure this is done by toggling a CSS class (e.g. `scrolled` class with predefined Tailwind styles) rather than setting individual style properties via JS on every scroll event
+- Make sure any scroll listener for this is throttled/debounced — checking scroll position and updating styles on every single scroll event without throttling is a common cause of forced reflow and will feel especially bad on low-end devices during scroll
+
+---
+
+## WHAT NOT TO TOUCH
+
+- No visual/design changes — fixing layout shift means reserving space correctly, NOT changing how things look once loaded
+- No changes to checkout, cart, payment
+- No changes to Firebase Auth
+- No routing changes
+
+---
+
+## TESTING REQUIREMENT FOR THIS ROUND
+
+Lighthouse alone isn't catching the real-device experience well enough (scores have been fluctuating between runs). After implementing these fixes:
+
+1. Run Lighthouse and confirm CLS is now under 0.1
+2. If possible, test on Chrome DevTools with CPU throttling set to "4x slowdown" or "6x slowdown" (under Performance tab → CPU throttling) to simulate a low-end device, and manually scroll through the kurta-products section and homepage to check for visible jank
+3. Report specific before/after CLS numbers, not just "fixed"
+
+## PRIORITY ORDER
+
+1. CLS fix on kurta-products section (and site-wide image dimension reservation) — this is likely the primary source of the "jittery" complaint
+2. Framer Motion → CSS conversion for simple animations — this is likely the primary source of "laggy on weak devices"
+3. Cloudinary image transforms — finally implement this, three rounds overdue
+4. Navbar forced reflow fix

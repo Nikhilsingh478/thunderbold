@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../../lib/cloudinary';
@@ -28,6 +27,9 @@ interface ProductGridProps {
  * Reusable product grid used by CategoryView, DealsPage, BrandView, etc.
  * Renders the canonical Thunderbold product card (image, wishlist heart,
  * name, PriceDisplay) with consistent animations and skeletons everywhere.
+ *
+ * Animations are CSS-only (@keyframes tbFadeInUp in index.css) — no Framer Motion
+ * at the card level so weak-CPU devices don't pay JS animation overhead per image.
  */
 export default function ProductGrid({
   products,
@@ -43,6 +45,7 @@ export default function ProductGrid({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
         {Array.from({ length: skeletonCount }).map((_, i) => (
           <div key={i} className="flex flex-col">
+            {/* aspect-[3/4] reserves exact space before content loads — prevents CLS */}
             <div className="aspect-[3/4] bg-white/5 rounded-sm animate-pulse" />
             <div className="mt-5 space-y-2">
               <div className="h-4 bg-white/5 rounded animate-pulse w-3/4" />
@@ -69,14 +72,13 @@ export default function ProductGrid({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
       {products.map((prod, i) => (
-        <motion.div
+        <div
           key={prod._id}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: Math.min(i, 8) * 0.05 }}
-          className="group cursor-pointer flex flex-col"
+          className="group cursor-pointer flex flex-col tb-card-appear"
+          style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}
           onClick={() => navigate(`/product/${prod._id}`)}
         >
+          {/* Container reserves 3:4 space before image loads — critical for CLS */}
           <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
             <button
               onClick={(e) => {
@@ -97,10 +99,15 @@ export default function ProductGrid({
               />
             </button>
 
-            <motion.img
+            {/* Explicit width/height tell the browser to reserve pixel dimensions
+                before the image downloads — combined with aspect-[3/4] this gives
+                two CLS-prevention layers. object-cover fills without distortion.  */}
+            <img
               src={optimizeCloudinaryUrl(prod.images?.[0] || prod.image, IMG_SIZES.card)}
               alt={prod.name}
-              className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[0.8s] ease-[0.16,1,0.3,1] grayscale-[0.1]"
+              width={500}
+              height={667}
+              className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] grayscale-[0.1]"
               loading={i < 4 ? 'eager' : 'lazy'}
               decoding="async"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
@@ -114,7 +121,7 @@ export default function ProductGrid({
               <PriceDisplay price={prod.price} mrp={prod.mrp} size="sm" />
             </div>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
