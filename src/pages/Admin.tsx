@@ -2300,7 +2300,7 @@ export default function Admin() {
                             <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-condensed text-xs text-sv-mid uppercase tracking-wider">
+                                  <span className="font-condensed text-xs text-white/70 uppercase tracking-wider">
                                     Order #{ret.orderNumber || shortId}
                                   </span>
                                   <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-condensed uppercase tracking-wider ${statusColor}`}>
@@ -2308,10 +2308,10 @@ export default function Admin() {
                                     {ret.status}
                                   </span>
                                 </div>
-                                <p className="font-condensed text-[10px] text-sv-dim tracking-wider">{ret.userId}</p>
+                                <p className="font-condensed text-[10px] text-white/40 tracking-wider">{ret.userId}</p>
                               </div>
                               <div className="text-right">
-                                <p className="font-condensed text-xs text-sv-mid">Order Total</p>
+                                <p className="font-condensed text-xs text-white/50">Order Total</p>
                                 <p className="font-condensed text-lg text-tb-white">₹{ret.totalAmount.toLocaleString('en-IN')}</p>
                               </div>
                             </div>
@@ -2319,16 +2319,16 @@ export default function Admin() {
                             {/* Reason & Description */}
                             <div className="mb-4 space-y-2">
                               <div className="flex items-center gap-2">
-                                <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-wider">Reason:</span>
+                                <span className="font-condensed text-[10px] text-white/45 uppercase tracking-wider">Reason:</span>
                                 <span className="font-condensed text-xs text-brass">{reasonLabel[ret.reason] || ret.reason}</span>
                               </div>
-                              <p className="font-condensed text-sm text-sv-mid leading-relaxed bg-white/[0.03] border border-white/8 rounded-lg px-3 py-2.5">
+                              <p className="font-condensed text-sm text-white/65 leading-relaxed bg-white/[0.03] border border-white/8 rounded-lg px-3 py-2.5">
                                 {ret.description}
                               </p>
                               {/* UPI ID for refund payout */}
                               {ret.upiId && (
                                 <div className="flex items-center gap-2 px-3 py-2 bg-brass/5 border border-brass/20 rounded-lg">
-                                  <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-wider shrink-0">Refund UPI:</span>
+                                  <span className="font-condensed text-[10px] text-white/50 uppercase tracking-wider shrink-0">Refund UPI:</span>
                                   <span className="font-mono text-xs text-brass font-semibold tracking-wide">{ret.upiId}</span>
                                 </div>
                               )}
@@ -2336,16 +2336,16 @@ export default function Admin() {
 
                             {/* Products */}
                             <div className="mb-4">
-                              <p className="font-condensed text-[10px] text-sv-dim uppercase tracking-wider mb-2">Items in this order:</p>
+                              <p className="font-condensed text-[10px] text-white/45 uppercase tracking-wider mb-2">Items in this order:</p>
                               <div className="space-y-1">
                                 {ret.products.slice(0, 3).map((p, i) => (
                                   <div key={i} className="flex items-center justify-between text-xs">
-                                    <span className="text-sv-mid font-condensed">{p.name}{p.size ? ` (${p.size})` : ''} × {p.quantity}</span>
-                                    {p.price && <span className="text-sv-dim font-condensed">₹{(p.price * p.quantity).toLocaleString('en-IN')}</span>}
+                                    <span className="text-white/65 font-condensed">{p.name}{p.size ? ` (${p.size})` : ''} × {p.quantity}</span>
+                                    {p.price && <span className="text-white/50 font-condensed">₹{(p.price * p.quantity).toLocaleString('en-IN')}</span>}
                                   </div>
                                 ))}
                                 {ret.products.length > 3 && (
-                                  <p className="font-condensed text-[10px] text-sv-dim">+{ret.products.length - 3} more items</p>
+                                  <p className="font-condensed text-[10px] text-white/45">+{ret.products.length - 3} more items</p>
                                 )}
                               </div>
                             </div>
@@ -2354,20 +2354,20 @@ export default function Admin() {
                             {ret.status === 'approved' && (
                               <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
                                 <p className="font-condensed text-xs text-emerald-400 font-semibold mb-0.5">Approved — Refund: ₹{(ret.refundAmount ?? 0).toLocaleString('en-IN')}</p>
-                                {ret.adminNotes && <p className="font-condensed text-xs text-sv-mid">{ret.adminNotes}</p>}
+                                {ret.adminNotes && <p className="font-condensed text-xs text-white/60">{ret.adminNotes}</p>}
                               </div>
                             )}
                             {ret.status === 'rejected' && (
                               <div className="mb-4 p-3 bg-rose-500/5 border border-rose-500/20 rounded-lg">
                                 <p className="font-condensed text-xs text-rose-400 font-semibold mb-0.5">Rejected</p>
-                                {ret.adminNotes && <p className="font-condensed text-xs text-sv-mid">{ret.adminNotes}</p>}
+                                {ret.adminNotes && <p className="font-condensed text-xs text-white/60">{ret.adminNotes}</p>}
                               </div>
                             )}
 
                             {/* Refund info */}
                             {ret.status === 'pending' && (
                               <div className="mb-4 flex items-center justify-between text-xs p-3 bg-white/[0.02] border border-white/8 rounded-lg">
-                                <span className="font-condensed text-sv-mid">
+                                <span className="font-condensed text-white/60">
                                   Suggested refund (order − ₹{ret.shippingCharges ?? 50} shipping)
                                 </span>
                                 <span className="font-condensed text-brass font-semibold">₹{(ret.suggestedRefundAmount ?? 0).toLocaleString('en-IN')}</span>
@@ -2375,7 +2375,7 @@ export default function Admin() {
                             )}
 
                             {/* Submitted date */}
-                            <p className="font-condensed text-[10px] text-sv-dim tracking-wider mb-4">
+                            <p className="font-condensed text-[10px] text-white/45 tracking-wider mb-4">
                               Submitted: {new Date(ret.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </p>
 
