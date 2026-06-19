@@ -9,22 +9,17 @@ interface Slide {
   href: string | null;
 }
 
-const DEFAULT_SLIDES: Slide[] = [
-  { src: '/banner.webp',  alt: 'Get an extra 40% off — Live Now',               href: null },
-  { src: '/banner2.webp', alt: 'Buy Three Jeans at Only ₹1399 — Limited Offer', href: '#live-sale' },
-];
-
 const INTERVAL = 3000;
 const SWIPE_THRESHOLD = 40;
 
 export default function HeroBanner() {
-  const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState(1);
   const touchStartX = useRef<number | null>(null);
 
-  // Fetch admin-configured banner images; fall back to defaults if none saved
+  // Fetch admin-configured banner images only — no fallback defaults
   useEffect(() => {
     let cancelled = false;
     fetch('/api/slider?type=hero')
@@ -39,11 +34,10 @@ export default function HeroBanner() {
               href: null,
             }))
           );
-          // Reset to first slide whenever banners are refreshed
           setCurrent(0);
         }
       })
-      .catch(() => {}); // silent — use defaults on any error
+      .catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
@@ -88,6 +82,9 @@ export default function HeroBanner() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // No admin banners configured — render nothing
+  if (slides.length === 0) return null;
+
   const variants = {
     enter:  (dir: number) => ({ opacity: 0, x: dir * 40 }),
     center: { opacity: 1, x: 0 },
@@ -128,7 +125,7 @@ export default function HeroBanner() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Height placeholder — always use first slide for stable layout */}
+        {/* Height placeholder — keeps layout stable while slides transition */}
         <img
           src={slides[0]?.src}
           alt=""

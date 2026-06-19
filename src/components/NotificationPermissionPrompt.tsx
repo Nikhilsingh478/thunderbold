@@ -54,7 +54,7 @@ export default function NotificationPermissionPrompt() {
                   Stay updated on your orders
                 </p>
                 <p className="font-condensed text-xs text-sv-mid leading-relaxed">
-                  Get instant notifications when your order is confirmed, packed, and on its way.
+                  Get instant notifications when your order is confirmed, packed, and out for delivery.
                 </p>
               </div>
 
