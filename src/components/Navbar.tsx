@@ -161,8 +161,8 @@ const Navbar = () => {
         initial="hidden"
         animate="visible"
         style={{ top: 'calc(36px + var(--tb-banner-h))' }}
-        className={`fixed left-0 w-full px-6 py-5 md:px-[52px] md:py-6 flex items-center justify-between transition-colors duration-500 z-[100] ${
-          scrolled ? 'bg-[#070707]/90 backdrop-blur-md border-b border-white/5' : 'bg-transparent'
+        className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-500 z-[100] ${
+          scrolled ? 'py-5 bg-[#070707]/90 backdrop-blur-md border-b border-white/5' : 'pt-5 pb-7 bg-transparent'
         }`}
       >
         <Link
