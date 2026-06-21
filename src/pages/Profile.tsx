@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+
 import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
 import { formatOrderId } from '../lib/utils';
@@ -795,14 +797,31 @@ export default function Profile() {
                               {/* Products */}
                               <div className="border-t border-white/[0.06] px-4 py-3 space-y-2.5">
                                 {(order.products ?? []).map((p, idx) => (
-                                  <div key={idx} className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="text-sm text-white/80 leading-snug">{p.name}</p>
-                                      <p className="text-xs text-white/35 mt-0.5">
-                                        {p.size ? `Size ${p.size} · ` : ''}Qty {p.quantity}
-                                      </p>
+                                  <div key={idx} className="flex items-start gap-3 border-b border-white/[0.03] last:border-b-0 pb-3 last:pb-0">
+                                    {/* Product Image */}
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                                      <img
+                                        src={optimizeCloudinaryUrl(p.image || '/placeholder.png', IMG_SIZES.thumbnail)}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                        decoding="async"
+                                        onError={(e) => {
+                                          e.currentTarget.src = '/placeholder.png';
+                                        }}
+                                      />
                                     </div>
-                                    <p className="text-sm text-white/65 shrink-0">₹{p.price?.toLocaleString('en-IN') ?? '—'}</p>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                          <p className="text-sm text-white/80 leading-snug line-clamp-2">{p.name}</p>
+                                          <p className="text-xs text-white/35 mt-0.5">
+                                            {p.size ? `Size ${p.size} · ` : ''}Qty {p.quantity}
+                                          </p>
+                                        </div>
+                                        <p className="text-sm text-white/65 shrink-0 font-condensed">₹{p.price?.toLocaleString('en-IN') ?? '—'}</p>
+                                      </div>
+                                    </div>
                                   </div>
                                 ))}
                               </div>

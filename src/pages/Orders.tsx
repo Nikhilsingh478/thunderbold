@@ -10,6 +10,8 @@ import ReviewModal, { ReviewData } from '../components/reviews/ReviewModal';
 import LightningRating from '../components/reviews/LightningRating';
 import { formatOrderId } from '../lib/utils';
 import ReturnRequestModal from '../components/ReturnRequestModal';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+
 
 interface OrderProduct {
   productId?: string;
@@ -529,51 +531,68 @@ const Orders = () => {
                           const existing  = product.productId ? myReviews[product.productId] : undefined;
 
                           return (
-                            <div key={index} className="flex flex-col gap-2">
-                              {/* Product row */}
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-tb-white text-sm font-medium leading-snug line-clamp-2">{product.name}</p>
-                                  <p className="text-sv-mid text-xs mt-0.5 font-condensed">
-                                    {product.size ? `Size ${product.size} · ` : ''}Qty {product.quantity}
-                                  </p>
-                                  {existing && (
-                                    <div className="mt-1.5 flex items-center gap-1.5">
-                                      <LightningRating value={existing.rating} readonly size="sm" />
-                                      <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.1em]">Reviewed</span>
-                                    </div>
-                                  )}
-                                </div>
-                                <p className="font-condensed text-tb-white text-sm shrink-0">
-                                  ₹{product.price?.toLocaleString('en-IN') ?? '—'}
-                                </p>
+                            <div key={index} className="flex gap-4 items-start border-b border-white/[0.04] last:border-b-0 pb-3.5 last:pb-0">
+                              {/* Product Image */}
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                                <img
+                                  src={optimizeCloudinaryUrl(product.image || '/placeholder.png', IMG_SIZES.thumbnail)}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/placeholder.png';
+                                  }}
+                                />
                               </div>
 
-                              {/* Action buttons */}
-                              {(product.productId || canReview) && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {product.productId && (
-                                    <Link
-                                      to={`/product/${product.productId}`}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/15 rounded-md text-[11px] font-condensed uppercase tracking-wider text-sv-mid hover:text-tb-white hover:border-white/30 transition-colors"
-                                    >
-                                      <Eye className="w-3 h-3" />View Product
-                                    </Link>
-                                  )}
-                                  {canReview && (
-                                    <button
-                                      onClick={() => setReviewTarget({
-                                        product: { id: product.productId!, name: product.name, image: product.image },
-                                        existing: existing ?? null,
-                                      })}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-brass/10 border border-brass/30 rounded-md text-[11px] font-condensed uppercase tracking-wider text-brass hover:bg-brass/20 transition-colors"
-                                    >
-                                      <Pencil className="w-3 h-3" />
-                                      {existing ? 'Edit Review' : 'Review'}
-                                    </button>
-                                  )}
+                              <div className="min-w-0 flex-1 flex flex-col gap-2">
+                                {/* Product details */}
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="text-tb-white text-sm font-medium leading-snug line-clamp-2">{product.name}</p>
+                                    <p className="text-sv-mid text-xs mt-0.5 font-condensed">
+                                      {product.size ? `Size ${product.size} · ` : ''}Qty {product.quantity}
+                                    </p>
+                                  </div>
+                                  <p className="font-condensed text-tb-white text-sm shrink-0">
+                                    ₹{product.price?.toLocaleString('en-IN') ?? '—'}
+                                  </p>
                                 </div>
-                              )}
+
+                                {existing && (
+                                  <div className="flex items-center gap-1.5">
+                                    <LightningRating value={existing.rating} readonly size="sm" />
+                                    <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.1em]">Reviewed</span>
+                                  </div>
+                                )}
+
+                                {/* Action buttons */}
+                                {(product.productId || canReview) && (
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {product.productId && (
+                                      <Link
+                                        to={`/product/${product.productId}`}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/15 rounded-md text-[11px] font-condensed uppercase tracking-wider text-sv-mid hover:text-tb-white hover:border-white/30 transition-colors"
+                                      >
+                                        <Eye className="w-3 h-3" />View Product
+                                      </Link>
+                                    )}
+                                    {canReview && (
+                                      <button
+                                        onClick={() => setReviewTarget({
+                                          product: { id: product.productId!, name: product.name, image: product.image },
+                                          existing: existing ?? null,
+                                        })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-brass/10 border border-brass/30 rounded-md text-[11px] font-condensed uppercase tracking-wider text-brass hover:bg-brass/20 transition-colors"
+                                      >
+                                        <Pencil className="w-3 h-3" />
+                                        {existing ? 'Edit Review' : 'Review'}
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           );
                         })}

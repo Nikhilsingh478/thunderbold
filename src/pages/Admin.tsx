@@ -1568,24 +1568,38 @@ export default function Admin() {
                               <p className="font-condensed text-xs text-sv-mid uppercase tracking-wider mb-1.5">Items</p>
                               <div className="space-y-2">
                                 {(order.products ?? []).map((p, i) => (
-                                  <div key={i} className="bg-white/[0.03] rounded-lg px-3 py-2">
-                                    {p.productId ? (
-                                      <a
-                                        href={`/product/${p.productId}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-tb-white hover:text-brass transition-colors duration-200 group"
-                                      >
-                                        <span>{p.name}</span>
-                                        <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
-                                      </a>
-                                    ) : (
-                                      <p className="text-tb-white text-sm font-medium">{p.name}</p>
-                                    )}
-                                    <div className="flex items-center gap-3 mt-0.5">
-                                      {p.size && <span className="text-sv-mid text-xs">Size: <span className="text-tb-white">{p.size}</span></span>}
-                                      <span className="text-sv-mid text-xs">Qty: <span className="text-tb-white">{p.quantity}</span></span>
-                                      {p.price != null && <span className="text-sv-mid text-xs">₹{p.price.toFixed(2)}</span>}
+                                  <div key={i} className="bg-white/[0.03] rounded-lg px-3 py-2 flex items-start gap-3">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                                      <img
+                                        src={optimizeCloudinaryUrl(p.image || '/placeholder.png', IMG_SIZES.thumbnail)}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                        decoding="async"
+                                        onError={(e) => {
+                                          e.currentTarget.src = '/placeholder.png';
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      {p.productId ? (
+                                        <a
+                                          href={`/product/${p.productId}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1.5 text-sm font-medium text-tb-white hover:text-brass transition-colors duration-200 group"
+                                        >
+                                          <span className="line-clamp-1">{p.name}</span>
+                                          <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                                        </a>
+                                      ) : (
+                                        <p className="text-tb-white text-sm font-medium line-clamp-1">{p.name}</p>
+                                      )}
+                                      <div className="flex items-center gap-3 mt-0.5">
+                                        {p.size && <span className="text-sv-mid text-xs">Size: <span className="text-tb-white">{p.size}</span></span>}
+                                        <span className="text-sv-mid text-xs">Qty: <span className="text-tb-white">{p.quantity}</span></span>
+                                        {p.price != null && <span className="text-sv-mid text-xs">₹{p.price.toFixed(2)}</span>}
+                                      </div>
                                     </div>
                                   </div>
                                 ))}
@@ -1667,26 +1681,40 @@ export default function Admin() {
                                 </td>
                                 {/* Items */}
                                 <td className="px-4 py-4 max-w-[220px]">
-                                  <div className="space-y-2">
+                                  <div className="space-y-3">
                                     {(order.products ?? []).map((p, i) => (
-                                      <div key={i}>
-                                        {p.productId ? (
-                                          <a
-                                            href={`/product/${p.productId}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-sm font-medium text-tb-white hover:text-brass transition-colors duration-200 group"
-                                          >
-                                            <span>{p.name}</span>
-                                            <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
-                                          </a>
-                                        ) : (
-                                          <div className="text-sm text-tb-white font-medium">{p.name}</div>
-                                        )}
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                          {p.size && <span className="text-xs text-sv-mid">Size: <span className="text-tb-white">{p.size}</span></span>}
-                                          <span className="text-xs text-sv-mid">Qty: <span className="text-tb-white">{p.quantity}</span></span>
-                                          {p.price != null && <span className="text-xs text-sv-mid">₹{p.price.toFixed(2)}</span>}
+                                      <div key={i} className="flex items-start gap-2.5">
+                                        <div className="w-9 h-9 rounded overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                                          <img
+                                            src={optimizeCloudinaryUrl(p.image || '/placeholder.png', IMG_SIZES.thumbnail)}
+                                            alt={p.name}
+                                            className="w-full h-full object-cover"
+                                            loading="lazy"
+                                            decoding="async"
+                                            onError={(e) => {
+                                              e.currentTarget.src = '/placeholder.png';
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          {p.productId ? (
+                                            <a
+                                              href={`/product/${p.productId}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-1.5 text-sm font-medium text-tb-white hover:text-brass transition-colors duration-200 group"
+                                            >
+                                              <span className="line-clamp-1">{p.name}</span>
+                                              <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                                            </a>
+                                          ) : (
+                                            <div className="text-sm text-tb-white font-medium line-clamp-1">{p.name}</div>
+                                          )}
+                                          <div className="flex items-center gap-2 mt-0.5">
+                                            {p.size && <span className="text-xs text-sv-mid">Size: <span className="text-tb-white">{p.size}</span></span>}
+                                            <span className="text-xs text-sv-mid">Qty: <span className="text-tb-white">{p.quantity}</span></span>
+                                            {p.price != null && <span className="text-xs text-sv-mid">₹{p.price.toFixed(2)}</span>}
+                                          </div>
                                         </div>
                                       </div>
                                     ))}
