@@ -257,6 +257,22 @@ const Orders = () => {
     setMyReviews(prev => { const n = { ...prev }; delete n[productId]; return n; });
   };
 
+  const handleReviewSubmit = async (input: { rating: number; comment: string }) => {
+    if (!reviewTarget?.product.id) return;
+    await submitReview(reviewTarget.product.id, input);
+  };
+
+  const handleReviewUpdate = async (input: { rating: number; comment: string }) => {
+    if (!reviewTarget?.existing?._id || !reviewTarget?.product.id) return;
+    await updateReview(reviewTarget.existing._id, reviewTarget.product.id, input);
+  };
+
+  const handleReviewDelete = async () => {
+    if (!reviewTarget?.existing?._id || !reviewTarget?.product.id) return;
+    await deleteReview(reviewTarget.existing._id, reviewTarget.product.id);
+  };
+
+
   // ── Cancel order ───────────────────────────────────────────────────────────
   const cancelOrder = async (orderId: string) => {
     if (!user || !confirm('Are you sure you want to cancel this order?')) return;
@@ -644,13 +660,11 @@ const Orders = () => {
       <ReviewModal
         open={!!reviewTarget}
         onClose={() => setReviewTarget(null)}
-        productId={reviewTarget?.product.id ?? ''}
-        productName={reviewTarget?.product.name ?? ''}
-        productImage={reviewTarget?.product.image}
-        existing={reviewTarget?.existing ?? null}
-        onSubmit={submitReview}
-        onUpdate={updateReview}
-        onDelete={deleteReview}
+        product={reviewTarget?.product ?? { id: '', name: '' }}
+        existingReview={reviewTarget?.existing ?? null}
+        onSubmit={handleReviewSubmit}
+        onUpdate={handleReviewUpdate}
+        onDelete={handleReviewDelete}
       />
 
       {/* Return Request Modal */}
