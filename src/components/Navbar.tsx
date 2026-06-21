@@ -28,11 +28,20 @@ function AuthSkeleton({ size = 32 }: { size?: number }) {
   );
 }
 
+let hasNavbarAnimatedThisSession = false;
+
 const Navbar = () => {
   const { user, loading: authLoading, logout } = useAuth();
   const { getTotalItems } = useCart();
   const { getWishlistCount } = useWishlist();
   const navigate = useNavigate();
+
+  const [shouldAnimate, setShouldAnimate] = useState(!hasNavbarAnimatedThisSession);
+
+  useEffect(() => {
+    hasNavbarAnimatedThisSession = true;
+  }, []);
+
 
   const baseLinks = [
     { name: 'Categories', href: '/' },
@@ -158,7 +167,7 @@ const Navbar = () => {
       <motion.nav
         id="tb-navbar"
         variants={navVariants}
-        initial="hidden"
+        initial={shouldAnimate ? "hidden" : false}
         animate="visible"
         style={{ top: 'calc(36px + var(--tb-banner-h))' }}
         className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-500 z-[100] ${

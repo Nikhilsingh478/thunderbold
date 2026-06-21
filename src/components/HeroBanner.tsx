@@ -12,11 +12,14 @@ interface Slide {
 const INTERVAL = 3000;
 const SWIPE_THRESHOLD = 40;
 
+let cachedSlides: Slide[] | null = null;
+
 export default function HeroBanner() {
-  const [slides, setSlides] = useState<Slide[]>([]);
+  const [slides, setSlides] = useState<Slide[]>(cachedSlides || []);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState(1);
+  const [loading, setLoading] = useState(!cachedSlides);
   const touchStartX = useRef<number | null>(null);
 
   // Fetch admin-configured banner images only — no fallback defaults
@@ -26,18 +29,21 @@ export default function HeroBanner() {
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
         if (cancelled) return;
-        if (Array.isArray(data?.images) && data.images.length > 0) {
-          setSlides(
-            data.images.map((src: string, i: number) => ({
-              src: optimizeCloudinaryUrl(src, IMG_SIZES.hero),
-              alt: `Banner ${i + 1}`,
-              href: null,
-            }))
-          );
+        if (Array.isArray(data?.images)) {
+          const mapped = data.images.map((src: string, i: number) => ({
+            src: optimizeCloudinaryUrl(src, IMG_SIZES.hero),
+            alt: `Banner ${i + 1}`,
+            href: null,
+          }));
+          setSlides(mapped);
+          cachedSlides = mapped;
           setCurrent(0);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -81,6 +87,14 @@ export default function HeroBanner() {
     const el = document.getElementById(href.replace('#', ''));
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  // Show a loading skeleton only on first mount while fetching configured slides.
+  // Matches the exact shape and size of the hero slider to prevent layout shifts.
+  if (loading && slides.length === 0) {
+    return (
+      <div className="mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0 bg-white/[0.02] animate-pulse h-[150px] sm:h-[180px] md:h-[260px]" />
+    );
+  }
 
   // No admin banners configured — render nothing
   if (slides.length === 0) return null;
