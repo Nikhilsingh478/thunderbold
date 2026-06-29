@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Thunderbold Cinematic Loader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100dvh;
+    background: #070707;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #tb-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #070707;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #bg-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  #vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: radial-gradient(ellipse 70% 70% at center, transparent 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.95) 100%);
+    pointer-events: none;
+    will-change: background;
+  }
+
+  #scanlines {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+  }
+
+  #center-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    will-change: transform, opacity, filter;
+  }
+
+  #bolt-icon {
+    width: 48px;
+    height: 78px;
+    margin-bottom: 24px;
+    will-change: transform, opacity, filter;
+    opacity: 0;
+    filter: blur(10px) drop-shadow(0 0 0px transparent);
+    transform: scale(0.6) translateY(-20px);
+    flex-shrink: 0;
+  }
+
+  #wordmark-wrap {
+    position: relative;
+    overflow: visible;
+    line-height: 1;
+  }
+
+  #wordmark {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(62px, 10vw, 104px);
+    letter-spacing: 0.32em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    -webkit-text-stroke: 0.5px rgba(255,255,255,0.3);
+    line-height: 1;
+    white-space: nowrap;
+    display: flex;
+  }
+
+  .char {
+    display: inline-block;
+    opacity: 0;
+    will-change: transform, opacity, color;
+  }
+
+  #wipe-mask {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #070707 0%, #070707 50%, transparent 100%);
+    transform: translateX(0%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  #reveal-line {
+    height: 1.5px;
+    width: 0;
+    margin-top: 16px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,195,0,0.7) 20%,
+      #FFC300 45%,
+      #FFFFFF 50%,
+      #FFC300 55%,
+      rgba(255,195,0,0.7) 80%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    background-position: -100% 0;
+    will-change: width, opacity;
+    opacity: 1;
+  }
+
+  #tagline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(12px, 2vw, 17px);
+    letter-spacing: 0.58em;
+    color: rgba(255, 195, 0, 0.75);
+    text-transform: uppercase;
+    margin-top: 16px;
+    opacity: 0;
+    will-change: opacity;
+  }
+
+  #exit-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: #070707;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #bolt-icon { opacity: 1 !important; filter: none !important; transform: none !important; }
+    .char { opacity: 1 !important; }
+    #tagline { opacity: 1 !important; }
+    #wipe-mask { display: none; }
+    #bg-canvas { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="tb-loader">
+  <canvas id="bg-canvas"></canvas>
+  <div id="vignette"></div>
+  <div id="scanlines"></div>
+
+  <div id="center-stage">
+    <svg id="bolt-icon" viewBox="0 0 44 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M26 0L0 42H18L12 72L44 26H24L26 0Z" fill="#FFC300"/>
+    </svg>
+
+    <div id="wordmark-wrap">
+      <div id="wordmark"></div>
+      <div id="wipe-mask"></div>
+    </div>
+
+    <div id="reveal-line"></div>
+    <div id="tagline">Wear The Energy</div>
+  </div>
+
+  <div id="exit-mask"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script>
+(function() {
+
+  // ── CANVAS LIGHTNING & PARTICLE SYSTEM ──────────────────────────────────
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Grid background
+  function drawGrid() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,185,0,0.018)';
+    ctx.lineWidth = 0.5;
+    const cell = 60;
+    for (let x = 0; x <= W; x += cell) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += cell) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  const bolts = [];
+  const particles = [];
+
+  function rnd(min, max) { return Math.random() * (max - min) + min; }
+
+  // Spawn spark particle burst
+  function spawnSparks(x, y, count, isDischarge = false) {
+    for (let i = 0; i < count; i++) {
+      const angle = rnd(0, Math.PI * 2);
+      const speed = isDischarge ? rnd(4, 14) : rnd(1.5, 6);
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - (isDischarge ? rnd(1, 4) : 0), // drift slightly upward
+        r: rnd(1.2, 3),
+        color: Math.random() > 0.3 ? '#FFC300' : '#FFFFFF',
+        alpha: rnd(0.7, 1),
+        decay: rnd(0.015, 0.035),
+        drag: rnd(0.94, 0.97)
+      });
+    }
+  }
+
+  // Recursive segment generator
+  function collectBoltSegments(x1, y1, x2, y2, depth, displacement, segments, isMain) {
+    if (depth === 0) {
+      segments.push({ x1, y1, x2, y2, main: isMain });
+      return;
+    }
+    const mx = (x1 + x2) / 2 + rnd(-displacement, displacement);
+    const my = (y1 + y2) / 2 + rnd(-displacement / 4, displacement / 4);
+    collectBoltSegments(x1, y1, mx, my, depth - 1, displacement * 0.5, segments, isMain);
+    collectBoltSegments(mx, my, x2, y2, depth - 1, displacement * 0.5, segments, isMain);
+    
+    // Branch generation
+    if (isMain && Math.random() < 0.35 && depth > 2) {
+      const bx = mx + rnd(-90, 90);
+      const by = my + rnd(30, 110);
+      collectBoltSegments(mx, my, bx, by, Math.max(depth - 2, 0), displacement * 0.4, segments, false);
+    }
+  }
+
+  function spawnBolt(fromX, fromY, toX, toY, forced) {
+    const segments = [];
+    collectBoltSegments(fromX, fromY, toX, toY, 5, 90, segments, true);
+    bolts.push({
+      segments,
+      opacity: 1,
+      decay: rnd(0.04, 0.08),
+      forced: !!forced
+    });
+    
+    // Spawn spark particles along the bolt destination
+    if (forced || Math.random() < 0.5) {
+      spawnSparks(toX, toY, forced ? 25 : 8, forced);
+    }
+  }
+
+  // Trigger main cinematic discharge
+  function triggerIconDischarge() {
+    const bolt = document.getElementById('bolt-icon');
+    const bRect = bolt.getBoundingClientRect();
+    const ox = bRect.left + bRect.width / 2;
+    const oy = bRect.top + bRect.height;
+    
+    // Trigger Screenshake
+    const shakeTL = gsap.timeline();
+    for (let i = 0; i < 8; i++) {
+      shakeTL.to('#center-stage', {
+        x: gsap.utils.random(-8, 8),
+        y: gsap.utils.random(-8, 8),
+        duration: 0.04,
+        ease: 'none'
+      });
+    }
+    shakeTL.to('#center-stage', { x: 0, y: 0, duration: 0.04, clearProps: 'x,y' });
+
+    // Trigger Vignette Amber Flash
+    gsap.fromTo('#vignette',
+      { background: 'radial-gradient(ellipse 70% 70% at center, rgba(255,195,0,0.18) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.96) 100%)' },
+      { background: 'radial-gradient(ellipse 70% 70% at center, transparent 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.95) 100%)', duration: 0.72, ease: 'power2.out' }
+    );
+
+    // Spawns multiple electric bolts outwards
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        const destX = ox + rnd(-160, 160);
+        const destY = oy + rnd(H * 0.35, H * 0.7);
+        spawnBolt(ox + rnd(-5, 5), oy - 15, destX, destY, true);
+        spawnSparks(destX, destY, 18, true);
+      }, i * 35);
+    }
+  }
+
+  // Set up passive ambient embers
+  const ambientEmbers = [];
+  for (let i = 0; i < 35; i++) {
+    ambientEmbers.push({
+      x: rnd(0, 1),
+      y: rnd(0, 1),
+      r: rnd(0.8, 1.6),
+      vy: rnd(0.08, 0.28),
+      vx: rnd(-0.08, 0.08),
+      alpha: rnd(0.1, 0.4)
+    });
+  }
+
+  function drawAmbientEmbers() {
+    ctx.save();
+    ambientEmbers.forEach(p => {
+      p.y -= p.vy / H * 60;
+      p.x += p.vx / W * 60;
+      if (p.y < -0.01) { p.y = 1.01; p.x = Math.random(); }
+      if (p.x < -0.01) p.x = 1.01;
+      if (p.x > 1.01) p.x = -0.01;
+      ctx.beginPath();
+      ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,195,0,${p.alpha})`;
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function updateAndDrawParticles() {
+    ctx.save();
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= p.drag;
+      p.vy *= p.drag;
+      p.vy += 0.04; // small gravity drift
+      p.alpha -= p.decay;
+
+      if (p.alpha <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawLightningBolts() {
+    for (let i = bolts.length - 1; i >= 0; i--) {
+      const b = bolts[i];
+      b.opacity -= b.decay;
+      if (b.opacity <= 0) { bolts.splice(i, 1); continue; }
+
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Pass 1: Neon bloom glow
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#FFC300';
+      b.segments.forEach(s => {
+        ctx.lineWidth = s.main ? 5.5 : 2.5;
+        ctx.strokeStyle = s.main
+          ? `rgba(255,185,0,${0.2 * b.opacity})`
+          : `rgba(255,185,0,${0.08 * b.opacity})`;
+        ctx.beginPath();
+        ctx.moveTo(s.x1, s.y1);
+        ctx.lineTo(s.x2, s.y2);
+        ctx.stroke();
+      });
+
+      // Pass 2: Hot white-hot core
+      ctx.shadowBlur = 0;
+      b.segments.forEach(s => {
+        ctx.lineWidth = s.main ? 1.4 : 0.65;
+        ctx.strokeStyle = s.main
+          ? `rgba(255,255,255,${0.9 * b.opacity})`
+          : `rgba(255,200,0,${0.5 * b.opacity})`;
+        ctx.beginPath();
+        ctx.moveTo(s.x1, s.y1);
+        ctx.lineTo(s.x2, s.y2);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+  }
+
+  let lastTime = 0;
+  let nextBolt = rnd(150, 450);
+  let elapsed = 0;
+  let canvasAlive = true;
+  let canvasOpacity = 1;
+
+  function animLoop(ts) {
+    if (!canvasAlive) return;
+    const dt = ts - lastTime;
+    lastTime = ts;
+    elapsed += dt;
+
+    ctx.clearRect(0, 0, W, H);
+
+    drawGrid();
+    drawAmbientEmbers();
+    updateAndDrawParticles();
+    drawLightningBolts();
+
+    // Random natural lightning bolt spawning
+    if (elapsed > nextBolt) {
+      const sx = rnd(W * 0.15, W * 0.85);
+      const sy = 0;
+      const ex = sx + rnd(-W * 0.25, W * 0.25);
+      const ey = rnd(H * 0.35, H * 0.8);
+      spawnBolt(sx, sy, ex, ey);
+      nextBolt = elapsed + rnd(200, 650);
+    }
+
+    canvas.style.opacity = canvasOpacity;
+    requestAnimationFrame(animLoop);
+  }
+  requestAnimationFrame(animLoop);
+
+  // Interactive Tap/Touch Lightning strike
+  window.addEventListener('pointerdown', (e) => {
+    if (!canvasAlive) return;
+    const bolt = document.getElementById('bolt-icon');
+    const bRect = bolt.getBoundingClientRect();
+    const ox = bRect.left + bRect.width / 2;
+    const oy = bRect.top + bRect.height;
+    
+    // Spawn lightning from the icon directly to fingertip coordinates
+    spawnBolt(ox, oy - 15, e.clientX, e.clientY, true);
+    spawnSparks(e.clientX, e.clientY, 15, true);
+
+    // Minor fingertip screenshake
+    gsap.fromTo('#center-stage', 
+      { x: () => rnd(-4, 4), y: () => rnd(-4, 4) },
+      { x: 0, y: 0, duration: 0.18, clearProps: 'x,y' }
+    );
+  });
+
+  // ── WORDMARK CHARACTER SPLIT ─────────────────────────────────────────────
+  const word = 'THUNDERBOLD';
+  const wm = document.getElementById('wordmark');
+  const chars = [];
+  word.split('').forEach(ch => {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.textContent = ch;
+    wm.appendChild(span);
+    chars.push(span);
+  });
+
+  // ── GSAP CINEMATIC TIMELINE ──────────────────────────────────────────────
+  const tl = gsap.timeline({ onComplete: () => {
+    document.getElementById('tb-loader').style.display = 'none';
+    document.dispatchEvent(new CustomEvent('thunderbold:loaderDone'));
+  }});
+
+  // t=0.00 — Bolt icon zoom-in & blur fade
+  tl.to('#bolt-icon', {
+    opacity: 1,
+    filter: 'blur(0px) drop-shadow(0 0 0px transparent)',
+    scale: 1,
+    y: 0,
+    duration: 0.5,
+    ease: 'back.out(1.5)'
+  }, 0);
+
+  // t=0.55 — Charge up glow
+  tl.to('#bolt-icon', {
+    filter: 'blur(0px) drop-shadow(0 0 6px #FFC300) drop-shadow(0 0 16px rgba(255,195,0,0.6))',
+    duration: 0.15,
+    ease: 'power2.in'
+  }, 0.55);
+
+  // t=0.70 — Discharge peak (triggers canvas bolts, screenshake, vignette flash)
+  tl.to('#bolt-icon', {
+    filter: 'blur(0px) drop-shadow(0 0 24px #FFC300) drop-shadow(0 0 50px rgba(255,195,0,0.9))',
+    duration: 0.1,
+    ease: 'power4.out',
+    onStart: triggerIconDischarge
+  }, 0.70);
+
+  // t=0.82 — Glow settle
+  tl.to('#bolt-icon', {
+    filter: 'blur(0px) drop-shadow(0 0 8px rgba(255,195,0,0.45))',
+    duration: 0.38,
+    ease: 'power2.out'
+  }, 0.82);
+
+  // t=0.70 — Reveal wordmark via mask sweep
+  tl.to('#wipe-mask', {
+    xPercent: 155,
+    duration: 0.45,
+    ease: 'power4.out'
+  }, 0.70);
+
+  // t=0.70 — Letter stagger fade
+  tl.to(chars, {
+    opacity: 1,
+    duration: 0.3,
+    stagger: 0.035,
+    ease: 'none'
+  }, 0.70);
+
+  // t=0.70 — Character spark flashes (gold/white flicker)
+  chars.forEach((ch, i) => {
+    if (Math.random() < 0.35) {
+      const delay = 0.70 + i * 0.035 + 0.01;
+      tl.to(ch, { color: '#FFC300', duration: 0.04, ease: 'none' }, delay)
+        .to(ch, { color: '#FFFFFF', duration: 0.08, ease: 'none' }, delay + 0.04);
+    }
+  });
+
+  // t=1.35 — Reveal line expansion
+  const rl = document.getElementById('reveal-line');
+  tl.to(rl, {
+    width: () => document.getElementById('wordmark').offsetWidth,
+    duration: 0.42,
+    ease: 'power4.inOut'
+  }, 1.35);
+
+  // t=1.65 — Reveal line sweep shimmer
+  tl.to(rl, {
+    backgroundPosition: '200% 0',
+    duration: 0.38,
+    ease: 'power2.inOut'
+  }, 1.65);
+
+  // t=1.85 — Reveal line dissolve
+  tl.to(rl, { opacity: 0, duration: 0.4, ease: 'power2.in' }, 1.85);
+
+  // t=1.60 — Tagline fade-in
+  tl.to('#tagline', { opacity: 1, duration: 0.65, ease: 'power2.out' }, 1.60);
+
+  // t=2.30 — Cinematic Exit Warp (stage zooms in, blurs, and dissolves)
+  tl.to('#center-stage', {
+    scale: 1.35,
+    filter: 'blur(20px)',
+    opacity: 0,
+    duration: 0.55,
+    ease: 'power3.in',
+    onStart: () => {
+      document.getElementById('tb-loader').style.pointerEvents = 'none';
+    }
+  }, 2.30);
+
+  // t=2.35 — Canvas fade out
+  tl.to({}, {
+    duration: 0.45,
+    onStart: () => {
+      gsap.to(canvas, { opacity: 0, duration: 0.45 });
+    }
+  }, 2.35);
+
+  // t=2.45 — Split open exit overlay fade
+  tl.to('#exit-mask', { opacity: 1, duration: 0.52, ease: 'power2.in' }, 2.45);
+
+  // t=3.05 — Finish
+  tl.to({}, { duration: 0.05 }, 3.05);
+
+  // ── REDUCED MOTION OVERRIDE ──────────────────────────────────────────────
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    tl.kill();
+    canvasAlive = false;
+    canvas.style.display = 'none';
+    gsap.set('#bolt-icon', { opacity: 1, filter: 'drop-shadow(0 0 8px rgba(255,195,0,0.5))', scale: 1, y: 0 });
+    gsap.set(chars, { opacity: 1 });
+    gsap.set('#tagline', { opacity: 1 });
+    gsap.set('#wipe-mask', { xPercent: 155 });
+    setTimeout(() => {
+      gsap.to('#exit-mask', { opacity: 1, duration: 0.4, onComplete: () => {
+        document.getElementById('tb-loader').style.display = 'none';
+        document.dispatchEvent(new CustomEvent('thunderbold:loaderDone'));
+      }});
+    }, 800);
+  }
+
+})();
+</script>
+</body>
+</html>
