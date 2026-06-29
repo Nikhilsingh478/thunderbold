@@ -487,11 +487,12 @@ export default function SplashScreen() {
             id="wordmark"
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 'clamp(58px, 9vw, 98px)',
-              letterSpacing: '0.3em',
+              fontSize: 'clamp(38px, 8.2vw, 84px)',
+              letterSpacing: '0.15em',
               color: '#FFFFFF',
               textTransform: 'uppercase',
-              WebkitTextStroke: '0.5px rgba(255,255,255,0.25)',
+              WebkitTextStroke: '1.2px #FFFFFF',
+              fontWeight: 800,
               lineHeight: 1,
               whiteSpace: 'nowrap',
               display: 'flex'
