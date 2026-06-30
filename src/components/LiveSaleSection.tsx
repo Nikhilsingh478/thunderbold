@@ -74,20 +74,6 @@ export default function LiveSaleSection() {
           transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           className="mb-10 md:mb-16 text-center"
         >
-          {/* Eyebrow */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-5 flex items-center justify-center gap-3"
-          >
-            <span className="w-6 h-px bg-brass/50 inline-block" />
-            <Zap className="w-3.5 h-3.5 text-brass fill-brass/20" strokeWidth={2.5} />
-            {/* Live Sale */}
-            <Zap className="w-3.5 h-3.5 text-brass fill-brass/20" strokeWidth={2.5} />
-            <span className="w-6 h-px bg-brass/50 inline-block" />
-          </motion.div>
 
           {/* Main heading */}
           <motion.h2
