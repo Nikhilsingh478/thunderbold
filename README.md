@@ -300,7 +300,21 @@ Routes are defined in `src/AppContent.tsx`. Heavy pages use `React.lazy()` — e
 | `/policies/:slug` | `Policies` | Lazy |
 | `*` | `NotFound` | Eager |
 
-### 6.3 State Management
+### 6.3 Responsive Navigation Header
+
+The navigation header (`src/components/Navbar.tsx`) separates layouts into responsive mobile and desktop versions:
+- **Mobile Realignment:** Left-aligned Hamburger menu button, centered enlarged `THUNDERBOLD` brand logo (`text-[1.32rem]`), and right-aligned Search trigger button.
+- **Expanding Menu Portal:** Uses Framer Motion's circular `clip-path` origin (`40px 40px` top-left) for screen coverage transitions.
+- **Desktop Branding:** Desktop size increased to `text-2xl md:text-[1.72rem]` to establish strong visual presence.
+
+### 6.4 Editorial Brand Showcase Section
+
+`src/components/BrandsSection.tsx` is styled as a luxury editorial block:
+- **Radial Accent Glow:** Features radial amber backdrop highlighting (`rgba(184,130,15,0.18)`).
+- **Watermark & Spacing:** Features a massive transparent background outline-stroke watermark and layout heights (`130px` mobile, `250px` desktop) to maintain high-end retail presence.
+- **Grid Layouts:** Custom hover borders and overlay panels responsive across viewport boundaries.
+
+### 6.5 State Management
 
 **Server state** is handled entirely by TanStack Query (`useQuery` / `useMutation`). Covers products, orders, user profiles, reviews, and categories. Provides caching, background refetch, deduplication, and error states.
 
@@ -653,7 +667,13 @@ Route `/admin` loads `src/pages/Admin.tsx` (lazy). Every admin API call requires
 
 Tabs: **Analytics · Orders · Products · Categories · Brands · Reviews**
 
-### 14.2 Analytics Endpoint (`GET /api/admin/analytics`)
+### 14.2 Silent Polling Conflict Resolution
+
+In `Admin.tsx`, a global auto-refresh effect silently polls the backend database every 15 seconds to fetch updated metrics:
+- **Polling Bypass:** When the active tab is `slider`, all silent polls (`silent === true`) bypass fetching the configuration.
+- **UX Benefit:** Prevents background refreshes from overriding local, unsaved configuration inputs before the admin clicks **Save**.
+
+### 14.3 Analytics Endpoint (`GET /api/admin/analytics`)
 
 Query params:
 - `?range=7d` — last 7 days
@@ -771,13 +791,10 @@ will-change: transform, opacity;
 
 ### 16.5 LCP Image Prioritisation
 
-The first slide image in `ThunderboldSlider` is the Largest Contentful Paint element:
+The first slide image in `ThunderboldSlider` and the active slides in `HeroBanner` are identified as the Largest Contentful Paint (LCP) elements:
 
-```jsx
-fetchPriority="high"   // promoted to top of browser fetch queue
-decoding="sync"        // guaranteed to render in first frame, no async decode tick
-loading="eager"        // (already; confirmed)
-```
+- **Fetch & Decoding Optimization:** The active slide and its dummy height-placeholder image in `HeroBanner.tsx` utilize `fetchPriority="high"` and `decoding="sync"` to fetch early and bypass asynchronous decode delays.
+- **Mobile Aspect Sizing:** The banner adjusts to a full-width viewport footprint (`aspect-[4/5] md:aspect-auto`) on mobile viewports to prevent dynamic layout shifts while loading.
 
 All subsequent slide images use `fetchPriority="low"` and `decoding="async"`.
 
@@ -1038,12 +1055,10 @@ The maskable icon has the lightning bolt centered within the 80% safe zone — r
 
 Renders once per browser session (controlled via `sessionStorage`). Total duration ~2.4 seconds:
 
-1. Lightning bolt scales + fades in (spring easing)
-2. Amber glow pulses behind the bolt
-3. "THUNDERBOLD" text expands with letter-spacing animation
-4. "CURATED FASHION" tagline fades in
-5. Amber sweep bar progresses across the bottom
-6. Full screen fades out
+1. **Seamless Entrance Transition:** Background color matched exactly to the PWA manifest color (`#080808`) to prevent layout color flashing when launching on Android wrappers.
+2. **Bolt Animation Crop Fix:** Removed the vertical translation animation from the GSAP timeline of the bolt icon to prevent visual clipping on mobile boundaries. Added static fade-in styles (`opacity: 0` to `opacity: 1` over `0.6s`) and static lightning discharges.
+3. **Refined Branding Weight:** Lowered the wordmark ("THUNDERBOLD") font weight from `800` to `700` and reduced the `-webkit-text-stroke` width from `1.2px` to `0.8px` for a cleaner, high-contrast look.
+4. **Tagline & Glow:** An amber glow pulses behind the bolt, "THUNDERBOLD" letters expand, "CURATED FASHION" fades in, and an amber sweep bar progresses before the screen fades out.
 
 All animations use GPU-composited transforms — no layout thrash. Does not block React Suspense.
 
@@ -1182,6 +1197,9 @@ See `DATABASE.md` for full field-level schemas, indexes, query patterns, integri
 | Race condition on stock | `$gte` guard + compensation rollback on `modifiedCount === 0` |
 | Return on non-delivered order | 400 error with current status in message |
 | Duplicate return request | 409 Conflict with existing return ID + status |
+| Admin configuration reset | Skipping config fetching in background auto-polling loop |
+| Splash native-to-web flash | manifest background and theme colors matched to `#080808` |
+| Bolt icon clipping on mobile | GSAP timelines omit vertical translations to keep inside viewport |
 
 ---
 
