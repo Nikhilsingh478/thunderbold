@@ -194,7 +194,7 @@ const Navbar = () => {
             <Link
               to="/"
               onClick={() => setIsOpen(false)}
-              className="font-display text-lg tracking-[0.28em] text-tb-white decoration-none hover:opacity-90"
+              className="font-display text-[1.32rem] tracking-[0.28em] text-tb-white decoration-none hover:opacity-90"
             >
               <motion.span variants={itemVariants}>
                 THUNDER<span className="brass-text">BOLD</span>
@@ -218,7 +218,7 @@ const Navbar = () => {
         <div className="hidden md:flex w-full items-center justify-between">
           <Link
             to="/"
-            className="font-display text-xl md:text-2xl tracking-[0.28em] text-tb-white z-[110] relative decoration-none hover:opacity-90"
+            className="font-display text-2xl md:text-[1.72rem] tracking-[0.28em] text-tb-white z-[110] relative decoration-none hover:opacity-90"
           >
             <motion.span variants={itemVariants}>
               THUNDER<span className="brass-text">BOLD</span>
