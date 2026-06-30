@@ -14,7 +14,10 @@ export default function BrandsSection() {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         onClick={() => navigate('/brands')}
         aria-label="Browse all brands"
-        className="group w-full block overflow-hidden rounded-xl border border-yellow-500/20 bg-[#FFC300] transition-all duration-500 relative"
+        className="group w-full block overflow-hidden rounded-xl border border-brass/20 transition-all duration-500 relative"
+        style={{
+          background: 'linear-gradient(135deg, #b8941a 0%, #f0d56c 50%, #b8941a 100%)'
+        }}
       >
         <div className="relative h-[130px] md:h-[250px] flex items-center justify-center overflow-hidden">
           {/* Radial light highlight glow */}
@@ -48,7 +51,7 @@ export default function BrandsSection() {
                 DISCOVER OUR <span className="font-bold underline decoration-neutral-950/20">BRANDS</span>
               </h3>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="font-condensed text-[10px] uppercase tracking-[0.2em] text-neutral-850 group-hover:text-black transition-colors duration-300">
+                <span className="font-condensed text-[10px] uppercase tracking-[0.2em] text-neutral-950 font-bold">
                   Explore Collections
                 </span>
                 <ArrowRight className="w-3.5 h-3.5 text-neutral-950 group-hover:translate-x-1.5 transition-transform duration-300" />
