@@ -108,8 +108,8 @@ export default defineConfig(() => ({
         display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
 
         orientation: 'portrait-primary',
-        theme_color: '#0a0a0a',
-        background_color: '#0a0a0a',
+        theme_color: '#080808',
+        background_color: '#080808',
 
         lang: 'en-IN',
         dir: 'ltr',

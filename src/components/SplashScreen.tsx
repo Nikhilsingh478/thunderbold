@@ -293,28 +293,19 @@ export default function SplashScreen() {
       }
     });
 
-    // t=0.00 — Bolt icon entrance
-    tl.to(boltIconRef.current, {
-      opacity: 1,
-      filter: 'blur(0px) drop-shadow(0 0 0px transparent)',
-      scale: 1,
-      y: 0,
-      duration: 0.5,
-      ease: 'back.out(1.4)'
-    }, 0);
-
-    // t=0.55 — Glow build
+    // t=0.15 — Glow build (starting icon is already visible and positioned at translateY(60px))
     tl.to(boltIconRef.current, {
       filter: 'blur(0px) drop-shadow(0 0 5px #FFC300) drop-shadow(0 0 14px rgba(255,195,0,0.55))',
-      duration: 0.15,
+      duration: 0.3,
       ease: 'power2.in'
-    }, 0.55);
+    }, 0.15);
 
-    // t=0.70 — Glow peak (trigger discharges)
+    // t=0.70 — Glow peak & Slide-Up Reveal (moves the bolt icon from translateY(60px) to y: 0)
     tl.to(boltIconRef.current, {
       filter: 'blur(0px) drop-shadow(0 0 22px #FFC300) drop-shadow(0 0 45px rgba(255,195,0,0.9)) drop-shadow(0 0 90px rgba(255,195,0,0.35))',
-      duration: 0.1,
-      ease: 'power4.out',
+      y: 0,
+      duration: 0.45,
+      ease: 'power3.out',
       onStart: triggerIconBolt
     }, 0.70);
 
@@ -472,9 +463,8 @@ export default function SplashScreen() {
             height: '72px',
             marginBottom: '20px',
             willChange: 'transform, opacity, filter',
-            opacity: 0,
-            filter: 'blur(8px) drop-shadow(0 0 0px transparent)',
-            transform: 'scale(0.7) translateY(-10px)',
+            opacity: 1,
+            transform: 'translateY(60px)',
             flexShrink: 0
           }}
         >
