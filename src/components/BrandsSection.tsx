@@ -16,7 +16,7 @@ export default function BrandsSection() {
         aria-label="Browse all brands"
         className="group w-full block overflow-hidden rounded-xl border border-brass/20 transition-all duration-500 relative"
         style={{
-          background: 'linear-gradient(135deg, #b8941a 0%, #f0d56c 50%, #b8941a 100%)'
+          background: 'linear-gradient(135deg, #7a6210 0%, #b8941a 50%, #7a6210 100%)'
         }}
       >
         <div className="relative h-[130px] md:h-[250px] flex items-center justify-center overflow-hidden">
