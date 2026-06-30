@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin, Plus, Send } from 'lucide-react';
+import { Shield, X, Instagram, ArrowRight, Mail, Phone, MapPin, Plus } from 'lucide-react';
 import { policyData } from '../lib/policyContent';
 
 type PolicyType = 'returns' | 'privacy' | 'terms' | null;
@@ -103,7 +103,7 @@ const supportLinks = [
 const FooterLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
   <Link
     to={to}
-    className="group inline-flex items-center gap-1.5 font-condensed text-[0.76rem] tracking-[0.12em] uppercase text-white/55 hover:text-white transition-all duration-300"
+    className="group inline-flex items-center gap-1.5 font-condensed text-[0.76rem] tracking-[0.12em] uppercase text-white/75 hover:text-white transition-all duration-300"
   >
     <span className="w-0 group-hover:w-2 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
     {children}
@@ -113,7 +113,7 @@ const FooterLink = ({ to, children }: { to: string; children: React.ReactNode })
 const FooterBtn = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
   <button
     onClick={onClick}
-    className="group inline-flex items-center gap-1.5 font-condensed text-[0.76rem] tracking-[0.12em] uppercase text-white/55 hover:text-white transition-all duration-300 text-left"
+    className="group inline-flex items-center gap-1.5 font-condensed text-[0.76rem] tracking-[0.12em] uppercase text-white/75 hover:text-white transition-all duration-300 text-left"
   >
     <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
     {children}
@@ -122,7 +122,7 @@ const FooterBtn = ({ onClick, children }: { onClick: () => void; children: React
 
 const ColHeading = ({ children }: { children: React.ReactNode }) => (
   <div className="mb-5">
-    <p className="font-condensed text-[0.72rem] tracking-[0.3em] uppercase text-white/90 font-bold">{children}</p>
+    <p className="font-condensed text-[0.72rem] tracking-[0.3em] uppercase text-white/95 font-bold">{children}</p>
     <div className="mt-2 w-5 h-[1.5px] bg-brass/80" />
   </div>
 );
@@ -143,7 +143,7 @@ const SupportList = () => (
     <li>
       <a
         href="mailto:adminthunderbold@gmail.com"
-        className="group inline-flex items-center gap-1.5 font-condensed text-[0.76rem] tracking-[0.12em] uppercase text-white/55 hover:text-white transition-all duration-300"
+        className="group inline-flex items-center gap-1.5 font-condensed text-[0.76rem] tracking-[0.12em] uppercase text-white/75 hover:text-white transition-all duration-300"
       >
         <span className="w-0 group-hover:w-2 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
         Contact Us
@@ -164,7 +164,7 @@ const ContactBlock = () => (
   <address className="not-italic space-y-3.5">
     <div className="flex items-start gap-2.5">
       <MapPin className="w-3.5 h-3.5 text-brass/80 shrink-0 mt-0.5" />
-      <p className="font-condensed text-[0.76rem] tracking-[0.06em] text-white/50 leading-relaxed uppercase">
+      <p className="font-condensed text-[0.76rem] tracking-[0.06em] text-white/70 leading-relaxed uppercase">
         Matrabhumi Circle,<br />
         Near Ring Road,<br />
         Bhusawal – 425201, India
@@ -174,7 +174,7 @@ const ContactBlock = () => (
       <Mail className="w-3.5 h-3.5 text-brass/80 shrink-0" />
       <a
         href="mailto:adminthunderbold@gmail.com"
-        className="font-condensed text-[0.76rem] tracking-[0.06em] text-white/55 hover:text-white transition-colors duration-200 uppercase"
+        className="font-condensed text-[0.76rem] tracking-[0.06em] text-white/75 hover:text-white transition-colors duration-200 uppercase"
       >
         adminthunderbold@gmail.com
       </a>
@@ -183,7 +183,7 @@ const ContactBlock = () => (
       <Phone className="w-3.5 h-3.5 text-brass/80 shrink-0" />
       <a
         href="tel:+919561172681"
-        className="font-condensed text-[0.76rem] tracking-[0.06em] text-white/55 hover:text-white transition-colors duration-200 uppercase"
+        className="font-condensed text-[0.76rem] tracking-[0.06em] text-white/75 hover:text-white transition-colors duration-200 uppercase"
       >
         +91 95611 72681
       </a>
@@ -199,17 +199,17 @@ function MobileAccordion({ title, children }: { title: string; children: React.R
         type="button"
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between py-4.5 group"
+        className="w-full flex items-center justify-between py-5.5 group"
       >
-        <span className="font-condensed text-[0.75rem] tracking-[0.25em] uppercase text-white/90 font-bold">
+        <span className="font-condensed text-[0.80rem] tracking-[0.25em] uppercase text-white/95 font-bold">
           {title}
         </span>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/10 bg-white/[0.02] text-brass"
+          className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/15 bg-white/[0.03] text-brass active:scale-95 transition-transform duration-200"
         >
-          <Plus className="w-3 h-3" />
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
@@ -222,7 +222,7 @@ function MobileAccordion({ title, children }: { title: string; children: React.R
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="pb-4 pt-1">
+            <div className="pb-5 pt-1">
               {children}
             </div>
           </motion.div>
@@ -254,11 +254,11 @@ export default function Footer() {
           
           {/* Segment 1: Brand info & Newsletter */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 pb-12 border-b border-white/[0.05] mb-12">
-            <div className="lg:col-span-6 space-y-4">
+            <div className="lg:col-span-12 space-y-4">
               <span className="font-display text-2xl md:text-3xl tracking-[0.22em] text-tb-white block">
                 THUNDER<span className="brass-text font-bold">BOLD</span>
               </span>
-              <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-sv-dim leading-relaxed max-w-sm">
+              <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-white/65 leading-relaxed max-w-sm">
                 Curated Fashion & Streetwear. Elevating your daily rotation with exclusive designer labels and modern essentials.
               </p>
               
@@ -269,7 +269,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
-                  className="inline-flex items-center justify-center w-8.5 h-8.5 rounded-full border border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all duration-300 group"
+                  className="inline-flex items-center justify-center w-8.5 h-8.5 rounded-full border border-white/10 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all duration-300 group"
                 >
                   <Instagram className="w-3.75 h-3.75 transition-transform duration-300 group-hover:scale-110" />
                 </a>
@@ -278,7 +278,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="WhatsApp"
-                  className="inline-flex items-center justify-center w-8.5 h-8.5 rounded-full border border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all duration-300 group"
+                  className="inline-flex items-center justify-center w-8.5 h-8.5 rounded-full border border-white/10 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all duration-300 group"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -293,6 +293,7 @@ export default function Footer() {
               </div>
             </div>
 
+            {/* Commented out newsletter form for future releases
             <div className="lg:col-span-6 space-y-4">
               <p className="font-condensed text-[0.74rem] uppercase tracking-[0.25em] text-brass font-bold">
                 Subscribe for exclusive drops
@@ -319,6 +320,7 @@ export default function Footer() {
                 Receive release updates, VIP discounts, and collections news.
               </p>
             </div>
+            */}
           </div>
 
           {/* Segment 2: Navigation Links Grid */}
@@ -363,10 +365,10 @@ export default function Footer() {
           {/* Segment 3: Bottom Bar & Watermark */}
           <div className="border-t border-white/[0.05] py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex flex-col gap-1.5 text-center sm:text-left">
-              <span className="font-condensed text-[0.62rem] tracking-[0.16em] uppercase text-white/35">
+              <span className="font-condensed text-[0.62rem] tracking-[0.16em] uppercase text-white/60">
                 Copyright © 2026 ThunderBold Private Limited. All rights reserved.
               </span>
-              <span className="font-condensed text-[0.58rem] tracking-[0.14em] uppercase text-white/20">
+              <span className="font-condensed text-[0.58rem] tracking-[0.14em] uppercase text-white/45">
                 Designed & Crafted for Premium Streetwear curation
               </span>
             </div>
@@ -375,9 +377,9 @@ export default function Footer() {
             <div className="flex flex-col items-center sm:items-end gap-2.5">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.06] bg-white/[0.015]">
                 <Shield className="w-3.25 h-3.25 text-brass shrink-0" />
-                <span className="font-condensed text-[0.58rem] tracking-[0.16em] uppercase text-white/40">Secure checkout system</span>
+                <span className="font-condensed text-[0.58rem] tracking-[0.16em] uppercase text-white/60">Secure checkout system</span>
               </div>
-              <span className="font-condensed text-[9px] uppercase tracking-[0.12em] text-sv-dim">
+              <span className="font-condensed text-[9px] uppercase tracking-[0.12em] text-white/50">
                 Accepted: Card / UPI / Cash on Delivery
               </span>
             </div>

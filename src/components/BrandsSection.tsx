@@ -51,7 +51,7 @@ export default function BrandsSection() {
                 DISCOVER OUR <span className="brass-text font-bold">BRANDS</span>
               </h3>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="font-condensed text-[10px] uppercase tracking-[0.2em] text-sv-mid group-hover:text-white transition-colors duration-300">
+                <span className="font-condensed text-[10px] uppercase tracking-[0.2em] text-white/65 group-hover:text-white transition-colors duration-300">
                   Explore Collections
                 </span>
                 <ArrowRight className="w-3.5 h-3.5 text-brass group-hover:translate-x-1.5 transition-transform duration-300" />
@@ -66,7 +66,7 @@ export default function BrandsSection() {
               <h3 className="font-display text-3xl md:text-[2.6rem] tracking-[0.2em] uppercase text-tb-white leading-none">
                 DISCOVER OUR <span className="brass-text font-bold">BRANDS</span>
               </h3>
-              <p className="font-condensed text-[0.72rem] tracking-[0.25em] text-sv-mid max-w-md uppercase">
+              <p className="font-condensed text-[0.72rem] tracking-[0.25em] text-white/60 max-w-md uppercase">
                 Browse our unique, hand-selected designer labels
               </p>
               <div className="flex items-center gap-2 mt-2 px-6 py-2.5 rounded-full border border-white/10 bg-white/[0.02] group-hover:border-brass/60 group-hover:bg-brass/[0.03] transition-all duration-300">

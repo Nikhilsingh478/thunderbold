@@ -486,8 +486,8 @@ export default function SplashScreen() {
               letterSpacing: '0.15em',
               color: '#FFFFFF',
               textTransform: 'uppercase',
-              WebkitTextStroke: '1.2px #FFFFFF',
-              fontWeight: 800,
+              WebkitTextStroke: '0.8px #FFFFFF',
+              fontWeight: 700,
               lineHeight: 1,
               whiteSpace: 'nowrap',
               display: 'flex'
