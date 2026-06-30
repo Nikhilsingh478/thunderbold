@@ -3,56 +3,56 @@
 
   <!-- Core pages -->
   <url>
-    <loc>https://thunderboltjeans.vercel.app/</loc>
+    <loc>https://thunderbold.shop/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/about</loc>
+    <loc>https://thunderbold.shop/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/policies</loc>
+    <loc>https://thunderbold.shop/policies</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
 
   <!-- Shop & Collections -->
   <url>
-    <loc>https://thunderboltjeans.vercel.app/brands</loc>
+    <loc>https://thunderbold.shop/brands</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/deals/under-999</loc>
+    <loc>https://thunderbold.shop/deals/under-999</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Category sections -->
   <url>
-    <loc>https://thunderboltjeans.vercel.app/?section=denim</loc>
+    <loc>https://thunderbold.shop/?section=denim</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/?section=tshirts</loc>
+    <loc>https://thunderbold.shop/?section=tshirts</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/?section=shirts</loc>
+    <loc>https://thunderbold.shop/?section=shirts</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/?section=kurtas</loc>
+    <loc>https://thunderbold.shop/?section=kurtas</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://thunderboltjeans.vercel.app/?section=outfits</loc>
+    <loc>https://thunderbold.shop/?section=outfits</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

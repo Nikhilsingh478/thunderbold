@@ -34,4 +34,4 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-Sitemap: https://thunderboltjeans.vercel.app/sitemap.xml
+Sitemap: https://thunderbold.shop/sitemap.xml

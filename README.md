@@ -2,7 +2,7 @@
 
 A full-stack, installable Progressive Web App built for a real retail brand selling curated Indian streetwear. React 18 + Vite frontend, Express/MongoDB backend, Firebase Auth, Firebase Cloud Messaging, and a Workbox service worker.
 
-> **Brand:** Thunderbold · **Market:** India · **Domain:** thunderbolddenim.com · **Payment:** Cash on Delivery only
+> **Brand:** Thunderbold · **Market:** India · **Domain:** thunderbold.shop · **Payment:** Cash on Delivery only
 
 ---
 
@@ -1112,14 +1112,14 @@ Zero-cache on the service worker ensures new deployments propagate immediately.
 
 **Via PWABuilder (web UI):**
 1. Visit [PWABuilder.com](https://www.pwabuilder.com)
-2. Enter production URL: `https://thunderbolddenim.com`
+2. Enter production URL: `https://thunderbold.shop`
 3. Package for stores → Android → Download `.aab`
 4. Upload to Google Play Console
 
 **Via Bubblewrap (CLI):**
 ```bash
 npm install -g @bubblewrap/cli
-bubblewrap init --manifest https://thunderbolddenim.com/manifest.webmanifest
+bubblewrap init --manifest https://thunderbold.shop/manifest.webmanifest
 bubblewrap build
 ```
 

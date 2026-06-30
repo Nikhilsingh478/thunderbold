@@ -35,8 +35,8 @@
 | Attribute          | Value                                                       |
 |--------------------|-------------------------------------------------------------|
 | Brand              | Thunderbold                                                 |
-| Domain             | thunderbolddenim.com                                        |
-| Support email      | support@thunderbolddenim.com                                |
+| Domain             | thunderbold.shop                                            |
+| Support email      | support@thunderbold.shop                                    |
 | Instagram          | @thunderbold.shop                                           |
 | Target market      | India (INR pricing, 6-digit pincodes, 10-digit phones)      |
 | Payment model      | Cash on Delivery (COD) only — no payment gateway            |
