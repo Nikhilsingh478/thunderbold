@@ -976,7 +976,7 @@ export default function Admin() {
       else if (activeTab === 'categories') fetchCategories(silent);
       else if (activeTab === 'reviews') fetchProducts(silent);
       else if (activeTab === 'brands') fetchBrands(silent);
-      else if (activeTab === 'slider') fetchSliderConfig(silent);
+      else if (activeTab === 'slider' && !silent) fetchSliderConfig(silent);
       else if (activeTab === 'returns') fetchReturns(silent);
     };
 
