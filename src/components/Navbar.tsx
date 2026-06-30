@@ -133,11 +133,11 @@ const Navbar = () => {
 
   const menuVariants = {
     closed: {
-      clipPath: 'circle(0% at calc(100% - 40px) 40px)',
+      clipPath: 'circle(0% at 40px 40px)',
       transition: { duration: 0.3, ease: [0.32, 0, 0.67, 0] as [number, number, number, number] },
     },
     open: {
-      clipPath: 'circle(150% at calc(100% - 40px) 40px)',
+      clipPath: 'circle(150% at 40px 40px)',
       transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
     },
   };
@@ -174,169 +174,187 @@ const Navbar = () => {
           scrolled ? 'py-5 bg-[#070707]/90 backdrop-blur-md border-b border-white/5' : 'pt-5 pb-7 bg-transparent'
         }`}
       >
-        <Link
-          to="/"
-          className="font-display text-xl md:text-2xl tracking-[0.28em] text-tb-white z-[110] relative decoration-none hover:opacity-90"
-        >
-          <motion.span variants={itemVariants}>
-            THUNDER<span className="brass-text">BOLD</span>
-          </motion.span>
-        </Link>
-
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
-
-          {/* Search Bar */}
-          <motion.button
-            variants={itemVariants}
-            onClick={() => setIsSearchOpen(true)}
-            aria-label="Open search"
-            className="group flex items-center gap-2.5 px-4 py-2 border border-white/[0.11] hover:border-white/30 rounded-sm bg-white/[0.025] hover:bg-white/[0.05] transition-all duration-300 focus:outline-none w-[196px] xl:w-[228px]"
-          >
-            <Search
-              size={13}
-              strokeWidth={1.8}
-              className="text-sv-mid group-hover:text-white/70 transition-colors duration-300 flex-shrink-0"
-            />
-            <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-sv-dim group-hover:text-white/50 transition-colors duration-300 truncate">
-              Search styles & fits…
-            </span>
-          </motion.button>
-
-          {/* Nav links */}
-          {links.map(link => (
-            <motion.div variants={itemVariants} key={link.name}>
-              <Link
-                to={link.href}
-                className="group font-condensed font-semibold text-[0.72rem] tracking-[0.20em] uppercase text-sv-mid hover:text-white transition-colors duration-300 relative"
-              >
-                {link.name}
-                <span className="absolute -bottom-2 left-0 w-0 h-px bg-brass-bright group-hover:w-full transition-all duration-300 ease-in-out" />
-              </Link>
-            </motion.div>
-          ))}
-
-          {/* Wishlist & Cart */}
-          <motion.div variants={itemVariants} className="flex items-center gap-3">
-            <Link
-              to="/wishlist"
-              className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+        {/* Mobile Layout */}
+        <div className="flex w-full items-center justify-between md:hidden">
+          {/* Hamburger Menu on Left */}
+          <div className="z-[110]">
+            <motion.button
+              variants={itemVariants}
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex flex-col justify-center items-center w-9 h-9 relative focus:outline-none group"
+              aria-label="Toggle menu"
             >
-              <Heart size={20} className="group-hover:scale-110 transition-transform duration-200" />
-              {wishlistItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
-                  {wishlistItemsCount}
-                </span>
-              )}
-            </Link>
+              <span className={`w-6 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? 'rotate-45 translate-y-[1px]' : '-translate-y-[3px] group-hover:bg-brass-bright'}`} />
+              <span className={`w-6 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? '-rotate-45 -translate-y-[1px]' : 'translate-y-[3px] group-hover:bg-brass-bright'}`} />
+            </motion.button>
+          </div>
+
+          {/* Heading Logo in Center */}
+          <div className="absolute left-1/2 -translate-x-1/2 z-[110]">
             <Link
-              to="/cart"
-              className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+              to="/"
+              onClick={() => setIsOpen(false)}
+              className="font-display text-lg tracking-[0.28em] text-tb-white decoration-none hover:opacity-90"
             >
-              <ShoppingCart size={20} className="group-hover:scale-110 transition-transform duration-200" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
-                  {cartItemsCount}
-                </span>
-              )}
+              <motion.span variants={itemVariants}>
+                THUNDER<span className="brass-text">BOLD</span>
+              </motion.span>
             </Link>
-          </motion.div>
+          </div>
 
-          {/* Desktop Auth — stable-width container prevents layout shift */}
-          <motion.div variants={itemVariants} className="relative" ref={userMenuRef}>
-            {authLoading ? (
-              <AuthSkeleton size={32} />
-            ) : user ? (
-              <>
-                <button
-                  onClick={() => setUserMenuOpen(v => !v)}
-                  className="flex items-center gap-2 group"
-                  aria-label="Account menu"
-                >
-                  <div className="w-8 h-8 rounded-full bg-brass/20 border border-brass/40 flex items-center justify-center flex-shrink-0 group-hover:border-brass/70 transition-colors duration-200">
-                    <span className="font-display text-[0.65rem] tracking-wide brass-text">{initials}</span>
-                  </div>
-                  <ChevronDown
-                    size={14}
-                    className={`text-sv-mid transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {userMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute right-0 top-full mt-3 w-52 bg-[#0e0e0e] border border-white/[0.09] rounded-xl shadow-2xl overflow-hidden z-[200]"
-                    >
-                      <div className="px-4 py-3.5 border-b border-white/[0.07]">
-                        <p className="font-body text-xs font-medium text-tb-white truncate">{displayName}</p>
-                        <p className="font-body text-[0.7rem] text-sv-dim truncate mt-0.5">{user.email}</p>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          to="/profile"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-white hover:bg-white/5 transition-all duration-150"
-                        >
-                          <User className="w-3.5 h-3.5 flex-shrink-0" />
-                          My Profile
-                        </Link>
-                        <Link
-                          to="/orders"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-white hover:bg-white/5 transition-all duration-150"
-                        >
-                          <Package className="w-3.5 h-3.5 flex-shrink-0" />
-                          My Orders
-                        </Link>
-                        <div className="h-px bg-white/[0.06] my-1" />
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-red-400 hover:bg-red-400/5 transition-all duration-150"
-                        >
-                          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-                          Logout
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </>
-            ) : (
-              <button
-                onClick={handleLogin}
-                className="text-sm px-4 py-2 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
-              >
-                Login
-              </button>
-            )}
-          </motion.div>
+          {/* Search Icon on Right */}
+          <div className="z-[110] flex items-center">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 text-sv-mid hover:text-white transition-colors duration-200"
+              aria-label="Search"
+            >
+              <Search size={19} />
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Header Right — cart / wishlist / account live in the bottom nav */}
-        <div className="md:hidden flex items-center gap-1 z-[110]">
-          {/* Search */}
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="p-2.5 text-sv-mid hover:text-white transition-colors duration-200"
-            aria-label="Search"
+        {/* Desktop Layout */}
+        <div className="hidden md:flex w-full items-center justify-between">
+          <Link
+            to="/"
+            className="font-display text-xl md:text-2xl tracking-[0.28em] text-tb-white z-[110] relative decoration-none hover:opacity-90"
           >
-            <Search size={19} />
-          </button>
+            <motion.span variants={itemVariants}>
+              THUNDER<span className="brass-text">BOLD</span>
+            </motion.span>
+          </Link>
 
-          {/* Hamburger */}
-          <motion.button
-            variants={itemVariants}
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex flex-col justify-center items-center w-9 h-9 relative focus:outline-none group"
-            aria-label="Toggle menu"
-          >
-            <span className={`w-6 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? 'rotate-45 translate-y-[1px]' : '-translate-y-[3px] group-hover:bg-brass-bright'}`} />
-            <span className={`w-6 h-px bg-white block transition-all duration-300 ease-out origin-center ${isOpen ? '-rotate-45 -translate-y-[1px]' : 'translate-y-[3px] group-hover:bg-brass-bright'}`} />
-          </motion.button>
+          <div className="flex items-center gap-8">
+            {/* Search Bar */}
+            <motion.button
+              variants={itemVariants}
+              onClick={() => setIsSearchOpen(true)}
+              aria-label="Open search"
+              className="group flex items-center gap-2.5 px-4 py-2 border border-white/[0.11] hover:border-white/30 rounded-sm bg-white/[0.025] hover:bg-white/[0.05] transition-all duration-300 focus:outline-none w-[196px] xl:w-[228px]"
+            >
+              <Search
+                size={13}
+                strokeWidth={1.8}
+                className="text-sv-mid group-hover:text-white/70 transition-colors duration-300 flex-shrink-0"
+              />
+              <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-sv-dim group-hover:text-white/50 transition-colors duration-300 truncate">
+                Search styles & fits…
+              </span>
+            </motion.button>
+
+            {/* Nav links */}
+            {links.map(link => (
+              <motion.div variants={itemVariants} key={link.name}>
+                <Link
+                  to={link.href}
+                  className="group font-condensed font-semibold text-[0.72rem] tracking-[0.20em] uppercase text-sv-mid hover:text-white transition-colors duration-300 relative"
+                >
+                  {link.name}
+                  <span className="absolute -bottom-2 left-0 w-0 h-px bg-brass-bright group-hover:w-full transition-all duration-300 ease-in-out" />
+                </Link>
+              </motion.div>
+            ))}
+
+            {/* Wishlist & Cart */}
+            <motion.div variants={itemVariants} className="flex items-center gap-3">
+              <Link
+                to="/wishlist"
+                className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+              >
+                <Heart size={20} className="group-hover:scale-110 transition-transform duration-200" />
+                {wishlistItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
+                    {wishlistItemsCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to="/cart"
+                className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+              >
+                <ShoppingCart size={20} className="group-hover:scale-110 transition-transform duration-200" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-brass text-black text-xs font-bold rounded-full flex items-center justify-center">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </Link>
+            </motion.div>
+
+            {/* Desktop Auth */}
+            <motion.div variants={itemVariants} className="relative" ref={userMenuRef}>
+              {authLoading ? (
+                <AuthSkeleton size={32} />
+              ) : user ? (
+                <>
+                  <button
+                    onClick={() => setUserMenuOpen(v => !v)}
+                    className="flex items-center gap-2 group"
+                    aria-label="Account menu"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-brass/20 border border-brass/40 flex items-center justify-center flex-shrink-0 group-hover:border-brass/70 transition-colors duration-200">
+                      <span className="font-display text-[0.65rem] tracking-wide brass-text">{initials}</span>
+                    </div>
+                    <ChevronDown
+                      size={14}
+                      className={`text-sv-mid transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute right-0 top-full mt-3 w-52 bg-[#0e0e0e] border border-white/[0.09] rounded-xl shadow-2xl overflow-hidden z-[200]"
+                      >
+                        <div className="px-4 py-3.5 border-b border-white/[0.07]">
+                          <p className="font-body text-xs font-medium text-tb-white truncate">{displayName}</p>
+                          <p className="font-body text-[0.7rem] text-sv-dim truncate mt-0.5">{user.email}</p>
+                        </div>
+                        <div className="py-1">
+                          <Link
+                            to="/profile"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-white hover:bg-white/5 transition-all duration-150"
+                          >
+                            <User className="w-3.5 h-3.5 flex-shrink-0" />
+                            My Profile
+                          </Link>
+                          <Link
+                            to="/orders"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-white hover:bg-white/5 transition-all duration-150"
+                          >
+                            <Package className="w-3.5 h-3.5 flex-shrink-0" />
+                            My Orders
+                          </Link>
+                          <div className="h-px bg-white/[0.06] my-1" />
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-red-400 hover:bg-red-400/5 transition-all duration-150"
+                          >
+                            <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+                            Logout
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  className="text-sm px-4 py-2 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
+                >
+                  Login
+                </button>
+              )}
+            </motion.div>
+          </div>
         </div>
       </motion.nav>
 

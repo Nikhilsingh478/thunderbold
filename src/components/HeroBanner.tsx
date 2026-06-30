@@ -92,7 +92,7 @@ export default function HeroBanner() {
   // Matches the exact shape and size of the hero slider to prevent layout shifts.
   if (loading && slides.length === 0) {
     return (
-      <div className="mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0 bg-white/[0.02] animate-pulse h-[150px] sm:h-[180px] md:h-[260px]" />
+      <div className="w-full bg-white/[0.02] animate-pulse aspect-[4/5] md:aspect-auto md:h-[260px]" />
     );
   }
 
@@ -109,14 +109,14 @@ export default function HeroBanner() {
 
   return (
     <div
-      className="relative overflow-hidden mx-3 rounded-sm border border-white/15 md:mx-0 md:rounded-none md:border-0 select-none group/banner"
+      className="relative overflow-hidden w-full select-none group/banner"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       {/* Slides */}
-      <div className="relative w-full h-[150px] md:h-auto md:max-h-[260px]">
+      <div className="relative w-full aspect-[4/5] md:aspect-auto md:h-auto md:max-h-[260px] overflow-hidden">
         <AnimatePresence initial={false} custom={direction} mode="sync">
           <motion.div
             key={current}
@@ -135,6 +135,7 @@ export default function HeroBanner() {
               className="w-full h-full object-cover object-center"
               loading={current === 0 ? 'eager' : 'lazy'}
               decoding="async"
+              fetchPriority={current === 0 ? 'high' : 'low'}
             />
           </motion.div>
         </AnimatePresence>
@@ -144,8 +145,9 @@ export default function HeroBanner() {
           src={slides[0]?.src}
           alt=""
           aria-hidden
-          className="w-full block object-cover object-center h-[150px] md:h-auto md:max-h-[260px] invisible"
+          className="w-full block object-cover object-center aspect-[4/5] md:aspect-auto md:h-auto md:max-h-[260px] invisible"
           loading="eager"
+          fetchPriority="high"
         />
       </div>
 
