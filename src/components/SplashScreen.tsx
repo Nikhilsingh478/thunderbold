@@ -293,74 +293,80 @@ export default function SplashScreen() {
       }
     });
 
-    // t=0.15 — Glow build (starting icon is already visible and positioned at translateY(60px))
+    // t=0.00 — Bolt icon fade-in
+    tl.to(boltIconRef.current, {
+      opacity: 1,
+      duration: 0.6,
+      ease: 'power2.out'
+    }, 0);
+
+    // t=0.60 — Glow build
     tl.to(boltIconRef.current, {
       filter: 'blur(0px) drop-shadow(0 0 5px #FFC300) drop-shadow(0 0 14px rgba(255,195,0,0.55))',
-      duration: 0.3,
+      duration: 0.15,
       ease: 'power2.in'
-    }, 0.15);
+    }, 0.60);
 
-    // t=0.70 — Glow peak & Slide-Up Reveal (moves the bolt icon from translateY(60px) to y: 0)
+    // t=0.75 — Glow peak (trigger discharges)
     tl.to(boltIconRef.current, {
       filter: 'blur(0px) drop-shadow(0 0 22px #FFC300) drop-shadow(0 0 45px rgba(255,195,0,0.9)) drop-shadow(0 0 90px rgba(255,195,0,0.35))',
-      y: 0,
-      duration: 0.45,
-      ease: 'power3.out',
+      duration: 0.1,
+      ease: 'power4.out',
       onStart: triggerIconBolt
-    }, 0.70);
+    }, 0.75);
 
-    // t=0.80 — Glow settle
+    // t=0.85 — Glow settle
     tl.to(boltIconRef.current, {
       filter: 'blur(0px) drop-shadow(0 0 7px rgba(255,195,0,0.45))',
       duration: 0.35,
       ease: 'power2.out'
-    }, 0.80);
+    }, 0.85);
 
-    // t=0.70 — Wipe mask sweep reveal wordmark
+    // t=0.75 — Wipe mask sweep reveal wordmark
     tl.to(wipeMaskRef.current, {
       xPercent: 150,
       duration: 0.42,
       ease: 'power4.out'
-    }, 0.70);
+    }, 0.75);
 
-    // t=0.70 — Char stagger fade
+    // t=0.75 — Char stagger fade
     tl.to(chars, {
       opacity: 1,
       duration: 0.28,
       stagger: 0.032,
       ease: 'none'
-    }, 0.70);
+    }, 0.75);
 
-    // t=0.70 — Character spark flashes (gold/white flicker)
+    // t=0.75 — Character spark flashes (gold/white flicker)
     chars.forEach((ch, i) => {
       if (Math.random() < 0.30) {
-        const delay = 0.70 + i * 0.032 + 0.01;
+        const delay = 0.75 + i * 0.032 + 0.01;
         tl.to(ch, { color: '#FFC300', duration: 0.05, ease: 'none' }, delay)
           .to(ch, { color: '#FFFFFF', duration: 0.07, ease: 'none' }, delay + 0.05);
       }
     });
 
-    // t=1.30 — Line expand
+    // t=1.35 — Line expand
     tl.to(revealLineRef.current, {
       width: () => wordmarkRef.current?.offsetWidth || 280,
       duration: 0.38,
       ease: 'power4.inOut'
-    }, 1.30);
+    }, 1.35);
 
-    // t=1.60 — Shimmer sweep
+    // t=1.65 — Shimmer sweep
     tl.to(revealLineRef.current, {
       backgroundPosition: '200% 0',
       duration: 0.35,
       ease: 'power2.inOut'
-    }, 1.60);
+    }, 1.65);
 
-    // t=1.82 — Fade line
-    tl.to(revealLineRef.current, { opacity: 0, duration: 0.38, ease: 'power2.in' }, 1.82);
+    // t=1.87 — Fade line
+    tl.to(revealLineRef.current, { opacity: 0, duration: 0.38, ease: 'power2.in' }, 1.87);
 
-    // t=1.55 — Tagline fade-in
-    tl.to(taglineRef.current, { opacity: 1, duration: 0.62, ease: 'power2.out' }, 1.55);
+    // t=1.60 — Tagline fade-in
+    tl.to(taglineRef.current, { opacity: 1, duration: 0.62, ease: 'power2.out' }, 1.60);
 
-    // t=2.28 — Center stage exit slide-up
+    // t=2.33 — Center stage exit slide-up
     tl.to(centerStageRef.current, {
       y: -14,
       opacity: 0,
@@ -370,18 +376,18 @@ export default function SplashScreen() {
         const loader = document.getElementById('tb-loader');
         if (loader) loader.style.pointerEvents = 'none';
       }
-    }, 2.28);
+    }, 2.33);
 
-    // t=2.38 — Canvas fade
+    // t=2.43 — Canvas fade
     tl.to({}, {
       duration: 0.45,
       onStart: () => {
         gsap.to(canvas, { opacity: 0, duration: 0.45 });
       }
-    }, 2.38);
+    }, 2.43);
 
-    // t=2.48 — Exit overlay fade
-    tl.to(exitMaskRef.current, { opacity: 1, duration: 0.52, ease: 'power2.in' }, 2.48);
+    // t=2.53 — Exit overlay fade
+    tl.to(exitMaskRef.current, { opacity: 1, duration: 0.52, ease: 'power2.in' }, 2.53);
 
     // Cleanup logic
     return () => {
@@ -463,8 +469,7 @@ export default function SplashScreen() {
             height: '72px',
             marginBottom: '20px',
             willChange: 'transform, opacity, filter',
-            opacity: 1,
-            transform: 'translateY(60px)',
+            opacity: 0,
             flexShrink: 0
           }}
         >
