@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { GridProduct } from '../components/products/ProductGrid';
+import { useSEO } from '../hooks/useSEO';
 
 export default function CategoryView() {
   const { categoryId } = useParams();
@@ -12,6 +13,11 @@ export default function CategoryView() {
   const [categoryProducts, setCategoryProducts] = useState<GridProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryName, setCategoryName] = useState('');
+
+  useSEO({
+    title: categoryName ? `${categoryName} Collection` : "Shop Category",
+    description: categoryName ? `Explore the premium Thunderbold ${categoryName.toLowerCase()} collection. Style that works every day.` : "Explore premium denim, t-shirts, shirts, kurtas, and outfits at Thunderbold.",
+  });
 
   useEffect(() => {
     if (!categoryId) return;

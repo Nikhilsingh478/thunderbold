@@ -4,6 +4,7 @@ import { ArrowRight, Eye, ShieldCheck, Layers, Compass } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import ScrollProgress from '../components/ScrollProgress';
 import CustomCursor from '../components/CustomCursor';
+import { useSEO } from '../hooks/useSEO';
 
 // 3D Tilt Card component for Brand Philosophy
 function InteractiveCard({ title, desc, number }: { title: string; desc: string; number: string }) {
@@ -567,6 +568,11 @@ function ExploreCTA() {
 }
 
 export default function About() {
+  useSEO({
+    title: "About Us",
+    description: "Learn more about Thunderbold's vision to bring premium denim, streetwear, and everyday clothing to fashion-conscious young adults in India.",
+  });
+
   return (
     <div className="noise-overlay min-h-screen bg-void">
       <CustomCursor />

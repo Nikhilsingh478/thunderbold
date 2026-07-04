@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import ScrollProgress from '../components/ScrollProgress';
 import CustomCursor from '../components/CustomCursor';
 import { policyData, type PolicyData } from '../lib/policyContent';
+import { useSEO } from '../hooks/useSEO';
 
 function PolicyAccordion({ policy }: { policy: PolicyData }) {
   const [open, setOpen] = useState(false);
@@ -101,6 +102,11 @@ function PolicyAccordion({ policy }: { policy: PolicyData }) {
 }
 
 export default function Policies() {
+  useSEO({
+    title: "Policies & Terms",
+    description: "Read Thunderbold's customer-first policies, including secure online payments, cash on delivery, easy shipping, and return terms.",
+  });
+
   return (
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
       <CustomCursor />

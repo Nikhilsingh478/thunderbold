@@ -7,6 +7,7 @@ import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { type GridProduct } from '../components/products/ProductGrid';
 import { optimizeCloudinaryUrl } from '../lib/cloudinary';
+import { useSEO } from '../hooks/useSEO';
 
 interface Brand {
   _id: string;
@@ -25,6 +26,11 @@ export default function BrandView() {
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [products, setProducts] = useState<GridProduct[]>([]);
+
+  useSEO({
+    title: brand ? `${brand.name}` : "Brand Collection",
+    description: brand ? `Shop premium denim, streetwear, and streetwear collections by ${brand.name} at Thunderbold.` : "Discover brand collaborations and curated premium streetwear collections at Thunderbold.",
+  });
   const [loading, setLoading] = useState(true);
   const [brandNotFound, setBrandNotFound] = useState(false);
 

@@ -30,31 +30,4 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Category sections -->
-  <url>
-    <loc>https://thunderbold.shop/?section=denim</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://thunderbold.shop/?section=tshirts</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://thunderbold.shop/?section=shirts</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://thunderbold.shop/?section=kurtas</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://thunderbold.shop/?section=outfits</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
 </urlset>

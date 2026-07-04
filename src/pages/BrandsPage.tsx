@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { optimizeCloudinaryUrl } from '../lib/cloudinary';
+import { useSEO } from '../hooks/useSEO';
 
 interface Brand {
   _id: string;
@@ -30,6 +31,11 @@ function BrandSkeleton() {
 }
 
 export default function BrandsPage() {
+  useSEO({
+    title: "All Brands",
+    description: "Discover our premium selection of streetwear, denim, and apparel brands curated specifically for modern India.",
+  });
+
   const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);

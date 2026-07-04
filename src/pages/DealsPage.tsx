@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { GridProduct } from '../components/products/ProductGrid';
+import { useSEO } from '../hooks/useSEO';
 
 /**
  * Configuration map for the deals routes.
@@ -28,6 +29,11 @@ const DEAL_CONFIG: Record<string, { maxPrice: number; heading: string; subheadin
 export default function DealsPage() {
   const { dealKey } = useParams<{ dealKey: string }>();
   const config = dealKey ? DEAL_CONFIG[dealKey] : undefined;
+
+  useSEO({
+    title: config ? config.heading : "Deals & Offers",
+    description: config ? `${config.heading} — ${config.subheading}` : "Find lightning value on denim, streetwear, and clothing collections from Thunderbold.",
+  });
 
   const [products, setProducts] = useState<GridProduct[]>([]);
   const [loading, setLoading] = useState(true);

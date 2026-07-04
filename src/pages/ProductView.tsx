@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
+import { useSEO } from '../hooks/useSEO';
 import PriceDisplay from '../components/PriceDisplay';
 import ProductReviewsSection from '../components/reviews/ProductReviewsSection';
 import { fetchProductById } from '../lib/products';
@@ -40,6 +41,12 @@ export default function ProductView() {
   const [selectedBottomwearSize, setSelectedBottomwearSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [product, setProduct] = useState<any>(null);
+
+  useSEO({
+    title: product ? product.name : "Product Details",
+    description: product ? (product.description || `Buy ${product.name} at Thunderbold — premium curation, honest pricing.`) : "View premium clothing collections, denim, and streetwear details at Thunderbold.",
+  });
+
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
