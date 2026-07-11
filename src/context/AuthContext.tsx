@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { 
   User,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -31,6 +33,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const auth = getFirebaseAuth();
+    
+    // Check for redirect sign-in result when returning from Google login page
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          await syncUserWithDatabase(result.user);
+        }
+      })
+      .catch((error) => {
+        console.error('Google redirect sign-in error:', error);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -47,17 +61,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const loginWithGoogle = async (): Promise<User> => {
-    try {
-      const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
-      const user = result.user;
-      
-      // Sync user with database
-      await syncUserWithDatabase(user);
-      
-      return user;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      throw error;
+    const auth = getFirebaseAuth();
+    
+    // Detect mobile user agents, standalone displays (installed PWAs), or WebViews
+    const ua = navigator.userAgent || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+                      || (window.navigator as any).standalone === true;
+    const isWebView = /Android.*Version\/[\d.]+/.test(ua) || ua.includes('wv');
+
+    if (isMobile || isStandalone || isWebView) {
+      // Use redirect flow on mobile/wrappers to avoid popup blockers and disallowed_useragent errors
+      await signInWithRedirect(auth, googleProvider);
+      // Return a non-resolving promise since the page is redirecting anyway
+      return new Promise(() => {});
+    } else {
+      // Keep standard popup flow on desktop for seamless login UX
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        await syncUserWithDatabase(user);
+        return user;
+      } catch (error) {
+        console.error('Google sign-in error:', error);
+        throw error;
+      }
     }
   };
 
