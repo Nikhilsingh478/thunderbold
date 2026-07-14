@@ -20,6 +20,8 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import About from "./pages/About";
 import CategoryView from "./pages/CategoryView";
+import BrandsPage from "./pages/BrandsPage";
+import BrandView from "./pages/BrandView";
 
 // Lazy loaded (heavy pages — split into separate JS chunks)
 const ProductView = lazy(() => import("./pages/ProductView"));
@@ -30,8 +32,6 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Orders = lazy(() => import("./pages/Orders"));
 const Profile = lazy(() => import("./pages/Profile"));
 const DealsPage = lazy(() => import("./pages/DealsPage"));
-const BrandsPage = lazy(() => import("./pages/BrandsPage"));
-const BrandView = lazy(() => import("./pages/BrandView"));
 const Policies = lazy(() => import("./pages/Policies"));
 
 /**

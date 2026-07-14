@@ -94,7 +94,7 @@ const quickLinks = [
   { label: 'About', to: '/about' },
 ];
 
-const supportLinks = [
+const accountLinks = [
   { label: 'Track Order', to: '/orders' },
   { label: 'My Cart', to: '/cart' },
   { label: 'Wishlist', to: '/wishlist' },
@@ -135,11 +135,16 @@ const QuickLinksList = () => (
   </ul>
 );
 
-const SupportList = () => (
+const AccountList = () => (
   <ul className="space-y-3.5">
-    {supportLinks.map(l => (
+    {accountLinks.map(l => (
       <li key={l.label}><FooterLink to={l.to}>{l.label}</FooterLink></li>
     ))}
+  </ul>
+);
+
+const CustomerServiceList = ({ onSelect }: { onSelect: (p: PolicyType) => void }) => (
+  <ul className="space-y-3.5">
     <li>
       <a
         href="mailto:adminthunderbold@gmail.com"
@@ -149,14 +154,9 @@ const SupportList = () => (
         Contact Us
       </a>
     </li>
-  </ul>
-);
-
-const PoliciesList = ({ onSelect }: { onSelect: (p: PolicyType) => void }) => (
-  <ul className="space-y-3.5">
+    <li><FooterBtn onClick={() => onSelect('returns')}>Returns & Cancellation</FooterBtn></li>
     <li><FooterBtn onClick={() => onSelect('privacy')}>Privacy Policy</FooterBtn></li>
     <li><FooterBtn onClick={() => onSelect('terms')}>Terms & Conditions</FooterBtn></li>
-    <li><FooterBtn onClick={() => onSelect('returns')}>Returns & Cancellation</FooterBtn></li>
   </ul>
 );
 
@@ -303,11 +303,11 @@ export default function Footer() {
               <MobileAccordion title="Quick Links">
                 <QuickLinksList />
               </MobileAccordion>
-              <MobileAccordion title="Support">
-                <SupportList />
+              <MobileAccordion title="My Account">
+                <AccountList />
               </MobileAccordion>
-              <MobileAccordion title="Policies">
-                <PoliciesList onSelect={setActivePolicy} />
+              <MobileAccordion title="Customer Service">
+                <CustomerServiceList onSelect={setActivePolicy} />
               </MobileAccordion>
               <MobileAccordion title="Contact">
                 <ContactBlock />
@@ -329,16 +329,16 @@ export default function Footer() {
               <QuickLinksList />
             </div>
 
-            {/* 3 — Support */}
+            {/* 3 — Account */}
             <div className="lg:col-span-2">
-              <ColHeading>Support</ColHeading>
-              <SupportList />
+              <ColHeading>My Account</ColHeading>
+              <AccountList />
             </div>
 
-            {/* 4 — Policies */}
+            {/* 4 — Customer Service */}
             <div className="lg:col-span-2">
-              <ColHeading>Policies</ColHeading>
-              <PoliciesList onSelect={setActivePolicy} />
+              <ColHeading>Customer Service</ColHeading>
+              <CustomerServiceList onSelect={setActivePolicy} />
             </div>
 
             {/* 5 — Contact */}
