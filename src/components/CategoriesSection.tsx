@@ -14,7 +14,9 @@ interface Category {
   section?: string;
 }
 
-interface ProductTile extends GridProduct {}
+interface ProductTile extends GridProduct {
+  section?: string;
+}
 
 function CategorySkeleton() {
   return (

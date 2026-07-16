@@ -66,7 +66,7 @@ const HeroSection = () => {
             animate={{ scale: 1 }}
             transition={{ duration: 1.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             loading="eager"
-            fetchpriority="high"
+            fetchPriority="high"
           />
           <motion.img
             src={mobileHero}
