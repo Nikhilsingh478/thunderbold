@@ -41,9 +41,25 @@ export default function BrandsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Try to load from session cache first for instant initial display
+    const cached = sessionStorage.getItem('tb_brands_cache');
+    if (cached) {
+      try {
+        setBrands(JSON.parse(cached));
+        setLoading(false);
+      } catch (e) {
+        console.error('Failed to parse cached brands:', e);
+      }
+    }
+
+    // 2. Fetch fresh data in the background (Stale-While-Revalidate)
     fetch('/api/brands')
       .then(r => r.json())
-      .then(d => setBrands(d.brands || []))
+      .then(d => {
+        const freshBrands = d.brands || [];
+        setBrands(freshBrands);
+        sessionStorage.setItem('tb_brands_cache', JSON.stringify(freshBrands));
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

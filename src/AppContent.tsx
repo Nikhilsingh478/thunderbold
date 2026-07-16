@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import AnnouncementBar from "./components/AnnouncementBar";
 import SplashScreen from "./components/SplashScreen";
 import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
+import AppUpdatePrompt from "./components/AppUpdatePrompt";
 import NotificationPermissionPrompt from "./components/NotificationPermissionPrompt";
 import ScrollToTop from "./components/ScrollToTop";
 import BottomNav from "./components/BottomNav";
@@ -162,6 +163,9 @@ const AppContent = () => {
 
       {/* PWA lifecycle toasts — update available + offline ready */}
       <PWAUpdatePrompt />
+
+      {/* Native App Store update prompt */}
+      <AppUpdatePrompt />
 
       {/* Push notification permission prompt — shown 3s after first login */}
       <NotificationPermissionPrompt />
