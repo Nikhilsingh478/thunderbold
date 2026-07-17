@@ -7,6 +7,11 @@ export default function AppUpdatePrompt() {
   const [playStoreUrl, setPlayStoreUrl] = useState('https://play.google.com/store/apps/details?id=shop.thunderbold.twa');
 
   useEffect(() => {
+    // If the user has already interacted with the update prompt in this session, don't show it again
+    if (sessionStorage.getItem('tb_update_dismissed') === 'true') {
+      return;
+    }
+
     // Detect if running inside the Android TWA app wrapper
     const isAndroidTWA = document.referrer.startsWith('android-app://') 
                       || window.location.search.includes('utm_source=twa')
@@ -45,7 +50,13 @@ export default function AppUpdatePrompt() {
 
   const handleUpdate = () => {
     window.open(playStoreUrl, '_blank');
+    sessionStorage.setItem('tb_update_dismissed', 'true'); // Hide for the rest of this session
     setShowPrompt(false); // Hide prompt immediately once the user clicks update
+  };
+
+  const handleDismiss = () => {
+    sessionStorage.setItem('tb_update_dismissed', 'true'); // Hide for the rest of this session
+    setShowPrompt(false);
   };
 
   return (
@@ -57,7 +68,7 @@ export default function AppUpdatePrompt() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowPrompt(false)}
+            onClick={handleDismiss}
             className="absolute inset-0 bg-black/75 backdrop-blur-md"
           />
 
@@ -94,7 +105,7 @@ export default function AppUpdatePrompt() {
                 Update Now
               </button>
               <button
-                onClick={() => setShowPrompt(false)}
+                onClick={handleDismiss}
                 className="w-full py-2.5 rounded-xl font-condensed text-xs tracking-[0.16em] uppercase font-semibold text-zinc-500 hover:text-zinc-300 transition-colors duration-200"
               >
                 Maybe Later

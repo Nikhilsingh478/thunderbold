@@ -118,6 +118,16 @@
           if (canonical) canonical.setAttribute('href', url);
           var ogUrl = document.querySelector('meta[property="og:url"]');
           if (ogUrl) ogUrl.setAttribute('content', url);
+
+          // Parse and cache native app version code and TWA state immediately on load
+          var params = new URLSearchParams(window.location.search);
+          var appVersion = params.get('app_version');
+          if (appVersion) {
+            localStorage.setItem('tb_native_app_version', appVersion);
+          }
+          if (window.location.search.includes('utm_source=twa') || document.referrer.startsWith('android-app://')) {
+            localStorage.setItem('tb_is_twa', 'true');
+          }
         } catch (e) {}
       })();
     </script>
