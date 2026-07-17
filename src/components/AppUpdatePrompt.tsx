@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, X, RefreshCw } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 export default function AppUpdatePrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -45,57 +45,60 @@ export default function AppUpdatePrompt() {
 
   const handleUpdate = () => {
     window.open(playStoreUrl, '_blank');
+    setShowPrompt(false); // Hide prompt immediately once the user clicks update
   };
 
   return (
     <AnimatePresence>
       {showPrompt && (
-        <div className="fixed bottom-20 left-0 right-0 z-[9000] flex justify-center pointer-events-none px-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.97 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-auto w-full max-w-sm"
-            role="alert"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPrompt(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md"
+          />
+
+          {/* Modal Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] p-6 shadow-2xl flex flex-col items-center text-center"
           >
-            <div
-              className="rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl"
-              style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.10)' }}
-            >
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(212,170,48,0.10)' }}
+            {/* Top Accent Icon with Glow */}
+            <div className="relative mb-5 flex items-center justify-center">
+              <div className="absolute inset-0 scale-150 rounded-full bg-brass/10 blur-xl" />
+              <div className="w-12 h-12 rounded-full border border-brass/35 bg-brass/10 flex items-center justify-center z-10">
+                <Zap className="w-6 h-6 text-brass animate-pulse" />
+              </div>
+            </div>
+
+            {/* Typography */}
+            <h3 className="font-display text-xl tracking-[0.12em] uppercase text-white mb-2">
+              New Update Available
+            </h3>
+            <p className="font-condensed text-xs tracking-wide text-zinc-400 max-w-[280px] leading-relaxed mb-6">
+              A newer, faster version of the Thunderbold app is available on the Google Play Store. Update now to enjoy the latest collections and speed optimizations.
+            </p>
+
+            {/* Buttons */}
+            <div className="w-full flex flex-col gap-2.5">
+              <button
+                onClick={handleUpdate}
+                className="w-full py-3 rounded-xl font-condensed text-xs tracking-[0.16em] uppercase font-bold text-black bg-brass hover:bg-yellow-400 active:scale-[0.98] transition-all duration-200 shadow-[0_4px_20px_rgba(212,170,48,0.2)]"
               >
-                <Zap className="w-4 h-4 text-brass" />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-condensed text-xs font-bold tracking-[0.1em] uppercase text-white">
-                  App Update Available
-                </p>
-                <p className="font-condensed text-[0.63rem] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  A new version of the Thunderbold app is available on the Play Store.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  onClick={handleUpdate}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-condensed text-[0.65rem] tracking-[0.12em] uppercase font-bold text-black bg-brass hover:bg-yellow-400 transition-colors duration-200"
-                >
-                  <RefreshCw className="w-3 h-3 animate-spin-slow" />
-                  Update
-                </button>
-                <button
-                  onClick={() => setShowPrompt(false)}
-                  className="p-1 flex-shrink-0 ml-1"
-                  style={{ color: 'rgba(255,255,255,0.35)' }}
-                  aria-label="Dismiss"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
+                Update Now
+              </button>
+              <button
+                onClick={() => setShowPrompt(false)}
+                className="w-full py-2.5 rounded-xl font-condensed text-xs tracking-[0.16em] uppercase font-semibold text-zinc-500 hover:text-zinc-300 transition-colors duration-200"
+              >
+                Maybe Later
+              </button>
             </div>
           </motion.div>
         </div>
