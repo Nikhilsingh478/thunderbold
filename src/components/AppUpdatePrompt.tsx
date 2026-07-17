@@ -12,10 +12,15 @@ export default function AppUpdatePrompt() {
       return;
     }
 
-    // Detect if running inside the Android TWA app wrapper
+    // Detect if running inside the Android TWA app wrapper.
+    // Note: Version 3 was compiled without utm_source=twa in the Start URL,
+    // so we also check display-mode: standalone as a reliable TWA/PWA signal.
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.matchMedia('(display-mode: fullscreen)').matches;
     const isAndroidTWA = document.referrer.startsWith('android-app://') 
                       || window.location.search.includes('utm_source=twa')
-                      || localStorage.getItem('tb_is_twa') === 'true';
+                      || localStorage.getItem('tb_is_twa') === 'true'
+                      || isStandalone;
 
     if (isAndroidTWA) {
       localStorage.setItem('tb_is_twa', 'true');
@@ -30,8 +35,8 @@ export default function AppUpdatePrompt() {
       // Read current local version code. Default to 3 (since Version 3 is currently approved and live)
       const currentVersion = parseInt(localStorage.getItem('tb_native_app_version') || '3', 10);
 
-      // Fetch the latest version code from the server
-      fetch('/app-version.json')
+      // Fetch the latest version code — bypass service worker cache entirely
+      fetch('/app-version.json', { cache: 'no-store' })
         .then((r) => r.json())
         .then((data) => {
           const latestVersion = parseInt(data.latestVersionCode, 10);

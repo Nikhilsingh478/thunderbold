@@ -34,7 +34,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const auth = getFirebaseAuth();
     
-    // Check for redirect sign-in result when returning from Google login page
+    // Process redirect sign-in result first, THEN subscribe to auth state.
+    // This order ensures that when the page returns from Google's redirect,
+    // the user credential is stored before onAuthStateChanged fires.
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
@@ -42,14 +44,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       })
       .catch((error) => {
-        console.error('Google redirect sign-in error:', error);
+        // auth/credential-already-in-use and similar errors are non-fatal — ignore them
+        const code = error?.code || '';
+        if (!code.includes('credential-already-in-use')) {
+          console.error('Google redirect sign-in error:', error);
+        }
+      })
+      .finally(() => {
+        // Only subscribe to auth state AFTER the redirect result has been
+        // processed. This prevents the brief "logged out" flash.
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setLoading(false);
+          if (currentUser) {
+            schedulePrefetchOrders(currentUser);
+          } else {
+            clearOrdersCache();
+          }
+        });
+        // Store unsubscribe so it can be called on cleanup
+        return unsubscribe;
       });
 
+    // Fallback unsubscribe setup in case redirect result resolves after unmount
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-      // Warm the orders cache during idle time so the Orders page opens instantly.
-      // Fully silent on failure — never affects auth flow.
       if (currentUser) {
         schedulePrefetchOrders(currentUser);
       } else {
@@ -63,29 +83,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loginWithGoogle = async (): Promise<User> => {
     const auth = getFirebaseAuth();
     
-    // Detect mobile user agents, standalone displays (installed PWAs), or WebViews
-    const ua = navigator.userAgent || '';
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
-                      || (window.navigator as any).standalone === true;
-    const isWebView = /Android.*Version\/[\d.]+/.test(ua) || ua.includes('wv');
+    // Strategy: Always try popup first.
+    // Popup works correctly in Chrome Custom Tabs (TWA) on most devices.
+    // If the popup is blocked or the browser/WebView explicitly disallows it,
+    // catch that specific error and fall back to the redirect flow.
+    // This avoids the redirect race condition where getRedirectResult() fires
+    // before Firebase has restored its internal session state.
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      await syncUserWithDatabase(user);
+      return user;
+    } catch (error: any) {
+      const code = error?.code || '';
+      // These error codes mean the popup was blocked or explicitly disallowed by the WebView.
+      // In this case only, fall back to the redirect flow.
+      const shouldRedirect = 
+        code === 'auth/popup-blocked' ||
+        code === 'auth/popup-closed-by-user' ||
+        code === 'auth/cancelled-popup-request' ||
+        code === 'auth/operation-not-supported-in-this-environment';
 
-    if (isMobile || isStandalone || isWebView) {
-      // Use redirect flow on mobile/wrappers to avoid popup blockers and disallowed_useragent errors
-      await signInWithRedirect(auth, googleProvider);
-      // Return a non-resolving promise since the page is redirecting anyway
-      return new Promise(() => {});
-    } else {
-      // Keep standard popup flow on desktop for seamless login UX
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-        await syncUserWithDatabase(user);
-        return user;
-      } catch (error) {
-        console.error('Google sign-in error:', error);
-        throw error;
+      if (shouldRedirect) {
+        console.log('[Auth] Popup blocked — falling back to redirect flow');
+        await signInWithRedirect(auth, googleProvider);
+        // Page is navigating away — return a non-resolving promise
+        return new Promise(() => {});
       }
+
+      console.error('Google sign-in error:', error);
+      throw error;
     }
   };
 
