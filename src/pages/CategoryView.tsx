@@ -6,6 +6,7 @@ import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { GridProduct } from '../components/products/ProductGrid';
 import { useSEO } from '../hooks/useSEO';
+import { cachedFetch } from '../lib/apiCache';
 
 export default function CategoryView() {
   const { categoryId } = useParams();
@@ -27,19 +28,15 @@ export default function CategoryView() {
     const load = async () => {
       setLoading(true);
       try {
-        const [catRes, prodRes] = await Promise.all([
-          fetch('/api/categories'),
-          fetch('/api/products'),
+        const [catData, prodData] = await Promise.all([
+          cachedFetch<{ categories?: Array<{ _id: string; name: string }> }>('/api/categories'),
+          cachedFetch<{ products?: Array<{ categoryId?: string } & GridProduct> }>('/api/products'),
         ]);
-        if (!cancelled && catRes.ok) {
-          const catData = await catRes.json();
-          const cat = catData.categories?.find((c: { _id: string; name: string }) => c._id === categoryId);
+        if (!cancelled) {
+          const cat = catData.categories?.find((c) => c._id === categoryId);
           if (cat) setCategoryName(cat.name);
-        }
-        if (!cancelled && prodRes.ok) {
-          const prodData = await prodRes.json();
           const filtered = (prodData.products || []).filter(
-            (p: { categoryId?: string }) => String(p.categoryId) === String(categoryId),
+            (p) => String(p.categoryId) === String(categoryId),
           );
           setCategoryProducts(filtered);
         }
@@ -74,11 +71,15 @@ export default function CategoryView() {
             >
               ← Back to Categories
             </button>
-            <h1 className="font-display text-5xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-              {categoryName}
-            </h1>
+            {categoryName ? (
+              <h1 className="font-display text-5xl md:text-6xl tracking-[0.12em] metal-text uppercase">
+                {categoryName}
+              </h1>
+            ) : (
+              <div className="h-12 md:h-[3.75rem] w-56 md:w-80 bg-white/10 animate-pulse rounded" />
+            )}
             <p className="font-serif font-light text-sv mt-4 text-base tracking-wide">
-              Explore our premium {categoryName.toLowerCase()} collection.
+              Explore our premium {categoryName ? categoryName.toLowerCase() : 'curated'} collection.
             </p>
           </motion.div>
 

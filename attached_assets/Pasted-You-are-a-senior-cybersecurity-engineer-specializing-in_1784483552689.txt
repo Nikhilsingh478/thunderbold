@@ -1,0 +1,144 @@
+You are a senior cybersecurity engineer specializing 
+in Node.js and Express security. Audit only the 
+backend of the Thunderbold codebase.
+
+Read these files only — nothing else:
+- server.js
+- api/_lib/mongodb.js
+- api/_lib/firebaseAdmin.js
+- api/_lib/adminHelper.js
+- api/_lib/rateLimit.js
+- api/_lib/validator.js
+- api/_lib/response.js
+- api/_lib/fcm.js
+- api/orders/index.js
+- api/returns/index.js
+- api/users/index.js
+- api/products/index.js
+- api/cart/index.js
+- api/wishlist/index.js
+- api/reviews/index.js
+- api/notifications/index.js
+- api/admin.js
+- vercel.json
+
+After reading all files audit these areas:
+
+AREA 1 — AUTHENTICATION & AUTHORIZATION
+- Does every POST PUT PATCH DELETE endpoint 
+  verify Firebase token before processing?
+- Are there any endpoints skipping token 
+  verification accidentally?
+- Is checkRevoked: true used in token verification?
+- Can a regular user perform admin actions 
+  by manipulating the request?
+- Check isAdmin() — can it be bypassed?
+- Can user A access or modify user B's orders, 
+  cart, wishlist, reviews, or addresses?
+- Is userId always derived from the verified 
+  token or ever from request body? If from 
+  request body on any endpoint that is critical.
+- Can a user update their own role to admin 
+  via the PATCH /api/users endpoint?
+
+AREA 2 — RATE LIMITING
+- Is rateLimit.js in-memory?
+- On Vercel serverless each invocation is a 
+  fresh process — does this limiter actually 
+  work across invocations?
+- List every endpoint and whether rate limiting 
+  is applied or not.
+- Can X-Forwarded-For be spoofed to bypass it?
+
+AREA 3 — INPUT VALIDATION
+- Is there any NoSQL injection risk — user 
+  input used directly in MongoDB query objects?
+- Check every findOne and find — is the filter 
+  constructed safely?
+- Are MongoDB ObjectIds validated before being 
+  passed to new ObjectId() — invalid strings 
+  cause unhandled exceptions?
+- Can someone order negative quantity items?
+- Is price ever accepted from the client at 
+  checkout — it must always come from database?
+- Where does totalAmount come from — client 
+  or server calculation?
+- Is every request body field explicitly 
+  extracted and validated or is the raw body 
+  spread into database documents?
+
+AREA 4 — BUSINESS LOGIC
+- Can a user place an order with price 0 or 
+  negative by manipulating the request?
+- Is the stock $gte guard truly atomic?
+- Can a user cancel an already-delivered order?
+- Can a user submit multiple returns for the 
+  same order by bypassing idempotency?
+- Can a user submit a review without a 
+  delivered order by manipulating productId?
+- Can a user manipulate the refund amount 
+  during return submission?
+
+AREA 5 — HTTP SECURITY HEADERS
+- List every security header being set in 
+  server.js and vercel.json with exact values.
+- Is Content-Security-Policy set?
+- Is HSTS set?
+- Is Permissions-Policy set?
+- What is Cross-Origin-Resource-Policy set to 
+  and is cross-origin appropriate?
+- Are headers applied to all routes or do 
+  some routes miss them?
+
+AREA 6 — DATA EXPOSURE
+- Is purchasePrice stripped from every public 
+  product endpoint via MongoDB projection?
+- Does analytics endpoint verify admin status?
+- Are FCM tokens ever returned in responses 
+  where they should not be?
+- Is any sensitive data logged to console 
+  that could appear in Vercel logs?
+
+Format your report exactly like this:
+
+# BACKEND SECURITY AUDIT REPORT
+
+## Summary
+Critical: [count]
+High: [count]
+Medium: [count]
+Low: [count]
+
+## Critical Vulnerabilities
+### CRIT-001: [Name]
+File: [exact file]
+Location: [exact function]
+Description: [what the issue is]
+Attack scenario: [how attacker exploits this]
+Impact: [damage to Thunderbold]
+Fix: [exact code change needed]
+
+## High Severity
+[same format]
+
+## Medium Severity
+[same format]
+
+## Low Severity
+[same format]
+
+## Verified Secure
+[things checked and confirmed correct]
+
+## Priority Fix Order
+[all findings ordered by priority with 
+estimated effort]
+
+IMPORTANT RULES:
+- Only report findings from actual code you read
+- Reference exact file names and functions
+- Do not report Firebase client SDK keys as 
+  a vulnerability — they are public by design
+- The in-memory rate limiter on serverless is 
+  a known architectural issue — report it once
+- Be brutally honest — real money is at stake

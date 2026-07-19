@@ -1,0 +1,158 @@
+You are a senior cybersecurity engineer 
+specializing in React and PWA security. 
+Audit only the frontend of the Thunderbold 
+codebase.
+
+Read these files only — nothing else:
+- src/main.tsx
+- src/App.tsx
+- src/AppContent.tsx
+- src/context/AuthContext.tsx
+- src/context/CartContext.tsx
+- src/context/WishlistContext.tsx
+- src/context/NotificationsContext.tsx
+- src/lib/firebase.ts
+- src/lib/firebaseMessaging.ts
+- src/lib/apiCache.ts
+- src/lib/requireAuth.ts
+- src/lib/modalController.ts
+- src/lib/storage.ts
+- src/utils/printInvoice.ts
+- src/pages/Admin.tsx
+- src/pages/Checkout.tsx
+- src/pages/Orders.tsx
+- src/pages/ProductView.tsx
+- src/pages/Cart.tsx
+- index.html
+- public/offline.html
+- vite.config.ts
+- package.json
+
+After reading all files audit these areas:
+
+AREA 1 — FIREBASE FRONTEND SECURITY
+- Are any server-side Firebase credentials 
+  referenced in frontend code?
+- Is FIREBASE_SERVICE_ACCOUNT ever prefixed 
+  with VITE_ anywhere?
+- Are Firebase client SDK keys the only 
+  Firebase credentials in the bundle?
+- Is the VAPID key handled correctly in 
+  NotificationsContext?
+
+AREA 2 — SENSITIVE DATA IN LOCALSTORAGE
+- What data is being stored in localStorage?
+- Are cart prices stored in localStorage — 
+  could a user manipulate them to pay less?
+- Is price always re-fetched from server at 
+  checkout or is localStorage price used?
+- Could localStorage manipulation give a user 
+  elevated access or free products?
+- Is any auth token or sensitive credential 
+  stored in localStorage directly?
+
+AREA 3 — XSS VULNERABILITIES
+- Is dangerouslySetInnerHTML used anywhere 
+  in any React component?
+- Check printInvoice.ts — does it use any 
+  user input in HTML generation unsafely?
+- Is user-generated content like review 
+  comments or product names rendered safely?
+- Check offline.html for any inline scripts 
+  that could be exploited.
+
+AREA 4 — CONTENT SECURITY POLICY
+- Check index.html for any existing CSP 
+  meta tags.
+- List every external domain the app loads 
+  resources from — Firebase, Cloudinary, 
+  Google Fonts, etc.
+- Are there inline scripts in index.html 
+  that would break a strict CSP?
+- Write a recommended CSP header value that 
+  would work for this specific app based on 
+  all external domains you found.
+
+AREA 5 — ADMIN PANEL SECURITY
+- Is the /admin route protected client-side?
+- What happens if someone navigates to /admin 
+  without being admin — is there a client-side 
+  guard?
+- Note: client-side guards are not true security 
+  since API endpoints verify admin server-side — 
+  but assess the UX security of the admin panel.
+- Is there any sensitive data rendered in the 
+  admin panel that could be exposed via DOM 
+  inspection?
+
+AREA 6 — DEPENDENCY VULNERABILITIES
+Read package.json production dependencies:
+- List every dependency and version.
+- Flag any with known CVEs in their listed version.
+- Flag any abandoned packages.
+- Are dependencies using ^ or ~ that could 
+  pull vulnerable versions automatically?
+
+AREA 7 — PWA SPECIFIC SECURITY
+- Check vite.config.ts PWA config — is the 
+  service worker scope properly restricted?
+- Is the offline.html serving any sensitive 
+  content?
+- Could the service worker cache sensitive 
+  API responses — check NetworkOnly config?
+- Is the sw.js served with no-cache headers 
+  in vercel.json?
+
+AREA 8 — OPEN REDIRECT & NAVIGATION
+- Are there any places where a URL from user 
+  input or URL params is used for navigation 
+  without validation?
+- Check any redirect after login — could it 
+  be manipulated to redirect to malicious URL?
+
+Format report exactly like this:
+
+# FRONTEND SECURITY AUDIT REPORT
+
+## Summary
+Critical: [count]
+High: [count]
+Medium: [count]
+Low: [count]
+
+## Critical Vulnerabilities
+### CRIT-001: [Name]
+File: [exact file]
+Location: [exact function or component]
+Description: [what the issue is]
+Attack scenario: [how attacker exploits this]
+Impact: [damage to Thunderbold]
+Fix: [exact code change needed]
+
+## High Severity
+[same format]
+
+## Medium Severity
+[same format]
+
+## Low Severity
+[same format]
+
+## Recommended CSP Header
+[full Content-Security-Policy header value 
+specific to this app's actual external domains]
+
+## Verified Secure
+[things checked and confirmed correct]
+
+## Priority Fix Order
+[all findings ordered by priority with 
+estimated effort]
+
+IMPORTANT RULES:
+- Only report findings from actual code you read
+- Reference exact file names and component names
+- Do not report Firebase client SDK keys as 
+  a vulnerability — public by design
+- Be brutally honest — real COD orders and 
+  customer data at stake

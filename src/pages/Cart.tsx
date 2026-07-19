@@ -75,7 +75,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="noise-overlay min-h-screen flex flex-col bg-void">
+    <div className="noise-overlay min-h-screen flex flex-col bg-void overflow-x-hidden">
       <CustomCursor />
       <ScrollProgress />
       <Navbar />
@@ -180,12 +180,12 @@ export default function Cart() {
                     </div>
 
                     {/* Product Details */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 overflow-hidden">
                       <h3 className="font-condensed font-semibold text-tb-white mb-1 truncate">
                         {item.name}
                       </h3>
-                      <p className="text-sm text-sv-mid mb-2">Size: {item.size}</p>
-                      <p className="font-condensed text-lg text-tb-white">
+                      <p className="text-sm text-sv-mid mb-2 truncate">Size: {item.size}</p>
+                      <p className="font-condensed text-base text-tb-white">
                         {typeof item.price === 'number' 
                           ? `₹${item.price.toFixed(2)}`
                           : item.price
