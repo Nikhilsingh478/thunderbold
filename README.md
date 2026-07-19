@@ -798,20 +798,24 @@ Manifest includes `related_applications` with Play Store IDs `shop.thunderbold.w
 
 **MongoDB Atlas** — database: `thunderbold` — **10 collections**
 
-| Collection | Purpose |
-|---|---|
-| `users` | Profiles, embedded `addresses[]`, `fcmTokens[]` |
-| `products` | Catalogue (standard + outfit variants); `purchasePrice` admin-only |
-| `orders` | Embedded product + address snapshots |
-| `returns` | One per order; includes `upiId` |
-| `cart` | One doc per user; full `items[]` replace |
-| `wishlist` | Same pattern as cart |
-| `reviews` | Soft-deleted; eligibility gated |
-| `categories` | Lookup table |
-| `brands` | Lookup table (`logoUrl` field) |
-| `config` | `_id: "slider"` and `_id: "hero-banner"` |
+| # | Collection | Purpose | Bootstrapped indexes |
+|---|---|---|---|
+| 1 | `users` | Profiles, embedded `addresses[]`, `fcmTokens[]` | none |
+| 2 | `products` | Catalogue (standard + outfit variants); `purchasePrice` admin-only | `{categoryId:1}` |
+| 3 | `orders` | Embedded product + address snapshots | `{userId:1}`, `{createdAt:-1}`, `{clientOrderId:1}` sparse+unique |
+| 4 | `returns` | One per order; includes `upiId` for COD refund | none |
+| 5 | `cart` | One doc per user; full `items[]` replace on write | `{userId:1}` unique |
+| 6 | `wishlist` | Same structure as cart, no `size`/`quantity` | `{userId:1}` unique |
+| 7 | `reviews` | Soft-deleted (`isDeleted`); eligibility gated on delivered order | `{productId,isDeleted,createdAt}`, `{userId,isDeleted}`, `{userId,productId}` |
+| 8 | `categories` | Lookup table; products reference by string `categoryId` | none |
+| 9 | `brands` | Lookup table; field is `logoUrl` not `image` | none |
+| 10 | `config` | Two singleton docs: `_id:"slider"` (4 slides) and `_id:"hero-banner"` (1–3 images) | none |
 
-See `DATABASE.md` for full schemas, indexes, and query patterns.
+**Index bootstrap summary** (`api/_lib/mongodb.js` `ensureIndexes()`): 9 indexes across 5 collections. The remaining 5 collections (`users`, `returns`, `categories`, `brands`, `config`) rely on the default `_id` index only — see `DATABASE.md §4` for recommended additions.
+
+> **Legacy:** An 11th collection `addresses` is used by `api/address/index.js` (unauthenticated, not counted in the 10). The main app stores addresses embedded in `users.addresses[]` instead.
+
+See `DATABASE.md` for full field schemas, query patterns, and migration notes.
 
 ---
 
