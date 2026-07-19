@@ -45,7 +45,7 @@ A full-stack, installable Progressive Web App for a curated Indian streetwear br
 
 | Layer | Technology | Version (package.json) |
 |---|---|---|
-| Frontend | React, TypeScript, Vite, Tailwind CSS | react ^18.3.1, vite ^5.4.21, tailwindcss ^3.4.19 |
+| Frontend | React, TypeScript, Vite, Tailwind CSS | react ^18.3.1, typescript ^5.9.3, vite ^5.4.21, tailwindcss ^3.4.19 |
 | Routing | React Router | react-router-dom ^6.30.4 |
 | Server State | TanStack Query | @tanstack/react-query ^5.101.0 |
 | Animations | Framer Motion, GSAP | framer-motion ^12.40.0, gsap ^3.15.0 |
@@ -58,43 +58,71 @@ A full-stack, installable Progressive Web App for a curated Indian streetwear br
 | Authentication | Firebase Authentication (Google OAuth + Email/Password) | firebase ^10.14.1 |
 | Push Notifications | Firebase Cloud Messaging (FCM) | firebase ^10.14.1, firebase-admin ^13.10.0 |
 | Database | MongoDB Atlas (Native Node.js Driver) | mongodb ^6.21.0 |
-| Backend | Node.js + Express 5 (dev); Vercel Serverless Functions (prod) | express ^5.2.1 |
+| Backend — dev | Node.js + Express 5 (`server.js`, port 3001) | express ^5.2.1 |
+| Backend — prod | Vercel Serverless Functions (`api/*.js`) | @vercel/node ^5.7.5 |
 | Media CDN | Cloudinary (URL transforms client-side) | — |
 | PWA | vite-plugin-pwa + Workbox `generateSW` | vite-plugin-pwa ^1.3.0, workbox-* ^7.4.1 |
 | Build | Vite with manual chunk splitting | @vitejs/plugin-react ^4.7.0 |
+| Testing | Vitest + Testing Library | vitest ^3.2.4 |
 
-> `helmet` is listed in `package.json` but is **not** used — `server.js` sets security headers manually.
+> `helmet` is listed in `package.json` but is **not** used — `server.js` sets security headers manually via plain middleware.
 
 ---
 
 ## 2. Architecture Overview
 
+The project has two distinct runtime environments that share the same `api/` handler files.
+
+### Development
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                          Browser                              │
-│  React 18 SPA (Vite dev server, port 5000)                    │
+│  React 18 SPA — Vite dev server (port 5000)                   │
 │  ├── React Router v6 (client-side routing)                    │
 │  ├── TanStack Query (server state / caching)                  │
 │  ├── Framer Motion + GSAP (animations)                        │
-│  ├── Firebase Auth SDK (lazy getFirebaseAuth() — off critical path) │
+│  ├── Firebase Auth SDK (lazy getFirebaseAuth())               │
 │  ├── Firebase Messaging SDK (FCM push notifications)          │
-│  └── Service Worker (Workbox — offline + asset caching)       │
+│  └── Service Worker disabled (devOptions.enabled: false)      │
 └───────────────────────────┬──────────────────────────────────┘
-                            │  /api/* (proxied in dev via Vite)
+                            │  /api/* proxied by Vite → localhost:3001
 ┌───────────────────────────▼──────────────────────────────────┐
-│              Express API Server (port 3001)                   │
-│  api/*.js — same files deployed as Vercel Serverless Fns      │
-│  ├── Firebase Admin SDK (cryptographic token verification)    │
-│  ├── MongoDB Atlas (getDb() singleton connection pool)        │
-│  ├── FCM sendToUser / sendMulticast (order + broadcast pushes) │
+│         Express dev server  ·  server.js  ·  port 3001        │
+│  Dynamically imports api/*.js handlers on first request       │
+│  ├── Firebase Admin SDK (token verification)                  │
+│  ├── MongoDB Atlas — getDb() singleton (thunderbold DB)       │
+│  ├── FCM sendToUser / sendMulticast                           │
 │  └── In-memory rate limiter (10 req/min per IP)               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Production (Vercel)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                          Browser                              │
+│  React 18 SPA — served from Vercel CDN (dist/)               │
+│  └── Service Worker active (Workbox generateSW)              │
+└──────┬───────────────────────────────┬────────────────────────┘
+       │  Static assets (CDN)          │  /api/* (vercel.json rewrites)
+┌──────▼──────────────────────────────▼────────────────────────┐
+│              Vercel Serverless Functions                       │
+│  api/admin.js · api/orders/index.js · api/users/index.js      │
+│  api/products · api/cart · api/wishlist · api/categories      │
+│  api/brands · api/reviews · api/returns · api/notifications   │
+│  api/address  (12 functions — at Vercel Hobby limit)          │
+│  ├── Firebase Admin SDK (token verification)                  │
+│  ├── MongoDB Atlas — getDb() singleton (thunderbold DB)       │
+│  └── FCM sendToUser / sendMulticast                           │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 **Key design decisions:**
 
 - Frontend uses only relative `/api/...` URLs — no environment-specific URL switching needed
-- Twelve serverless handler files in `api/` stay within Vercel Hobby's 12-function limit via consolidated sub-route patterns
+- `server.js` is a thin Express wrapper that dynamically imports the same `api/*.js` files Vercel uses, keeping dev/prod parity
+- Twelve serverless handler files in `api/` stay within Vercel Hobby's 12-function limit via consolidated sub-route patterns (e.g. `?subpath=create|cancel|manage` on orders)
 - `purchasePrice` (internal cost) is stripped from non-admin product API responses
 - Email (not Firebase UID) is used as `userId` across orders, cart, wishlist, and reviews — stable across account re-linking
 - There is **no** dedicated `GET /api/products/:id` endpoint — single-product pages fetch the full catalogue client-side via `src/lib/products.ts`
@@ -133,73 +161,84 @@ Without `VITE_FIREBASE_VAPID_KEY`, the app works fully but FCM token registratio
 ## 4. Running the App
 
 ```bash
-npm run dev        # Concurrently: node server.js (:3001) + vite (:5000)
-npm run build      # Production build — generates dist/sw.js + manifest + public/version.json
-npm run preview    # Preview production build locally
+# Development
+npm run dev        # Starts both: node server.js (port 3001) + vite (port 5000)
+npm run dev:client # Vite only — if you want to run the frontend without the Express server
+npm run server     # Express API server only (port 3001)
+
+# Production build
+npm run build      # Vite build → dist/; also writes public/version.json
+npm run preview    # Serve the production build locally for inspection
+
+# Quality
+npm test           # Run Vitest test suite once
+npm run lint       # ESLint
 ```
 
-The service worker is **only active in production builds** (`npm run build`). During development, `devOptions.enabled: false` keeps Vite HMR and the API proxy working cleanly.
+The service worker is **only active in production builds** (`npm run build`). During development, `devOptions.enabled: false` in `vite.config.ts` keeps Vite HMR and the `/api` proxy working cleanly without SW interference.
+
+> **Local secrets:** Copy `.env.example` to `.env` and fill in `MONGO_URI` and `FIREBASE_SERVICE_ACCOUNT`. The client Firebase config is currently hardcoded in `src/lib/firebase.ts` — only `VITE_FIREBASE_VAPID_KEY` is read from env.
 
 ---
 
 ## 5. Project Structure
 
 ```
-thunderbolt-brand-world/
-├── api/                              # Express / Vercel Serverless handlers (12 functions)
+thunderbold/
+├── api/                              # Shared handlers: Express (dev) + Vercel Serverless (prod)
 │   ├── _lib/
-│   │   ├── mongodb.js                # Singleton pool + index bootstrap
-│   │   ├── firebaseAdmin.js          # Token verification + Admin Messaging
-│   │   ├── fcm.js                    # sendToUser() + sendMulticast()
-│   │   ├── adminHelper.js            # isAdmin() — DB role + hardcoded allowlist
-│   │   ├── rateLimit.js              # In-memory sliding-window rate limiter
-│   │   ├── response.js               # Standardised JSON response helpers
-│   │   └── validator.js              # Address / phone / pincode validators
+│   │   ├── mongodb.js                # Singleton pool (maxPoolSize 10) + index bootstrap
+│   │   ├── firebaseAdmin.js          # verifyFirebaseToken() + getAdminMessaging()
+│   │   ├── fcm.js                    # sendToUser() + sendMulticast() (500 tokens/batch)
+│   │   ├── adminHelper.js            # isAdmin() — DB role check + hardcoded allowlist
+│   │   ├── rateLimit.js              # In-memory sliding-window, 10 req/min/IP
+│   │   ├── response.js               # successResponse() / errorResponse() helpers
+│   │   └── validator.js              # validateAddress / validatePhone / validatePincode
 │   ├── admin.js                      # Analytics + slider/hero config (subpath routing)
-│   ├── address/index.js              # Legacy standalone addresses collection
+│   ├── address/index.js              # Legacy unauthenticated addresses collection
 │   ├── brands/index.js
 │   ├── cart/index.js
 │   ├── categories/index.js
-│   ├── notifications/index.js        # Broadcast + test-send
-│   ├── orders/index.js               # Orders CRUD + atomic stock management
-│   ├── products/index.js             # Product catalogue (no [id].js file)
+│   ├── notifications/index.js        # broadcast + test-send (subpath routing)
+│   ├── orders/index.js               # CRUD + atomic stock decrement (subpath routing)
+│   ├── products/index.js             # Full catalogue — no individual-product endpoint
 │   ├── returns/index.js
 │   ├── reviews/index.js
-│   ├── users/index.js                # Profile, addresses, FCM tokens
+│   ├── users/index.js                # Profile, embedded addresses, FCM tokens
 │   └── wishlist/index.js
-│
+│                                     # 12 serverless function files (Vercel Hobby limit)
 ├── src/
-│   ├── App.tsx                       # Root provider tree
-│   ├── AppContent.tsx                # BrowserRouter + routes + Suspense
-│   ├── main.tsx                      # Vite entry + PWA SW registration + version polling
+│   ├── App.tsx                       # Root provider tree (Auth → Notifications → Cart → Query)
+│   ├── AppContent.tsx                # BrowserRouter + Routes + Suspense + modals
+│   ├── main.tsx                      # Vite entry · PWA SW registration · version polling
 │   ├── context/
 │   │   ├── AuthContext.tsx
 │   │   ├── CartContext.tsx
 │   │   ├── WishlistContext.tsx
 │   │   └── NotificationsContext.tsx
-│   ├── pages/                        # 16 route-level pages (see §6.2)
-│   ├── components/                 # Shared UI (Navbar, Footer, checkout/, reviews/, auth/, Analytics/, ui/, …)
+│   ├── pages/                        # 15 route-level pages (see §6.2)
+│   ├── components/                   # Navbar, Footer, checkout/, reviews/, auth/, Analytics/, ui/, …
 │   ├── lib/                          # firebase, apiCache, ordersCache, pricing, cloudinary, …
 │   ├── hooks/                        # useSEO, etc.
 │   └── utils/
 │
 ├── public/
-│   ├── icons/                        # 9 PWA icons (72–512px) + maskable variant
-│   ├── screenshots/                  # mobile.png, desktop.png (+ legacy .svg files)
-│   ├── banners/                      # Deal page banner assets
+│   ├── icons/                        # 9 PWA icon files (72 → 512 px + maskable 512 px)
+│   ├── screenshots/                  # mobile.png, desktop.png (PWA install dialog)
+│   ├── banners/                      # Deal page banner images
 │   ├── .well-known/assetlinks.json   # TWA Digital Asset Links
-│   ├── firebase-messaging-sw-part.js # FCM handler injected into Workbox SW
-│   ├── firebase-messaging-sw.js      # Dev-only FCM fallback SW
-│   ├── offline.html
+│   ├── firebase-messaging-sw-part.js # FCM handler imported by Workbox-generated SW
+│   ├── firebase-messaging-sw.js      # Dev-only standalone FCM SW
+│   ├── offline.html                  # Offline fallback page
 │   ├── sitemap.xml
 │   ├── robots.txt
 │   ├── Thunderbold.apk               # Sideload APK
-│   └── version.json                  # Generated at build time by vite.config.ts
+│   └── version.json                  # Written by vite.config.ts at build time
 │
-├── server.js                         # Express server (port 3001)
-├── vite.config.ts
-├── vercel.json
-├── index.html
+├── server.js                         # Express dev server (port 3001) — not deployed
+├── vite.config.ts                    # Vite + PWA + proxy config
+├── vercel.json                       # Serverless rewrites + static cache headers
+├── index.html                        # Vite HTML entry
 ├── tailwind.config.ts
 ├── package.json
 ├── README.md
@@ -697,30 +736,53 @@ PWAUpdatePrompt → fallback toast if custom events fire
 
 ## 24. Deployment — Vercel
 
+Vercel automatically detects every `.js` file directly inside `api/` (and `api/*/index.js`) as a Serverless Function. No additional configuration is required beyond `vercel.json`.
+
 | Setting | Value |
 |---|---|
 | Build Command | `npm run build` |
 | Output Directory | `dist/` |
+| Node.js Runtime | 18.x (Vercel default) |
+| Serverless Functions | `api/` directory — 12 files |
+
+### Environment Variables (Vercel dashboard → Settings → Environment Variables)
+
+| Variable | Required | Notes |
+|---|---|---|
+| `MONGO_URI` | ✅ | MongoDB Atlas connection string |
+| `FIREBASE_SERVICE_ACCOUNT` | ✅ | Stringified service account JSON — server-only, never prefix with `VITE_` |
+| `VITE_FIREBASE_VAPID_KEY` | ✅ | FCM Web Push VAPID public key — enables push token registration |
 
 ### Rewrites (`vercel.json`)
 
-```
-/api/admin/analytics → /api/admin
-/api/slider → /api/admin?subpath=slider
-/api/orders/create|cancel|manage → /api/orders?subpath=:sub
-/api/users/fcm-token → /api/users?subpath=fcm-token
-/api/notifications/broadcast|test-send → /api/notifications?subpath=:sub
-/api/* → serverless functions
-/(.*) → /index.html (SPA fallback)
-```
+Sub-route patterns consolidate multiple logical endpoints into a single function file to stay within the 12-function limit.
 
-### Static Headers
+| Incoming path | Resolved function | Notes |
+|---|---|---|
+| `/api/admin/analytics` | `api/admin.js` | Analytics dashboard |
+| `/api/admin/analytics/:path*` | `api/admin.js?subpath=:path*` | Parameterised analytics |
+| `/api/slider` | `api/admin.js?subpath=slider` | Slider/hero config |
+| `/api/orders/create` | `api/orders/index.js?subpath=create` | |
+| `/api/orders/cancel` | `api/orders/index.js?subpath=cancel` | |
+| `/api/orders/manage` | `api/orders/index.js?subpath=manage` | |
+| `/api/users/fcm-token` | `api/users/index.js?subpath=fcm-token` | |
+| `/api/notifications/broadcast` | `api/notifications/index.js?subpath=broadcast` | |
+| `/api/notifications/test-send` | `api/notifications/index.js?subpath=test-send` | |
+| `/api/returns` | `api/returns/index.js` | Explicit passthrough |
+| `/api/:any*` | Matched function file | Catch-all for products, cart, etc. |
+| `/:any*` | `dist/index.html` | SPA client-side routing fallback |
 
-- `/sw.js`, `/workbox-*.js`, `/index.html`, `/version.json`, `/manifest.webmanifest` → no-cache
-- `/icons/*` → immutable 1-year cache
-- `/screenshots/*` → 1-day cache
+### Cache Headers (`vercel.json`)
 
-12 serverless functions in `api/` — at Vercel Hobby limit.
+| Path | Cache-Control |
+|---|---|
+| `/index.html`, `/version.json`, `/manifest.webmanifest` | `no-cache, no-store, must-revalidate` |
+| `/sw.js`, `/workbox-:hash.js` | `no-cache, no-store, must-revalidate` |
+| `/icons/*` | `public, max-age=31536000, immutable` (1 year) |
+| `/screenshots/*` | `public, max-age=86400` (1 day) |
+| `/.well-known/assetlinks.json` | `public, max-age=3600` (1 hour) |
+
+> The service worker and `version.json` are intentionally never cached so new builds are detected immediately on the next page visit.
 
 ---
 

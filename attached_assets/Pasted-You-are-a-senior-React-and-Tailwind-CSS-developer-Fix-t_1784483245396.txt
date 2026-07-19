@@ -1,0 +1,205 @@
+You are a senior React and Tailwind CSS developer. 
+Fix two specific UI bugs in the Thunderbold PWA. 
+Read the relevant files completely before touching 
+any code.
+
+---
+
+BUG 1 — CART UI OVERFLOWING VIEWPORT ON MOBILE
+
+SYMPTOM:
+When a user opens the cart on mobile, the cart card 
+UI is getting cut from the right side. Content is 
+overflowing the viewport width and is not visible 
+without horizontal scrolling.
+
+FILES TO READ FIRST:
+- src/pages/Cart.tsx
+- Every file inside src/components/checkout/
+- src/components/ui/ (any card or container 
+  components used in cart)
+- tailwind.config.ts
+
+WHAT TO LOOK FOR:
+- Any fixed width values (w-[600px] or similar) 
+  that exceed mobile viewport
+- Any min-w values that are too large for mobile
+- Missing overflow-hidden on parent containers
+- Missing max-w-full on child elements
+- Any flex or grid children that are not properly 
+  constrained
+- Any absolute positioned elements extending 
+  beyond parent bounds
+- Any padding or margin values pushing content 
+  outside viewport
+- Any horizontal scroll being triggered by 
+  a child element wider than 100vw
+
+HOW TO FIX:
+- Ensure the cart page root container has 
+  w-full overflow-x-hidden
+- Ensure every card component inside cart has 
+  max-w-full and w-full where appropriate
+- Replace any fixed pixel widths that exceed 
+  mobile screen width with responsive values
+- Ensure product image in cart item does not 
+  have a fixed width larger than its container
+- Ensure price and product name text wraps 
+  properly and does not push layout
+- Test mentally at 360px viewport width which 
+  is the smallest common Android screen width
+- Do not break the desktop cart layout while 
+  fixing mobile — use responsive Tailwind 
+  prefixes (sm: md: lg:) to separate mobile 
+  and desktop styles
+
+---
+
+BUG 2 — CATEGORY VIEW LAYOUT JITTER ON LOAD
+
+SYMPTOM:
+When a user clicks on any category (t-shirts, 
+jeans, or any other), the page loads with a 
+visible jitter. The sequence looks like this:
+
+1. Back navigation appears
+2. "Explore our premium..." subtitle appears
+3. Then suddenly the category heading (e.g. 
+   "Printed Oversized T-Shirts") jumps in 
+   between the back navigation and subtitle 
+   causing a layout shift and jitter
+
+This is a Cumulative Layout Shift (CLS) issue. 
+Content is rendering in the wrong order because 
+the category name is being fetched asynchronously 
+and arrives after the rest of the UI has already 
+painted.
+
+FILES TO READ FIRST:
+- src/pages/CategoryView.tsx
+- src/lib/apiCache.ts
+- Any hook or context that provides category 
+  data to CategoryView
+
+WHAT TO LOOK FOR:
+- How is the category name being fetched — 
+  is it coming from an API call that resolves 
+  after initial render?
+- Is there a loading state for the category 
+  name specifically?
+- Is the category heading rendering conditionally 
+  based on data availability, causing it to 
+  appear after the subtitle?
+- Is there a skeleton or placeholder for the 
+  heading while data loads?
+- What is the render order of elements — 
+  back navigation, heading, subtitle — and 
+  does that order change between loading 
+  state and loaded state?
+
+HOW TO FIX:
+
+Option A — Reserve space immediately:
+Add a skeleton placeholder for the category 
+heading that occupies the exact same height 
+as the real heading before data arrives. 
+This prevents layout shift because the space 
+is already reserved.
+
+Example approach:
+{categoryName ? (
+  <h1 className="text-2xl font-bold">
+    {categoryName}
+  </h1>
+) : (
+  <div className="h-8 w-48 bg-gray-800 
+    animate-pulse rounded" />
+)}
+
+The skeleton must have the same height as 
+the real heading (h-8 or h-9 or whatever 
+matches the actual heading height in this 
+component) so that the subtitle below it 
+does not shift position when the real 
+heading loads in.
+
+Option B — Use URL params or router state:
+If the category name is available in the 
+route params or was passed via React Router 
+state from the previous page, use that 
+immediately for the initial render instead 
+of waiting for the API response. Then 
+confirm/update with the API response when 
+it arrives. This eliminates the loading 
+delay entirely.
+
+Check if the category slug or name is 
+available in useParams() or useLocation() 
+state before deciding which option to use.
+If the name is in the URL or router state, 
+Option B is cleaner. If not, use Option A.
+
+Option C — If categories are already cached:
+Check if the full categories list is already 
+fetched and cached (via apiCache.ts or 
+TanStack Query) when the user navigates to 
+CategoryView. If the categories list is 
+already in cache, the category name lookup 
+should be synchronous and instant — no 
+loading state needed at all. Check if 
+CategoryView is deriving the category name 
+from a separate API call when it could 
+just be looking it up from the already-cached 
+categories list.
+
+PREFERRED FIX ORDER:
+1. First check Option C — if categories are 
+   cached already, this is a zero-cost fix
+2. If not cached, use Option B if name is 
+   in router state or URL
+3. Fall back to Option A skeleton if neither 
+   C nor B are possible
+
+ADDITIONAL CLS FIXES FOR CATEGORY VIEW:
+- Ensure product grid has a minimum height 
+  or skeleton grid while products load so 
+  the page does not reflow when products arrive
+- Add explicit width and height to product 
+  images in the category grid to prevent 
+  image-load CLS
+- If there is a product count or results 
+  text, ensure it has a placeholder so it 
+  does not cause layout shift
+
+---
+
+RULES FOR BOTH FIXES:
+
+1. Read the actual component files before 
+   writing any fix. Do not assume what the 
+   code looks like.
+
+2. Do not change any functionality — only 
+   fix the visual/layout bugs described.
+
+3. Do not change desktop layouts while fixing 
+   mobile bugs. Use responsive prefixes.
+
+4. Do not introduce new dependencies. Fix 
+   using existing Tailwind classes and React 
+   patterns already in the codebase.
+
+5. For the cart fix — test your mental model 
+   at 360px, 390px, and 414px widths which 
+   cover the most common Indian Android 
+   screen sizes.
+
+6. For the category jitter fix — the goal 
+   is zero visible layout shift. The page 
+   should feel like content loads in place, 
+   not content jumping around after load.
+
+7. After making changes, explicitly state 
+   what you changed in each file and why, 
+   so the changes can be reviewed before 
+   deploying.
