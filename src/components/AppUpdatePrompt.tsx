@@ -32,8 +32,8 @@ export default function AppUpdatePrompt() {
         localStorage.setItem('tb_native_app_version', appVersion);
       }
 
-      // Read current local version code. Default to 3 (since Version 3 is currently approved and live)
-      const currentVersion = parseInt(localStorage.getItem('tb_native_app_version') || '3', 10);
+      // Read current local version code. Default to 4 (since Version 4 was previously built)
+      const currentVersion = parseInt(localStorage.getItem('tb_native_app_version') || '4', 10);
 
       // Fetch the latest version code — bypass service worker cache entirely
       fetch('/app-version.json', { cache: 'no-store' })
