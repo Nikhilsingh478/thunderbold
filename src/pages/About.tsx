@@ -79,8 +79,8 @@ function SectionDivider() {
 function HeroStatement() {
   return (
     <section
-      className="relative min-h-screen flex flex-col justify-end overflow-hidden pb-20 md:pb-28 px-6 md:px-16 lg:px-24"
-      style={{ paddingTop: 'calc(160px + var(--tb-banner-h, 0px))' }}
+      className="relative min-h-[100svh] flex flex-col justify-center md:justify-end overflow-hidden pb-16 md:pb-28 px-6 md:px-16 lg:px-24"
+      style={{ paddingTop: 'calc(120px + var(--tb-banner-h, 0px))' }}
     >
       {/* Noise grain overlay — depth layer */}
       <div
