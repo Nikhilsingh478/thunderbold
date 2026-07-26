@@ -142,7 +142,6 @@ async function handleCreate(req, res) {
 
   const validProducts = products.every((p) =>
     p.productId && p.name &&
-    typeof p.price === "number" &&
     p.image && p.size &&
     typeof p.quantity === "number" && p.quantity > 0
   );
@@ -201,6 +200,17 @@ async function handleCreate(req, res) {
     }
   }
 
+  // Build server-validated products — always use DB prices, name, and image; never trust client
+  const validatedProducts = products.map(item => {
+    const dbProduct = dbProductsMap.get(item.productId);
+    return {
+      ...item,
+      price: dbProduct.price,
+      name: dbProduct.name,
+      image: dbProduct.image,
+    };
+  });
+
   // Sanitize optional gift message — strip HTML tags, trim, limit to 300 chars
   const sanitizedGiftMessage = typeof giftMessage === "string"
     ? giftMessage.replace(/<[^>]*>/g, "").trim().slice(0, 300)
@@ -231,12 +241,12 @@ async function handleCreate(req, res) {
   // Create order
   const order = {
     userId,
-    products,
+    products: validatedProducts,
     address,
     paymentMethod,
     status: "pending",
     createdAt: new Date(),
-    totalAmount: products.reduce((sum, p) => sum + p.price * p.quantity, 0),
+    totalAmount: validatedProducts.reduce((sum, p) => sum + p.price * p.quantity, 0),
     orderNumber,
     ...(clientOrderId ? { clientOrderId } : {}),
     ...(sanitizedGiftMessage ? { giftMessage: sanitizedGiftMessage } : {}),
@@ -263,7 +273,7 @@ async function handleCreate(req, res) {
   const decremented = [];
   let stockError = null;
 
-  for (const item of products) {
+  for (const item of validatedProducts) {
     let productObjectId;
     try { productObjectId = new ObjectId(item.productId); }
     catch { productObjectId = item.productId; }
@@ -341,7 +351,7 @@ async function handleCreate(req, res) {
     return res.status(409).json({ error: stockError });
   }
 
-  const firstProduct = products[0]?.name || "items";
+  const firstProduct = validatedProducts[0]?.name || "items";
   const otherCount = products.length - 1;
   const productDisplay = otherCount > 0 ? `"${firstProduct}" and ${otherCount} other item(s)` : `"${firstProduct}"`;
 

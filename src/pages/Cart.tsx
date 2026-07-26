@@ -52,7 +52,7 @@ export default function Cart() {
         <Navbar />
         
         <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
-          <div className="max-w-[1240px] mx-auto">
+          <div className="max-w-[1240px] mx-auto w-full">
             <div className="animate-pulse">
               <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
               <div className="space-y-4">
@@ -165,7 +165,7 @@ export default function Cart() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex gap-4 p-4 bg-white/5 border border-white/10 rounded-xl"
+                    className="flex gap-4 p-4 bg-white/5 border border-white/10 rounded-xl w-full min-w-0 overflow-hidden"
                   >
                     {/* Product Image */}
                     <div className="w-20 h-20 bg-[#0c0c0c] rounded-lg overflow-hidden flex-shrink-0">
@@ -194,7 +194,7 @@ export default function Cart() {
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2 flex-shrink-0">
                       <div className="flex items-center border border-white/20 rounded-lg">
                         <button
                           onClick={() => handleQuantityChange(item.productId, item.size, item.quantity - 1)}
@@ -236,9 +236,9 @@ export default function Cart() {
                   </h2>
                   
                   <div className="space-y-4 mb-6">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-sv-mid">Subtotal ({getTotalItems()} items)</span>
-                      <span className="text-tb-white font-condensed">
+                    <div className="flex justify-between gap-2 text-sm">
+                      <span className="text-sv-mid flex-shrink-0">Subtotal ({getTotalItems()} items)</span>
+                      <span className="text-tb-white font-condensed text-right">
                         {typeof getTotalPrice() === 'number' 
                           ? `₹${getTotalPrice().toFixed(2)}`
                           : getTotalPrice()
@@ -246,21 +246,21 @@ export default function Cart() {
                       </span>
                     </div>
                     
-                    <div className="flex justify-between text-sm">
-                      <span className="text-sv-mid">Shipping</span>
-                      <span className="text-tb-white font-condensed">Free</span>
+                    <div className="flex justify-between gap-2 text-sm">
+                      <span className="text-sv-mid flex-shrink-0">Shipping</span>
+                      <span className="text-tb-white font-condensed text-right">Free</span>
                     </div>
                     
-                    <div className="flex justify-between text-sm">
-                      <span className="text-sv-mid">Tax</span>
-                      <span className="text-tb-white font-condensed">Calculated at checkout</span>
+                    <div className="flex justify-between gap-2 text-sm">
+                      <span className="text-sv-mid flex-shrink-0">Tax</span>
+                      <span className="text-tb-white font-condensed text-right">Calculated at checkout</span>
                     </div>
                     
                     <div className="h-px bg-white/20 my-4"></div>
                     
-                    <div className="flex justify-between text-lg font-bold">
-                      <span className="text-tb-white">Total</span>
-                      <span className="text-tb-white font-condensed">
+                    <div className="flex justify-between gap-2 text-lg font-bold">
+                      <span className="text-tb-white flex-shrink-0">Total</span>
+                      <span className="text-tb-white font-condensed text-right">
                         {typeof getTotalPrice() === 'number' 
                           ? `₹${getTotalPrice().toFixed(2)}`
                           : getTotalPrice()

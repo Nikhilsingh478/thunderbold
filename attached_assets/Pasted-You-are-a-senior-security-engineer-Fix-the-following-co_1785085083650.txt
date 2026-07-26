@@ -1,0 +1,361 @@
+You are a senior security engineer. Fix the following 
+confirmed security vulnerabilities in the Thunderbold 
+PWA codebase. Read every relevant file completely 
+before touching any code.
+
+---
+
+FIX 1 — CRITICAL: XSS in printInvoice.ts
+
+File to read first: src/utils/printInvoice.ts
+
+The function printInvoice() builds raw HTML via 
+template literals and writes it to a popup window 
+using win.document.write(). User-controlled fields 
+are interpolated without HTML escaping — gift message, 
+address fields, phone number, customer name. A 
+malicious gift message can execute scripts in the 
+same-origin popup and steal admin localStorage data.
+
+Fix — add this helper at the top of the file:
+
+function esc(str?: string | null): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+Then find and replace every user-controlled 
+interpolation in the HTML string:
+- order.giftMessage → esc(order.giftMessage)
+- addr.fullName → esc(addr.fullName)
+- addr.phone → esc(addr.phone)
+- addr.addressLine1, addressLine2, city, state, 
+  pincode → esc() each one
+- item.name → esc(item.name)
+- item.size → esc(item.size)
+- Any other customer-entered field in the template
+
+Read the entire file and apply esc() to every 
+single user-controlled value. Do not miss any.
+
+---
+
+FIX 2 — CRITICAL: Server must re-validate product 
+prices on order creation
+
+Files to read first:
+- api/orders/index.js (the create handler)
+- src/pages/Checkout.tsx
+- src/context/CartContext.tsx
+
+PROBLEM:
+Cart items are stored in localStorage with their 
+price values. At checkout, Checkout.tsx sends these 
+prices directly to the server in the orderProducts 
+array. A user can edit localStorage to set any 
+price including 0 or 1 rupee, place a COD order, 
+and the server records it at the manipulated price.
+This is direct revenue loss on every COD order.
+
+FIX ON THE BACKEND (api/orders/index.js):
+In the order creation handler, after receiving 
+the products array from the client:
+
+1. Extract all productIds from the request
+2. Fetch those products from MongoDB:
+   const productIds = products.map(p => {
+     try { return new ObjectId(p.productId) } 
+     catch { return null }
+   }).filter(Boolean)
+   
+   const dbProducts = await db.collection('products')
+     .find({ _id: { $in: productIds } })
+     .project({ _id: 1, price: 1, name: 1, image: 1 })
+     .toArray()
+   
+   const dbProductMap = new Map(
+     dbProducts.map(p => [p._id.toString(), p])
+   )
+
+3. For each item in the products array, replace 
+   the client-supplied price with the database price:
+   
+   const validatedProducts = []
+   for (const item of products) {
+     const dbProduct = dbProductMap.get(item.productId)
+     if (!dbProduct) {
+       return errorResponse(res, 400, 
+         `Product ${item.productId} not found`)
+     }
+     validatedProducts.push({
+       ...item,
+       price: dbProduct.price,      // ALWAYS from DB
+       name: dbProduct.name,        // from DB
+       image: dbProduct.image,      // from DB
+     })
+   }
+
+4. Use validatedProducts (not the original products 
+   array) for all subsequent operations including 
+   totalAmount calculation and the order document.
+
+5. Recalculate totalAmount server-side:
+   const totalAmount = validatedProducts.reduce(
+     (sum, item) => sum + (dbProduct.price * item.quantity), 
+   0)
+   
+   Use this server-calculated totalAmount, completely 
+   ignoring any totalAmount sent from the client.
+
+FIX ON THE FRONTEND (src/pages/Checkout.tsx):
+Remove price from the orderProducts payload sent 
+to the server. The server no longer uses it:
+
+const orderProducts = cartItems.map(item => ({
+  productId: item.productId || item._id,
+  name: item.name,
+  image: item.image,
+  size: item.size || 'N/A',
+  quantity: item.quantity || 1,
+  topwearSize: item.topwearSize,
+  bottomwearSize: item.bottomwearSize,
+  // price: REMOVED — server fetches from DB
+}))
+
+Also remove totalAmount from the request body 
+if it is being sent — the server calculates it.
+
+---
+
+FIX 3 — HIGH: jwt.decode without verification 
+on users profile endpoints
+
+File to read first: api/users/index.js
+
+PROBLEM:
+The GET, PATCH, and DELETE handlers for user 
+profiles use jwt.decode() which only decodes 
+the token without verifying the signature. 
+This means a user can forge a JWT payload 
+(e.g. with a different email or uid) and 
+access or modify another user's profile, 
+addresses, and settings without a valid 
+Firebase token.
+
+FIX:
+Replace jwt.decode() with verifyFirebaseToken() 
+from api/_lib/firebaseAdmin.js for all three 
+operations — GET profile, PATCH profile, 
+DELETE address.
+
+The verifyFirebaseToken function is already 
+used in other handlers. Import and use it 
+the same way:
+
+// At the top of the handler
+const { verifyFirebaseToken } = require('../_lib/firebaseAdmin')
+
+// In GET/PATCH/DELETE handlers replace:
+const decoded = jwt.decode(token)
+// With:
+const decoded = await verifyFirebaseToken(token)
+
+Make sure to handle the case where 
+verifyFirebaseToken throws — wrap in try/catch 
+and return 401 if it throws.
+
+After this fix the jwt package import may no 
+longer be needed in users/index.js — remove 
+it if that is the case.
+
+---
+
+FIX 4 — HIGH: Remove ADMIN_EMAILS from frontend 
+bundle
+
+Files to read first:
+- src/pages/Admin.tsx
+- api/users/index.js or whichever endpoint 
+  is most appropriate
+
+PROBLEM:
+ADMIN_EMAILS array with real email addresses 
+is hardcoded in Admin.tsx and shipped in the 
+production JavaScript bundle. Anyone can find 
+these email addresses by inspecting the bundle.
+This exposes team members to targeted phishing.
+
+FIX — Part A (Backend):
+Add a lightweight endpoint that returns whether 
+the current authenticated user is an admin.
+The server already has isAdmin() logic.
+
+In api/users/index.js, add handling for 
+GET /api/users/me/admin-status:
+
+if (method === 'GET' && subpath === 'admin-status') {
+  const token = req.headers.authorization?.split(' ')[1]
+  if (!token) return errorResponse(res, 401, 'No token')
+  
+  try {
+    const decoded = await verifyFirebaseToken(token)
+    const db = await getDb()
+    const adminStatus = await isAdmin(decoded.email, db)
+    return successResponse(res, { isAdmin: adminStatus })
+  } catch {
+    return errorResponse(res, 401, 'Invalid token')
+  }
+}
+
+FIX — Part B (Frontend):
+In src/pages/Admin.tsx:
+
+1. Remove the ADMIN_EMAILS constant entirely
+2. Add a state variable: 
+   const [isAdminUser, setIsAdminUser] = useState(false)
+   const [adminCheckLoading, setAdminCheckLoading] = 
+     useState(true)
+3. On mount, after user is available, call the 
+   new endpoint:
+   
+   useEffect(() => {
+     if (!user) return
+     const checkAdmin = async () => {
+       try {
+         const token = await user.getIdToken()
+         const res = await fetch('/api/users/me/admin-status', {
+           headers: { Authorization: `Bearer ${token}` }
+         })
+         const data = await res.json()
+         setIsAdminUser(data.isAdmin || false)
+       } catch {
+         setIsAdminUser(false)
+       } finally {
+         setAdminCheckLoading(false)
+       }
+     }
+     checkAdmin()
+   }, [user])
+
+4. Replace all ADMIN_EMAILS.includes(user?.email) 
+   checks with isAdminUser
+5. Show loading state while adminCheckLoading is true
+6. Add the vercel.json rewrite for the new endpoint 
+   if needed
+
+---
+
+FIX 5 — MEDIUM: Stop persisting full address 
+to localStorage after checkout
+
+File to read first: src/pages/Checkout.tsx
+
+PROBLEM:
+After a successful order, the full delivery 
+address including fullName, phone, addressLine1, 
+city, state, pincode is saved to localStorage 
+indefinitely. Any XSS payload or malicious 
+browser extension can read this PII.
+
+FIX:
+Find the line in handleSubmit() that calls 
+localStorage.setItem with the address data.
+Replace localStorage with sessionStorage:
+
+// Change this:
+localStorage.setItem(STORAGE_KEY, JSON.stringify(address))
+
+// To this:
+sessionStorage.setItem(STORAGE_KEY, JSON.stringify(address))
+
+Also update the corresponding read (loadSavedAddress 
+or similar function) to read from sessionStorage 
+instead of localStorage.
+
+This means the address pre-fill clears when the 
+tab closes instead of persisting indefinitely — 
+acceptable UX trade-off for PII protection.
+
+---
+
+FIX 6 — LOW: Validate FCM orderId before navigation
+
+File to read first:
+src/context/NotificationsContext.tsx
+
+PROBLEM:
+When a push notification arrives with an orderId 
+in the data payload, the code navigates directly 
+to /orders?orderId=${data.orderId} without 
+validating the orderId format. A crafted 
+notification could inject unexpected query params.
+
+FIX:
+Add a MongoDB ObjectId format check before 
+using the orderId:
+
+// Before navigation, add this check:
+const isValidObjectId = /^[a-f0-9]{24}$/i.test(data.orderId)
+if (data.orderId && isValidObjectId) {
+  window.location.href = `/orders?orderId=${data.orderId}`
+} else if (data.link) {
+  window.location.href = data.link
+} else {
+  window.location.href = '/orders'
+}
+
+---
+
+FIX 7 — LOW: Remove user-scalable=no from viewport
+
+File to read first: index.html
+
+PROBLEM:
+The viewport meta tag contains 
+maximum-scale=1.0, user-scalable=no which 
+prevents users from zooming. This fails 
+WCAG 1.4.4 accessibility requirements.
+
+FIX:
+Find the viewport meta tag and remove 
+maximum-scale=1.0 and user-scalable=no.
+Keep all other viewport attributes.
+
+Change from:
+width=device-width, initial-scale=1.0, 
+maximum-scale=1.0, user-scalable=no, 
+viewport-fit=cover
+
+Change to:
+width=device-width, initial-scale=1.0, 
+viewport-fit=cover
+
+---
+
+RULES FOR ALL FIXES:
+
+1. Read every file mentioned before writing 
+   any code changes.
+
+2. Make surgical changes only — do not 
+   refactor unrelated code.
+
+3. Do not break any existing functionality.
+
+4. After all fixes, explicitly list every 
+   file you changed and exactly what you 
+   changed in each file.
+
+5. If you find any additional user-controlled 
+   values in printInvoice.ts that need esc(), 
+   apply it — do not miss any interpolation.
+
+6. Test your mental model of the order creation 
+   fix — the final order document must use 
+   database prices not client prices for both 
+   the items array and totalAmount.

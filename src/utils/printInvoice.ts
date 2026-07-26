@@ -32,6 +32,17 @@ export interface PrintableOrder {
   orderNumber?: string;
 }
 
+// HTML-escape every user-controlled value before interpolating into document.write()
+function esc(str?: string | null): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function formatDate(iso?: string): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -65,10 +76,10 @@ export function printInvoice(order: PrintableOrder): void {
   const itemRows = items.map((item) => `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#111827;">
-        ${item.name ?? '—'}
+        ${esc(item.name) || '—'}
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#6b7280;text-align:center;">
-        ${item.size ?? '—'}
+        ${esc(item.size) || '—'}
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#111827;text-align:center;">
         ${item.quantity ?? 1}
@@ -83,10 +94,10 @@ export function printInvoice(order: PrintableOrder): void {
   `).join('');
 
   const addressLines = [
-    addr.fullName,
-    addr.addressLine1,
-    addr.addressLine2,
-    [addr.city, addr.state, addr.pincode].filter(Boolean).join(', '),
+    esc(addr.fullName),
+    esc(addr.addressLine1),
+    esc(addr.addressLine2),
+    [esc(addr.city), esc(addr.state), esc(addr.pincode)].filter(Boolean).join(', '),
   ].filter(Boolean);
 
   // Gift message block — only rendered when present
@@ -96,7 +107,7 @@ export function printInvoice(order: PrintableOrder): void {
       <p style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#92400e;margin-bottom:8px;">
         Gift / Order Message
       </p>
-      <p style="font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap;margin:0;">${order.giftMessage}</p>
+      <p style="font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap;margin:0;">${esc(order.giftMessage)}</p>
     </div>`
     : '';
 
@@ -277,14 +288,14 @@ export function printInvoice(order: PrintableOrder): void {
         <h3>Order Details</h3>
         <p><strong>Order ID:</strong> ${displayId}</p>
         <p><strong>Date:</strong> ${formatDate(order.createdAt)}</p>
-        <p><strong>Payment:</strong> ${order.paymentMethod ?? '—'}</p>
+        <p><strong>Payment:</strong> ${esc(order.paymentMethod) || '—'}</p>
         <p><strong>Status:</strong></p>
-        <span class="status-badge">${status}</span>
+        <span class="status-badge">${esc(status)}</span>
       </div>
       <div class="meta-box">
         <h3>Ship To</h3>
         ${addressLines.map(l => `<p>${l}</p>`).join('')}
-        ${addr.phone ? `<p style="margin-top:6px;font-weight:600;">📞 ${addr.phone}</p>` : ''}
+        ${addr.phone ? `<p style="margin-top:6px;font-weight:600;">📞 ${esc(addr.phone)}</p>` : ''}
       </div>
     </div>
 
@@ -326,7 +337,7 @@ export function printInvoice(order: PrintableOrder): void {
     <div class="footer">
       <p>Thank you for your order!<br /><strong>Thunderbold</strong> — Curated Fashion Store</p>
       <p style="text-align:right;">
-        Customer: <strong>${addr.fullName ?? order.userId ?? '—'}</strong><br />
+        Customer: <strong>${esc(addr.fullName) || esc(order.userId) || '—'}</strong><br />
         Printed on: ${formatDate(new Date().toISOString())}
       </p>
     </div>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover enables edge-to-edge on notched/dynamic-island phones -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- ── PWA / Web App Meta ────────────────────────────────────────────── -->
     <meta name="theme-color" content="#0a0a0a" />
@@ -106,31 +106,7 @@
         #apk-banner { display: none !important; }
       }
     </style>
-    <script>
-      (function() {
-        try {
-          var path = window.location.pathname;
-          var url = 'https://thunderbold.shop' + path;
-          if (url.length > 27 && url.endsWith('/')) {
-            url = url.slice(0, -1);
-          }
-          var canonical = document.querySelector('link[rel="canonical"]');
-          if (canonical) canonical.setAttribute('href', url);
-          var ogUrl = document.querySelector('meta[property="og:url"]');
-          if (ogUrl) ogUrl.setAttribute('content', url);
-
-          // Parse and cache native app version code and TWA state immediately on load
-          var params = new URLSearchParams(window.location.search);
-          var appVersion = params.get('app_version');
-          if (appVersion) {
-            localStorage.setItem('tb_native_app_version', appVersion);
-          }
-          if (window.location.search.includes('utm_source=twa') || document.referrer.startsWith('android-app://')) {
-            localStorage.setItem('tb_is_twa', 'true');
-          }
-        } catch (e) {}
-      })();
-    </script>
+    <script src="/canonical-init.js"></script>
   </head>
 
   <body>
@@ -151,29 +127,9 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Download Our App
     </a>
-    <script>
-      (function() {
-        var ua = navigator.userAgent || '';
-        var isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                        || window.navigator.standalone === true;
-        var isWebView = isStandalone
-                     || /\bwv\b/i.test(ua)
-                     || /Android.*Version\/[\d.]+ /.test(ua)
-                     || typeof window.Android !== 'undefined';
-        if (isWebView) {
-          var banner = document.getElementById('apk-banner');
-          if (banner) banner.style.display = 'none';
-        }
-      })();
-    </script>
+    <script src="/banner-init.js"></script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
-        });
-      }
-    </script>
+    <script src="/sw-register.js"></script>
   </body>
 </html>

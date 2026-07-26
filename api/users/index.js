@@ -2,15 +2,7 @@ import { getDb } from '../_lib/mongodb.js';
 import { successResponse, errorResponse } from '../_lib/response.js';
 import { validateAddress } from '../_lib/validator.js';
 import { verifyFirebaseToken } from '../_lib/firebaseAdmin.js';
-import jwt from 'jsonwebtoken';
-
-function decodeFirebaseToken(token) {
-  try {
-    return jwt.decode(token);
-  } catch {
-    return null;
-  }
-}
+import { isAdmin } from '../_lib/adminHelper.js';
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -26,8 +18,22 @@ export default async function handler(req, res) {
   const db = await getDb();
   const users = db.collection('users');
 
-  // ─── FCM token sub-routes (/api/users/fcm-token) ────────────────────────────
   const subPath = (req.query && req.query.subpath) || (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '');
+
+  // ─── Admin status check (/api/users/me/admin-status) ────────────────────────
+  if (subPath === 'admin-status') {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
+    try {
+      const decoded = await verifyFirebaseToken(authHeader.split(' ')[1]);
+      const adminStatus = await isAdmin(decoded.email, db);
+      return res.status(200).json(successResponse({ isAdmin: adminStatus }));
+    } catch {
+      return res.status(401).json(errorResponse('Invalid token'));
+    }
+  }
+
+  // ─── FCM token sub-routes (/api/users/fcm-token) ────────────────────────────
   if (subPath === 'fcm-token') {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
@@ -125,8 +131,12 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
-    const decoded = decodeFirebaseToken(authHeader.split(' ')[1]);
-    if (!decoded) return res.status(401).json(errorResponse('Invalid token'));
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(authHeader.split(' ')[1]);
+    } catch {
+      return res.status(401).json(errorResponse('Invalid token'));
+    }
     const uid = decoded.uid || decoded.user_id;
     if (!uid) return res.status(401).json(errorResponse('Invalid token: no uid'));
 
@@ -164,9 +174,13 @@ export default async function handler(req, res) {
     // Otherwise → add address (requires auth)
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
-    const decoded = decodeFirebaseToken(authHeader.split(' ')[1]);
-    if (!decoded) return res.status(401).json(errorResponse('Invalid token'));
-    const uid = decoded.uid || decoded.user_id;
+    let decodedAddr;
+    try {
+      decodedAddr = await verifyFirebaseToken(authHeader.split(' ')[1]);
+    } catch {
+      return res.status(401).json(errorResponse('Invalid token'));
+    }
+    const uid = decodedAddr.uid || decodedAddr.user_id;
     if (!uid) return res.status(401).json(errorResponse('Invalid token: no uid'));
 
     const validation = validateAddress(body);
@@ -209,8 +223,12 @@ export default async function handler(req, res) {
   if (req.method === 'PATCH') {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
-    const decoded = decodeFirebaseToken(authHeader.split(' ')[1]);
-    if (!decoded) return res.status(401).json(errorResponse('Invalid token'));
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(authHeader.split(' ')[1]);
+    } catch {
+      return res.status(401).json(errorResponse('Invalid token'));
+    }
     const uid = decoded.uid || decoded.user_id;
     if (!uid) return res.status(401).json(errorResponse('Invalid token: no uid'));
 
@@ -249,8 +267,12 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
-    const decoded = decodeFirebaseToken(authHeader.split(' ')[1]);
-    if (!decoded) return res.status(401).json(errorResponse('Invalid token'));
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(authHeader.split(' ')[1]);
+    } catch {
+      return res.status(401).json(errorResponse('Invalid token'));
+    }
     const uid = decoded.uid || decoded.user_id;
     if (!uid) return res.status(401).json(errorResponse('Invalid token: no uid'));
 

@@ -1,411 +1,384 @@
-import { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Eye, ShieldCheck, Layers, Compass } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import ScrollProgress from '../components/ScrollProgress';
 import CustomCursor from '../components/CustomCursor';
 import { useSEO } from '../hooks/useSEO';
 
-// 3D Tilt Card component for Brand Philosophy
-function InteractiveCard({ title, desc, number }: { title: string; desc: string; number: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const x = useSpring(0, { stiffness: 120, damping: 25 });
-  const y = useSpring(0, { stiffness: 120, damping: 25 });
+// ─── Animation Variants ────────────────────────────────────────────────────────
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = e.clientX - rect.left - width / 2;
-    const mouseY = e.clientY - rect.top - height / 2;
-    
-    // Smooth tilt feedback
-    x.set((mouseY / (height / 2)) * -12);
-    y.set((mouseX / (width / 2)) * 12);
-  };
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
 
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.8 } },
+};
 
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ rotateX: x, rotateY: y, transformStyle: 'preserve-3d' }}
-      className="relative bg-white/[0.01] border border-white/5 rounded-2xl p-8 md:p-10 transition-all duration-500 hover:bg-white/[0.03] hover:border-brass/35 flex flex-col gap-6 select-none group"
-    >
-      <div 
-        style={{ transform: 'translateZ(30px)' }} 
-        className="font-display text-5xl text-brass/10 group-hover:text-brass/30 transition-colors duration-500"
-      >
-        {number}
-      </div>
-      <div style={{ transform: 'translateZ(40px)' }} className="space-y-3">
-        <h3 className="font-condensed font-bold text-lg md:text-xl uppercase tracking-wider text-white group-hover:text-brass transition-colors duration-300">
-          {title}
-        </h3>
-        <p className="font-body font-light text-sm md:text-base text-sv-mid leading-relaxed">
-          {desc}
-        </p>
-      </div>
-      {/* Subtle hover glow */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-brass/[0.02] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    </motion.div>
-  );
+const slideLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+const slideRight = {
+  hidden: { opacity: 0, x: 40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+const heroStagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.3 } },
+};
+
+const listStagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.15 } },
+};
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+function useInViewOnce(margin = '-100px') {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: margin as Parameters<typeof useInView>[1]['margin'] });
+  return { ref, isInView };
 }
 
-// Parallax Hero Section with high-contrast text reveals
-function PageHero() {
-  const containerRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
-  const yBg = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
-  const yText = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
-  const opacityText = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+// ─── Section 1: Statement Hero ─────────────────────────────────────────────────
 
+function HeroStatement() {
   return (
-    <section
-      ref={containerRef}
-      className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden bg-void pt-[calc(110px+var(--tb-banner-h))] md:pt-[calc(140px+var(--tb-banner-h))] pb-16"
-    >
-      {/* Background Weave texture with smooth dark overlay */}
-      <motion.div style={{ y: yBg }} className="absolute inset-0 w-full h-[120%] pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/75 via-[#080808]/90 to-[#0a0a0a] z-10" />
-        <div 
-          className="absolute inset-0 opacity-[0.12] mix-blend-overlay z-[5]"
-          style={{
-            backgroundImage: "url('/about_raw_weave.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(184,130,15,0.05) 0%, transparent 70%)',
-            zIndex: 6,
-          }}
-        />
-      </motion.div>
+    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+      {/* Noise overlay for depth */}
+      <div className="absolute inset-0 noise-overlay opacity-[0.04] pointer-events-none" />
+      {/* Subtle brass glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(184,148,26,0.05) 0%, transparent 60%)' }}
+      />
 
-      <motion.div
-        style={{ y: yText, opacity: opacityText }}
-        className="relative z-20 text-center px-6 max-w-5xl flex flex-col items-center"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center gap-3 mb-6"
-        >
-          <span className="w-8 h-px bg-brass/30" />
-          <span className="font-condensed text-[0.62rem] md:text-[0.68rem] tracking-[0.45em] uppercase text-brass font-bold">
-            Curated Streetwear &middot; Everyday Essentials
-          </span>
-          <span className="w-8 h-px bg-brass/30" />
-        </motion.div>
-
-        {/* Title */}
-        <h1 className="font-display uppercase leading-[0.8] text-center mb-6 tracking-wide select-none text-white" style={{ fontSize: 'clamp(3rem, 13vw, 9.5rem)' }}>
-          THUNDER⚡BOLD
-        </h1>
-
-        {/* Subtext */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="font-body font-light text-sv-mid max-w-[660px] text-center mb-10 leading-relaxed text-base md:text-lg"
-        >
-          Premium denim, oversized streetwear, daily tees, kurtas, and apparel essentials &mdash; carefully handpicked for style, comfort, and value.
-        </motion.p>
-
+      <div className="max-w-[1200px] w-full">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          initial="hidden"
+          animate="visible"
+          variants={heroStagger}
         >
-          <a
-            href="/#categories"
-            className="inline-flex items-center justify-center px-8 py-4 border border-white/10 bg-white/[0.02] hover:bg-brass hover:text-void hover:border-brass rounded-lg font-condensed text-xs font-bold uppercase tracking-[0.2em] transition-all duration-300 shadow-md hover:shadow-brass/10"
+          {/* Line 1 — outlined ghost */}
+          <motion.h1
+            variants={fadeUp}
+            className="font-display uppercase leading-[0.85] tracking-tight mb-4 select-none"
+            style={{
+              fontSize: 'clamp(2.2rem, 7.5vw, 7.5rem)',
+              color: 'transparent',
+              WebkitTextStroke: '1.5px #f0eeea',
+            }}
           >
-            Explore Collections
-          </a>
-        </motion.div>
-      </motion.div>
+            WE DON&apos;T SELL FASHION.
+          </motion.h1>
 
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-void to-transparent pointer-events-none z-20" />
+          {/* Line 2 — solid white */}
+          <motion.h1
+            variants={fadeUp}
+            className="font-display text-tb-white uppercase leading-[0.85] tracking-tight mb-10 select-none"
+            style={{ fontSize: 'clamp(2.2rem, 7.5vw, 7.5rem)' }}
+          >
+            WE SELL WHAT ACTUALLY WORKS.
+          </motion.h1>
+
+          {/* Brass subline */}
+          <motion.p
+            variants={fadeUp}
+            className="font-condensed text-brass text-sm md:text-base tracking-[0.15em] max-w-lg"
+          >
+            A curated marketplace for Indian streetwear that earns its place in your wardrobe.
+          </motion.p>
+        </motion.div>
+      </div>
     </section>
   );
 }
 
-// Editorial Manifesto Section: Curation Over Production
-function CurationManifesto() {
-  return (
-    <section className="relative px-6 py-24 md:py-32 bg-void border-b border-white/5">
-      <div className="max-w-[1200px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-          {/* Left Column: Pinned Core Statement */}
-          <div className="lg:col-span-5 lg:sticky lg:top-28 h-fit space-y-6">
-            <div className="font-condensed font-semibold text-[0.64rem] tracking-[0.38em] uppercase text-brass flex items-center gap-3">
-              <span className="w-5 h-px bg-brass-dim" />
-              The Platform
-            </div>
-            <h2 className="font-display text-white uppercase text-4xl md:text-6xl leading-[0.95] tracking-wide">
-              WE DON&apos;T MAKE THE CLOTHES.<br />
-              WE <span className="brass-text">CURATE</span> THEM.
-            </h2>
-            <div className="w-16 h-1 bg-brass/30 rounded" />
-          </div>
+// ─── Section 2: Problem We Solve ──────────────────────────────────────────────
 
-          {/* Right Column: In-depth Brand Narrative */}
-          <div className="lg:col-span-7 space-y-8 text-sv-mid font-body font-light text-base md:text-lg leading-relaxed">
-            <p className="text-white font-medium text-lg md:text-xl leading-relaxed">
-              In a world flooded with cheap, mass-produced fast fashion, finding clothing that actually looks good, fits comfortably, and doesn&apos;t break the bank has become a chore.
+const problems = [
+  { n: '01', text: 'Too many options, zero curation' },
+  { n: '02', text: 'Middlemen inflating prices by 3×' },
+  { n: '03', text: 'Fast fashion pretending to be streetwear' },
+  { n: '04', text: 'No accountability for fabric or fit' },
+];
+
+function ProblemSection() {
+  const { ref: headRef, isInView: headInView } = useInViewOnce('-60px');
+  const { ref: listRef, isInView: listInView } = useInViewOnce('-60px');
+  const { ref: rightRef, isInView: rightInView } = useInViewOnce('-60px');
+
+  return (
+    <section className="py-24 md:py-32 px-6 md:px-16 border-t border-white/[0.06]">
+      <div className="max-w-[1200px] mx-auto">
+
+        {/* Headline */}
+        <motion.h2
+          ref={headRef}
+          initial="hidden"
+          animate={headInView ? 'visible' : 'hidden'}
+          variants={fadeUp}
+          className="font-display text-tb-white uppercase leading-tight mb-16 md:mb-20"
+          style={{ fontSize: 'clamp(2rem, 5.5vw, 5rem)' }}
+        >
+          Indian fashion has<br className="hidden md:block" /> a noise problem.
+        </motion.h2>
+
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
+
+          {/* Left: numbered list */}
+          <motion.div
+            ref={listRef}
+            initial="hidden"
+            animate={listInView ? 'visible' : 'hidden'}
+            variants={listStagger}
+          >
+            {problems.map((p) => (
+              <motion.div
+                key={p.n}
+                variants={slideLeft}
+                className="flex items-start gap-6 py-6 border-b border-white/[0.06] group"
+              >
+                <span
+                  className="font-display text-brass leading-none flex-shrink-0 select-none"
+                  style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}
+                >
+                  {p.n}
+                </span>
+                <span className="font-condensed text-base md:text-lg text-tb-white uppercase tracking-wide leading-snug pt-1 group-hover:text-brass transition-colors duration-300">
+                  {p.text}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Right: statement */}
+          <motion.div
+            ref={rightRef}
+            initial="hidden"
+            animate={rightInView ? 'visible' : 'hidden'}
+            variants={fadeIn}
+            className="flex flex-col justify-center"
+          >
+            <p
+              className="font-display text-tb-white uppercase leading-tight mb-8"
+              style={{ fontSize: 'clamp(1.8rem, 3.5vw, 3rem)' }}
+            >
+              We exist to fix exactly this.
             </p>
-            <p>
-              Thunderbold is a modern curated fashion platform. We search, inspect, filter, and compile collections of denim, streetwear, and everyday essentials so you don&apos;t have to scroll through endless pages of filler.
+            <p className="font-condensed text-sv-mid text-base md:text-lg leading-relaxed">
+              Every piece on Thunderbold passed through our hands before it reached yours. We inspect, reject, and curate — so you don&apos;t have to.
             </p>
-            <p>
-              We operate as a selective marketplace. Our team travels, reviews samples, and partners with makers to handpick individual products that meet our aesthetic guidelines and comfort standards. If a fabric is too stiff, a cut is off, or the pricing doesn&apos;t make sense &mdash; it never enters our catalog.
-            </p>
-            <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-white/10">
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-lg bg-brass/10 border border-brass/20 flex items-center justify-center text-brass shrink-0">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-condensed font-bold text-sm tracking-wider uppercase text-white mb-1">Selective Sourcing</h4>
-                  <p className="font-body text-xs text-sv-dim leading-relaxed">We source individual pieces, not catalog dumps, based on texture, wash, and style.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-lg bg-brass/10 border border-brass/20 flex items-center justify-center text-brass shrink-0">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-condensed font-bold text-sm tracking-wider uppercase text-white mb-1">Zero Filler Pages</h4>
-                  <p className="font-body text-xs text-sv-dim leading-relaxed">Every item in our store is selected for a reason. No algorithms, just curation.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          </motion.div>
+
         </div>
       </div>
     </section>
   );
 }
 
-// Curation Lab / Interactive Quality Inspection Desk
-interface SpecItem {
-  id: string;
-  title: string;
-  image: string;
-  subtitle: string;
-  location: string;
-  intro: string;
-  specs: string[];
-}
+// ─── Section 3: Marketplace Process ───────────────────────────────────────────
 
-function CurationLab() {
-  const [activeSpec, setActiveSpec] = useState<string>('workshop');
+const processSteps = [
+  {
+    label: 'SOURCING',
+    desc: 'We partner directly with Indian workshops and makers. No importers. No brand tax.',
+  },
+  {
+    label: 'INSPECTION',
+    desc: 'Every batch is physically checked for fabric quality, stitching, and sizing accuracy before listing.',
+  },
+  {
+    label: 'CURATION',
+    desc: 'Less than 10% of what we review makes it to the site. We reject more than we list.',
+  },
+  {
+    label: 'LISTING',
+    desc: 'What you see has earned its place. No filler, no sponsored placement.',
+  },
+  {
+    label: 'YOUR WARDROBE',
+    desc: 'Delivered. Worn. Kept.',
+  },
+];
 
-  const items: SpecItem[] = [
-    {
-      id: 'workshop',
-      title: 'The Curation Hub',
-      image: '/about_workshop.png',
-      subtitle: 'SELECTION STUDIO',
-      location: 'BHUSAWAL, MH',
-      intro: 'Our core operations team works from this workspace. We inspect fabric rolls, review stitch templates, and coordinate sample test cycles.',
-      specs: [
-        'Sample validation: 100% of collections pre-tested',
-        'Cuts approved: straight fit, baggy fit, dropped-shoulder',
-        'Curation rate: under 5% of garments sourced are accepted'
-      ]
-    },
-    {
-      id: 'rivet',
-      title: 'Construction & Hardware',
-      image: '/about_rivet_detail.png',
-      subtitle: 'HARDWARE LOG',
-      location: 'LAB SPECS',
-      intro: 'Clothing is built to be worn. We test copper rivets, verify zipper slides, and ensure structural seams are double-reinforced.',
-      specs: [
-        'Reinforcements: copper rivets at high stress points',
-        'Zippers: smooth-glide metal teeth (tested for 5000+ cycles)',
-        'Stitching: heavy-duty thread count, high-density edge overlocks'
-      ]
-    },
-    {
-      id: 'weave',
-      title: 'Textile Integrity',
-      image: '/about_raw_weave.png',
-      subtitle: 'FABRIC INDEX',
-      location: 'TEXTILE LAB',
-      intro: 'We prioritize natural cottons and premium indigo dyes. Every denim fabric weight is verified and pre-shrunk to retain its shape after washes.',
-      specs: [
-        'Fabric weight: 12.5oz to 14.5oz premium raw denim weave',
-        'T-Shirt grade: 220-260 GSM combed compact cotton',
-        'Treatment: pre-washed and tumble pre-shrunk for size stability'
-      ]
-    }
-  ];
-
-  const currentItem = items.find(item => item.id === activeSpec) || items[0];
+function ProcessSection() {
+  const { ref, isInView } = useInViewOnce('-80px');
 
   return (
-    <section className="relative py-24 md:py-32 bg-[#090909] border-b border-white/5 overflow-hidden">
-      <div className="max-w-[1200px] mx-auto px-6">
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
-          <div className="space-y-4">
-            <div className="font-condensed font-semibold text-[0.64rem] tracking-[0.38em] uppercase text-brass flex items-center gap-3">
-              <span className="w-5 h-px bg-brass-dim" />
-              Inspection Lab
-            </div>
-            <h2 className="font-display text-white uppercase text-4xl md:text-6xl leading-none">
-              THE <span className="brass-text">CURATION</span> REPORT
-            </h2>
+    <section className="py-24 md:py-32 px-6 md:px-16 bg-[#0b0b0b] border-t border-white/[0.06]">
+      <div className="max-w-[1200px] mx-auto">
+
+        {/* Label + headline */}
+        <div className="mb-16 md:mb-20">
+          <p className="font-condensed text-brass text-[0.65rem] tracking-[0.4em] uppercase font-bold mb-5">
+            The Platform
+          </p>
+          <h2
+            className="font-display text-tb-white uppercase leading-tight"
+            style={{ fontSize: 'clamp(2rem, 5vw, 4.5rem)' }}
+          >
+            From workshop floor<br className="hidden md:block" /> to your door.
+          </h2>
+        </div>
+
+        {/* Desktop horizontal timeline */}
+        <div className="hidden md:block" ref={ref}>
+          {/* Animated connecting line */}
+          <div className="relative h-px mb-10">
+            <div className="absolute inset-0 bg-white/[0.08]" />
+            <motion.div
+              className="absolute top-0 left-0 h-full bg-brass"
+              initial={{ width: '0%' }}
+              animate={isInView ? { width: '100%' } : { width: '0%' }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+            />
           </div>
-          {/* Switch tabs */}
-          <div className="flex bg-white/[0.02] border border-white/10 rounded-lg p-1.5 shrink-0 self-stretch md:self-auto overflow-x-auto">
-            {items.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSpec(item.id)}
-                className={`px-4 py-2 font-condensed font-semibold text-[0.68rem] tracking-wider uppercase rounded transition-all duration-300 ${activeSpec === item.id ? 'bg-brass text-void font-bold' : 'text-sv-mid hover:text-white'}`}
+
+          {/* Steps */}
+          <div className="flex gap-6">
+            {processSteps.map((step, idx) => (
+              <motion.div
+                key={step.label}
+                initial="hidden"
+                animate={isInView ? 'visible' : 'hidden'}
+                variants={fadeUp}
+                transition={{ delay: 0.15 + idx * 0.18 }}
+                className="flex-1"
               >
-                {item.id === 'workshop' ? 'Studio' : item.id === 'rivet' ? 'Hardware' : 'Fabrics'}
-              </button>
+                <div className="w-2 h-2 rounded-full bg-brass mb-6" />
+                <p className="font-condensed font-bold text-[0.65rem] tracking-[0.28em] uppercase text-brass mb-3">
+                  {step.label}
+                </p>
+                <p className="font-condensed text-sv-mid text-sm leading-relaxed">{step.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Dynamic Showcase */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          {/* Left: Interactive Image Panel */}
-          <div className="lg:col-span-6 relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 group">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-15 pointer-events-none" />
-            
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentItem.id}
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                src={currentItem.image}
-                alt={currentItem.title}
-                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
-              />
-            </AnimatePresence>
-
-            <div className="absolute bottom-6 left-6 z-20 flex flex-col">
-              <span className="font-condensed text-[0.55rem] tracking-[0.16em] uppercase text-brass font-bold">{currentItem.subtitle}</span>
-              <span className="font-condensed text-sm tracking-[0.12em] uppercase text-white font-bold">{currentItem.location}</span>
-            </div>
-            
-            <div className="absolute top-6 right-6 z-20 w-8 h-8 rounded-full bg-void/80 border border-white/15 flex items-center justify-center text-brass backdrop-blur-md">
-              <Eye className="w-4 h-4" />
-            </div>
-          </div>
-
-          {/* Right: Technical Spec Sheet */}
-          <div className="lg:col-span-6 space-y-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentItem.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="space-y-6"
-              >
-                <div className="space-y-2">
-                  <span className="font-mono text-xs text-brass uppercase font-bold tracking-widest">// SPECIFICATION LOG</span>
-                  <h3 className="font-display text-2xl md:text-3xl text-white uppercase tracking-wide">{currentItem.title}</h3>
-                </div>
-
-                <p className="font-body font-light text-sv-mid text-sm sm:text-base leading-relaxed">
-                  {currentItem.intro}
+        {/* Mobile vertical timeline */}
+        <motion.div
+          className="md:hidden"
+          ref={ref}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          variants={listStagger}
+        >
+          {processSteps.map((step, idx) => (
+            <motion.div
+              key={step.label}
+              variants={slideLeft}
+              className="flex gap-5"
+            >
+              <div className="flex flex-col items-center flex-shrink-0 pt-1">
+                <div className="w-2 h-2 rounded-full bg-brass flex-shrink-0" />
+                {idx < processSteps.length - 1 && (
+                  <div className="w-px flex-1 bg-white/[0.08] mt-2 mb-0" style={{ minHeight: '40px' }} />
+                )}
+              </div>
+              <div className="pb-8">
+                <p className="font-condensed font-bold text-[0.65rem] tracking-[0.28em] uppercase text-brass mb-2">
+                  {step.label}
                 </p>
-
-                {/* Specs List */}
-                <div className="space-y-3.5 pt-4 border-t border-white/5">
-                  {currentItem.specs.map((spec, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <span className="text-brass text-sm pt-0.5">⚡</span>
-                      <p className="font-condensed font-bold text-xs sm:text-sm tracking-wider uppercase text-white">
-                        {spec}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-        </div>
+                <p className="font-condensed text-sv-mid text-sm leading-relaxed">{step.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
 
       </div>
     </section>
   );
 }
 
-// Brand Philosophy
-function PhilosophySection() {
-  const pillars = [
-    {
-      n: '01',
-      title: 'Aesthetic Focus',
-      desc: "Streetwear cuts, clean washes, and comfortable fits that integrate naturally into your wardrobe."
-    },
-    {
-      n: '02',
-      title: 'Stitch & Fabric Testing',
-      desc: "Every collection is run through wear tests, wash cycles, and seam checks before we list a single unit."
-    },
-    {
-      n: '03',
-      title: 'Honest Pricing',
-      desc: "Sourcing direct and selling on a curated platform means skipping retail markup, label hype, and filler costs."
+// ─── Section 4: The Numbers ────────────────────────────────────────────────────
+
+interface StatDef {
+  prefix: string;
+  end: number;
+  suffix: string;
+  label: string;
+  desc: string;
+}
+
+function CounterStat({ prefix, end, suffix, label, desc, inView }: StatDef & { inView: boolean }) {
+  const [count, setCount] = useState(0);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!inView || started.current) return;
+    if (end === 0) { started.current = true; return; }
+    started.current = true;
+    const duration = 1800;
+    const startTime = performance.now();
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * end));
+      if (progress < 1) requestAnimationFrame(tick);
     }
-  ];
+    requestAnimationFrame(tick);
+  }, [inView, end]);
 
   return (
-    <section className="max-w-[1200px] mx-auto px-6 py-24 md:py-32 bg-void">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-        {/* Left header */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="font-condensed font-semibold text-[0.64rem] tracking-[0.38em] uppercase text-brass flex items-center gap-3">
-            <span className="w-5 h-px bg-brass-dim" />
-            Core Values
-          </div>
-          <h2 className="font-display text-white uppercase text-3xl md:text-5xl leading-none">
-            STYLE SHOULD FEEL <span className="brass-text">NATURAL</span>
-          </h2>
-          <p className="font-body font-light text-sv-mid text-sm sm:text-base leading-relaxed">
-            Fashion shouldn&apos;t be about wearing the loudest design or paying massive brand markups. It&apos;s about confident cuts, comfortable fabrics, and building a rotation of items you actually look forward to wearing.
-          </p>
-        </div>
+    <div className="flex flex-col items-start">
+      <span
+        className="font-display text-brass leading-none select-none tabular-nums"
+        style={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)' }}
+      >
+        {prefix}{end === 0 ? '0' : count}{suffix}
+      </span>
+      <p className="font-condensed font-bold text-xs uppercase tracking-[0.22em] text-tb-white mt-5 mb-2">
+        {label}
+      </p>
+      <p className="font-condensed text-sv-mid text-xs leading-relaxed max-w-[170px]">{desc}</p>
+    </div>
+  );
+}
 
-        {/* Right card grid */}
-        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-5">
-          {pillars.map((p, i) => (
-            <motion.div
-              key={p.n}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.08 }}
-            >
-              <InteractiveCard title={p.title} desc={p.desc} number={p.n} />
-            </motion.div>
+const stats: StatDef[] = [
+  { prefix: '< ', end: 10, suffix: '%',  label: 'Make it to listing',  desc: 'Of sourced products pass our curation filter' },
+  { prefix: '₹',  end: 0,  suffix: '',   label: 'Middleman markup',    desc: 'We source direct — you pay for the product, not the chain' },
+  { prefix: '',   end: 100, suffix: '%', label: 'Physically inspected', desc: 'Every product in our catalog has passed human review' },
+  { prefix: '',   end: 48,  suffix: 'hr',label: 'Average dispatch',    desc: 'After order confirmation, your item ships fast' },
+];
+
+function NumbersSection() {
+  const { ref, isInView } = useInViewOnce('-60px');
+
+  return (
+    <section className="py-24 md:py-32 px-6 md:px-16 border-t border-white/[0.06]" ref={ref}>
+      <div className="max-w-[1200px] mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-14 gap-x-8 lg:gap-x-0">
+          {stats.map((stat, idx) => (
+            <div key={idx} className="relative">
+              {/* Vertical brass separator — desktop only */}
+              {idx > 0 && (
+                <div className="hidden lg:block absolute left-0 top-0 h-full w-px bg-brass/[0.18]" />
+              )}
+              <div className="lg:px-10">
+                <CounterStat {...stat} inView={isInView} />
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -413,164 +386,234 @@ function PhilosophySection() {
   );
 }
 
-// Experience & Value Proposition Combined Section
-function ExperienceValue() {
-  const experiences = [
-    { label: 'Oversized Fits', desc: 'Dropped shoulders, boxy profiles.' },
-    { label: 'Curated Denim', desc: 'Baggy and straight washes, copper rivets.' },
-    { label: 'Smart Combos', desc: 'Pre-matched outfits to save styling effort.' },
-    { label: 'Everyday Comfort', desc: 'Combed cotton blends engineered for wear.' }
-  ];
+// ─── Section 5: Brand Side ─────────────────────────────────────────────────────
 
-  const values = [
-    'Direct coordination with workshops',
-    'Careful, manual fabric selection',
-    'Thorough hardware checks (zippers/rivets)',
-    'Hassle-free sizing exchanges',
-    'Honest, transparent pricing models'
+interface PillarDef { word: string; desc: string }
+
+function Pillar({ word, desc }: PillarDef) {
+  const { ref, isInView } = useInViewOnce('-60px');
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={isInView ? 'visible' : 'hidden'}
+      variants={fadeUp}
+      className="py-10 border-b border-white/[0.06]"
+    >
+      <h3
+        className="font-display uppercase leading-none select-none mb-4 cursor-default"
+        style={{
+          fontSize: 'clamp(3.5rem, 9vw, 7rem)',
+          color: hovered ? 'transparent' : '#f0eeea',
+          WebkitTextStroke: hovered ? '2px #b8941a' : '0px transparent',
+          transition: 'color 0.45s ease, -webkit-text-stroke 0.45s ease',
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {word}
+      </h3>
+      <p className="font-condensed text-sv-mid text-base leading-relaxed max-w-xl">{desc}</p>
+    </motion.div>
+  );
+}
+
+function BrandSection() {
+  const { ref, isInView } = useInViewOnce('-60px');
+
+  const pillars: PillarDef[] = [
+    {
+      word: 'COMFORT',
+      desc: 'Fabric that works in 40°C Indian summers, not European runways.',
+    },
+    {
+      word: 'LONGEVITY',
+      desc: "We reject anything that won't survive 50 washes. Fast fashion doesn't belong here.",
+    },
+    {
+      word: 'VALUE',
+      desc: 'Direct sourcing means you pay for the product, not the brand tax.',
+    },
   ];
 
   return (
-    <section className="relative border-t border-white/5 py-24 px-6 md:py-32 bg-[#090909]">
-      <div className="max-w-[1200px] mx-auto space-y-20">
-        
-        {/* Style Showcase */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-          <div className="lg:col-span-6 space-y-6">
-            <div className="font-condensed font-semibold text-[0.64rem] tracking-[0.38em] uppercase text-brass flex items-center gap-3">
-              <span className="w-5 h-px bg-brass-dim" />
-              Collections
-            </div>
-            <h3 className="font-display text-white uppercase text-3xl md:text-5xl leading-none">
-              TAILORED FOR DAILY LIFE
-            </h3>
-            <p className="font-body font-light text-sv-mid text-sm sm:text-base leading-relaxed">
-              We look for styles that adapt to college, travel, weekends, or casual workspace environments. Thunderbold pieces are selected to look relaxed but feel premium.
-            </p>
-          </div>
+    <section className="py-24 md:py-32 px-6 md:px-16 bg-[#0b0b0b] border-t border-white/[0.06]">
+      <div className="max-w-[1200px] mx-auto">
 
-          <div className="lg:col-span-6 grid grid-cols-2 gap-4">
-            {experiences.map((exp, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: idx * 0.08 }}
-                className="p-5 bg-white/[0.01] border border-white/5 rounded-xl hover:border-brass/25 transition-colors duration-300"
-              >
-                <h4 className="font-condensed font-bold text-sm text-brass uppercase tracking-wider mb-1">{exp.label}</h4>
-                <p className="font-body text-xs text-sv-dim">{exp.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+        {/* Headline mix */}
+        <motion.div
+          ref={ref}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          variants={listStagger}
+          className="mb-16"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-tb-white uppercase leading-[0.88]"
+            style={{ fontSize: 'clamp(2.5rem, 7vw, 6.5rem)' }}
+          >
+            STYLE THAT
+          </motion.h2>
+          <motion.h2
+            variants={fadeUp}
+            className="font-display uppercase leading-[0.88] mb-10"
+            style={{
+              fontSize: 'clamp(2.5rem, 7vw, 6.5rem)',
+              color: 'transparent',
+              WebkitTextStroke: '1.5px #b8941a',
+            }}
+          >
+            EARNS ITS PLACE
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="font-condensed text-sv-mid text-base md:text-lg leading-relaxed max-w-xl"
+          >
+            We don&apos;t chase trends. We look for pieces that work across contexts — campus, commute,
+            casual Friday. Indian sizing. Indian weather. Indian life.
+          </motion.p>
+        </motion.div>
+
+        {/* Pillars */}
+        <div>
+          {pillars.map((p) => (
+            <Pillar key={p.word} {...p} />
+          ))}
         </div>
-
-        {/* Sourcing Promise */}
-        <div className="pt-16 border-t border-white/5 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-          <div className="lg:col-span-6 order-last lg:order-first">
-            <div className="flex flex-col gap-3.5">
-              {values.map((v, idx) => (
-                <motion.div 
-                  key={idx}
-                  initial={{ opacity: 0, x: -15 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.08 }}
-                  className="flex items-center gap-4 py-2.5 border-b border-white/5"
-                >
-                  <span className="text-brass font-bold font-mono text-sm">0{idx + 1}</span>
-                  <span className="font-condensed text-xs sm:text-sm font-bold uppercase tracking-wider text-white">{v}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          <div className="lg:col-span-6 space-y-6">
-            <div className="font-condensed font-semibold text-[0.64rem] tracking-[0.38em] uppercase text-brass flex items-center gap-3">
-              <span className="w-5 h-px bg-brass-dim" />
-              Sourcing Promise
-            </div>
-            <h3 className="font-display text-white uppercase text-3xl md:text-5xl leading-none">
-              QUALITY CHECKS, <span className="brass-text">NO EXCUSES</span>
-            </h3>
-            <p className="font-body font-light text-sv-mid text-sm sm:text-base leading-relaxed">
-              We check every seam, thread count, zipper slide, and wash weight. When we buy directly and skip the middlemen, we invest that value straight back into premium fabrics and quality checks. No shortcuts, just transparent apparel curation.
-            </p>
-          </div>
-        </div>
-
       </div>
     </section>
   );
 }
 
-// Interactive Collection CTA
-function ExploreCTA() {
+// ─── Section 6: The People ─────────────────────────────────────────────────────
+
+function PeopleSection() {
+  const { ref: textRef, isInView: textInView } = useInViewOnce('-60px');
+  const { ref: quoteRef, isInView: quoteInView } = useInViewOnce('-60px');
+
   return (
-    <section className="relative py-24 md:py-36 bg-[#080808]">
-      <div 
-        className="absolute right-0 bottom-0 top-0 w-1/3 opacity-[0.03] pointer-events-none mix-blend-screen bg-cover bg-no-repeat bg-right-bottom"
-        style={{ backgroundImage: "url('/about_rivet_detail.png')" }}
-      />
-      
-      <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+    <section className="py-24 md:py-32 px-6 md:px-16 border-t border-white/[0.06]">
+      <div className="max-w-[1200px] mx-auto">
+
+        {/* Founder text */}
+        <motion.div
+          ref={textRef}
+          initial="hidden"
+          animate={textInView ? 'visible' : 'hidden'}
+          variants={listStagger}
+          className="grid lg:grid-cols-2 gap-16 lg:gap-24 mb-20"
+        >
           <div>
-            <div className="font-condensed font-semibold text-[0.64rem] tracking-[0.38em] uppercase text-brass flex items-center gap-3 mb-6">
-              <span className="w-5 h-px bg-brass-dim" />
-              Shop Now
-            </div>
-            <h2 className="font-display text-white uppercase text-4xl md:text-6xl leading-[0.95] mb-6">
-              SKIP THE FILLER.<br />
-              EXPLORE THE <span className="brass-text">CATALOG</span>.
-            </h2>
-            <p className="font-body font-light text-sv-mid text-sm sm:text-base leading-relaxed max-w-md">
-              Browse our curated denim, street tees, and outfit combos. Selected for everyday wearability, priced with honesty.
-            </p>
+            <motion.h2
+              variants={fadeUp}
+              className="font-display text-tb-white uppercase leading-tight mb-8"
+              style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}
+            >
+              Built in Bhusawal.
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              className="font-condensed text-sv-mid text-base md:text-lg leading-relaxed"
+            >
+              We&apos;re not a Mumbai startup with VC money and a fancy office. We&apos;re two people
+              from Maharashtra who got tired of overpriced streetwear and decided to do something
+              about it. Thunderbold started as a side project and became a conviction.
+            </motion.p>
           </div>
+        </motion.div>
 
-          <div className="flex flex-col gap-4 max-w-md w-full">
-            <a
-              href="/#categories"
-              className="flex items-center justify-between px-6 py-5 border border-white/10 rounded-xl bg-white/[0.01] hover:border-brass/45 hover:bg-brass/[0.03] transition-all duration-300 group"
-            >
-              <span className="font-condensed text-[0.85rem] tracking-[0.16em] uppercase text-white/70 group-hover:text-white transition-colors duration-200">
-                Shop Denim
-              </span>
-              <ArrowRight className="w-4 h-4 text-brass/50 group-hover:text-brass group-hover:translate-x-1.5 transition-all duration-300" />
-            </a>
-
-            <a
-              href="/#categories"
-              className="flex items-center justify-between px-6 py-5 border border-white/10 rounded-xl bg-white/[0.01] hover:border-brass/45 hover:bg-brass/[0.03] transition-all duration-300 group"
-            >
-              <span className="font-condensed text-[0.85rem] tracking-[0.16em] uppercase text-white/70 group-hover:text-white transition-colors duration-200">
-                Explore T-Shirts
-              </span>
-              <ArrowRight className="w-4 h-4 text-brass/50 group-hover:text-brass group-hover:translate-x-1.5 transition-all duration-300" />
-            </a>
-
-            <a
-              href="/#categories"
-              className="flex items-center justify-between px-6 py-5 border border-white/10 rounded-xl bg-white/[0.01] hover:border-brass/45 hover:bg-brass/[0.03] transition-all duration-300 group"
-            >
-              <span className="font-condensed text-[0.85rem] tracking-[0.16em] uppercase text-white/70 group-hover:text-white transition-colors duration-200">
-                Browse Outfits
-              </span>
-              <ArrowRight className="w-4 h-4 text-brass/50 group-hover:text-brass group-hover:translate-x-1.5 transition-all duration-300" />
-            </a>
+        {/* Pull quote */}
+        <motion.div
+          ref={quoteRef}
+          initial="hidden"
+          animate={quoteInView ? 'visible' : 'hidden'}
+          variants={slideRight}
+          className="border-l-2 border-brass pl-8 md:pl-14"
+        >
+          <div
+            className="font-display text-brass leading-none mb-4 select-none"
+            style={{ fontSize: 'clamp(4rem, 10vw, 8rem)', lineHeight: 0.75 }}
+          >
+            &ldquo;
           </div>
-        </div>
+          <blockquote
+            className="font-display text-tb-white italic uppercase leading-tight"
+            style={{ fontSize: 'clamp(1.4rem, 3.5vw, 2.8rem)' }}
+          >
+            If it&apos;s on Thunderbold, we&apos;d wear it ourselves.
+          </blockquote>
+        </motion.div>
+
       </div>
     </section>
   );
 }
+
+// ─── Section 7: The Promise CTA ────────────────────────────────────────────────
+
+function PromiseCTA() {
+  const { ref, isInView } = useInViewOnce('-60px');
+
+  return (
+    <section className="py-24 md:py-36 px-6 md:px-16 bg-[#0b0b0b] border-t border-white/[0.06]">
+      <div className="max-w-[1200px] mx-auto text-center">
+        <motion.div
+          ref={ref}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          variants={listStagger}
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-tb-white uppercase leading-tight"
+            style={{ fontSize: 'clamp(2.2rem, 6.5vw, 6rem)' }}
+          >
+            No filler. No middlemen.
+          </motion.h2>
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-tb-white uppercase leading-tight mb-14"
+            style={{ fontSize: 'clamp(2.2rem, 6.5vw, 6rem)' }}
+          >
+            Just clothes that work.
+          </motion.h2>
+
+          <motion.div variants={fadeUp} className="flex flex-col items-center gap-6">
+            {/* Brass button with fill-from-left hover */}
+            <a
+              href="/"
+              className="relative overflow-hidden group inline-flex items-center gap-3 border border-brass text-brass font-condensed font-bold text-sm tracking-[0.22em] uppercase px-10 py-5 transition-colors duration-300 hover:text-void"
+            >
+              <span
+                className="absolute inset-0 bg-brass origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
+                style={{ transformOrigin: 'left' }}
+              />
+              <span className="relative z-10 flex items-center gap-3">
+                Explore the Catalog
+                <ArrowRight size={16} />
+              </span>
+            </a>
+
+            <p className="font-condensed text-sv-dim text-xs tracking-[0.1em] max-w-sm leading-relaxed">
+              Cash on delivery. Free returns on quality issues. Real people answering your questions.
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Main Export ───────────────────────────────────────────────────────────────
 
 export default function About() {
   useSEO({
-    title: "About Us",
-    description: "Learn more about Thunderbold's vision to bring premium denim, streetwear, and everyday clothing to fashion-conscious young adults in India.",
+    title: 'About Us — Thunderbold',
+    description:
+      "We're not a Mumbai startup. We're two people from Maharashtra building a curated marketplace for Indian streetwear — inspected, rejected, and kept only when it earns its place.",
   });
 
   return (
@@ -579,12 +622,13 @@ export default function About() {
       <ScrollProgress />
       <Navbar />
       <main>
-        <PageHero />
-        <CurationManifesto />
-        <CurationLab />
-        <PhilosophySection />
-        <ExperienceValue />
-        <ExploreCTA />
+        <HeroStatement />
+        <ProblemSection />
+        <ProcessSection />
+        <NumbersSection />
+        <BrandSection />
+        <PeopleSection />
+        <PromiseCTA />
       </main>
     </div>
   );

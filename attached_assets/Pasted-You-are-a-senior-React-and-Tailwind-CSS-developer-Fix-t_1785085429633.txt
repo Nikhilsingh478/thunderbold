@@ -1,0 +1,266 @@
+You are a senior React and Tailwind CSS developer.
+Fix the cart UI overflow bug on mobile in the 
+Thunderbold PWA. The cart page content is getting 
+cut off on the right side on mobile screens.
+
+Read these files completely before touching anything:
+- src/pages/Cart.tsx
+- src/components/ui/ (every file)
+- Every file inside src/components/checkout/
+- tailwind.config.ts
+
+---
+
+WHAT IS WRONG — READ THIS CAREFULLY:
+
+From the screenshot the following are visually cut off:
+1. The minus (-) quantity button on the cart item 
+   card is half visible — cut from the right edge
+2. The "Calculated" text in the Order Summary 
+   section is cut off on the right
+3. The entire cart item card appears wider than 
+   the viewport
+4. The Order Summary card also appears to overflow
+
+This is a horizontal overflow issue. Something in 
+the cart layout is wider than 100vw on mobile.
+
+---
+
+STEP 1 — DIAGNOSE THE OVERFLOW:
+
+Look for these specific patterns that cause 
+horizontal overflow:
+
+1. Any fixed width on cart item container or 
+   card that exceeds mobile viewport width
+   Example: w-[500px] or min-w-[400px]
+
+2. Any flex row where children don't have 
+   proper constraints:
+   - Product image with fixed width pushing 
+     content outside container
+   - Product name not truncating or wrapping
+   - Price and controls in a row without 
+     flex-shrink or min-w-0
+
+3. Any padding or margin on the page root 
+   container that pushes content right
+
+4. Any grid with fixed column widths that 
+   exceed mobile width
+
+5. Order Summary section — "Calculated" text 
+   being cut means the row containing Tax 
+   and Calculated is wider than container
+
+6. The bottom sticky bar showing "1 ITEM ₹850 
+   CHECKOUT →" — check if this has correct 
+   width constraints
+
+---
+
+STEP 2 — FIX THE CART PAGE CONTAINER:
+
+In src/pages/Cart.tsx:
+
+The root container of the page must have:
+className="w-full max-w-full overflow-x-hidden"
+
+Every section container inside must have:
+className="w-full" 
+
+Do NOT use any fixed pixel widths on containers.
+
+---
+
+STEP 3 — FIX THE CART ITEM CARD:
+
+The cart item card has three sections in a row:
+- Product image (left)
+- Product details — name, size, price (middle)  
+- Quantity controls — minus, number, plus (right)
+
+This flex row is causing the overflow.
+Fix it like this:
+
+<div className="flex items-center gap-3 w-full 
+  min-w-0 overflow-hidden">
+  
+  {/* Image — fixed size, flex-shrink-0 */}
+  <div className="flex-shrink-0 w-20 h-20 
+    md:w-24 md:h-24">
+    <img className="w-full h-full object-cover" />
+  </div>
+  
+  {/* Details — must have min-w-0 to allow shrinking */}
+  <div className="flex-1 min-w-0">
+    <p className="truncate font-medium">
+      {item.name}
+    </p>
+    <p className="text-sm">Size: {item.size}</p>
+    <p className="text-sm">₹{item.price}</p>
+  </div>
+  
+  {/* Quantity controls — flex-shrink-0 to stay visible */}
+  <div className="flex-shrink-0 flex items-center 
+    gap-2">
+    <button>-</button>
+    <span>{item.quantity}</span>
+    <button>+</button>
+  </div>
+  
+</div>
+
+THE CRITICAL FIX HERE IS:
+- Image div must have flex-shrink-0 so it 
+  does not grow
+- Middle details div must have flex-1 AND 
+  min-w-0 — without min-w-0 flex children 
+  do not shrink below their content size 
+  which causes overflow
+- Product name must have truncate class 
+  so long names do not push layout
+- Quantity controls must have flex-shrink-0 
+  so they stay fully visible
+
+---
+
+STEP 4 — FIX THE ORDER SUMMARY SECTION:
+
+The Order Summary card has rows like:
+Shipping | [value]
+Tax      | Calculated
+
+Each row is a flex row between label and value.
+Fix every row to:
+
+<div className="flex items-center justify-between 
+  w-full gap-2">
+  <span className="text-sm flex-shrink-0">Tax</span>
+  <span className="text-sm text-right">
+    Calculated at checkout
+  </span>
+</div>
+
+The value span needs text-right so it aligns 
+properly when the text is long. Without 
+justify-between and proper flex constraints 
+the "Calculated" text gets pushed outside 
+the container.
+
+Also ensure the Order Summary card itself has:
+className="w-full rounded-lg p-4"
+
+No fixed widths. No min-width larger than 
+the container.
+
+---
+
+STEP 5 — FIX THE BOTTOM STICKY BAR:
+
+The sticky bottom bar showing 
+"1 ITEM ₹850 | CHECKOUT →"
+must have:
+
+className="fixed bottom-0 left-0 right-0 
+  w-full z-50 px-4 py-3"
+
+Using left-0 right-0 instead of a fixed pixel 
+width ensures it never overflows on any screen.
+
+The inner content should be:
+className="flex items-center justify-between 
+  w-full gap-4"
+
+---
+
+STEP 6 — FIX THE PAGE ROOT:
+
+The very top level div of Cart.tsx should be:
+
+className="min-h-screen w-full overflow-x-hidden 
+  bg-[#080808] text-white pb-32"
+
+The pb-32 ensures content is not hidden behind 
+the sticky bottom bar.
+
+---
+
+STEP 7 — VERIFY THESE SPECIFIC THINGS 
+AFTER MAKING CHANGES:
+
+1. At 360px viewport width (smallest common 
+   Android screen) nothing should be cut off
+
+2. The product name "devils black shine trouser 
+   for men" is long — it must truncate with 
+   ellipsis not overflow
+
+3. The minus button must be fully visible 
+   on the right side of the cart item
+
+4. "Calculated" text in Order Summary must 
+   be fully visible
+
+5. The PROCEED TO CHECKOUT button must be 
+   full width
+
+6. The sticky bottom CHECKOUT bar must span 
+   the full width
+
+7. Desktop layout (md: and above) must not 
+   be broken — use responsive prefixes to 
+   separate mobile and desktop fixes
+
+---
+
+STEP 8 — ALSO CHECK THESE COMMON MISTAKES:
+
+1. If the cart uses a Card component from 
+   src/components/ui/card.tsx — check if 
+   that Card component has any fixed width 
+   or min-width set. If it does, remove it 
+   or add w-full to override.
+
+2. If there is a wrapper div around the 
+   entire cart content with a fixed width — 
+   change it to max-w-2xl mx-auto w-full 
+   which is responsive and centered on desktop.
+
+3. If any image tag is missing explicit 
+   width and height or className="w-full" — 
+   images without size constraints cause 
+   layout to be unpredictable.
+
+4. Check if there is a gap or space between 
+   the page content and viewport edge — if 
+   the content starts with padding-x that 
+   is too large on mobile, reduce it to px-3 
+   or px-4 on mobile.
+
+---
+
+RULES:
+
+1. Read the actual Cart.tsx and related files 
+   before writing any fix. Do not assume 
+   the structure — read it.
+
+2. Make minimum changes necessary to fix 
+   the overflow. Do not redesign the cart.
+
+3. Preserve all existing functionality — 
+   quantity increment decrement, remove item, 
+   clear cart, checkout navigation.
+
+4. After making changes explicitly list 
+   every file changed and every className 
+   that was modified.
+
+5. The fix must work at these widths:
+   360px — smallest Android
+   390px — iPhone SE / mid Android  
+   414px — larger Android
+   768px — tablet (should look good)
+   1280px — desktop (must not be broken)

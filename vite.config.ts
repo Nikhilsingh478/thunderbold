@@ -3,9 +3,18 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import fs from "fs";
+import { execSync } from "child_process";
 
-// Generate a build-time version timestamp
-const buildVersion = new Date().getTime().toString();
+// Use short git SHA as build version — more useful for debugging than a
+// timestamp and reveals less about deployment cadence. Falls back to
+// unix timestamp if git is unavailable (e.g. in some CI environments).
+const buildVersion = (() => {
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return Date.now().toString();
+  }
+})();
 
 // Write version.json immediately on config evaluation
 try {

@@ -1,0 +1,327 @@
+You are a senior security engineer. Fix the 
+remaining security issues in the Thunderbold 
+PWA codebase. Read every file completely 
+before making changes.
+
+---
+
+FIX 1 — HIGH: Add Content Security Policy header
+
+Files to read first:
+- server.js (middleware section)
+- index.html (all inline scripts)
+- vercel.json
+
+STEP A — Extract inline scripts from index.html:
+
+Read index.html completely. Find every inline 
+<script> block. There should be approximately 
+3 inline script blocks:
+- A canonical URL updater script
+- A WebView/TWA banner detection script  
+- A service worker registration script
+
+For each inline script:
+1. Create a new file in /public/ with a 
+   descriptive name e.g.:
+   - public/canonical-init.js
+   - public/banner-init.js
+   - public/sw-register.js
+2. Move the script content into that file
+3. Replace the inline <script>...</script> 
+   with <script src="/filename.js"></script>
+
+Make sure the extracted scripts work identically 
+to the inline versions — check for any variables 
+they depend on being available at load time.
+
+STEP B — Add CSP header in server.js:
+
+After the existing security headers middleware, 
+add a Content-Security-Policy header.
+
+Based on the actual external domains this app 
+uses, the CSP must allow:
+- scripts from self only (after inline scripts 
+  are extracted to external files)
+- styles from self + https://fonts.googleapis.com
+  + unsafe-inline (required for Tailwind/Framer)
+- fonts from self + https://fonts.gstatic.com
+- images from self + data: + blob: + 
+  https://res.cloudinary.com + 
+  https://thunderbold.shop
+- connect (fetch/XHR) from self + all Firebase 
+  domains:
+  https://*.googleapis.com
+  https://*.firebaseapp.com
+  https://*.firebaseio.com
+  wss://*.firebaseio.com
+  https://fcm.googleapis.com
+  https://identitytoolkit.googleapis.com
+  https://securetoken.googleapis.com
+- workers from self + blob:
+- manifest from self
+- frames from https://thunderbolt-auth.firebaseapp.com
+- object-src none
+- base-uri self
+- form-action self
+- upgrade-insecure-requests
+
+Add it like this in server.js middleware:
+
+res.setHeader('Content-Security-Policy', [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://thunderbold.shop",
+  "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://fcm.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "frame-src https://thunderbolt-auth.firebaseapp.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "upgrade-insecure-requests"
+].join('; '))
+
+STEP C — Add CSP to vercel.json headers:
+
+In vercel.json, add the same CSP as a header 
+for the catch-all static route so it applies 
+to the frontend too:
+
+{
+  "source": "/(.*)",
+  "headers": [
+    {
+      "key": "Content-Security-Policy",
+      "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://thunderbold.shop; connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com; worker-src 'self' blob:; manifest-src 'self'; frame-src https://thunderbolt-auth.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    }
+  ]
+}
+
+IMPORTANT: After adding CSP, test mentally that 
+every external resource the app loads is covered 
+by the policy. If any external domain is missing 
+the app will break silently for users.
+
+---
+
+FIX 2 — MEDIUM: Move Firebase client config 
+to environment variables
+
+Files to read first:
+- src/lib/firebase.ts
+- public/firebase-messaging-sw-part.js
+- .env.example (if it exists)
+
+PROBLEM:
+Firebase client SDK config is hardcoded as 
+string literals in firebase.ts. This makes 
+it impossible to rotate credentials without 
+a code change and deploy.
+
+FIX in src/lib/firebase.ts:
+Replace the hardcoded firebaseConfig object 
+with environment variable reads:
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+}
+
+Add a guard so the app fails loudly if env 
+vars are missing rather than silently:
+
+if (!firebaseConfig.apiKey) {
+  console.error('Firebase config missing — check VITE_FIREBASE_* env vars')
+}
+
+FIX in public/firebase-messaging-sw-part.js:
+This file runs as a service worker and cannot 
+use import.meta.env. It needs the Firebase 
+config hardcoded OR passed via postMessage 
+from the main app. The simplest fix is to 
+keep the config hardcoded in this specific 
+file only (service workers are a special case) 
+and add a comment explaining why.
+
+Add a .env file (do NOT commit it) with all 
+VITE_FIREBASE_* values matching what was 
+previously hardcoded in firebase.ts.
+
+Add all VITE_FIREBASE_* variables to Vercel 
+environment variables documentation in README 
+or .env.example.
+
+---
+
+FIX 3 — LOW: Add sw.js no-cache header 
+to vercel.json
+
+File to read first: vercel.json
+
+Check if /sw.js already has a no-cache header.
+If it does, skip this fix.
+If it does not, add it:
+
+{
+  "source": "/sw.js",
+  "headers": [
+    {
+      "key": "Cache-Control",
+      "value": "no-store, no-cache, must-revalidate"
+    },
+    {
+      "key": "Service-Worker-Allowed",
+      "value": "/"
+    }
+  ]
+}
+
+---
+
+FIX 4 — LOW: Pin production dependencies 
+and run audit
+
+File to read first: package.json
+
+1. For every entry in "dependencies" (not 
+   devDependencies), remove the ^ caret prefix 
+   so versions are exact. For example:
+   "express": "^5.2.1" → "express": "5.2.1"
+
+2. Do this for all production dependencies.
+
+3. Do NOT pin devDependencies — exact pinning 
+   matters most for production packages.
+
+4. After pinning, run:
+   npm install
+   
+   This regenerates package-lock.json with 
+   exact versions.
+
+5. Run:
+   npm audit
+   
+   Report what it finds. If there are high 
+   or critical vulnerabilities, fix them with:
+   npm audit fix
+   
+   Report what was fixed.
+
+---
+
+FIX 5 — LOW: Replace build timestamp with 
+git SHA in bundle
+
+File to read first: vite.config.ts
+
+PROBLEM:
+The build version is currently 
+new Date().getTime().toString() — a precise 
+Unix millisecond timestamp embedded in the 
+bundle that reveals exact deployment timing.
+
+FIX:
+Replace with git commit SHA which is more 
+useful for debugging and reveals less about 
+deployment cadence:
+
+// In vite.config.ts
+import { execSync } from 'child_process'
+
+const buildVersion = (() => {
+  try {
+    return execSync('git rev-parse --short HEAD')
+      .toString().trim()
+  } catch {
+    return Date.now().toString()
+  }
+})()
+
+This gives you a short git hash like 'fa5df0d' 
+as the version instead of a timestamp. Falls 
+back to timestamp if git is unavailable.
+
+---
+
+FIX 6 — MEDIUM: Fix CORS from wildcard 
+to specific origins
+
+File to read first: server.js
+
+PROBLEM:
+CORS is set to Access-Control-Allow-Origin: * 
+on all API handlers. This allows any website 
+to make cross-origin requests to your API.
+
+FIX:
+In server.js, replace the wildcard CORS 
+with a specific allowed origins list:
+
+const ALLOWED_ORIGINS = [
+  'https://thunderbold.shop',
+  'https://www.thunderbold.shop',
+  'http://localhost:5000',
+  'http://localhost:3000',
+]
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Access-Control-Allow-Methods', 
+    'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 
+    'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204)
+  }
+  next()
+})
+
+Also add Vary: Origin header so CDN handles 
+CORS correctly:
+res.setHeader('Vary', 'Origin')
+
+---
+
+RULES FOR ALL FIXES:
+
+1. Read every file mentioned before writing 
+   any code.
+
+2. For the CSP fix — after extracting inline 
+   scripts, verify the app would still work. 
+   The SW registration script is critical — 
+   if it breaks, push notifications and offline 
+   mode break. Test your mental model carefully.
+
+3. For the Firebase env vars fix — the actual 
+   Firebase config values from firebase.ts 
+   must be preserved exactly in the new .env 
+   file. Do not change any Firebase project 
+   values.
+
+4. For CORS fix — make absolutely sure 
+   localhost origins are included for 
+   development to keep working.
+
+5. After all fixes list every file changed 
+   and exactly what changed.
+
+6. If the CSP causes any Firebase Auth 
+   functionality to break due to missing 
+   domains, add those domains to connect-src. 
+   Firebase Auth uses several googleapis.com 
+   subdomains — the wildcard *.googleapis.com 
+   should cover all of them but verify.

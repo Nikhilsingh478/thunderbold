@@ -1,0 +1,473 @@
+You are a senior frontend developer and creative 
+director specializing in award-winning web experiences 
+(think Awwwards, FWA level). Your task is to completely 
+redesign and rebuild the Thunderbold About page 
+(src/pages/About.tsx) from scratch.
+
+BEFORE WRITING A SINGLE LINE OF CODE READ THESE:
+- src/pages/About.tsx (current implementation)
+- src/App.tsx (provider tree)
+- src/AppContent.tsx (routing)
+- tailwind.config.ts (design tokens — brass, obsidian colors)
+- src/components/Navbar.tsx (so you don't break nav)
+- src/components/Footer.tsx (so you don't break footer)
+- package.json (confirm framer-motion and gsap available)
+
+---
+
+THE CORE CONCEPT — READ THIS VERY CAREFULLY:
+
+Thunderbold is NOT just a clothing brand.
+Thunderbold is NOT just a marketplace.
+Thunderbold is BOTH simultaneously — and that 
+tension between the two is the story.
+
+On one side: a brand with taste, standards, 
+curation philosophy, aesthetic conviction.
+On the other side: a platform that sources from 
+workshops, curates from makers, and cuts out 
+middlemen to bring real product to real people.
+
+The About page must make this duality feel alive.
+Not explained. FELT.
+
+The current page fails because:
+- It explains instead of showing
+- It uses generic section titles like 
+  "INSPECTION LAB" and "CORE VALUES"
+- It has no visual tension or narrative arc
+- It reads like every other D2C brand page
+- Animations are absent or superficial
+- There is no sense of place, process, or people
+- It does not feel like a marketplace at all
+
+---
+
+DESIGN PHILOSOPHY FOR THIS REBUILD:
+
+Think editorial magazine meets industrial warehouse.
+Think Ssense.com meets a Bhusawal textile mill.
+Dark, high-contrast, intentional whitespace.
+Typography does the heavy lifting.
+Animations reveal meaning, not just decoration.
+Every section answers ONE question for the visitor.
+
+Color palette from tailwind.config.ts:
+- Background: #080808 (obsidian)
+- Primary text: #ffffff
+- Accent: brass/amber (#B8820F or similar from config)
+- Secondary text: #888888
+- Cards/surfaces: #111111 or #0f0f0f
+
+Typography approach:
+- Headings: bold, large, sometimes outlined/ghost text
+- Use mix of solid and outlined text for contrast
+- Tracking: wide on labels, tight on headlines
+- Never center-align body text
+
+---
+
+PAGE NARRATIVE ARC — BUILD EXACTLY THIS STRUCTURE:
+
+SECTION 1 — THE STATEMENT (Hero)
+
+Not a welcome. A declaration.
+
+Full viewport height. Dark background.
+Two lines of text that establish the duality:
+
+Line 1 (large, outlined ghost text, animated):
+"WE DON'T SELL FASHION."
+
+Line 2 (large, solid white, animated with delay):
+"WE SELL WHAT ACTUALLY WORKS."
+
+Below these two lines, a single sentence in small 
+brass/amber color:
+"A curated marketplace for Indian streetwear 
+that earns its place in your wardrobe."
+
+Animation: Lines slide up from below with 
+opacity fade, staggered 0.3s apart using 
+Framer Motion. Use viewport-triggered animation 
+so it fires when user enters the section.
+
+NO hero image. Typography IS the visual.
+Add a very subtle animated grain/noise texture 
+overlay using CSS (pseudo-element with 
+opacity 0.03-0.05) for depth.
+
+---
+
+SECTION 2 — THE PROBLEM WE SOLVE (Why we exist)
+
+Headline (left-aligned, large):
+"Indian fashion has a noise problem."
+
+Two column layout on desktop, single column mobile:
+
+LEFT COLUMN:
+A numbered list — not bullet points, actual 
+large numbers (01, 02, 03) in brass color 
+with text beside each:
+
+01 — Too many options, zero curation
+02 — Middlemen inflating prices by 3x
+03 — Fast fashion pretending to be streetwear
+04 — No accountability for fabric or fit
+
+RIGHT COLUMN:
+A single bold statement in large text:
+"We exist to fix exactly this."
+
+Below it in smaller text:
+"Every piece on Thunderbold passed through 
+our hands before it reached yours. We inspect, 
+reject, and curate — so you don't have to."
+
+Animation: The numbered items animate in 
+one by one as user scrolls, each sliding 
+in from the left with a 0.15s stagger.
+The right column text fades in when it 
+enters viewport.
+
+---
+
+SECTION 3 — HOW THE MARKETPLACE WORKS 
+(The platform side)
+
+This section establishes Thunderbold as 
+a marketplace/platform, not just a brand.
+
+Full-width section with dark background.
+
+Top label in small caps brass text:
+"THE PLATFORM"
+
+Headline:
+"From workshop floor to your door."
+
+Below the headline, a horizontal process 
+flow that works as a timeline:
+
+On desktop: horizontal scroll or horizontal 
+flex with connecting lines between steps
+On mobile: vertical timeline
+
+Steps (each with a number, title, and 
+one-line description):
+
+→ SOURCING
+  "We partner directly with Indian workshops 
+  and makers. No importers. No brand tax."
+
+→ INSPECTION  
+  "Every batch is physically checked for 
+  fabric quality, stitching, and sizing 
+  accuracy before listing."
+
+→ CURATION
+  "Less than 10% of what we review makes 
+  it to the site. We reject more than we list."
+
+→ LISTING
+  "What you see has earned its place. 
+  No filler, no sponsored placement."
+
+→ YOUR WARDROBE
+  "Delivered. Worn. Kept."
+
+Animation: On desktop, a brass-colored 
+line draws itself across connecting the 
+steps as user scrolls — use Framer Motion 
+pathLength animation on an SVG line or 
+a div that expands its width from 0 to 100%.
+Each step node appears when the line reaches it.
+
+---
+
+SECTION 4 — THE NUMBERS (Credibility)
+
+Dark section with large typographic numbers.
+No cards. Numbers ARE the design.
+
+Layout: 3 or 4 stats in a row on desktop,
+2x2 grid on mobile.
+
+Each stat:
+- Very large number in brass/amber (animated 
+  count-up using useEffect + requestAnimationFrame 
+  when section enters viewport)
+- Small label below in white
+- Even smaller description below that in grey
+
+Stats to use:
+"< 10%" — Of sourced products make it to listing
+"₹0" — Middleman markup on our products  
+"100%" — Products physically inspected
+"48hr" — Average dispatch after order confirmation
+
+Animation: Numbers count up from 0 when 
+the section enters viewport. Use 
+IntersectionObserver with a counter animation.
+
+Design detail: Between each stat, add a 
+very thin vertical brass line as separator 
+(hidden on mobile, visible on desktop).
+
+---
+
+SECTION 5 — THE BRAND SIDE (Our aesthetic 
+conviction)
+
+This establishes the brand personality 
+separate from the marketplace function.
+
+Headline (large, mix of solid and outlined):
+Solid: "STYLE THAT"
+Outlined ghost: "EARNS ITS PLACE"
+
+Subtext:
+"We don't chase trends. We look for pieces 
+that work across contexts — campus, commute, 
+casual Friday. Indian sizing. Indian weather. 
+Indian life."
+
+Below this, three philosophy pillars 
+displayed as large typographic blocks:
+
+Each pillar:
+- A single bold word in very large text 
+  (like 80-100px equivalent)
+- A one-sentence explanation below it 
+  in small regular text
+
+COMFORT — "Fabric that works in 40°C 
+Indian summers, not European runways."
+
+LONGEVITY — "We reject anything that 
+won't survive 50 washes. Fast fashion 
+doesn't belong here."
+
+VALUE — "Direct sourcing means you pay 
+for the product, not the brand tax."
+
+Animation: Each pillar word slides up 
+and fades in when it enters viewport.
+Add a hover effect — on hover the large 
+word switches from solid white to outlined 
+brass stroke. Use CSS transition on 
+-webkit-text-stroke.
+
+---
+
+SECTION 6 — THE PEOPLE (Human element)
+
+This is the most important section for 
+making it feel real and not AI-generated.
+
+Headline:
+"Built in Bhusawal."
+
+Subtext (authentic, not corporate):
+"We're not a Mumbai startup with VC money 
+and a fancy office. We're two people from 
+Maharashtra who got tired of overpriced 
+streetwear and decided to do something about it.
+Thunderbold started as a side project and 
+became a conviction."
+
+Below the text, a horizontal strip with 
+a quote styled like a pull quote in a magazine:
+
+Large brass quotation mark graphic
+Then the quote in large italic text:
+"If it's on Thunderbold, we'd wear it ourselves."
+
+No stock photos. No fake team headshots.
+If there are real photos available in 
+the public/ folder use them, otherwise 
+keep it purely typographic.
+
+This section should feel like a founder's 
+note, not a corporate about page.
+
+Animation: The quote slides in from the 
+right when it enters viewport.
+
+---
+
+SECTION 7 — THE PROMISE (CTA)
+
+Full-width dark section. Simple. Strong.
+
+One large headline:
+"No filler. No middlemen."
+"Just clothes that work."
+
+One CTA button in brass/amber:
+"Explore the Catalog"
+Links to /category/denim or homepage
+
+Below the button in small grey text:
+"Cash on delivery. Free returns on 
+quality issues. Real people answering 
+your questions."
+
+Animation: Button has a subtle hover 
+animation — background fills from left 
+to right (clip-path or pseudo-element 
+transform).
+
+---
+
+ANIMATION SYSTEM — IMPLEMENT ALL OF THESE:
+
+Use Framer Motion for all animations.
+Import: import { motion, useInView, 
+useAnimation } from 'framer-motion'
+
+Standard entrance animation variants 
+to define once and reuse:
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+  }
+}
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { duration: 0.8 }
+  }
+}
+
+const slideLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+  }
+}
+
+const stagger = {
+  visible: {
+    transition: { staggerChildren: 0.15 }
+  }
+}
+
+Use useInView hook with once: true so 
+animations only trigger once when entering 
+viewport, not every time:
+
+const ref = useRef(null)
+const isInView = useInView(ref, { 
+  once: true, 
+  margin: "-100px" 
+})
+
+Wrap each section in a motion.div with 
+ref and animate based on isInView.
+
+---
+
+TECHNICAL REQUIREMENTS:
+
+1. Use only Tailwind CSS classes — no 
+   inline style objects except for dynamic 
+   values that cannot be expressed in Tailwind.
+
+2. Use design tokens from tailwind.config.ts 
+   — check what the brass/amber color is 
+   actually named and use that class name.
+
+3. The page must be fully responsive:
+   - Mobile: single column, stacked sections
+   - Tablet (md:): two column where applicable  
+   - Desktop (lg:): full multi-column layouts
+
+4. No external images beyond what's already 
+   in the public/ folder. Design must work 
+   without images.
+
+5. Do not import any new npm packages. 
+   Use only framer-motion (already installed) 
+   and existing dependencies.
+
+6. The counter animation in Section 4 
+   must use useEffect and requestAnimationFrame, 
+   not a library.
+
+7. Performance: use will-change: transform 
+   only on actively animating elements, 
+   remove it after animation completes.
+
+8. The page must load without layout shift — 
+   all sections should have defined minimum 
+   heights before content loads.
+
+9. Export default function About() at the 
+   bottom — match the existing export pattern.
+
+10. Do not touch Navbar or Footer — they 
+    render from parent components.
+
+---
+
+WHAT TO EXPLICITLY AVOID:
+
+- No stock photography descriptions or 
+  placeholder image boxes
+- No "CORE VALUES" section title or similar 
+  corporate language
+- No bullet point lists unless styled as 
+  the numbered 01/02/03 format described above
+- No centered body text (headings can be 
+  centered for specific effect, body never)
+- No gradient backgrounds unless very subtle
+- No emoji in body text
+- No "Join our community" or "Follow us" CTAs
+- No testimonials section (no customer reviews 
+  on the about page)
+- No FAQ section
+- No timeline of "company history" (too early 
+  for that)
+- Do not copy the structure of any existing 
+  section from the current About.tsx — 
+  start completely fresh
+
+---
+
+FINAL CHECK BEFORE SUBMITTING:
+
+Read through the complete rebuilt About.tsx and verify:
+
+1. Does Section 1 establish the brand in 
+   under 3 seconds of reading?
+
+2. Does Section 3 clearly communicate 
+   that this is a marketplace/platform 
+   not just a brand?
+
+3. Does Section 6 feel human and authentic 
+   or does it still read like AI copy?
+
+4. Are all 7 sections present?
+
+5. Do all animations use once: true so 
+   they don't repeat on scroll?
+
+6. Does the page work on 360px mobile width?
+
+7. Are all brass/amber colors using the 
+   actual Tailwind config token name?
+
+8. Is the export default correct?
+
+Output the complete rebuilt About.tsx file.

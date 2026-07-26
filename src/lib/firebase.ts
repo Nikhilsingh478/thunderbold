@@ -8,13 +8,17 @@ import {
 import type { Auth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCKmRGX8FOVsk0khJTM1s25Pcxe_TezYgQ",
-  authDomain: "thunderbolt-auth.firebaseapp.com",
-  projectId: "thunderbolt-auth",
-  storageBucket: "thunderbolt-auth.firebasestorage.app",
-  messagingSenderId: "491240288125",
-  appId: "1:491240288125:web:a5406e022ac5a2f2442614"
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
+
+if (!firebaseConfig.apiKey) {
+  console.error('[Firebase] Config missing — check VITE_FIREBASE_* env vars');
+}
 
 const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 

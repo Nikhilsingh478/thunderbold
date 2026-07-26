@@ -12,11 +12,6 @@ import { useAuth } from '../context/AuthContext';
 import { printInvoice } from '../utils/printInvoice';
 import { formatOrderId } from '../lib/utils';
 
-const ADMIN_EMAILS = [
-  "adminthunderbold@gmail.com",
-  "neelsingh45940s@gmail.com",
-  "thepavanartt@gmail.com",
-];
 
 interface OrderProduct {
   name: string;
@@ -963,8 +958,31 @@ export default function Admin() {
     finally { if (!silent) setReturnsLoading(false); }
   };
 
+  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [adminCheckLoading, setAdminCheckLoading] = useState(true);
+
   useEffect(() => {
-    if (user && !ADMIN_EMAILS.includes(user.email)) navigate('/');
+    if (!user) {
+      setAdminCheckLoading(false);
+      return;
+    }
+    const checkAdmin = async () => {
+      try {
+        const token = await user.getIdToken();
+        const r = await fetch('/api/users/me/admin-status', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await r.json();
+        setIsAdminUser(data.isAdmin || false);
+        if (!data.isAdmin) navigate('/');
+      } catch {
+        setIsAdminUser(false);
+        navigate('/');
+      } finally {
+        setAdminCheckLoading(false);
+      }
+    };
+    checkAdmin();
   }, [user, navigate]);
 
   useEffect(() => {
@@ -1459,7 +1477,7 @@ export default function Admin() {
     }
   };
 
-  if (!user) {
+  if (!user || adminCheckLoading) {
     return (
       <div className="noise-overlay min-h-screen flex items-center justify-center bg-void">
         <div className="text-sv-mid font-condensed text-sm tracking-widest uppercase">Loading...</div>
@@ -1467,7 +1485,7 @@ export default function Admin() {
     );
   }
 
-  if (!ADMIN_EMAILS.includes(user.email)) return null;
+  if (!isAdminUser) return null;
 
   const tabs = [
     { key: 'analytics' as const, label: 'Analytics', Icon: BarChart3 },

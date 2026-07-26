@@ -120,7 +120,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             action: data.orderId ? {
               label: 'View Order',
               onClick: () => {
-                window.location.href = `/orders?orderId=${data.orderId}`;
+                const isValidObjectId = /^[a-f0-9]{24}$/i.test(data.orderId);
+                if (isValidObjectId) {
+                  window.location.href = `/orders?orderId=${data.orderId}`;
+                } else if (data.link) {
+                  window.location.href = data.link;
+                } else {
+                  window.location.href = '/orders';
+                }
               }
             } : undefined,
           });

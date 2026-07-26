@@ -17,7 +17,7 @@ const GIFT_MSG_MAX = 300;
 
 function loadSavedAddress(): AddressData | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
   return null;
@@ -113,7 +113,7 @@ export default function Checkout() {
 
     setSubmitting(true);
     setSubmittedAddress(address);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(address));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(address));
 
     const clientOrderId = crypto.randomUUID();
 
@@ -121,7 +121,6 @@ export default function Checkout() {
       const orderProducts = cartItems.map(item => ({
         productId: item.productId || item.productUrl?.split('/').pop() || 'unknown',
         name: item.name || item.productName || 'Unknown Product',
-        price: typeof item.price === 'string' ? parseFloat(item.price.replace(/[^\d.]/g, '')) : (item.price || 0),
         size: item.size || 'N/A',
         quantity: item.quantity || 1,
         image: item.image || item.productImage || '/placeholder.png',

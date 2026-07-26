@@ -15,8 +15,47 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://thunderbold.shop",
+    "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://fcm.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "frame-src https://thunderbolt-auth.firebaseapp.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests",
+  ].join('; '));
   next();
 });
+
+// CORS — restrict to known production and dev origins instead of wildcard
+const ALLOWED_ORIGINS = [
+  'https://thunderbold.shop',
+  'https://www.thunderbold.shop',
+  'http://localhost:5000',
+  'http://localhost:3000',
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json());
 
 app.use('/api/orders', async (req, res) => {
