@@ -165,60 +165,73 @@ export default function Cart() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex gap-4 p-4 bg-white/5 border border-white/10 rounded-xl w-full min-w-0 overflow-hidden"
+                    className="p-4 bg-white/5 border border-white/10 rounded-xl w-full min-w-0 overflow-hidden"
                   >
-                    {/* Product Image */}
-                    <div className="w-20 h-20 bg-[#0c0c0c] rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={optimizeCloudinaryUrl(item.image, IMG_SIZES.thumbnail)}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
-                      />
+                    {/* Top row: image + product details + remove button */}
+                    <div className="flex gap-3 mb-4">
+                      {/* Product Image */}
+                      <div className="w-[72px] h-[72px] md:w-20 md:h-20 bg-[#0c0c0c] rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={optimizeCloudinaryUrl(item.image, IMG_SIZES.thumbnail)}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+                        />
+                      </div>
+
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-condensed font-semibold text-tb-white mb-1 leading-snug" style={{ wordBreak: 'break-word' }}>
+                          {item.name}
+                        </h3>
+                        <p className="text-xs text-sv-mid mb-1">Size: {item.size}</p>
+                        <p className="font-condensed font-bold text-base text-tb-white">
+                          {typeof item.price === 'number'
+                            ? `₹${item.price.toFixed(2)}`
+                            : item.price
+                          }
+                        </p>
+                      </div>
+
+                      {/* Remove button — top right */}
+                      <button
+                        onClick={() => handleRemoveItem(item.productId, item.size)}
+                        className="flex-shrink-0 p-1.5 text-sv-mid hover:text-red-400 transition-colors self-start"
+                        aria-label="Remove item"
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
 
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <h3 className="font-condensed font-semibold text-tb-white mb-1 truncate">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm text-sv-mid mb-2 truncate">Size: {item.size}</p>
-                      <p className="font-condensed text-base text-tb-white">
-                        {typeof item.price === 'number' 
-                          ? `₹${item.price.toFixed(2)}`
-                          : item.price
-                        }
-                      </p>
-                    </div>
-
-                    {/* Quantity Controls */}
-                    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                    {/* Bottom row: quantity stepper */}
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center border border-white/20 rounded-lg">
                         <button
                           onClick={() => handleQuantityChange(item.productId, item.size, item.quantity - 1)}
-                          className="p-2 hover:bg-white/10 transition-colors"
+                          className="p-2.5 hover:bg-white/10 transition-colors"
+                          aria-label="Decrease quantity"
                         >
-                          <Minus size={16} />
+                          <Minus size={14} />
                         </button>
-                        <span className="w-12 text-center font-condensed text-tb-white">
+                        <span className="w-10 text-center font-condensed text-tb-white text-sm select-none">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => handleQuantityChange(item.productId, item.size, item.quantity + 1)}
-                          className="p-2 hover:bg-white/10 transition-colors"
+                          className="p-2.5 hover:bg-white/10 transition-colors"
+                          aria-label="Increase quantity"
                         >
-                          <Plus size={16} />
+                          <Plus size={14} />
                         </button>
                       </div>
-                      
-                      <button
-                        onClick={() => handleRemoveItem(item.productId, item.size)}
-                        className="p-2 text-sv-mid hover:text-red-400 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
+                      {/* Item subtotal */}
+                      <p className="font-condensed text-sv-mid text-xs">
+                        {item.quantity > 1 && typeof item.price === 'number'
+                          ? `${item.quantity} × ₹${item.price.toFixed(0)} = ₹${(item.price * item.quantity).toFixed(0)}`
+                          : ''}
+                      </p>
                     </div>
                   </motion.div>
                 ))}
@@ -235,33 +248,35 @@ export default function Cart() {
                     Order Summary
                   </h2>
                   
-                  <div className="space-y-4 mb-6">
-                    <div className="flex justify-between gap-2 text-sm">
-                      <span className="text-sv-mid flex-shrink-0">Subtotal ({getTotalItems()} items)</span>
-                      <span className="text-tb-white font-condensed text-right">
-                        {typeof getTotalPrice() === 'number' 
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="text-sv-mid whitespace-nowrap">Subtotal ({getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''})</span>
+                      <span className="text-tb-white font-condensed font-semibold">
+                        {typeof getTotalPrice() === 'number'
                           ? `₹${getTotalPrice().toFixed(2)}`
                           : getTotalPrice()
                         }
                       </span>
                     </div>
-                    
-                    <div className="flex justify-between gap-2 text-sm">
-                      <span className="text-sv-mid flex-shrink-0">Shipping</span>
-                      <span className="text-tb-white font-condensed text-right">Free</span>
+
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="text-sv-mid">Shipping</span>
+                      <span className="text-brass font-condensed font-semibold">Free</span>
                     </div>
-                    
-                    <div className="flex justify-between gap-2 text-sm">
-                      <span className="text-sv-mid flex-shrink-0">Tax</span>
-                      <span className="text-tb-white font-condensed text-right">Calculated at checkout</span>
+
+                    <div className="flex items-start justify-between gap-3 text-sm">
+                      <span className="text-sv-mid whitespace-nowrap">Tax</span>
+                      <span className="text-sv-mid font-condensed text-right text-xs leading-relaxed">
+                        Calculated<br className="md:hidden" /><span className="hidden md:inline"> </span>at checkout
+                      </span>
                     </div>
-                    
-                    <div className="h-px bg-white/20 my-4"></div>
-                    
-                    <div className="flex justify-between gap-2 text-lg font-bold">
-                      <span className="text-tb-white flex-shrink-0">Total</span>
-                      <span className="text-tb-white font-condensed text-right">
-                        {typeof getTotalPrice() === 'number' 
+
+                    <div className="h-px bg-white/[0.12] my-2" />
+
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-tb-white font-bold text-base">Total</span>
+                      <span className="text-tb-white font-condensed font-bold text-lg">
+                        {typeof getTotalPrice() === 'number'
                           ? `₹${getTotalPrice().toFixed(2)}`
                           : getTotalPrice()
                         }
