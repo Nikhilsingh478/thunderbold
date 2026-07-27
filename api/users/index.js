@@ -3,15 +3,14 @@ import { successResponse, errorResponse } from '../_lib/response.js';
 import { validateAddress } from '../_lib/validator.js';
 import { verifyFirebaseToken } from '../_lib/firebaseAdmin.js';
 import { isAdmin } from '../_lib/adminHelper.js';
+import { setCorsHeaders } from '../_lib/cors.js';
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 

@@ -1,8 +1,13 @@
 import { getDb } from '../_lib/mongodb.js';
 import { validateAddress } from '../_lib/validator.js';
 import { successResponse, errorResponse, validationErrorResponse } from '../_lib/response.js';
+import { setCorsHeaders } from '../_lib/cors.js';
 
 export default async function handler(req, res) {
+  setCorsHeaders(req, res, 'GET, POST, OPTIONS');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   try {
     if (req.method === 'GET') {
       const userId = req.query.userId;

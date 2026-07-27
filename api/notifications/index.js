@@ -14,11 +14,10 @@ import { verifyFirebaseToken } from '../_lib/firebaseAdmin.js';
 import { getAdminMessaging } from '../_lib/firebaseAdmin.js';
 import { isAdmin } from '../_lib/adminHelper.js';
 import { sendMulticast, sendToUser } from '../_lib/fcm.js';
+import { setCorsHeaders } from '../_lib/cors.js';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res, 'POST, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 

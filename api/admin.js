@@ -2,6 +2,7 @@ import { getDb } from "./_lib/mongodb.js";
 import { ObjectId } from "mongodb";
 import { verifyFirebaseToken } from "./_lib/firebaseAdmin.js";
 import { isAdmin } from "./_lib/adminHelper.js";
+import { setCorsHeaders } from "./_lib/cors.js";
 
 async function checkAdminAuth(req, db) {
   const authHeader = req.headers.authorization;
@@ -452,7 +453,7 @@ const DEFAULT_SLIDES = [
 ];
 
 async function handleSlider(req, res, db) {
-  res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS");
+  setCorsHeaders(req, res, 'GET, PUT, OPTIONS');
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -560,8 +561,7 @@ async function handleSlider(req, res, db) {
 // ---------------------------------------------------------------------------
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
