@@ -4,63 +4,98 @@ import { Zap } from 'lucide-react';
 
 export default function AppUpdatePrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
-  const [playStoreUrl, setPlayStoreUrl] = useState('https://play.google.com/store/apps/details?id=shop.thunderbold.twa');
+  const [playStoreUrl, setPlayStoreUrl] = useState(
+    'https://play.google.com/store/apps/details?id=shop.thunderbold.twa'
+  );
+  const [currentVersionCode, setCurrentVersionCode] = useState(0);
 
   useEffect(() => {
-    // If the user has already interacted with the update prompt in this session, don't show it again
-    if (sessionStorage.getItem('tb_update_dismissed') === 'true') {
+    // 1. Session check: if already shown this session, skip
+    if (sessionStorage.getItem('update_prompt_shown_this_session') === 'true') {
       return;
     }
 
-    // Detect if running inside the Android TWA app wrapper.
-    // Note: Version 3 was compiled without utm_source=twa in the Start URL,
-    // so we also check display-mode: standalone as a reliable TWA/PWA signal.
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                      || window.matchMedia('(display-mode: fullscreen)').matches;
-    const isAndroidTWA = document.referrer.startsWith('android-app://') 
-                      || window.location.search.includes('utm_source=twa')
-                      || localStorage.getItem('tb_is_twa') === 'true'
-                      || isStandalone;
+    // 2. Read app_version from URL params
+    const params = new URLSearchParams(window.location.search);
+    const rawVersion = params.get('app_version');
+    const versionNum = parseInt(rawVersion || '0', 10);
 
-    if (isAndroidTWA) {
-      localStorage.setItem('tb_is_twa', 'true');
-      
-      // Parse the native app version code from the URL parameters (if present)
-      const params = new URLSearchParams(window.location.search);
-      const appVersion = params.get('app_version');
-      if (appVersion) {
-        localStorage.setItem('tb_native_app_version', appVersion);
-      }
-
-      // Read current local version code. Default to 5 (since Version 5 was previously built)
-      const currentVersion = parseInt(localStorage.getItem('tb_native_app_version') || '5', 10);
-
-      // Fetch the latest version code — bypass service worker cache entirely
-      fetch('/app-version.json', { cache: 'no-store' })
-        .then((r) => r.json())
-        .then((data) => {
-          const latestVersion = parseInt(data.latestVersionCode, 10);
-          if (latestVersion && currentVersion < latestVersion) {
-            if (data.playStoreUrl) {
-              setPlayStoreUrl(data.playStoreUrl);
-            }
-            setShowPrompt(true);
-          }
-        })
-        .catch((err) => {
-          console.error('Failed to check app version:', err);
-        });
+    // If 0, NaN, or not present in URL → web browser visit, not a TWA install. Do NOT show prompt.
+    if (!versionNum || isNaN(versionNum) || versionNum <= 0) {
+      return;
     }
+
+    setCurrentVersionCode(versionNum);
+
+    // 3. Clear stale dismiss state if stored dismissed version < current app version
+    let dismissedFor = localStorage.getItem('thunderbold_update_dismissed_for');
+    if (dismissedFor && parseInt(dismissedFor, 10) < versionNum) {
+      localStorage.removeItem('thunderbold_update_dismissed_for');
+      dismissedFor = null;
+    }
+
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    // 4. Fetch /app-version.json with cache busting
+    fetch(`/app-version.json?t=${Date.now()}`, { cache: 'no-store' })
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to fetch app-version.json');
+        return r.json();
+      })
+      .then((data) => {
+        const latestVersionCode = parseInt(data.latestVersionCode, 10);
+        if (data.playStoreUrl) {
+          setPlayStoreUrl(data.playStoreUrl);
+        }
+
+        const currentDismissedFor = localStorage.getItem('thunderbold_update_dismissed_for');
+        const alreadyDismissed = currentDismissedFor === String(versionNum);
+
+        const shouldShow =
+          versionNum > 0 &&
+          !isNaN(latestVersionCode) &&
+          latestVersionCode > versionNum &&
+          !alreadyDismissed;
+
+        if (import.meta.env.DEV) {
+          console.log('[AppUpdatePrompt]', {
+            currentVersionCode: versionNum,
+            latestVersionCode,
+            dismissedFor: currentDismissedFor,
+            shouldShow,
+          });
+        }
+
+        if (shouldShow) {
+          sessionStorage.setItem('update_prompt_shown_this_session', 'true');
+          timerId = setTimeout(() => {
+            setShowPrompt(true);
+          }, 3000);
+        }
+      })
+      .catch((err) => {
+        if (import.meta.env.DEV) {
+          console.error('[AppUpdatePrompt] Fetch error:', err);
+        }
+      });
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+    };
   }, []);
 
   const handleUpdate = () => {
+    if (currentVersionCode > 0) {
+      localStorage.setItem('thunderbold_update_dismissed_for', String(currentVersionCode));
+    }
     window.open(playStoreUrl, '_blank');
-    sessionStorage.setItem('tb_update_dismissed', 'true'); // Hide for the rest of this session
-    setShowPrompt(false); // Hide prompt immediately once the user clicks update
+    setShowPrompt(false);
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem('tb_update_dismissed', 'true'); // Hide for the rest of this session
+    if (currentVersionCode > 0) {
+      localStorage.setItem('thunderbold_update_dismissed_for', String(currentVersionCode));
+    }
     setShowPrompt(false);
   };
 
@@ -122,3 +157,4 @@ export default function AppUpdatePrompt() {
     </AnimatePresence>
   );
 }
+
