@@ -4,11 +4,24 @@ import { requestAndRegisterToken, initMessaging } from '../lib/firebaseMessaging
 import { onMessage } from 'firebase/messaging';
 import { toast } from 'sonner';
 
+export const isStandaloneApp = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches ||
+    (navigator as any).standalone === true ||
+    document.referrer.includes('android-app://') ||
+    window.location.search.includes('utm_source=twa')
+  );
+};
+
 interface NotificationsContextType {
   shouldPrompt: boolean;
   setShouldPrompt: (value: boolean) => void;
   triggerPrompt: () => void;
   registerToken: () => Promise<void>;
+  isApp: boolean;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | null>(null);
@@ -34,18 +47,32 @@ function getOrCreateDeviceId(): string {
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [shouldPrompt, setShouldPromptState] = useState(false);
+  const [isApp, setIsApp] = useState(false);
+
+  useEffect(() => {
+    setIsApp(isStandaloneApp());
+  }, []);
 
   const setShouldPrompt = useCallback((value: boolean) => {
     setShouldPromptState(value);
   }, []);
 
   const triggerPrompt = useCallback(() => {
-    if (!user) return;
     if (!browserSupported()) return;
+    if (!isStandaloneApp()) return; // App-only requirement — never prompt on browser website
     if (Notification.permission === 'granted') return;
-    if (Notification.permission === 'denied') return;
+
+    // Suppress prompt if dismissed in last 3 days
+    try {
+      const dismissedAt = localStorage.getItem('tb_notif_prompt_dismissed');
+      if (dismissedAt) {
+        const diffDays = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60 * 24);
+        if (diffDays < 3) return;
+      }
+    } catch {}
+
     setShouldPromptState(true);
-  }, [user]);
+  }, []);
 
   const registerToken = useCallback(async (): Promise<void> => {
     if (!user) return;
@@ -148,7 +175,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <NotificationsContext.Provider value={{ shouldPrompt, setShouldPrompt, triggerPrompt, registerToken }}>
+    <NotificationsContext.Provider value={{ shouldPrompt, setShouldPrompt, triggerPrompt, registerToken, isApp }}>
       {children}
     </NotificationsContext.Provider>
   );
