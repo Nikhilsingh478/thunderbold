@@ -4,13 +4,23 @@ export const CLOUD_NAME = 'djptdutak';
 export const CLOUD_NAME_2 = 'dyyjowb8g';
 
 /**
- * Transforms a raw Cloudinary URL into an optimised one.
+ * Checks if a path segment right after /upload/ consists of Cloudinary transformation parameters.
+ */
+function isTransformationSegment(segment: string): boolean {
+  if (!segment) return false;
+  const knownPrefixes = ['f_', 'q_', 'w_', 'h_', 'c_', 'g_', 'dpr_', 'ar_', 'b_', 'r_', 'e_', 'o_', 'fl_'];
+  const tokens = segment.split(',');
+  return tokens.length > 0 && tokens.every(t => knownPrefixes.some(p => t.startsWith(p)));
+}
+
+/**
+ * Transforms a raw Cloudinary URL into an optimised one safely.
  * - f_auto  → best format for browser (WebP / AVIF)
  * - q_auto  → automatic quality compression
  * - w_<n>   → resize to requested width
  * - h_<n>,c_fill → optional: crop to exact height (for fixed-ratio cards)
  *
- * Safe for non-Cloudinary URLs, empty strings, and http URLs.
+ * Preserves all folder names, version numbers, and file paths accurately.
  */
 export function optimizeCloudinaryUrl(
   url: string | null | undefined,
@@ -37,35 +47,27 @@ export function optimizeCloudinaryUrl(
     ? `f_auto,q_auto,w_${width},h_${height},c_fill`
     : `f_auto,q_auto,w_${width}`;
 
-  // Already has this exact transformation -> return unchanged to avoid duplication
-  if (cleanUrl.includes(`/upload/${params}/`)) {
-    return cleanUrl;
-  }
-
   try {
     const uploadIndex = cleanUrl.indexOf('/upload/');
     if (uploadIndex === -1) return cleanUrl;
 
     const afterUpload = cleanUrl.substring(uploadIndex + 8);
     const parts = afterUpload.split('/');
-    if (parts.length > 1) {
-      const firstPart = parts[0];
-      const isVersion = /^v\d+$/.test(firstPart);
-      const isDirectFile = !isVersion && /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(firstPart);
 
-      // If existing segment contains old transformations (e.g. c_scale,w_400 or f_auto,q_auto)
-      // replace that segment instead of prepending to avoid invalid duplicate paths
-      if (!isVersion && !isDirectFile && firstPart.length > 0) {
-        const rest = parts.slice(1).join('/');
-        return `${cleanUrl.substring(0, uploadIndex)}/upload/${params}/${rest}`;
-      }
+    // If existing segment contains old transformations (e.g. c_scale,w_400 or f_auto,q_auto)
+    // replace ONLY that transformation segment without removing folder names or version tags
+    if (parts.length > 0 && isTransformationSegment(parts[0])) {
+      const rest = parts.slice(1).join('/');
+      return `${cleanUrl.substring(0, uploadIndex)}/upload/${params}/${rest}`;
     }
 
-    return cleanUrl.replace('/upload/', `/upload/${params}/`);
+    // Standard case: inject params right after /upload/
+    return `${cleanUrl.substring(0, uploadIndex)}/upload/${params}/${afterUpload}`;
   } catch {
     return cleanUrl;
   }
 }
+
 
 /**
  * Safe image error handler to prevent infinite loops and alt text flickering.
