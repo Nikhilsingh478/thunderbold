@@ -1,7 +1,7 @@
 import { AlertTriangle, XCircle } from 'lucide-react';
 import ChartCard from './ChartCard';
 import type { StockAlerts as StockAlertsData, StockProduct } from './types';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../../lib/cloudinary';
 
 interface StockAlertsProps {
   data: StockAlertsData;
@@ -12,7 +12,7 @@ function Row({ p, kind }: { p: StockProduct; kind: 'oos' | 'low' }) {
     <li className="flex items-center gap-3">
       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/[0.03]">
         {p.image ? (
-          <img src={optimizeCloudinaryUrl(p.image, IMG_SIZES.thumbnail)} alt={p.name} className="h-full w-full object-cover" loading="lazy" decoding="async" onError={handleImageError} />
+          <img src={optimizeCloudinaryUrl(p.image, IMG_SIZES.thumbnail)} alt={p.name} className="h-full w-full object-cover" loading="lazy" decoding="async" />
         ) : (
           <div className="h-full w-full bg-white/[0.03]" />
         )}

@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -160,7 +160,7 @@ export default function Wishlist() {
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                           loading="lazy"
                           decoding="async"
-                          onError={handleImageError}
+                          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
                         />
 
                         {/* Remove button — always visible */}

@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import ProductGrid, { type GridProduct } from '../components/products/ProductGrid';
-import { optimizeCloudinaryUrl, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl } from '../lib/cloudinary';
 import { useSEO } from '../hooks/useSEO';
 
 interface Brand {
@@ -122,7 +122,7 @@ export default function BrandView() {
           >
             {brand?.logoUrl ? (
               <div className="mx-auto mb-5 w-20 h-20 rounded-full overflow-hidden border border-brass/20 bg-brass/10">
-                <img src={optimizeCloudinaryUrl(brand.logoUrl, 160)} alt={brand.name} className="w-full h-full object-cover" decoding="async" onError={handleImageError} />
+                <img src={optimizeCloudinaryUrl(brand.logoUrl, 160)} alt={brand.name} className="w-full h-full object-cover" decoding="async" />
               </div>
             ) : null}
             <div className="font-condensed font-semibold text-[0.64rem] md:text-[0.68rem] tracking-[0.36em] md:tracking-[0.40em] uppercase text-brass mb-5 flex items-center justify-center gap-3">

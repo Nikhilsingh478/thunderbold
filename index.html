@@ -101,6 +101,17 @@
         #apk-banner { display: none !important; }
       }
     </style>
+    <script>
+      window.handleImageError = function(e, fallback) {
+        try {
+          var t = (e && (e.currentTarget || e.target)) || e;
+          if (t && t.tagName === 'IMG') {
+            t.onerror = null;
+            t.src = fallback || '/placeholder.png';
+          }
+        } catch(err) {}
+      };
+    </script>
     <script src="/canonical-init.js"></script>
   </head>
 

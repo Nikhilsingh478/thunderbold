@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 
 import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
@@ -806,7 +806,10 @@ export default function Profile() {
                                         className="w-full h-full object-cover"
                                         loading="lazy"
                                         decoding="async"
-                                        onError={handleImageError}
+                                        onError={(e) => {
+                                          e.currentTarget.onerror = null;
+                                          e.currentTarget.src = '/placeholder.png';
+                                        }}
                                       />
                                     </div>
                                     <div className="min-w-0 flex-1">

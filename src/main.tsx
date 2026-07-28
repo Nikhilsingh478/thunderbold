@@ -2,6 +2,20 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Global safety handler for image error events
+(window as any).handleImageError = function (
+  e: any,
+  fallback: string = '/placeholder.png'
+) {
+  try {
+    const target = e?.currentTarget || e?.target;
+    if (target && target instanceof HTMLImageElement) {
+      target.onerror = null;
+      target.src = fallback;
+    }
+  } catch {}
+};
+
 // Disable browser's built-in scroll restoration so we fully control where
 // the page lands on every navigation (forward, back, or refresh).
 // Without this, the browser tries to restore the old scroll position and —

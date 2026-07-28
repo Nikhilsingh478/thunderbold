@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Heart, Share2, ShoppingCart, X } from 'lucide-react';
@@ -456,7 +456,7 @@ export default function ProductView() {
                       className="w-full h-full object-cover object-center" 
                       loading="lazy" 
                       decoding="async" 
-                      onError={handleImageError} 
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }} 
                     />
                   </button>
                 ))}
@@ -484,7 +484,7 @@ export default function ProductView() {
                         }}
                         loading={index === 0 ? "eager" : "lazy"}
                         decoding="async"
-                        onError={handleImageError}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
                       />
                     </div>
                   ))}
@@ -990,7 +990,6 @@ export default function ProductView() {
                 src={optimizeCloudinaryUrl(IMAGES[0] || '/placeholder.png', IMG_SIZES.thumbnail)}
                 alt={product?.name}
                 className="w-9 h-12 object-cover rounded border border-white/10"
-                onError={handleImageError}
               />
               <div className="min-w-0">
                 <p className="font-condensed font-bold text-xs text-white truncate uppercase tracking-wide">
@@ -1214,7 +1213,7 @@ export default function ProductView() {
                         : 'border-white/10 opacity-50 hover:opacity-100 bg-white/[0.02]'
                     }`}
                   >
-                    <img src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} className="w-full h-full object-cover" onError={handleImageError} />
+                    <img src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

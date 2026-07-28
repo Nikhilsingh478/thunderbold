@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell, RotateCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
@@ -1595,7 +1595,9 @@ export default function Admin() {
                                         className="w-full h-full object-cover"
                                         loading="lazy"
                                         decoding="async"
-                                        onError={handleImageError}
+                                        onError={(e) => {
+                                          e.currentTarget.src = '/placeholder.png';
+                                        }}
                                       />
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -1708,7 +1710,10 @@ export default function Admin() {
                                             className="w-full h-full object-cover"
                                             loading="lazy"
                                             decoding="async"
-                                            onError={handleImageError}
+                                            onError={(e) => {
+                                              e.currentTarget.onerror = null;
+                                              e.currentTarget.src = '/placeholder.png';
+                                            }}
                                           />
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -1831,7 +1836,7 @@ export default function Admin() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               decoding="async"
-                              onError={handleImageError}
+                              onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                             />
                           </div>
                           <div className="p-3">
@@ -1921,7 +1926,7 @@ export default function Admin() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               decoding="async"
-                              onError={handleImageError}
+                              onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                             />
                           </div>
                           <div className="p-3">
@@ -2039,7 +2044,7 @@ export default function Admin() {
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                   loading="lazy"
                                   decoding="async"
-                                  onError={handleImageError}
+                                  onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
                                 />
                               </div>
                               <div className="p-3">
@@ -2073,7 +2078,7 @@ export default function Admin() {
                           src={optimizeCloudinaryUrl((reviewsProduct as any).images?.[0] || reviewsProduct.image || '/placeholder.png', IMG_SIZES.card)}
                           alt={reviewsProduct.name}
                           className="w-16 h-16 rounded-lg object-cover shrink-0"
-                          onError={handleImageError}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
                         />
                         <div className="min-w-0">
                           <p className="font-condensed text-xs text-sv-mid uppercase tracking-widest mb-0.5">Reviews for</p>

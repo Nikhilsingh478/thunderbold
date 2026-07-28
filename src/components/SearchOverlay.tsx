@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchProducts, Product } from '../lib/products';
@@ -137,7 +137,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-[1.05] transition-transform duration-700 ease-[0.16,1,0.3,1]"
-                        onError={handleImageError}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
                       />
                     </div>
                     <div className="mt-4">

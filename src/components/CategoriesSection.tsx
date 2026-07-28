@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
-import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
 import PromoBanner from './promo/PromoBanner';
 import ProductGrid, { type GridProduct } from './products/ProductGrid';
 import ThunderboldSlider from './ThunderboldSlider';
@@ -50,7 +50,7 @@ function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; 
             className="w-full h-full object-cover"
             loading={index < 2 ? 'eager' : 'lazy'}
             decoding="async"
-            onError={handleImageError}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
           />
         </div>
       </div>
