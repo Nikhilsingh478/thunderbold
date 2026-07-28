@@ -620,13 +620,12 @@ Compositor-only dot animations (`transform: scaleX()` + `opacity`) in Thunderbol
 
 ```
 X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
+X-Frame-Options: SAMEORIGIN
 Referrer-Policy: strict-origin-when-cross-origin
-Cross-Origin-Resource-Policy: cross-origin
+Content-Security-Policy: default-src 'self'; script-src 'self' ...
 ```
 
-Not set: `Content-Security-Policy`, `Strict-Transport-Security`, `Permissions-Policy`.
+Active: `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
 
 ### Rate Limiting
 
@@ -899,4 +898,4 @@ This repository and its contents are proprietary. See [LICENSE](LICENSE) for ter
 
 *Thunderbold — Premium Indian Fashion. Built for the Bold.*
 
-> Last updated: July 19, 2026
+> Last updated: July 29, 2026
