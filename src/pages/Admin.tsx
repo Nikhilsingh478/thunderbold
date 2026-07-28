@@ -973,8 +973,9 @@ export default function Admin() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await r.json();
-        setIsAdminUser(data.isAdmin || false);
-        if (!data.isAdmin) navigate('/');
+        const isAdminVal = Boolean(data.isAdmin ?? data.data?.isAdmin);
+        setIsAdminUser(isAdminVal);
+        if (!isAdminVal) navigate('/');
       } catch {
         setIsAdminUser(false);
         navigate('/');

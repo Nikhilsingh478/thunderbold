@@ -20,13 +20,13 @@ export default async function handler(req, res) {
   const subPath = (req.query && req.query.subpath) || (req.url || '/').split('?')[0].replace(/^\/+|\/+$/g, '');
 
   // ─── Admin status check (/api/users/me/admin-status) ────────────────────────
-  if (subPath === 'admin-status') {
+  if (subPath === 'admin-status' || subPath.endsWith('admin-status')) {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) return res.status(401).json(errorResponse('Unauthorized'));
     try {
       const decoded = await verifyFirebaseToken(authHeader.split(' ')[1]);
       const adminStatus = await isAdmin(decoded.email, db);
-      return res.status(200).json(successResponse({ isAdmin: adminStatus }));
+      return res.status(200).json({ success: true, isAdmin: adminStatus, data: { isAdmin: adminStatus } });
     } catch {
       return res.status(401).json(errorResponse('Invalid token'));
     }
