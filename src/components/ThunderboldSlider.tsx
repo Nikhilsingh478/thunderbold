@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, handleImageError } from '../lib/cloudinary';
 
 interface SlideData {
   imageUrl: string;
@@ -219,6 +219,7 @@ export default function ThunderboldSlider() {
                   loading={i === 0 ? 'eager' : 'lazy'}
                   fetchPriority={i === 0 ? 'high' : 'low'}
                   decoding={i === 0 ? 'sync' : 'async'}
+                  onError={handleImageError}
                   style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom center', display: 'block', userSelect: 'none' }}
                 />
               ) : (

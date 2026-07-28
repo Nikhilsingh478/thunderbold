@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
 
 interface Slide {
   src: string;
@@ -136,6 +136,7 @@ export default function HeroBanner() {
               loading={current === 0 ? 'eager' : 'lazy'}
               decoding="async"
               fetchPriority={current === 0 ? 'high' : 'low'}
+              onError={handleImageError}
             />
           </motion.div>
         </AnimatePresence>

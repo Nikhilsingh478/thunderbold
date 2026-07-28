@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
 import { motion } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -177,7 +177,7 @@ export default function Cart() {
                           className="w-full h-full object-cover"
                           loading="lazy"
                           decoding="async"
-                          onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+                          onError={handleImageError}
                         />
                       </div>
 

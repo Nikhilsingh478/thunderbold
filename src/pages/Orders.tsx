@@ -10,7 +10,7 @@ import ReviewModal, { ReviewData } from '../components/reviews/ReviewModal';
 import LightningRating from '../components/reviews/LightningRating';
 import { formatOrderId } from '../lib/utils';
 import ReturnRequestModal from '../components/ReturnRequestModal';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../lib/cloudinary';
 
 
 interface OrderProduct {
@@ -556,9 +556,7 @@ const Orders = () => {
                                   className="w-full h-full object-cover"
                                   loading="lazy"
                                   decoding="async"
-                                  onError={(e) => {
-                                    e.currentTarget.src = '/placeholder.png';
-                                  }}
+                                  onError={handleImageError}
                                 />
                               </div>
 

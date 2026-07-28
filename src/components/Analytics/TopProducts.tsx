@@ -1,6 +1,6 @@
 import ChartCard from './ChartCard';
 import type { TopProduct } from './types';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, handleImageError } from '../../lib/cloudinary';
 
 interface TopProductsProps {
   data: TopProduct[];
@@ -40,6 +40,7 @@ export default function TopProducts({ data }: TopProductsProps) {
                     className="h-full w-full object-cover"
                     loading="lazy"
                     decoding="async"
+                    onError={handleImageError}
                   />
                 ) : (
                   <div className="h-full w-full bg-white/[0.03]" />

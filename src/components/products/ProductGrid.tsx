@@ -110,7 +110,7 @@ export default function ProductGrid({
               className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] grayscale-[0.1]"
               loading={i < 4 ? 'eager' : 'lazy'}
               decoding="async"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
+              onError={handleImageError}
             />
           </div>
           <div className="mt-4 flex flex-col">
