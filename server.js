@@ -21,7 +21,7 @@ app.use((req, res, next) => {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://thunderbold.shop https://*.googleusercontent.com",
-    "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://fcm.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://accounts.google.com",
+    "connect-src 'self' https://res.cloudinary.com https://*.cloudinary.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://fcm.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://accounts.google.com",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "frame-src 'self' https://thunderbolt-auth.firebaseapp.com https://*.firebaseapp.com https://accounts.google.com",

@@ -76,6 +76,7 @@ export default defineConfig(() => ({
       registerType: 'autoUpdate', // Auto-activate new SW immediately — prevents stale cache black screens
       injectRegister: null,      // We register manually in main.tsx via virtual:pwa-register
 
+      filename: 'sw.js',
       /**
        * Service worker only in production.
        * In dev mode it conflicts with Vite HMR and the API proxy.
@@ -86,7 +87,7 @@ export default defineConfig(() => ({
 
       /**
        * Files in /public to include in the precache manifest.
-       * Only lightweight assets — product images are handled via runtimeCaching.
+       * Only lightweight assets — product images load directly via Cloudinary CDN.
        */
       includeAssets: [
         'favicon.svg',
@@ -267,9 +268,11 @@ export default defineConfig(() => ({
       } as Record<string, unknown>,
 
       workbox: {
+        additionalManifestEntries: [],
+
         /**
          * Precache JS/CSS/HTML/fonts and small raster assets.
-         * Large media files (banners, product images) are served via runtimeCaching.
+         * Cloudinary product images bypass the SW completely and load directly from CDN.
          */
         globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2}'],
         globIgnores: [
@@ -280,12 +283,14 @@ export default defineConfig(() => ({
 
         /**
          * SPA navigation fallback — serve index.html for all navigation requests
-         * except API calls (those must always go to the network).
+         * except API calls and Cloudinary CDN requests.
          */
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
-          /^\/api\//,    // Never intercept API requests
-          /^\/sw\.js$/,  // Don't intercept the service worker itself
+          /^\/api\//,             // Never intercept API requests
+          /^\/sw\.js$/,           // Don't intercept the service worker itself
+          /res\.cloudinary\.com/, // Bypass SW for Cloudinary CDN
+          /cloudinary\.com/,
         ],
 
         /**
@@ -342,39 +347,10 @@ export default defineConfig(() => ({
           },
           {
             /**
-             * Cloudinary product images — served via StaleWhileRevalidate.
-             * Prevents poisoned CacheFirst entries from persisting indefinitely.
-             * Renamed to tb-cloudinary-images-v2 to force old cache eviction.
-             */
-            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'tb-cloudinary-images-v2',
-              expiration: {
-                maxEntries: 120,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
-              plugins: [
-                {
-                  fetchDidSucceed: async ({ response }) => {
-                    return response;
-                  },
-                  cachedResponseWillBeUsed: async ({ cachedResponse }) => {
-                    if (cachedResponse && cachedResponse.status === 0) {
-                      return null;
-                    }
-                    return cachedResponse;
-                  },
-                },
-              ],
-            },
-          },
-          {
-            /**
              * Local static images (banners, icons, placeholders).
-             * 30-day CacheFirst with a 60-entry limit.
+             * Explicitly excludes Cloudinary CDN URLs so Cloudinary images bypass SW completely.
              */
-            urlPattern: /\.(?:png|jpg|jpeg|webp|svg|gif|ico)$/i,
+            urlPattern: ({ url }: { url: URL }) => !url.href.includes('cloudinary.com') && /\.(?:png|jpg|jpeg|webp|svg|gif|ico)$/i.test(url.pathname),
             handler: 'CacheFirst',
             options: {
               cacheName: 'tb-static-images',
