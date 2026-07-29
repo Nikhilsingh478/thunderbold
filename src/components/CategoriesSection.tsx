@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 import PromoBanner from './promo/PromoBanner';
 import ProductGrid, { type GridProduct } from './products/ProductGrid';
 import ThunderboldSlider from './ThunderboldSlider';
@@ -41,16 +41,17 @@ function CategoryCard({ cat, index, navigate }: { cat: Category; index: number; 
       <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute inset-0 bg-brass-bright/5 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 z-0 pointer-events-none" />
-        <div className="w-full h-full bg-gradient-to-br from-brass/20 to-brass/10 flex items-center justify-center">
+        <div className="w-full h-full bg-[#0c0c0c] flex items-center justify-center">
           <img
-            src={optimizeCloudinaryUrl(cat.image || '/placeholder.png', IMG_SIZES.card)}
+            src={optimizeCloudinaryUrl(cat.image, IMG_SIZES.card)}
             alt={cat.name}
             width={500}
             height={667}
-            className="w-full h-full object-cover"
-            loading={index < 2 ? 'eager' : 'lazy'}
-            decoding="async"
-            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
+            className="w-full h-full object-cover text-transparent"
+            loading={index === 0 ? 'eager' : 'lazy'}
+            fetchPriority={index === 0 ? 'high' : 'low'}
+            decoding={index === 0 ? 'sync' : 'async'}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }}
           />
         </div>
       </div>

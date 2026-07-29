@@ -4,14 +4,18 @@ import "./index.css";
 
 // Global safety handler for image error events
 (window as any).handleImageError = function (
-  e: any,
-  fallback: string = '/placeholder.png'
+  img: any
 ) {
   try {
-    const target = e?.currentTarget || e?.target;
+    const target = (img && (img.currentTarget || img.target)) || img;
     if (target && target instanceof HTMLImageElement) {
       target.onerror = null;
-      target.src = fallback;
+      target.src = 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">' +
+        '<rect width="400" height="400" fill="#111111"/>' +
+        '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#333333" font-size="14" font-family="sans-serif">No Image</text>' +
+        '</svg>'
+      );
     }
   } catch {}
 };

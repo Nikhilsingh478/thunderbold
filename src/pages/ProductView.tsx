@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Heart, Share2, ShoppingCart, X } from 'lucide-react';
@@ -453,10 +453,10 @@ export default function ProductView() {
                     <img 
                       src={optimizeCloudinaryUrl(img, IMG_SIZES.thumbnail)} 
                       alt={`Thumbnail ${index + 1}`} 
-                      className="w-full h-full object-cover object-center" 
+                      className="w-full h-full object-cover object-center text-transparent" 
                       loading="lazy" 
                       decoding="async" 
-                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }} 
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }} 
                     />
                   </button>
                 ))}
@@ -469,11 +469,11 @@ export default function ProductView() {
               >
                 <div className="flex h-full touch-pan-y">
                   {IMAGES.map((img, index) => (
-                    <div className="flex-[0_0_100%] min-w-0 relative h-full" key={index}>
+                    <div className="flex-[0_0_100%] min-w-0 relative h-full bg-[#0c0c0c]" key={index}>
                       <img
                         src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
-                        className="w-full h-full object-cover object-center cursor-zoom-in transition-transform duration-100 ease-out origin-center"
+                        className="w-full h-full object-cover object-center cursor-zoom-in transition-transform duration-100 ease-out origin-center text-transparent"
                         onMouseMove={handleMouseMove}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
@@ -483,8 +483,9 @@ export default function ProductView() {
                           setShowLightbox(true);
                         }}
                         loading={index === 0 ? "eager" : "lazy"}
-                        decoding="async"
-                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
+                        fetchPriority={index === 0 ? "high" : "low"}
+                        decoding={index === 0 ? "sync" : "async"}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }}
                       />
                     </div>
                   ))}

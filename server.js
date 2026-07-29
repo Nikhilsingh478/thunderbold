@@ -20,7 +20,7 @@ app.use((req, res, next) => {
     "script-src 'self' 'unsafe-inline' https://apis.google.com https://www.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://thunderbold.shop https://*.googleusercontent.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://thunderbold.shop https://*.googleusercontent.com",
     "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://fcm.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://accounts.google.com",
     "worker-src 'self' blob:",
     "manifest-src 'self'",

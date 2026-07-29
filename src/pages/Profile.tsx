@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 
 import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
@@ -801,14 +801,14 @@ export default function Profile() {
                                     {/* Product Image */}
                                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
                                       <img
-                                        src={optimizeCloudinaryUrl(p.image || '/placeholder.png', IMG_SIZES.thumbnail)}
+                                        src={optimizeCloudinaryUrl(p.image, IMG_SIZES.thumbnail)}
                                         alt={p.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover text-transparent"
                                         loading="lazy"
                                         decoding="async"
                                         onError={(e) => {
                                           e.currentTarget.onerror = null;
-                                          e.currentTarget.src = '/placeholder.png';
+                                          e.currentTarget.src = PLACEHOLDER;
                                         }}
                                       />
                                     </div>

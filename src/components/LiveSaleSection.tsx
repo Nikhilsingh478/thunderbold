@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 
 interface Product {
   _id: string;
@@ -146,10 +146,11 @@ export default function LiveSaleSection() {
                     <img
                       src={optimizeCloudinaryUrl(img, IMG_SIZES.card)}
                       alt={product.name}
-                      className={`w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-[0.16,1,0.3,1] ${isOutOfStock ? 'opacity-60 grayscale-[0.4]' : ''}`}
-                      loading={index < 2 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
+                      className={`w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-[0.16,1,0.3,1] text-transparent ${isOutOfStock ? 'opacity-60 grayscale-[0.4]' : ''}`}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'low'}
+                      decoding={index === 0 ? 'sync' : 'async'}
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }}
                     />
                   </div>
                   <div className="mt-3 md:mt-5 flex flex-col">

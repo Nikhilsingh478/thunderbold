@@ -1,6 +1,13 @@
 export const CLOUD_NAME = 'djptdutak';
 export const CLOUD_NAME_2 = 'dyyjowb8g';
 
+export const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">' +
+  '<rect width="400" height="400" fill="#111111"/>' +
+  '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#333333" font-size="14" font-family="sans-serif">No Image</text>' +
+  '</svg>'
+);
+
 /**
  * Transforms a raw Cloudinary URL into an optimised one.
  * - f_auto  → best format for browser (WebP / AVIF)
@@ -19,7 +26,7 @@ export function optimizeCloudinaryUrl(
   width: number = 800,
   height?: number,
 ): string {
-  if (!url) return '/placeholder.png';
+  if (!url || url === '/placeholder.png') return PLACEHOLDER;
   if (!url.includes('res.cloudinary.com')) return url;
   // Already transformed by this function — skip to avoid duplicating params
   if (url.includes('/upload/f_auto,q_auto,w_')) return url;

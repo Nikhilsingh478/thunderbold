@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell, RotateCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';

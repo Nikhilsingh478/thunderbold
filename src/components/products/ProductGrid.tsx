@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl, IMG_SIZES } from '../../lib/cloudinary';
+import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../../lib/cloudinary';
 import { useWishlist } from '../../context/WishlistContext';
 import PriceDisplay from '../PriceDisplay';
 
@@ -107,10 +107,11 @@ export default function ProductGrid({
               alt={prod.name}
               width={500}
               height={667}
-              className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] grayscale-[0.1]"
-              loading={i < 4 ? 'eager' : 'lazy'}
-              decoding="async"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).onerror = null; (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
+              className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-[1.08] transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] grayscale-[0.1] text-transparent"
+              loading={i === 0 ? 'eager' : 'lazy'}
+              fetchPriority={i === 0 ? 'high' : 'low'}
+              decoding={i === 0 ? 'sync' : 'async'}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).onerror = null; (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
             />
           </div>
           <div className="mt-4 flex flex-col">
