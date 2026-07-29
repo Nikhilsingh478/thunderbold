@@ -71,6 +71,24 @@ if ('serviceWorker' in navigator) {
         if (!r) return;
         console.log('[PWA] Service worker registered.');
 
+        // Clear stale image caches on SW registration
+        if ('caches' in window) {
+          caches.keys().then((cacheNames) => {
+            cacheNames.forEach((cacheName) => {
+              if (
+                cacheName.includes('cloudinary') ||
+                cacheName.includes('images')
+              ) {
+                if (!cacheName.includes('v2')) {
+                  caches.delete(cacheName).then(() => {
+                    console.log('[SW] Cleared stale cache:', cacheName);
+                  }).catch(() => {});
+                }
+              }
+            });
+          }).catch(() => {});
+        }
+
         // 1. Periodic SW update check every 1 hour
         setInterval(() => {
           if (navigator.onLine) {

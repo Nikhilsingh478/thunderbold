@@ -342,18 +342,31 @@ export default defineConfig(() => ({
           },
           {
             /**
-             * Cloudinary product images — content-addressed URLs, safe to cache
-             * for 30 days with a 120-entry LRU cap.
+             * Cloudinary product images — served via StaleWhileRevalidate.
+             * Prevents poisoned CacheFirst entries from persisting indefinitely.
+             * Renamed to tb-cloudinary-images-v2 to force old cache eviction.
              */
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'tb-cloudinary-images',
+              cacheName: 'tb-cloudinary-images-v2',
               expiration: {
                 maxEntries: 120,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
               },
-              cacheableResponse: { statuses: [0, 200] },
+              plugins: [
+                {
+                  fetchDidSucceed: async ({ response }) => {
+                    return response;
+                  },
+                  cachedResponseWillBeUsed: async ({ cachedResponse }) => {
+                    if (cachedResponse && cachedResponse.status === 0) {
+                      return null;
+                    }
+                    return cachedResponse;
+                  },
+                },
+              ],
             },
           },
           {
