@@ -326,7 +326,7 @@ export default defineConfig(() => ({
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'tb-google-fonts-css',
+              cacheName: 'tb-google-fonts-css-v2',
               expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 * 24 * 7 },
             },
           },
@@ -337,7 +337,7 @@ export default defineConfig(() => ({
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'tb-google-fonts-files',
+              cacheName: 'tb-google-fonts-files-v2',
               expiration: {
                 maxEntries: 30,
                 maxAgeSeconds: 60 * 60 * 24 * 365,

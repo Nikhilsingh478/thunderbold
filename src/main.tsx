@@ -71,13 +71,19 @@ if ('serviceWorker' in navigator) {
         if (!r) return;
         console.log('[PWA] Service worker registered.');
 
-        // Delete ALL caches on SW registration to purge any stale/poisoned entries completely
+        // Clear stale image and font caches on SW registration
         if ('caches' in window) {
           caches.keys().then((cacheNames) => {
             cacheNames.forEach((cacheName) => {
-              caches.delete(cacheName).then(() => {
-                console.log('[SW] Deleted cache:', cacheName);
-              }).catch(() => {});
+              if (
+                cacheName.includes('cloudinary') ||
+                (cacheName.includes('images') && !cacheName.includes('v3')) ||
+                (cacheName.includes('fonts') && !cacheName.includes('v2'))
+              ) {
+                caches.delete(cacheName).then(() => {
+                  console.log('[SW] Cleared stale cache:', cacheName);
+                }).catch(() => {});
+              }
             });
           }).catch(() => {});
         }
