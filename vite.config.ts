@@ -68,6 +68,7 @@ export default defineConfig(() => ({
   plugins: [
     react(),
     VitePWA({
+      selfDestroying: true,
       /**
        * generateSW — Workbox fully generates the service worker.
        * Simpler and more reliable than injectManifest for this use case.
@@ -266,103 +267,6 @@ export default defineConfig(() => ({
           { src: '/icons/icon-512x512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       } as Record<string, unknown>,
-
-      workbox: {
-        additionalManifestEntries: [],
-
-        /**
-         * Precache JS/CSS/HTML/fonts and small raster assets.
-         * Cloudinary product images bypass the SW completely and load directly from CDN.
-         */
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2}'],
-        globIgnores: [
-          '**/banners/**',
-          '**/screenshots/**',
-          // Exclude large icon sizes from precache — runtimeCaching handles them
-        ],
-
-        /**
-         * SPA navigation fallback — serve index.html for all navigation requests
-         * except API calls and Cloudinary CDN requests.
-         */
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [
-          /^\/api\//,             // Never intercept API requests
-          /^\/sw\.js$/,           // Don't intercept the service worker itself
-          /res\.cloudinary\.com/, // Bypass SW for Cloudinary CDN
-          /cloudinary\.com/,
-        ],
-
-        /**
-         * Clean up outdated caches from old SW versions on activation.
-         * Prevents stale data after deployments.
-         */
-        cleanupOutdatedCaches: true,
-
-        /**
-         * In 'prompt' mode, do not auto skip waiting but do claim clients upon activation.
-         * The prompt component triggers activation, and clientsClaim ensures it immediately
-         * takes control of all pages to trigger page reloads reliably.
-         */
-        skipWaiting: true,
-        clientsClaim: true,
-
-        importScripts: ['/firebase-messaging-sw-part.js'],
-
-        runtimeCaching: [
-          {
-            /**
-             * CRITICAL — Never cache any API response.
-             * Auth, cart, orders, admin, checkout must always hit the network.
-             * Stale API data causes incorrect stock counts and auth failures.
-             */
-            urlPattern: /^\/api\/.*/i,
-            handler: 'NetworkOnly',
-          },
-          {
-            /**
-             * Google Fonts CSS — safe to serve stale while revalidating in background.
-             */
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'tb-google-fonts-css-v2',
-              expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 * 24 * 7 },
-            },
-          },
-          {
-            /**
-             * Google Fonts binary files — immutable, safe to cache for 1 year.
-             */
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tb-google-fonts-files-v2',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            /**
-             * Local static images (banners, icons, placeholders).
-             * Explicitly excludes Cloudinary CDN URLs so Cloudinary images bypass SW completely.
-             */
-            urlPattern: ({ url }: { url: URL }) => !url.href.includes('cloudinary.com') && /\.(?:png|jpg|jpeg|webp|svg|gif|ico)$/i.test(url.pathname),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tb-static-images',
-              expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
-      },
     }),
   ],
   resolve: {
