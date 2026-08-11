@@ -196,7 +196,7 @@ export default function CategoriesSection() {
               <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
                 The Kurta Collection
               </h2>
-              <p className="font-condensed text-sv text-sm md:text-base tracking-[0.12em] mt-4">
+              <p className="font-display text-sv text-sm md:text-base tracking-[0.08em] mt-4">
                 Crafted tradition. Contemporary style.
               </p>
             </div>
@@ -210,10 +210,10 @@ export default function CategoriesSection() {
               skeletonCount={4}
               emptyState={
                 <div className="min-h-[280px] flex flex-col items-center justify-center py-16 border border-white/[0.06] rounded-sm">
-                  <p className="font-condensed text-sm uppercase tracking-[0.22em] text-sv-mid">
+                  <p className="font-display text-sm uppercase tracking-[0.18em] text-sv-mid font-medium">
                     Coming Soon
                   </p>
-                  <p className="font-condensed text-xs tracking-[0.14em] text-sv-dim mt-2">
+                  <p className="font-display text-xs tracking-[0.1em] text-sv-dim mt-2">
                     New arrivals being added
                   </p>
                 </div>

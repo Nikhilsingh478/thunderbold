@@ -19,22 +19,22 @@ export default function PriceDisplay({ price, mrp, size = 'md', showSavings = fa
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className={`font-condensed font-bold tracking-wide text-tb-white ${finalSize}`}>
+        <span className={`font-display font-bold tracking-tight text-tb-white ${finalSize}`}>
           ₹{sellingPrice.toLocaleString('en-IN')}
         </span>
         {hasDiscount && (
           <>
-            <span className={`font-condensed text-white/35 line-through tracking-wide ${origSize}`}>
+            <span className={`font-display text-white/35 line-through tracking-tight ${origSize}`}>
               ₹{origPrice.toLocaleString('en-IN')}
             </span>
-            <span className="text-[0.6rem] font-condensed font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-600 text-white uppercase">
+            <span className="text-[0.6rem] font-display font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-600 text-white uppercase">
               {discountPct}% off
             </span>
           </>
         )}
       </div>
       {hasDiscount && showSavings && (
-        <span className="font-condensed text-[0.68rem] tracking-wider text-green-400">
+        <span className="font-display text-[0.68rem] tracking-wide text-green-400">
           You save ₹{savings.toLocaleString('en-IN')}
         </span>
       )}

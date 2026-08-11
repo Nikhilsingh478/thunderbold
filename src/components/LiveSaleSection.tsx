@@ -108,7 +108,7 @@ export default function LiveSaleSection() {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="text-center py-10 md:py-16"
           >
-            <p className="font-condensed text-sv-dim text-xs tracking-[0.22em] uppercase">
+            <p className="font-display text-sv-dim text-xs tracking-[0.14em] uppercase">
               — Sale drops coming soon —
             </p>
           </motion.div>
@@ -133,11 +133,11 @@ export default function LiveSaleSection() {
                 >
                   <div className="overflow-hidden bg-[#0c0c0c] aspect-[3/4] relative border border-white/5 group-hover:border-white/10 transition-colors duration-500 rounded-sm">
                     <div className="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1.5">
-                      <span className="font-condensed text-[0.58rem] tracking-[0.14em] uppercase px-2 py-0.5 bg-brass text-void font-bold rounded-sm">
+                      <span className="font-display text-[0.58rem] tracking-[0.1em] uppercase px-2 py-0.5 bg-brass text-void font-bold rounded-sm">
                         Offer
                       </span>
                       {isOutOfStock && (
-                        <span className="font-condensed text-[0.55rem] tracking-[0.12em] uppercase px-2 py-0.5 bg-red-500/90 text-white font-bold rounded-sm">
+                        <span className="font-display text-[0.55rem] tracking-[0.1em] uppercase px-2 py-0.5 bg-red-500/90 text-white font-bold rounded-sm">
                           Sold Out
                         </span>
                       )}
@@ -154,10 +154,10 @@ export default function LiveSaleSection() {
                     />
                   </div>
                   <div className="mt-3 md:mt-5 flex flex-col">
-                    <h3 className="font-condensed text-sm md:text-base tracking-[0.1em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 leading-snug">
+                    <h3 className="font-display font-medium text-sm md:text-base tracking-tight uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 leading-snug">
                       {product.name}
                     </h3>
-                    <p className="font-condensed text-xs md:text-sm tracking-widest text-brass mt-1 font-semibold">
+                    <p className="font-display text-xs md:text-sm tracking-tight text-brass mt-1 font-bold">
                       ₹{product.price.toLocaleString('en-IN')}
                     </p>
                   </div>
