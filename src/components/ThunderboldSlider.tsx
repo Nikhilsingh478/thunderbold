@@ -191,13 +191,13 @@ export default function ThunderboldSlider() {
             key={`${activeIndex}`}
             className="tb-heading-anim"
             style={{
-              fontFamily: "'Manrope', sans-serif",
-              fontSize: isMobile ? 'clamp(44px, 14vw, 90px)' : 'clamp(80px, 16vw, 240px)',
-              fontWeight: 800,
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: isMobile ? 'clamp(48px, 16vw, 100px)' : 'clamp(90px, 18vw, 260px)',
+              fontWeight: 400,
               color: 'white',
               lineHeight: 1,
               textTransform: 'uppercase',
-              letterSpacing: '-0.03em',
+              letterSpacing: '-0.02em',
               whiteSpace: 'nowrap',
               margin: 0,
             }}

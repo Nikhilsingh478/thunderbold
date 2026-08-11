@@ -78,11 +78,12 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Manrope"', 'sans-serif'],
+        display: ['"Manrope"', '"Inter"', 'sans-serif'],
+        bebas: ['"Bebas Neue"', 'sans-serif'],
         condensed: ['"Barlow Condensed"', 'sans-serif'],
-        serif: ['"Manrope"', 'sans-serif'],
-        body: ['"Manrope"', 'sans-serif'],
-        sans: ['"Manrope"', 'sans-serif'],
+        serif: ['"Manrope"', '"Inter"', 'sans-serif'],
+        body: ['"Manrope"', '"Inter"', 'sans-serif'],
+        sans: ['"Manrope"', '"Inter"', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
