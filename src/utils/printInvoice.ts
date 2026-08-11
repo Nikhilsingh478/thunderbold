@@ -29,6 +29,7 @@ export interface PrintableOrder {
   totalAmount?: number;
   createdAt?: string;
   giftMessage?: string;
+  giftCardId?: string;
   orderNumber?: string;
 }
 
@@ -108,6 +109,21 @@ export function printInvoice(order: PrintableOrder): void {
         Gift / Order Message
       </p>
       <p style="font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap;margin:0;">${esc(order.giftMessage)}</p>
+    </div>`
+    : '';
+
+  // Gift card block — only rendered when a card was selected
+  const GIFT_CARD_LABELS: Record<string, string> = {
+    brother: 'Brother', dad: 'Dad', friend: 'Friend', mom: 'Mom', valentine: 'Valentine',
+  };
+  const giftCardBlock = order.giftCardId && GIFT_CARD_LABELS[order.giftCardId]
+    ? `
+    <div style="margin-bottom:24px;border:1px solid #fde68a;border-radius:8px;padding:16px 18px;background:#fffbeb;display:flex;align-items:center;gap:16px;">
+      <img src="/gift-cards/${esc(order.giftCardId)}.webp" alt="${esc(GIFT_CARD_LABELS[order.giftCardId])}" style="width:56px;height:78px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb;" />
+      <div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#92400e;margin-bottom:4px;">Gift Card</p>
+        <p style="font-size:13px;color:#111827;font-weight:600;">${esc(GIFT_CARD_LABELS[order.giftCardId])}</p>
+      </div>
     </div>`
     : '';
 
@@ -276,7 +292,7 @@ export function printInvoice(order: PrintableOrder): void {
 <body>
   <div class="page">
     <div class="header">
-      <div class="brand">THUNDER<span>BOLT</span></div>
+      <div class="brand">THUNDER<span>BOLD</span></div>
       <div class="doc-title">
         <h2>Packing Slip</h2>
         <p>${displayId}</p>
@@ -298,6 +314,8 @@ export function printInvoice(order: PrintableOrder): void {
         ${addr.phone ? `<p style="margin-top:6px;font-weight:600;">📞 ${esc(addr.phone)}</p>` : ''}
       </div>
     </div>
+
+    ${giftCardBlock}
 
     ${giftMessageBlock}
 

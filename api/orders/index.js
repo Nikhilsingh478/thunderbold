@@ -116,7 +116,7 @@ async function handleCreate(req, res) {
   const productsCollection = db.collection("products");
 
   const body = await parseBody(req);
-  const { products, address, paymentMethod, clientOrderId, giftMessage } = body;
+  const { products, address, paymentMethod, clientOrderId, giftMessage, giftCardId } = body;
 
   // Idempotency check
   if (clientOrderId) {
@@ -217,6 +217,12 @@ async function handleCreate(req, res) {
     ? giftMessage.replace(/<[^>]*>/g, "").trim().slice(0, 300)
     : "";
 
+  // Validate optional giftCardId — must be one of the five known card IDs
+  const VALID_GIFT_CARD_IDS = ["brother", "dad", "friend", "mom", "valentine"];
+  const sanitizedGiftCardId = typeof giftCardId === "string" && VALID_GIFT_CARD_IDS.includes(giftCardId)
+    ? giftCardId
+    : null;
+
   // Generate unique, collision-resistant orderNumber
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded confusing: O, 0, I, 1
   let orderNumber = '';
@@ -251,6 +257,7 @@ async function handleCreate(req, res) {
     orderNumber,
     ...(clientOrderId ? { clientOrderId } : {}),
     ...(sanitizedGiftMessage ? { giftMessage: sanitizedGiftMessage } : {}),
+    ...(sanitizedGiftCardId ? { giftCardId: sanitizedGiftCardId } : {}),
   };
 
   let result;

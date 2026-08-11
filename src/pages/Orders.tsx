@@ -33,6 +33,8 @@ interface Order {
   returnShippingCharges?: number;
   returnRefundAmount?: number;
   adminNotes?: string;
+  giftMessage?: string;
+  giftCardId?: string;
 }
 
 const RETURN_STATUSES = ['return_requested', 'return_approved', 'return_rejected', 'refund_issued'];
@@ -537,6 +539,21 @@ const Orders = () => {
                               <span className="opacity-60">Note from our team: </span>{order.adminNotes}
                             </p>
                           )}
+                        </div>
+                      )}
+
+                      {/* Gift Card */}
+                      {order.giftCardId && (
+                        <div className="px-4 py-3 border-b border-white/8 flex items-center gap-3">
+                          <img
+                            src={`/gift-cards/${order.giftCardId}.webp`}
+                            alt={order.giftCardId}
+                            className="w-10 h-14 rounded object-cover border border-white/15 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="font-condensed text-[10px] text-brass/80 uppercase tracking-wider mb-0.5">Gift Card</p>
+                            <p className="font-condensed text-xs text-sv-mid capitalize">{order.giftCardId}</p>
+                          </div>
                         </div>
                       )}
 

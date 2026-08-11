@@ -15,6 +15,14 @@ import OrderConfirmation from '../components/checkout/OrderConfirmation';
 const STORAGE_KEY = 'user_address';
 const GIFT_MSG_MAX = 300;
 
+const GIFT_CARDS = [
+  { id: 'brother',   label: 'Brother',   src: '/gift-cards/brother.webp' },
+  { id: 'dad',       label: 'Dad',       src: '/gift-cards/dad.webp' },
+  { id: 'friend',    label: 'Friend',    src: '/gift-cards/friend.webp' },
+  { id: 'mom',       label: 'Mom',       src: '/gift-cards/mom.webp' },
+  { id: 'valentine', label: 'Valentine', src: '/gift-cards/valentine.webp' },
+];
+
 function loadSavedAddress(): AddressData | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -50,6 +58,8 @@ export default function Checkout() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submittedAddress, setSubmittedAddress] = useState<AddressData | null>(null);
   const [giftMessage, setGiftMessage] = useState('');
+  const [isGift, setIsGift] = useState(false);
+  const [selectedGiftCard, setSelectedGiftCard] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -150,6 +160,10 @@ export default function Checkout() {
         orderData.giftMessage = trimmedMessage;
       }
 
+      if (isGift && selectedGiftCard) {
+        orderData.giftCardId = selectedGiftCard;
+      }
+
       const token = await user.getIdToken();
 
       let response: Response | null = null;
@@ -235,7 +249,7 @@ export default function Checkout() {
             {/* Address Form */}
             <div>
               <h2 className="font-display text-2xl tracking-[0.1em] text-tb-white uppercase mb-6">
-                Delivery Address
+                {isGift ? "Recipient's Address" : 'Delivery Address'}
               </h2>
               <AddressForm
                 onSubmit={handleSubmit}
@@ -244,15 +258,91 @@ export default function Checkout() {
               />
             </div>
 
-            {/* Right Column — Gift Message then Order Summary */}
+            {/* Right Column — Gift Section then Order Summary */}
             <div className="flex flex-col gap-6">
-              {/* Gift / Order Message */}
+              {/* Gift Toggle + Gift Card + Message */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 className="border border-white/[0.08] bg-white/[0.02] p-5 md:p-6"
               >
+                {/* Gift Toggle */}
+                <label className="flex items-center gap-3 cursor-pointer mb-4 select-none">
+                  <div
+                    onClick={() => {
+                      setIsGift(v => !v);
+                      if (isGift) setSelectedGiftCard(null);
+                    }}
+                    className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${
+                      isGift ? 'bg-brass' : 'bg-white/15'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${
+                        isGift ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </div>
+                  <span className="font-condensed font-semibold text-[0.78rem] tracking-[0.18em] uppercase text-tb-white">
+                    This is a gift 🎁
+                  </span>
+                </label>
+
+                {/* Gift Card Picker — shown only when gift is enabled */}
+                {isGift && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="mb-4"
+                  >
+                    <p className="font-condensed text-[0.65rem] tracking-[0.2em] uppercase text-sv-dim mb-3">
+                      Choose a gift card <span className="text-sv-dim/60 normal-case tracking-normal">(optional)</span>
+                    </p>
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                      {GIFT_CARDS.map((card) => (
+                        <button
+                          key={card.id}
+                          type="button"
+                          onClick={() =>
+                            setSelectedGiftCard(prev => (prev === card.id ? null : card.id))
+                          }
+                          className={`shrink-0 flex flex-col items-center gap-1.5 transition-all duration-200 ${
+                            selectedGiftCard === card.id
+                              ? 'opacity-100 scale-100'
+                              : 'opacity-60 hover:opacity-90 scale-95 hover:scale-100'
+                          }`}
+                        >
+                          <div
+                            className={`w-20 h-28 rounded overflow-hidden border-2 transition-colors duration-200 ${
+                              selectedGiftCard === card.id
+                                ? 'border-brass'
+                                : 'border-white/10 hover:border-white/30'
+                            }`}
+                          >
+                            <img
+                              src={card.src}
+                              alt={card.label}
+                              className="w-full h-full object-cover"
+                              draggable={false}
+                            />
+                          </div>
+                          <span
+                            className={`font-condensed text-[0.62rem] tracking-[0.14em] uppercase transition-colors duration-200 ${
+                              selectedGiftCard === card.id ? 'text-brass' : 'text-sv-dim'
+                            }`}
+                          >
+                            {card.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Gift / Order Message */}
                 <div className="mb-4">
                   <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-tb-white">
                     Gift / Order Message

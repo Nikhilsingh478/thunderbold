@@ -40,6 +40,7 @@ interface Order {
   address?: OrderAddress;
   paymentMethod?: string;
   giftMessage?: string;
+  giftCardId?: string;
   orderNumber?: string;
 }
 
@@ -2642,6 +2643,21 @@ export default function Admin() {
                   <p className="text-tb-white text-sm leading-relaxed whitespace-pre-wrap bg-white/[0.03] border border-white/[0.07] px-3 py-2.5 rounded">
                     {viewAddressOrder.giftMessage}
                   </p>
+                </div>
+              )}
+              {viewAddressOrder.giftCardId && (
+                <div className="pt-2 border-t border-white/[0.08]">
+                  <p className="font-condensed text-xs text-brass/80 uppercase tracking-wider mb-2">Gift Card</p>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={`/gift-cards/${viewAddressOrder.giftCardId}.webp`}
+                      alt={viewAddressOrder.giftCardId}
+                      className="w-16 h-[5.5rem] rounded object-cover border border-white/15"
+                    />
+                    <span className="font-condensed text-[0.7rem] tracking-[0.16em] uppercase text-sv-mid capitalize">
+                      {viewAddressOrder.giftCardId}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
