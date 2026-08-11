@@ -567,25 +567,25 @@ export default function Profile() {
                             </div>
 
                             {/* Address lines */}
-                            <p className="text-sm text-white/55 leading-snug">
-                              {addr.phone}
+                            <p className="text-sm text-zinc-200 font-display font-medium leading-snug">
+                              Phone: {addr.phone}
                             </p>
-                            <p className="text-sm text-white/55 leading-snug mt-0.5">
+                            <p className="text-sm text-zinc-200 font-display leading-snug mt-0.5">
                               {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}
                             </p>
-                            <p className="text-sm text-white/55 leading-snug">
+                            <p className="text-sm text-zinc-200 font-display leading-snug">
                               {addr.city}, {addr.state} — {addr.pincode}
                             </p>
                             {addr.landmark && (
-                              <p className="text-xs text-white/30 mt-1">Near: {addr.landmark}</p>
+                              <p className="text-xs text-zinc-300 font-display mt-1">Near: {addr.landmark}</p>
                             )}
 
                             {/* Actions row */}
-                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.07]">
+                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
                               {!addr.isDefault && (
                                 <button
                                   onClick={() => handleSetDefault(addr.id)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.09] hover:border-white/[0.16] text-white/50 hover:text-white/80 font-condensed text-[0.6rem] tracking-[0.14em] uppercase transition-all duration-200 rounded-lg active:scale-95"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-zinc-200 hover:text-white font-display text-[0.65rem] font-bold tracking-[0.12em] uppercase transition-all duration-200 rounded-lg active:scale-95"
                                 >
                                   <Star className="w-3 h-3" />
                                   Set Default
@@ -593,7 +593,7 @@ export default function Profile() {
                               )}
                               <button
                                 onClick={() => handleRemoveAddress(addr.id)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/15 hover:border-red-500/30 text-red-400/60 hover:text-red-400 font-condensed text-[0.6rem] tracking-[0.14em] uppercase transition-all duration-200 rounded-lg active:scale-95"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-300 hover:text-red-200 font-display text-[0.65rem] font-bold tracking-[0.12em] uppercase transition-all duration-200 rounded-lg active:scale-95"
                               >
                                 <Trash2 className="w-3 h-3" />
                                 Remove
@@ -958,7 +958,7 @@ interface AddressFieldProps {
 function AddressField({ label, value, onChange, error, required, type, inputMode, placeholder }: AddressFieldProps) {
   return (
     <div className="mb-4">
-      <label className="block font-condensed text-[0.62rem] tracking-[0.2em] uppercase text-white/40 mb-1.5">
+      <label className="block font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-200 mb-2">
         {label}{required && <span className="text-brass ml-1">*</span>}
       </label>
       <input
@@ -967,14 +967,14 @@ function AddressField({ label, value, onChange, error, required, type, inputMode
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full bg-void border px-4 py-3 font-body text-sm text-white placeholder:text-white/20 outline-none transition-all duration-300 rounded-xl ${
+        className={`w-full bg-[#0f0f0f] border px-4 py-3 font-display text-sm text-white placeholder:text-zinc-400 outline-none transition-all duration-300 rounded-xl ${
           error
-            ? 'border-red-500/40 focus:border-red-400/70'
-            : 'border-white/[0.09] focus:border-brass/50'
+            ? 'border-red-500/80 focus:border-red-400'
+            : 'border-white/20 focus:border-brass'
         }`}
       />
       {error && (
-        <p className="font-body text-[0.7rem] text-red-400/80 mt-1.5">{error}</p>
+        <p className="font-display text-xs text-red-400 mt-1.5 font-medium">{error}</p>
       )}
     </div>
   );

@@ -178,7 +178,7 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="font-condensed font-semibold text-[0.62rem] tracking-[0.32em] uppercase text-sv-mid mb-6">
+      <div className="font-display font-semibold text-xs tracking-[0.22em] uppercase text-zinc-200 mb-6">
         Delivery Address
       </div>
 
@@ -189,38 +189,38 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <div className="bg-surface border border-white/[0.08] rounded-xl p-5">
+          <div className="bg-[#0f0f0f] border border-white/15 rounded-xl p-5 shadow-lg">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    useSavedAddress ? 'border-brass bg-brass' : 'border-white/30'
+                    useSavedAddress ? 'border-brass bg-brass' : 'border-white/40'
                   }`}>
-                    {useSavedAddress && <div className="w-2 h-2 bg-void rounded-full" />}
+                    {useSavedAddress && <div className="w-2 h-2 bg-black rounded-full" />}
                   </div>
-                  <span className="font-condensed font-semibold text-[0.68rem] tracking-[0.18em] uppercase text-tb-white">
+                  <span className="font-display font-bold text-xs tracking-[0.14em] uppercase text-white">
                     Saved Address
                   </span>
                 </div>
-                <div className="font-body text-sv-mid text-sm space-y-1 ml-6">
-                  <p className="text-tb-white font-medium">{savedAddress.fullName}</p>
-                  <p>{savedAddress.phone}</p>
-                  <p>{savedAddress.addressLine1}</p>
-                  {savedAddress.addressLine2 && <p>{savedAddress.addressLine2}</p>}
-                  <p>{savedAddress.city}, {savedAddress.state} - {savedAddress.pincode}</p>
+                <div className="font-display text-zinc-200 text-sm space-y-1 ml-6 leading-relaxed">
+                  <p className="text-white font-semibold text-base">{savedAddress.fullName}</p>
+                  <p className="text-zinc-200">Phone: {savedAddress.phone}</p>
+                  <p className="text-zinc-200">{savedAddress.addressLine1}</p>
+                  {savedAddress.addressLine2 && <p className="text-zinc-200">{savedAddress.addressLine2}</p>}
+                  <p className="text-zinc-200">{savedAddress.city}, {savedAddress.state} — {savedAddress.pincode}</p>
                 </div>
               </div>
             </div>
             
-            <div className="flex gap-3 ml-6">
+            <div className="flex gap-3 ml-6 pt-2">
               <button
                 type="button"
                 onClick={handleUseSavedAddress}
                 disabled={useSavedAddress}
-                className={`px-4 py-2 font-condensed font-semibold text-[0.62rem] tracking-[0.18em] uppercase transition-all duration-300 ${
+                className={`px-4 py-2 font-display font-bold text-xs tracking-[0.14em] uppercase transition-all duration-300 rounded-lg ${
                   useSavedAddress
-                    ? 'bg-brass text-void cursor-default'
-                    : 'bg-white/10 text-sv-mid hover:bg-white/20'
+                    ? 'bg-brass text-black cursor-default shadow'
+                    : 'bg-white/15 text-white hover:bg-white/25 border border-white/20'
                 }`}
               >
                 Use This Address
@@ -228,7 +228,7 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
               <button
                 type="button"
                 onClick={handleCreateNewAddress}
-                className="px-4 py-2 bg-transparent border border-white/[0.20] font-condensed font-semibold text-[0.62rem] tracking-[0.18em] uppercase text-sv-mid hover:bg-white/10 transition-all duration-300"
+                className="px-4 py-2 bg-transparent border border-white/25 font-display font-bold text-xs tracking-[0.14em] uppercase text-zinc-200 hover:text-white hover:bg-white/10 transition-all duration-300 rounded-lg"
               >
                 New Address
               </button>
@@ -249,7 +249,7 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
               <button
                 type="button"
                 onClick={handleUseSavedAddress}
-                className="font-body text-sm text-brass hover:text-brass-bright transition-colors duration-200 flex items-center gap-2"
+                className="font-display text-sm font-semibold text-brass hover:text-yellow-400 transition-colors duration-200 flex items-center gap-2"
               >
                 <span>×</span> Use saved address instead
               </button>
@@ -269,7 +269,7 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
                   className={f.half ? '' : 'md:col-span-2'}
                 >
                   <div className="mb-5">
-                    <label className="block font-condensed font-semibold text-[0.68rem] tracking-[0.18em] uppercase text-sv-mid mb-2">
+                    <label className="block font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-200 mb-2">
                       {f.label}
                       {f.required && <span className="text-brass ml-1">*</span>}
                     </label>
@@ -282,10 +282,10 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
                       onBlur={() => blur(f.key)}
                       placeholder={f.placeholder}
                       maxLength={maxLen[f.key]}
-                      className={`w-full bg-surface border px-4 py-3.5 font-body text-[0.92rem] text-tb-white placeholder:text-sv-dim/60 outline-none transition-all duration-300 ${
+                      className={`w-full bg-[#0f0f0f] border px-4 py-3.5 font-display text-sm text-white placeholder:text-zinc-400 outline-none transition-all duration-300 rounded-xl ${
                         error && isTouched
-                          ? 'border-red-500/60 focus:border-red-400'
-                          : 'border-white/[0.08] focus:border-brass/50'
+                          ? 'border-red-500/80 focus:border-red-400'
+                          : 'border-white/20 focus:border-brass'
                       }`}
                     />
                     {error && isTouched && (
@@ -293,7 +293,7 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="font-body text-[0.75rem] text-red-400/80 mt-1.5"
+                        className="font-display text-xs text-red-400 mt-1.5 font-medium"
                       >
                         {error}
                       </motion.p>
@@ -311,15 +311,15 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
         type="submit"
         disabled={submitting || (showNewAddressForm && !isValid)}
         whileTap={{ scale: 0.985 }}
-        className={`w-full mt-4 py-5 font-condensed font-bold text-base tracking-[0.2em] uppercase transition-all duration-300 clip-bolt flex items-center justify-center gap-3 ${
+        className={`w-full mt-4 py-5 font-display font-bold text-base tracking-[0.18em] uppercase transition-all duration-300 clip-bolt flex items-center justify-center gap-3 rounded-xl ${
           (showNewAddressForm ? isValid : true) && !submitting
-            ? 'bg-tb-white text-void hover:bg-white hover:scale-[1.01] shadow-[0_0_20px_rgba(255,255,255,0.08)]'
-            : 'bg-white/5 text-white/20 cursor-not-allowed'
+            ? 'bg-brass text-black hover:bg-yellow-400 hover:scale-[1.01] shadow-[0_0_24px_rgba(212,170,48,0.35)]'
+            : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
         }`}
       >
         {submitting ? (
           <>
-            <span className="inline-block w-4 h-4 border-2 border-void/30 border-t-void animate-spin" style={{ borderRadius: '50%' }} />
+            <span className="inline-block w-4 h-4 border-2 border-black/30 border-t-black animate-spin" style={{ borderRadius: '50%' }} />
             Redirecting...
           </>
         ) : (
@@ -327,7 +327,7 @@ export default function AddressForm({ onSubmit, submitting, savedAddress }: Prop
         )}
       </motion.button>
 
-      <p className="font-body font-light text-[0.72rem] text-sv-dim text-center mt-4 tracking-wide">
+      <p className="font-display text-xs text-zinc-300 text-center mt-4 tracking-wide font-medium">
         You'll be redirected to WhatsApp to confirm your order
       </p>
     </form>

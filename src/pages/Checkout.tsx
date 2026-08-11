@@ -298,8 +298,8 @@ export default function Checkout() {
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                     className="mb-4"
                   >
-                    <p className="font-condensed text-[0.65rem] tracking-[0.2em] uppercase text-sv-dim mb-3">
-                      Choose a gift card <span className="text-sv-dim/60 normal-case tracking-normal">(optional)</span>
+                    <p className="font-display font-semibold text-xs tracking-[0.16em] uppercase text-zinc-200 mb-3">
+                      Choose a gift card <span className="text-zinc-300 font-normal normal-case tracking-normal">(optional)</span>
                     </p>
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
                       {GIFT_CARDS.map((card) => (
@@ -312,14 +312,14 @@ export default function Checkout() {
                           className={`flex flex-col items-center gap-1.5 transition-all duration-200 ${
                             selectedGiftCard === card.id
                               ? 'opacity-100 scale-100'
-                              : 'opacity-70 hover:opacity-100 scale-95 hover:scale-100'
+                              : 'opacity-80 hover:opacity-100 scale-95 hover:scale-100'
                           }`}
                         >
                           <div
                             className={`w-full aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                               selectedGiftCard === card.id
-                                ? 'border-brass shadow-[0_0_12px_rgba(212,170,48,0.3)] ring-1 ring-brass'
-                                : 'border-white/10 hover:border-white/30 bg-white/[0.02]'
+                                ? 'border-brass shadow-[0_0_12px_rgba(212,170,48,0.35)] ring-1 ring-brass'
+                                : 'border-white/20 hover:border-white/40 bg-white/[0.04]'
                             }`}
                           >
                             <img
@@ -330,8 +330,8 @@ export default function Checkout() {
                             />
                           </div>
                           <span
-                            className={`font-display text-[0.68rem] font-medium tracking-[0.1em] uppercase transition-colors duration-200 ${
-                              selectedGiftCard === card.id ? 'text-brass font-bold' : 'text-zinc-400'
+                            className={`font-display text-[0.7rem] font-semibold tracking-[0.08em] uppercase transition-colors duration-200 ${
+                              selectedGiftCard === card.id ? 'text-brass font-bold' : 'text-zinc-200'
                             }`}
                           >
                             {card.label}
@@ -344,13 +344,13 @@ export default function Checkout() {
 
                 {/* Gift / Order Message */}
                 <div className="mb-4">
-                  <p className="font-condensed font-semibold text-[0.68rem] tracking-[0.22em] uppercase text-tb-white">
+                  <p className="font-display font-bold text-xs tracking-[0.16em] uppercase text-white">
                     Gift / Order Message
-                    <span className="ml-2 font-condensed text-[0.6rem] tracking-[0.14em] text-sv-dim normal-case">
-                      Optional
+                    <span className="ml-2 font-display text-xs font-normal tracking-normal text-zinc-300 normal-case">
+                      (Optional)
                     </span>
                   </p>
-                  <p className="font-body text-[0.75rem] text-sv-dim mt-1">
+                  <p className="font-display text-xs text-zinc-300 mt-1 leading-relaxed font-medium">
                     Add a personal note or any special instructions for your order.
                   </p>
                 </div>
@@ -360,10 +360,10 @@ export default function Checkout() {
                     onChange={e => setGiftMessage(e.target.value.slice(0, GIFT_MSG_MAX))}
                     placeholder="Write a message for the recipient (optional)"
                     rows={3}
-                    className="w-full bg-surface border border-white/[0.08] focus:border-brass/40 px-4 py-3 font-body text-[0.9rem] text-tb-white placeholder:text-sv-dim/50 outline-none transition-colors duration-300 resize-none"
+                    className="w-full bg-[#0f0f0f] border border-white/20 focus:border-brass px-4 py-3 font-display text-sm text-white placeholder:text-zinc-400 outline-none transition-colors duration-300 resize-none rounded-xl"
                   />
-                  <span className={`absolute bottom-3 right-3 font-condensed text-[0.62rem] tracking-wide tabular-nums transition-colors duration-200 ${
-                    giftMessage.length >= GIFT_MSG_MAX ? 'text-red-400/70' : 'text-sv-dim/60'
+                  <span className={`absolute bottom-3 right-3 font-display text-xs tracking-wide tabular-nums transition-colors duration-200 ${
+                    giftMessage.length >= GIFT_MSG_MAX ? 'text-red-400 font-bold' : 'text-zinc-300 font-medium'
                   }`}>
                     {giftMessage.length}/{GIFT_MSG_MAX}
                   </span>
