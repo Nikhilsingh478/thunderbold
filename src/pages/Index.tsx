@@ -35,8 +35,8 @@ const Index = () => {
       <ScrollProgress />
       <Navbar />
       <main className="flex-1">
-        {/* pt clears: apk banner (36px) + announcement bar (36px) + navbar (~64px mobile / ~72px desktop) */}
-        <div className="pt-[calc(100px+var(--tb-banner-h))] md:pt-[calc(108px+var(--tb-banner-h))]">
+        {/* pt clears navbar (~64px mobile / ~72px desktop) + optional APK banner */}
+        <div className="pt-[calc(68px+var(--tb-banner-h,0px))] md:pt-[calc(76px+var(--tb-banner-h,0px))]">
           <HeroBanner />
         </div>
         <BrandsSection />

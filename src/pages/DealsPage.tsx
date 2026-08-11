@@ -91,7 +91,7 @@ export default function DealsPage() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h,0px))] pb-24 px-6 md:px-16">
         <div className="max-w-[1400px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

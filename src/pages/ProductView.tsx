@@ -435,7 +435,7 @@ export default function ProductView() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h))] md:pt-[calc(164px+var(--tb-banner-h))] pb-12 md:pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[calc(76px+var(--tb-banner-h,0px))] md:pt-[calc(110px+var(--tb-banner-h,0px))] pb-12 md:pb-24 px-6 md:px-16">
         <div className="max-w-[1240px] mx-auto">
           {/* Back Button */}
           <button
@@ -475,20 +475,22 @@ export default function ProductView() {
 
               {/* Main Swipable Viewport with Inline Zoom & Lightbox Click */}
               <div 
-                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group rounded-sm flex-1" 
+                className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group rounded-sm flex-1 cursor-grab active:cursor-grabbing select-none" 
                 ref={emblaRef}
+                style={{ touchAction: 'pan-y' }}
               >
-                <div className="flex h-full touch-pan-y">
+                <div className="flex h-full">
                   {IMAGES.map((img, index) => (
-                    <div className="flex-[0_0_100%] min-w-0 relative h-full bg-[#0c0c0c]" key={index}>
+                    <div className="flex-[0_0_100%] min-w-0 relative h-full bg-[#0c0c0c] select-none" key={index}>
                       <img
                         src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
-                        className="w-full h-full object-cover object-center cursor-zoom-in transition-transform duration-100 ease-out origin-center text-transparent"
+                        className="w-full h-full object-cover object-center cursor-pointer transition-transform duration-100 ease-out origin-center text-transparent select-none pointer-events-auto"
                         onMouseMove={handleMouseMove}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => {
+                          if (emblaApi && !emblaApi.clickAllowed()) return;
                           setLightboxIndex(index);
                           resetLightboxZoom();
                           setShowLightbox(true);
@@ -1252,7 +1254,7 @@ function ProductViewSkeleton({ onBack }: { onBack: () => void }) {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h))] md:pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+      <main className="flex-1 pt-[calc(76px+var(--tb-banner-h,0px))] md:pt-[calc(110px+var(--tb-banner-h,0px))] pb-24 px-6 md:px-16">
         <div className="max-w-[1240px] mx-auto">
           {/* Back Button (real, fully functional) */}
           <button

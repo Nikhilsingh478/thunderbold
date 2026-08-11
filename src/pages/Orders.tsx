@@ -420,14 +420,14 @@ const Orders = () => {
           <div className="mb-6">
             <button
               onClick={() => navigate(-1)}
-              className="font-condensed font-semibold text-xs tracking-[0.18em] uppercase text-sv-mid hover:text-brass transition-colors duration-200 mb-6 flex items-center gap-2"
+              className="font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-300 hover:text-brass transition-colors duration-200 mb-6 flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />Back
             </button>
             <div className="flex items-baseline justify-between gap-4 flex-wrap">
               <div>
-                <h1 className="font-display text-3xl tracking-[0.2em] text-tb-white uppercase mb-1">Your Orders</h1>
-                <p className="text-sv-mid text-sm">
+                <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-[0.12em] text-white uppercase mb-1">Your Orders</h1>
+                <p className="text-zinc-300 font-display text-xs sm:text-sm">
                   {totalOrders > 0 ? `${totalOrders} order${totalOrders !== 1 ? 's' : ''} total` : 'Track and manage your orders'}
                 </p>
               </div>
@@ -451,26 +451,26 @@ const Orders = () => {
             loadingSkeleton
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-red-400 mb-4">{error}</p>
+              <p className="text-red-400 font-display text-sm mb-4">{error}</p>
               <button
                 onClick={() => fetchPage(currentPage)}
-                className="px-4 py-2 bg-brass text-void rounded hover:bg-yellow-400 transition-colors font-condensed text-sm uppercase tracking-wider"
+                className="px-5 py-2.5 bg-brass text-black rounded-lg hover:bg-yellow-400 transition-colors font-display text-xs font-bold uppercase tracking-wider shadow"
               >
                 Try Again
               </button>
             </div>
           ) : orders.length === 0 && totalOrders === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-              <Package className="w-16 h-16 text-sv-mid mx-auto mb-4" />
-              <h2 className="font-display text-xl tracking-[0.1em] text-tb-white uppercase mb-2">No Orders Yet</h2>
-              <p className="text-sv-mid mb-8 text-sm">Your orders will appear here</p>
-              <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-void font-condensed text-sm uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 bg-white/[0.02] border border-white/10 rounded-2xl p-8">
+              <Package className="w-14 h-14 text-zinc-400 mx-auto mb-4" />
+              <h2 className="font-display font-bold text-xl tracking-[0.1em] text-white uppercase mb-2">No Orders Yet</h2>
+              <p className="text-zinc-300 font-display text-sm mb-8">Your orders will appear here once placed.</p>
+              <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-brass text-black font-display font-bold text-xs uppercase tracking-wider hover:bg-yellow-400 transition-all duration-200 rounded-xl shadow-lg">
                 Start Shopping
               </Link>
             </motion.div>
           ) : (
             <>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {orders.map((order, idx) => {
                   const isDelivered = order.status === 'delivered';
                   const isPending   = order.status === 'pending';
@@ -484,25 +484,25 @@ const Orders = () => {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: idx * 0.04 }}
-                      className="bg-surface border border-white/10 rounded-xl overflow-hidden"
+                      className="bg-[#0f0f0f] border border-white/15 rounded-2xl overflow-hidden shadow-xl"
                     >
                       {/* Card Header */}
-                      <div className="px-4 py-3.5 flex items-start justify-between gap-3 border-b border-white/8">
+                      <div className="px-4 sm:px-5 py-4 flex items-start justify-between gap-3 border-b border-white/10 bg-white/[0.02]">
                         <div className="min-w-0">
-                          <p className="font-condensed font-semibold text-tb-white text-xs tracking-[0.12em] uppercase truncate">
+                          <p className="font-display font-bold text-white text-xs sm:text-sm tracking-wide uppercase truncate">
                             {formatOrderId(order)}
                           </p>
-                          <p className="flex items-center gap-1 mt-0.5 font-condensed text-[11px] text-sv-mid">
-                            <Calendar className="w-3 h-3 shrink-0" />
+                          <p className="flex items-center gap-1.5 mt-1 font-display text-xs text-zinc-300">
+                            <Calendar className="w-3.5 h-3.5 text-brass shrink-0" />
                             {formatDate(order.createdAt)}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
-                          <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-condensed uppercase tracking-wider ${getStatusColor(order.status)}`}>
+                          <span className={`flex items-center gap-1 px-3 py-1 rounded-full border text-[11px] font-display font-semibold uppercase tracking-wider ${getStatusColor(order.status)}`}>
                             {getStatusIcon(order.status)}
                             {getStatusLabel(order.status)}
                           </span>
-                          <p className="font-condensed font-semibold text-tb-white text-sm">
+                          <p className="font-display font-bold text-brass text-sm sm:text-base">
                             ₹{order.totalAmount?.toLocaleString('en-IN') ?? '—'}
                           </p>
                         </div>
@@ -510,33 +510,28 @@ const Orders = () => {
 
                       {/* Return banner */}
                       {isReturn && (
-                        <div className={`px-4 py-2.5 text-[11px] font-condensed tracking-wide leading-relaxed border-b ${
-                          order.status === 'return_requested' ? 'bg-amber-500/5 border-amber-500/15 text-amber-300/80' :
-                          order.status === 'return_approved'  ? 'bg-emerald-500/5 border-emerald-500/15 text-emerald-300/80' :
-                          order.status === 'refund_issued'    ? 'bg-teal-500/5 border-teal-500/15 text-teal-300/80' :
-                          'bg-rose-500/5 border-rose-500/15 text-rose-300/80'
+                        <div className={`px-5 py-3 text-xs font-display tracking-wide leading-relaxed border-b ${
+                          order.status === 'return_requested' ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' :
+                          order.status === 'return_approved'  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' :
+                          order.status === 'refund_issued'    ? 'bg-teal-500/10 border-teal-500/20 text-teal-200' :
+                          'bg-rose-500/10 border-rose-500/20 text-rose-200'
                         }`}>
                           {order.status === 'return_requested' && 'Return submitted. Our team will review and contact you within 2–3 business days.'}
                           {order.status === 'return_approved'  && (
                             <>Return approved! Refund of{' '}
-                              <span className="font-semibold text-emerald-300">₹{refundAmt.toLocaleString('en-IN')}</span>
+                              <span className="font-bold text-emerald-300">₹{refundAmt.toLocaleString('en-IN')}</span>
                               {' '}(₹{order.totalAmount?.toLocaleString('en-IN')} − ₹{shipCost} shipping) will be processed within 5–7 business days.</>
                           )}
                           {order.status === 'refund_issued'    && (
                             <>Refund of{' '}
-                              <span className="font-semibold text-teal-300">₹{refundAmt.toLocaleString('en-IN')}</span>
+                              <span className="font-bold text-teal-300">₹{refundAmt.toLocaleString('en-IN')}</span>
                               {' '}has been issued to your UPI account.</>
                           )}
                           {order.status === 'return_rejected'  && 'Your return request was not approved. Contact support at +91 95611 72681.'}
-                          {/* Admin message — shown below the status line whenever the admin has written one */}
+                          {/* Admin message */}
                           {order.adminNotes && (
-                            <p className={`mt-1.5 pt-1.5 border-t ${
-                              order.status === 'return_requested' ? 'border-amber-500/15' :
-                              order.status === 'return_approved'  ? 'border-emerald-500/15' :
-                              order.status === 'refund_issued'    ? 'border-teal-500/15' :
-                              'border-rose-500/15'
-                            } text-white/70`}>
-                              <span className="opacity-60">Note from our team: </span>{order.adminNotes}
+                            <p className="mt-2 pt-2 border-t border-white/10 text-zinc-200">
+                              <span className="font-semibold text-white">Note from our team: </span>{order.adminNotes}
                             </p>
                           )}
                         </div>
@@ -544,29 +539,29 @@ const Orders = () => {
 
                       {/* Gift Card */}
                       {order.giftCardId && (
-                        <div className="px-4 py-3 border-b border-white/8 flex items-center gap-3">
+                        <div className="px-5 py-3 border-b border-white/10 bg-white/[0.015] flex items-center gap-3.5">
                           <img
                             src={`/gift-cards/${order.giftCardId}.webp`}
                             alt={order.giftCardId}
-                            className="w-10 h-14 rounded object-cover border border-white/15 shrink-0"
+                            className="w-10 h-14 rounded-md object-cover border border-white/20 shrink-0 shadow"
                           />
                           <div className="min-w-0">
-                            <p className="font-condensed text-[10px] text-brass/80 uppercase tracking-wider mb-0.5">Gift Card</p>
-                            <p className="font-condensed text-xs text-sv-mid capitalize">{order.giftCardId}</p>
+                            <p className="font-display font-semibold text-[11px] text-brass uppercase tracking-wider mb-0.5">Gift Card Included</p>
+                            <p className="font-display text-xs text-zinc-200 capitalize font-medium">{order.giftCardId}</p>
                           </div>
                         </div>
                       )}
 
                       {/* Items */}
-                      <div className="px-4 py-3.5 space-y-3.5">
+                      <div className="px-4 sm:px-5 py-4 space-y-4">
                         {(order.products ?? []).map((product, index) => {
                           const canReview = isDelivered && !!product.productId && reviewableProducts.has(product.productId);
                           const existing  = product.productId ? myReviews[product.productId] : undefined;
 
                           return (
-                            <div key={index} className="flex gap-4 items-start border-b border-white/[0.04] last:border-b-0 pb-3.5 last:pb-0">
+                            <div key={index} className="flex gap-4 items-start border-b border-white/10 last:border-b-0 pb-4 last:pb-0">
                               {/* Product Image */}
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-white/5 border border-white/15 shrink-0">
                                 <img
                                   src={optimizeCloudinaryUrl(product.image, IMG_SIZES.thumbnail)}
                                   alt={product.name}
@@ -584,32 +579,32 @@ const Orders = () => {
                                 {/* Product details */}
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
-                                    <p className="text-tb-white text-sm font-medium leading-snug line-clamp-2">{product.name}</p>
-                                    <p className="text-sv-mid text-xs mt-0.5 font-condensed">
-                                      {product.size ? `Size ${product.size} · ` : ''}Qty {product.quantity}
+                                    <p className="text-white text-sm font-display font-semibold leading-snug line-clamp-2">{product.name}</p>
+                                    <p className="text-zinc-300 text-xs mt-1 font-display">
+                                      {product.size ? `Size: ${product.size} · ` : ''}Qty: {product.quantity}
                                     </p>
                                   </div>
-                                  <p className="font-condensed text-tb-white text-sm shrink-0">
+                                  <p className="font-display font-bold text-white text-sm shrink-0">
                                     ₹{product.price?.toLocaleString('en-IN') ?? '—'}
                                   </p>
                                 </div>
 
                                 {existing && (
-                                  <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-2">
                                     <LightningRating value={existing.rating} readonly size="sm" />
-                                    <span className="font-condensed text-[10px] text-sv-mid uppercase tracking-[0.1em]">Reviewed</span>
+                                    <span className="font-display text-[11px] text-zinc-300 font-medium uppercase tracking-wider">Reviewed</span>
                                   </div>
                                 )}
 
                                 {/* Action buttons */}
                                 {(product.productId || canReview) && (
-                                  <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="flex items-center gap-2.5 flex-wrap pt-1">
                                     {product.productId && (
                                       <Link
                                         to={`/product/${product.productId}`}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/15 rounded-md text-[11px] font-condensed uppercase tracking-wider text-sv-mid hover:text-tb-white hover:border-white/30 transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-xs font-display font-semibold uppercase tracking-wider text-zinc-200 hover:text-white hover:bg-white/20 transition-colors"
                                       >
-                                        <Eye className="w-3 h-3" />View Product
+                                        <Eye className="w-3.5 h-3.5" />View Product
                                       </Link>
                                     )}
                                     {canReview && (
@@ -618,9 +613,9 @@ const Orders = () => {
                                           product: { id: product.productId!, name: product.name, image: product.image },
                                           existing: existing ?? null,
                                         })}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-brass/10 border border-brass/30 rounded-md text-[11px] font-condensed uppercase tracking-wider text-brass hover:bg-brass/20 transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brass/15 border border-brass/40 rounded-lg text-xs font-display font-bold uppercase tracking-wider text-brass hover:bg-brass/25 transition-colors"
                                       >
-                                        <Pencil className="w-3 h-3" />
+                                        <Pencil className="w-3.5 h-3.5" />
                                         {existing ? 'Edit Review' : 'Review'}
                                       </button>
                                     )}
@@ -634,19 +629,19 @@ const Orders = () => {
 
                       {/* Footer: cancel / return */}
                       {(isPending || (isDelivered && !isReturn)) && (
-                        <div className="px-4 py-3 border-t border-white/8 flex items-center gap-2">
+                        <div className="px-4 sm:px-5 py-3.5 border-t border-white/10 bg-white/[0.02] flex items-center gap-3">
                           {isPending && (
                             <button
                               onClick={() => cancelOrder(order._id)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/30 rounded-md text-red-400 text-xs font-condensed uppercase tracking-wider hover:bg-red-500/20 transition-colors"
+                              className="flex items-center gap-1.5 px-4 py-2 bg-red-500/15 border border-red-500/40 rounded-xl text-red-300 text-xs font-display font-bold uppercase tracking-wider hover:bg-red-500/25 transition-colors"
                             >
-                              <X className="w-3 h-3" />Cancel Order
+                              <X className="w-3.5 h-3.5" />Cancel Order
                             </button>
                           )}
                           {isDelivered && !isReturn && (
                             <button
                               onClick={() => setReturnTarget(order)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-md text-amber-400 text-xs font-condensed uppercase tracking-wider hover:bg-amber-500/20 transition-colors"
+                              className="flex items-center gap-1.5 px-4 py-2 bg-amber-500/15 border border-amber-500/40 rounded-xl text-amber-300 text-xs font-display font-bold uppercase tracking-wider hover:bg-amber-500/25 transition-colors"
                             >
                               <RotateCcw className="w-3 h-3" />Request Return
                             </button>

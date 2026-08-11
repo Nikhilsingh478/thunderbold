@@ -8,7 +8,6 @@ import { modalController, ModalControlEvent } from "./lib/modalController";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 
-import AnnouncementBar from "./components/AnnouncementBar";
 import SplashScreen from "./components/SplashScreen";
 import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
 import AppUpdatePrompt from "./components/AppUpdatePrompt";
@@ -129,7 +128,6 @@ const AppContent = () => {
       {/* Cinematic branded splash — shown once per session, overlays the app */}
       <SplashScreen />
 
-      <AnnouncementBar />
       <BrowserRouter>
         <ScrollToTop />
         <BottomNav />

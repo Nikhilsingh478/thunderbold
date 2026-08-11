@@ -149,16 +149,12 @@ const Navbar = () => {
 
   useEffect(() => {
     if (isOpen) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '0px';
     }
     return () => {
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '0px';
     };
   }, [isOpen]);
 
@@ -169,9 +165,9 @@ const Navbar = () => {
         variants={navVariants}
         initial={shouldAnimate ? "hidden" : false}
         animate="visible"
-        style={{ top: 'calc(36px + var(--tb-banner-h))' }}
-        className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-500 z-[100] ${
-          scrolled ? 'py-5 bg-[#070707]/90 backdrop-blur-md border-b border-white/5' : 'pt-5 pb-7 bg-transparent'
+        style={{ top: 'var(--tb-banner-h, 0px)', willChange: 'transform, opacity' }}
+        className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-300 z-[100] ${
+          scrolled ? 'py-4 bg-[#070707]/95 backdrop-blur-lg border-b border-white/5 shadow-lg' : 'pt-4 pb-5 bg-transparent'
         }`}
       >
         {/* Mobile Layout */}

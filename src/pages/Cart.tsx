@@ -51,7 +51,7 @@ export default function Cart() {
         <ScrollProgress />
         <Navbar />
         
-        <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-6 md:px-16">
+        <main className="flex-1 pt-[calc(110px+var(--tb-banner-h,0px))] pb-24 px-6 md:px-16">
           <div className="max-w-[1240px] mx-auto w-full">
             <div className="animate-pulse">
               <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
@@ -112,7 +112,7 @@ export default function Cart() {
         </div>
       )}
 
-      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 md:pb-24 px-4 md:px-16" style={{ paddingBottom: items.length > 0 ? 'calc(124px + env(safe-area-inset-bottom))' : undefined }}>
+      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h,0px))] pb-24 md:pb-24 px-4 md:px-16" style={{ paddingBottom: items.length > 0 ? 'calc(124px + env(safe-area-inset-bottom))' : undefined }}>
         <div className="max-w-[1240px] mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6 md:mb-8">

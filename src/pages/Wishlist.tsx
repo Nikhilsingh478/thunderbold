@@ -32,7 +32,7 @@ export default function Wishlist() {
         <CustomCursor />
         <ScrollProgress />
         <Navbar />
-        <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-24 px-4 md:px-8 lg:px-16">
+        <main className="flex-1 pt-[calc(110px+var(--tb-banner-h,0px))] pb-24 px-4 md:px-8 lg:px-16">
           <div className="max-w-[1240px] mx-auto">
             <div className="animate-pulse mb-6">
               <div className="h-7 bg-white/10 rounded w-32 mb-1" />
@@ -62,7 +62,7 @@ export default function Wishlist() {
       <ScrollProgress />
       <Navbar />
 
-      <main className="flex-1 pt-[calc(164px+var(--tb-banner-h))] pb-28 px-4 md:px-8 lg:px-16">
+      <main className="flex-1 pt-[calc(110px+var(--tb-banner-h,0px))] pb-28 px-4 md:px-8 lg:px-16">
         <div className="max-w-[1240px] mx-auto">
 
           {/* ── Header ─────────────────────────────────────────── */}

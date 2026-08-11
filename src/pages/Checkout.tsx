@@ -301,7 +301,7 @@ export default function Checkout() {
                     <p className="font-condensed text-[0.65rem] tracking-[0.2em] uppercase text-sv-dim mb-3">
                       Choose a gift card <span className="text-sv-dim/60 normal-case tracking-normal">(optional)</span>
                     </p>
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
                       {GIFT_CARDS.map((card) => (
                         <button
                           key={card.id}
@@ -309,17 +309,17 @@ export default function Checkout() {
                           onClick={() =>
                             setSelectedGiftCard(prev => (prev === card.id ? null : card.id))
                           }
-                          className={`shrink-0 flex flex-col items-center gap-1.5 transition-all duration-200 ${
+                          className={`flex flex-col items-center gap-1.5 transition-all duration-200 ${
                             selectedGiftCard === card.id
                               ? 'opacity-100 scale-100'
-                              : 'opacity-60 hover:opacity-90 scale-95 hover:scale-100'
+                              : 'opacity-70 hover:opacity-100 scale-95 hover:scale-100'
                           }`}
                         >
                           <div
-                            className={`w-20 h-28 rounded overflow-hidden border-2 transition-colors duration-200 ${
+                            className={`w-full aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                               selectedGiftCard === card.id
-                                ? 'border-brass'
-                                : 'border-white/10 hover:border-white/30'
+                                ? 'border-brass shadow-[0_0_12px_rgba(212,170,48,0.3)] ring-1 ring-brass'
+                                : 'border-white/10 hover:border-white/30 bg-white/[0.02]'
                             }`}
                           >
                             <img
@@ -330,8 +330,8 @@ export default function Checkout() {
                             />
                           </div>
                           <span
-                            className={`font-condensed text-[0.62rem] tracking-[0.14em] uppercase transition-colors duration-200 ${
-                              selectedGiftCard === card.id ? 'text-brass' : 'text-sv-dim'
+                            className={`font-display text-[0.68rem] font-medium tracking-[0.1em] uppercase transition-colors duration-200 ${
+                              selectedGiftCard === card.id ? 'text-brass font-bold' : 'text-zinc-400'
                             }`}
                           >
                             {card.label}
