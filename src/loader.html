@@ -164,17 +164,17 @@
   <div id="scanlines"></div>
 
   <div id="center-stage">
-    <svg id="bolt-icon" viewBox="0 0 44 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M26 0L0 42H18L12 72L44 26H24L26 0Z" fill="#FFC300"/>
-    </svg>
+    <img id="bolt-icon" src="/loader_assets/thunderbold-bolt.svg" alt="Thunderbold lightning mark" style="width:52px;height:60px;margin-bottom:20px;opacity:0;flex-shrink:0;">
 
-    <div id="wordmark-wrap">
-      <div id="wordmark"></div>
-      <div id="wipe-mask"></div>
+    <div id="wordmark-wrap" style="position:relative;overflow:visible;line-height:1;">
+      <div id="wordmark" style="opacity:0;will-change:opacity;display:flex;align-items:center;justify-content:center;">
+        <img src="/loader_assets/thunderbold-wordmark.svg" alt="Thunderbold" style="width:clamp(260px,58vw,620px);height:auto;display:block;">
+      </div>
+      <div id="wipe-mask" style="position:absolute;inset:0;background:linear-gradient(90deg,#080808 0%,#080808 50%,transparent 100%);transform:translateX(0%);pointer-events:none;z-index:2;"></div>
     </div>
 
     <div id="reveal-line"></div>
-    <div id="tagline">Wear The Energy</div>
+    <div id="tagline">BUILT FOR THE BOLD</div>
   </div>
 
   <div id="exit-mask"></div>
@@ -245,8 +245,8 @@
   }
 
   function triggerIconBolt() {
-    const stage = document.getElementById('center-stage');
     const bolt = document.getElementById('bolt-icon');
+    if (!bolt) return;
     const bRect = bolt.getBoundingClientRect();
     const ox = bRect.left + bRect.width / 2;
     const oy = bRect.top + bRect.height;
@@ -259,7 +259,6 @@
   }
 
   // Sheet lightning flash state
-  let sheetFlash = 0;
   let nextSheet = rnd(800, 2000);
   let lastSheetTime = 0;
 
@@ -371,18 +370,6 @@
   }
   requestAnimationFrame(frame);
 
-  // ── WORDMARK CHARACTER SPLIT ─────────────────────────────────────────────
-  const word = 'THUNDERBOLD';
-  const wm = document.getElementById('wordmark');
-  const chars = [];
-  word.split('').forEach(ch => {
-    const span = document.createElement('span');
-    span.className = 'char';
-    span.textContent = ch;
-    wm.appendChild(span);
-    chars.push(span);
-  });
-
   // ── GSAP MASTER TIMELINE ─────────────────────────────────────────────────
   const tl = gsap.timeline({ onComplete: () => {
     document.getElementById('tb-loader').style.display = 'none';
@@ -425,12 +412,11 @@
     ease: 'power4.out'
   }, 0.75);
 
-  // t=0.75 — Character stagger fade in
-  tl.to(chars, {
+  // t=0.75 — Wordmark fade in
+  tl.to('#wordmark', {
     opacity: 1,
-    duration: 0.28,
-    stagger: 0.032,
-    ease: 'none'
+    duration: 0.35,
+    ease: 'power2.out'
   }, 0.75);
 
   // t=0.75 — Random char gold sparks

@@ -22,9 +22,8 @@ export default function SplashScreen() {
     // ── Reduced Motion Override ───────────────────────────────────────────
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
-      const chars = wordmarkRef.current?.querySelectorAll('.char') || [];
       gsap.set(boltIconRef.current, { opacity: 1, filter: 'drop-shadow(0 0 7px rgba(255,195,0,0.5))', scale: 1, y: 0 });
-      gsap.set(chars, { opacity: 1 });
+      gsap.set(wordmarkRef.current, { opacity: 1 });
       gsap.set(taglineRef.current, { opacity: 1 });
       gsap.set(wipeMaskRef.current, { xPercent: 150 });
       
@@ -284,7 +283,6 @@ export default function SplashScreen() {
     };
 
     // ── GSAP Timeline ──────────────────────────────────────────────────────
-    const chars = wordmarkRef.current?.querySelectorAll('.char') || [];
     const tl = gsap.timeline({
       onComplete: () => {
         setVisible(false);
@@ -329,22 +327,12 @@ export default function SplashScreen() {
       ease: 'power4.out'
     }, 0.75);
 
-    // t=0.75 — Char stagger fade
-    tl.to(chars, {
+    // t=0.75 — Wordmark fade-in
+    tl.to(wordmarkRef.current, {
       opacity: 1,
-      duration: 0.28,
-      stagger: 0.032,
-      ease: 'none'
+      duration: 0.35,
+      ease: 'power2.out'
     }, 0.75);
-
-    // t=0.75 — Character spark flashes (gold/white flicker)
-    chars.forEach((ch, i) => {
-      if (Math.random() < 0.30) {
-        const delay = 0.75 + i * 0.032 + 0.01;
-        tl.to(ch, { color: '#FFC300', duration: 0.05, ease: 'none' }, delay)
-          .to(ch, { color: '#FFFFFF', duration: 0.07, ease: 'none' }, delay + 0.05);
-      }
-    });
 
     // t=1.35 — Line expand
     tl.to(revealLineRef.current, {
@@ -458,54 +446,42 @@ export default function SplashScreen() {
           willChange: 'transform, opacity'
         }}
       >
-        <svg
-          ref={boltIconRef}
+        <img
+          ref={boltIconRef as any}
           id="bolt-icon"
-          viewBox="0 0 44 72"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+          src="/loader_assets/thunderbold-bolt.svg"
+          alt="Thunderbold lightning mark"
           style={{
-            width: '44px',
-            height: '72px',
+            width: '52px',
+            height: '60px',
             marginBottom: '20px',
             willChange: 'transform, opacity, filter',
             opacity: 0,
             flexShrink: 0
           }}
-        >
-          <path d="M26 0L0 42H18L12 72L44 26H24L26 0Z" fill="#FFC300" />
-        </svg>
+        />
 
         <div id="wordmark-wrap" style={{ position: 'relative', overflow: 'visible', lineHeight: 1 }}>
           <div
             ref={wordmarkRef}
             id="wordmark"
             style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 'clamp(38px, 8.2vw, 84px)',
-              letterSpacing: '0.15em',
-              color: '#FFFFFF',
-              textTransform: 'uppercase',
-              WebkitTextStroke: '0.8px #FFFFFF',
-              fontWeight: 700,
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-              display: 'flex'
+              opacity: 0,
+              willChange: 'opacity',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            {"THUNDERBOLD".split("").map((ch, i) => (
-              <span
-                key={i}
-                className="char"
-                style={{
-                  display: 'inline-block',
-                  opacity: 0,
-                  willChange: 'transform, opacity, color'
-                }}
-              >
-                {ch}
-              </span>
-            ))}
+            <img
+              src="/loader_assets/thunderbold-wordmark.svg"
+              alt="Thunderbold"
+              style={{
+                width: 'clamp(260px, 58vw, 620px)',
+                height: 'auto',
+                display: 'block'
+              }}
+            />
           </div>
           <div
             ref={wipeMaskRef}
@@ -550,7 +526,7 @@ export default function SplashScreen() {
             willChange: 'opacity'
           }}
         >
-          Wear The Energy
+          BUILT FOR THE BOLD
         </div>
       </div>
 
