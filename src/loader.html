@@ -164,11 +164,25 @@
   <div id="scanlines"></div>
 
   <div id="center-stage">
-    <img id="bolt-icon" src="/loader_assets/thunderbold-bolt.svg" alt="Thunderbold lightning mark" style="width:52px;height:60px;margin-bottom:20px;opacity:0;flex-shrink:0;">
+    <img id="bolt-icon" src="/loader_assets/thunderbold-bolt.svg" alt="Thunderbold lightning mark" style="width:clamp(60px, 11vw, 84px);height:auto;margin-bottom:22px;opacity:0;flex-shrink:0;">
 
     <div id="wordmark-wrap" style="position:relative;overflow:visible;line-height:1;">
-      <div id="wordmark" style="opacity:0;will-change:opacity;display:flex;align-items:center;justify-content:center;">
-        <img src="/loader_assets/thunderbold-wordmark.svg" alt="Thunderbold" style="width:clamp(260px,58vw,620px);height:auto;display:block;">
+      <div id="wordmark" style="opacity:0;will-change:opacity,filter;display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 941 62" role="img" aria-label="Thunderbold" style="width:clamp(280px, 62vw, 680px);height:auto;display:block;">
+          <g fill="#FFFFFF" fill-rule="evenodd" shape-rendering="geometricPrecision">
+            <g id="glyph-T"><path d="M 0,1 L 0,11 L 18,11 L 19,12 L 19,60 L 29,60 L 29,13 L 31,11 L 49,11 L 49,1 Z"/></g>
+            <g id="glyph-H"><path d="M 90,1 L 90,60 L 99,60 L 100,59 L 100,36 L 101,35 L 128,35 L 129,36 L 129,60 L 138,60 L 139,59 L 139,1 L 129,1 L 129,23 L 127,25 L 101,25 L 100,24 L 100,1 Z"/></g>
+            <g id="glyph-U"><path d="M 183,1 L 183,41 L 184,42 L 184,45 L 185,46 L 185,47 L 187,49 L 187,50 L 194,57 L 195,57 L 196,58 L 197,58 L 198,59 L 199,59 L 200,60 L 203,60 L 204,61 L 212,61 L 213,60 L 217,60 L 218,59 L 219,59 L 220,58 L 221,58 L 222,57 L 223,57 L 226,54 L 227,54 L 227,53 L 230,50 L 230,49 L 231,48 L 231,47 L 232,46 L 232,44 L 233,43 L 233,40 L 234,39 L 234,1 L 224,1 L 223,2 L 224,3 L 224,36 L 223,37 L 223,40 L 222,41 L 222,43 L 216,49 L 214,49 L 213,50 L 203,50 L 202,49 L 201,49 L 199,47 L 198,47 L 197,46 L 197,45 L 195,43 L 195,42 L 194,41 L 194,39 L 193,38 L 193,1 Z"/></g>
+            <g id="glyph-N"><path d="M 278,1 L 277,2 L 277,59 L 278,60 L 287,60 L 287,21 L 288,20 L 289,20 L 290,21 L 290,22 L 293,25 L 293,26 L 295,28 L 295,29 L 298,32 L 298,33 L 302,37 L 302,38 L 305,41 L 305,42 L 308,45 L 308,46 L 311,49 L 311,50 L 314,53 L 314,54 L 317,57 L 317,58 L 319,60 L 328,60 L 329,59 L 328,58 L 329,57 L 329,2 L 328,1 L 319,1 L 318,2 L 318,39 L 317,40 L 314,37 L 314,36 L 310,32 L 310,31 L 307,28 L 307,27 L 304,24 L 304,23 L 301,20 L 301,19 L 298,16 L 298,15 L 295,12 L 295,11 L 292,8 L 292,7 L 289,4 L 289,3 L 287,1 Z"/></g>
+            <g id="glyph-D"><path d="M 372,1 L 372,60 L 397,60 L 398,59 L 402,59 L 403,58 L 404,58 L 405,57 L 407,57 L 409,55 L 410,55 L 412,53 L 413,53 L 416,50 L 416,49 L 419,46 L 419,45 L 420,44 L 420,43 L 421,42 L 421,41 L 422,40 L 422,36 L 423,35 L 423,26 L 422,25 L 422,22 L 421,21 L 421,19 L 420,18 L 420,17 L 419,16 L 419,15 L 418,14 L 418,13 L 411,6 L 410,6 L 409,5 L 408,5 L 407,4 L 406,4 L 405,3 L 403,3 L 402,2 L 400,2 L 399,1 Z M 383,11 L 396,11 L 397,12 L 400,12 L 401,13 L 402,13 L 403,14 L 404,14 L 410,20 L 410,21 L 411,22 L 411,23 L 412,24 L 412,27 L 413,28 L 413,32 L 412,33 L 412,36 L 411,37 L 411,39 L 409,41 L 409,42 L 405,46 L 404,46 L 402,48 L 400,48 L 399,49 L 389,49 L 388,50 L 386,50 L 385,49 L 384,50 L 382,48 L 382,12 Z"/></g>
+            <g id="glyph-E"><path d="M 465,1 L 465,11 L 509,11 L 509,1 Z"/><path d="M 465,25 L 465,35 L 508,35 L 509,36 L 509,25 Z"/><path d="M 465,49 L 465,60 L 510,60 L 510,49 Z"/></g>
+            <g id="glyph-R"><path d="M 552,1 L 552,60 L 562,60 L 562,12 L 563,11 L 581,11 L 582,12 L 583,12 L 586,15 L 586,16 L 587,17 L 587,23 L 586,24 L 586,25 L 583,28 L 582,28 L 581,29 L 565,29 L 566,30 L 566,31 L 570,35 L 570,36 L 572,38 L 572,39 L 575,42 L 575,43 L 578,46 L 578,47 L 580,49 L 580,50 L 583,53 L 583,54 L 585,56 L 585,57 L 588,60 L 599,60 L 599,58 L 596,55 L 596,54 L 594,52 L 594,51 L 591,48 L 591,47 L 589,45 L 589,44 L 586,41 L 586,40 L 585,39 L 585,38 L 587,36 L 588,36 L 589,35 L 590,35 L 595,30 L 595,29 L 596,28 L 596,27 L 597,26 L 597,23 L 598,22 L 598,17 L 597,16 L 597,14 L 596,13 L 596,11 L 595,10 L 595,9 L 590,4 L 589,4 L 588,3 L 587,3 L 586,2 L 584,2 L 583,1 Z"/></g>
+            <g id="glyph-B"><path d="M 640,1 L 640,60 L 671,60 L 672,59 L 675,59 L 676,58 L 678,58 L 684,52 L 684,51 L 685,50 L 685,47 L 686,46 L 686,40 L 685,39 L 685,37 L 684,36 L 684,35 L 682,33 L 682,32 L 680,30 L 680,29 L 681,28 L 681,27 L 683,25 L 683,24 L 684,23 L 684,20 L 685,19 L 685,16 L 684,15 L 684,12 L 683,11 L 683,9 L 677,3 L 676,3 L 675,2 L 672,2 L 671,1 Z M 650,36 L 651,35 L 670,35 L 671,36 L 672,36 L 674,38 L 674,39 L 675,40 L 675,45 L 674,46 L 674,47 L 673,48 L 672,48 L 671,49 L 670,49 L 669,50 L 651,50 L 650,49 Z M 650,12 L 651,11 L 669,11 L 670,12 L 671,12 L 673,14 L 673,15 L 674,16 L 674,20 L 673,21 L 673,22 L 671,24 L 670,24 L 669,25 L 651,25 L 650,24 Z"/></g>
+            <g id="glyph-O"><path d="M 748,0 L 747,1 L 743,1 L 742,2 L 740,2 L 739,3 L 738,3 L 737,4 L 736,4 L 734,6 L 733,6 L 726,13 L 726,14 L 725,15 L 725,16 L 724,17 L 724,18 L 723,19 L 723,21 L 722,22 L 722,25 L 721,26 L 721,34 L 722,35 L 722,39 L 723,40 L 723,42 L 724,43 L 724,44 L 725,45 L 725,46 L 727,48 L 727,49 L 733,55 L 734,55 L 736,57 L 737,57 L 738,58 L 739,58 L 740,59 L 742,59 L 743,60 L 747,60 L 748,61 L 755,61 L 756,60 L 760,60 L 761,59 L 763,59 L 764,58 L 765,58 L 766,57 L 767,57 L 770,54 L 771,54 L 775,50 L 775,49 L 777,47 L 777,46 L 778,45 L 778,44 L 779,43 L 779,42 L 780,41 L 780,38 L 781,37 L 781,24 L 780,23 L 780,20 L 779,19 L 779,18 L 778,17 L 778,16 L 777,15 L 777,14 L 774,11 L 774,10 L 770,6 L 769,6 L 767,4 L 766,4 L 765,3 L 764,3 L 763,2 L 761,2 L 760,1 L 756,1 L 755,0 Z M 746,11 L 756,11 L 757,12 L 759,12 L 760,13 L 761,13 L 763,15 L 764,15 L 765,16 L 765,17 L 768,20 L 768,21 L 769,22 L 769,23 L 770,24 L 770,26 L 771,27 L 771,34 L 770,35 L 770,37 L 769,38 L 769,39 L 768,40 L 768,41 L 765,44 L 765,45 L 764,46 L 763,46 L 761,48 L 760,48 L 759,49 L 757,49 L 756,50 L 746,50 L 745,49 L 744,49 L 743,48 L 742,48 L 741,47 L 740,47 L 735,42 L 735,41 L 733,39 L 733,37 L 732,36 L 732,26 L 733,25 L 733,23 L 734,22 L 734,21 L 736,19 L 736,18 L 740,14 L 741,14 L 742,13 L 743,13 L 744,12 L 745,12 Z"/></g>
+            <g id="glyph-L"><path d="M 819,1 L 819,60 L 856,60 L 857,59 L 857,50 L 831,50 L 829,48 L 829,1 Z"/></g>
+            <g id="glyph-D-final"><path d="M 890,1 L 890,60 L 914,60 L 915,59 L 919,59 L 920,58 L 922,58 L 923,57 L 924,57 L 925,56 L 926,56 L 928,54 L 929,54 L 934,49 L 934,48 L 936,46 L 936,45 L 938,43 L 938,41 L 939,40 L 939,38 L 940,37 L 940,24 L 939,23 L 939,21 L 938,20 L 938,18 L 937,17 L 937,16 L 935,14 L 935,13 L 932,10 L 932,9 L 931,9 L 928,6 L 927,6 L 926,5 L 925,5 L 924,4 L 923,4 L 922,3 L 920,3 L 919,2 L 917,2 L 916,1 Z M 901,11 L 914,11 L 915,12 L 917,12 L 918,13 L 920,13 L 922,15 L 923,15 L 924,16 L 924,17 L 927,20 L 927,21 L 929,23 L 929,26 L 930,27 L 930,33 L 929,34 L 929,37 L 928,38 L 928,39 L 927,40 L 927,41 L 921,47 L 920,47 L 919,48 L 917,48 L 916,49 L 913,49 L 912,50 L 911,49 L 910,50 L 902,50 L 900,48 L 900,12 Z"/></g>
+          </g>
+        </svg>
       </div>
       <div id="wipe-mask" style="position:absolute;inset:0;background:linear-gradient(90deg,#080808 0%,#080808 50%,transparent 100%);transform:translateX(0%);pointer-events:none;z-index:2;"></div>
     </div>
@@ -376,23 +390,29 @@
     document.dispatchEvent(new CustomEvent('thunderbold:loaderDone'));
   }});
 
-  // t=0.00 — Bolt icon fade-in
-  tl.to('#bolt-icon', {
+  // t=0.00 — Bolt icon fade-in and subtle scale bounce
+  tl.fromTo('#bolt-icon', {
+    opacity: 0,
+    scale: 0.7
+  }, {
     opacity: 1,
+    scale: 1,
     duration: 0.6,
-    ease: 'power2.out'
+    ease: 'back.out(1.7)'
   }, 0);
 
-  // t=0.60 — Glow BUILD
+  // t=0.60 — Glow BUILD + scale surge
   tl.to('#bolt-icon', {
-    filter: 'blur(0px) drop-shadow(0 0 5px #FFC300) drop-shadow(0 0 14px rgba(255,195,0,0.55))',
+    filter: 'blur(0px) drop-shadow(0 0 6px #FFC300) drop-shadow(0 0 16px rgba(255,195,0,0.65))',
+    scale: 1.08,
     duration: 0.15,
     ease: 'power2.in'
   }, 0.60);
 
   // t=0.75 — Glow PEAK — electric discharge
   tl.to('#bolt-icon', {
-    filter: 'blur(0px) drop-shadow(0 0 22px #FFC300) drop-shadow(0 0 45px rgba(255,195,0,0.9)) drop-shadow(0 0 90px rgba(255,195,0,0.35))',
+    filter: 'blur(0px) drop-shadow(0 0 24px #FFC300) drop-shadow(0 0 50px rgba(255,195,0,0.95)) drop-shadow(0 0 100px rgba(255,195,0,0.4))',
+    scale: 1.12,
     duration: 0.1,
     ease: 'power4.out',
     onStart: triggerIconBolt
@@ -400,7 +420,8 @@
 
   // t=0.85 — Glow SETTLE
   tl.to('#bolt-icon', {
-    filter: 'blur(0px) drop-shadow(0 0 7px rgba(255,195,0,0.45))',
+    filter: 'blur(0px) drop-shadow(0 0 8px rgba(255,195,0,0.5))',
+    scale: 1.0,
     duration: 0.35,
     ease: 'power2.out'
   }, 0.85);
@@ -412,21 +433,42 @@
     ease: 'power4.out'
   }, 0.75);
 
-  // t=0.75 — Wordmark fade in
+  // t=0.75 — Staggered entrance for each letter in SVG
+  const glyphs = document.querySelectorAll('#wordmark g[id^="glyph"]');
+  gsap.set(glyphs, { opacity: 0, y: 10, scale: 0.94, transformOrigin: 'center center' });
+
   tl.to('#wordmark', {
     opacity: 1,
-    duration: 0.35,
-    ease: 'power2.out'
+    duration: 0.15,
+    ease: 'none'
   }, 0.75);
 
-  // t=0.75 — Random char gold sparks
-  chars.forEach((ch, i) => {
-    if (Math.random() < 0.30) {
-      const delay = 0.75 + i * 0.032 + 0.01;
-      tl.to(ch, { color: '#FFC300', duration: 0.05, ease: 'none' }, delay)
-        .to(ch, { color: '#FFFFFF', duration: 0.07, ease: 'none' }, delay + 0.05);
-    }
+  tl.to(glyphs, {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    duration: 0.32,
+    stagger: 0.035,
+    ease: 'back.out(1.5)'
+  }, 0.75);
+
+  // Cascading electric gold sparks across individual letter glyphs
+  glyphs.forEach((gl, i) => {
+    const delay = 0.75 + i * 0.035 + 0.02;
+    tl.to(gl, { fill: '#F8C80A', duration: 0.06, ease: 'none' }, delay)
+      .to(gl, { fill: '#FFFFFF', duration: 0.12, ease: 'power2.out' }, delay + 0.06);
   });
+
+  // t=1.15 — Glow pulse across the wordmark
+  tl.to('#wordmark', {
+    filter: 'drop-shadow(0 0 12px rgba(248,200,10,0.5))',
+    duration: 0.2,
+    ease: 'power2.out'
+  }, 1.15).to('#wordmark', {
+    filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.2))',
+    duration: 0.35,
+    ease: 'power2.inOut'
+  }, 1.35);
 
   // t=1.35 — Reveal line expand
   const rl = document.getElementById('reveal-line');
