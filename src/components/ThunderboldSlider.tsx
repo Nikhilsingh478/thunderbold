@@ -191,13 +191,13 @@ export default function ThunderboldSlider() {
             key={`${activeIndex}`}
             className="tb-heading-anim"
             style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: isMobile ? 'clamp(48px, 16vw, 100px)' : 'clamp(90px, 18vw, 260px)',
-              fontWeight: 900,
+              fontFamily: "'Manrope', sans-serif",
+              fontSize: isMobile ? 'clamp(44px, 14vw, 90px)' : 'clamp(80px, 16vw, 240px)',
+              fontWeight: 800,
               color: 'white',
               lineHeight: 1,
               textTransform: 'uppercase',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.03em',
               whiteSpace: 'nowrap',
               margin: 0,
             }}
@@ -232,7 +232,7 @@ export default function ThunderboldSlider() {
 
         {/* Bottom-left: label + swipe hint dots */}
         <div className="absolute left-4 sm:left-10 bottom-4 sm:bottom-20 max-w-[70%] sm:max-w-md" style={{ zIndex: 60 }}>
-          <p className="mb-3 sm:mb-4 text-xs sm:text-[22px] uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em', fontFamily: "'Bebas Neue', sans-serif" }}>
+          <p className="mb-3 sm:mb-4 text-xs sm:text-[22px] uppercase" style={{ color: 'white', opacity: 0.95, letterSpacing: '0.08em', fontFamily: "'Manrope', sans-serif" }}>
             THUNDER LOOKS
           </p>
           {/* Dot indicators */}

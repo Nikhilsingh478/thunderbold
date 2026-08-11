@@ -116,7 +116,7 @@ export default function LoginModal({ isOpen, onClose, isDelayedPrompt = false }:
               {/* Header */}
               <div className="text-center mb-8 relative z-10">
                 <div className="flex items-center justify-center mb-4">
-                  <Zap className="w-8 h-8 text-yellow-500 mr-2" />
+                  <img src="/loader_assets/thunderbold-bolt.svg" alt="Thunderbold" className="w-7 h-7 mr-2.5 shrink-0 inline-block" />
                   <h2 className="font-display text-2xl tracking-[0.28em] text-tb-white">
                     {isDelayedPrompt ? 'Join the System' : 'Enter the System'}
                   </h2>

@@ -78,10 +78,11 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Bebas Neue"', 'sans-serif'],
+        display: ['"Manrope"', 'sans-serif'],
         condensed: ['"Barlow Condensed"', 'sans-serif'],
-        serif: ['Inter', 'sans-serif'],
-        body: ['Barlow', 'sans-serif'],
+        serif: ['"Manrope"', 'sans-serif'],
+        body: ['"Manrope"', 'sans-serif'],
+        sans: ['"Manrope"', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

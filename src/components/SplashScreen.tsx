@@ -594,9 +594,10 @@ export default function SplashScreen() {
           ref={taglineRef}
           id="tagline"
           style={{
-            fontFamily: "'Bebas Neue', sans-serif",
+            fontFamily: "'Manrope', sans-serif",
             fontSize: 'clamp(11px, 1.8vw, 16px)',
-            letterSpacing: '0.55em',
+            letterSpacing: '0.45em',
+            fontWeight: 700,
             color: 'rgba(255, 195, 0, 0.72)',
             textTransform: 'uppercase',
             marginTop: '14px',

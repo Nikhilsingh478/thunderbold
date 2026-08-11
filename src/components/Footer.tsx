@@ -193,9 +193,13 @@ const ContactBlock = () => (
 
 const BrandBlock = () => (
   <div>
-    <span className="font-display text-2xl tracking-[0.20em] text-white block mb-3">
-      THUNDER<span className="brass-text">⚡</span>BOLD
-    </span>
+    <Link to="/" className="inline-block mb-3 hover:opacity-90 transition-opacity">
+      <img
+        src="/loader_assets/thunderbold-wordmark.svg"
+        alt="Thunderbold"
+        className="h-6 w-auto block"
+      />
+    </Link>
     <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-white/45 leading-relaxed max-w-[220px]">
       Curated Fashion & Streetwear.<br />Style Within Reach.
     </p>
