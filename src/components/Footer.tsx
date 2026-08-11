@@ -33,8 +33,8 @@ function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void 
         {/* Header */}
         <div className="relative px-7 pt-7 pb-5 border-b border-white/[0.08]">
           <div className="pr-10">
-            <p className="font-condensed text-[0.65rem] tracking-[0.25em] uppercase text-brass mb-2">{subtitle}</p>
-            <h2 className="font-display text-2xl tracking-[0.06em] uppercase text-white">{title}</h2>
+            <p className="font-display text-[0.65rem] tracking-[0.25em] uppercase text-brass mb-2">{subtitle}</p>
+            <h2 className="font-display text-2xl tracking-[0.06em] uppercase text-white font-bold">{title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -52,16 +52,16 @@ function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void 
               className={`py-5 ${i < sections.length - 1 ? 'border-b border-white/[0.06]' : ''} ${sec.highlight ? 'bg-brass/[0.04] -mx-7 px-7 rounded-none' : ''}`}
             >
               <div className="flex items-start gap-3 mb-2.5">
-                <span className="shrink-0 mt-0.5 font-condensed text-[0.6rem] tracking-[0.2em] text-brass/70 tabular-nums pt-[3px]">0{i + 1}</span>
-                <h3 className="font-condensed text-[0.75rem] tracking-[0.2em] uppercase text-white font-semibold">{sec.heading}</h3>
+                <span className="shrink-0 mt-0.5 font-display text-[0.65rem] tracking-[0.2em] text-brass/70 tabular-nums pt-[3px]">0{i + 1}</span>
+                <h3 className="font-display text-[0.75rem] tracking-[0.18em] uppercase text-white font-semibold">{sec.heading}</h3>
               </div>
-              <p className="font-serif font-light text-sm leading-[1.75] text-white/60 pl-6">
+              <p className="font-display font-normal text-sm leading-[1.75] text-white/60 pl-6">
                 {sec.text}
               </p>
               {sec.list && (
                 <ul className="mt-3 pl-6 space-y-1.5">
                   {sec.list.map(item => (
-                    <li key={item} className="flex items-start gap-2 font-serif font-light text-sm text-white/60">
+                    <li key={item} className="flex items-start gap-2 font-display font-normal text-sm text-white/60">
                       <span className="text-brass shrink-0 mt-1">—</span>
                       <span>{item}</span>
                     </li>
@@ -74,10 +74,10 @@ function PolicyModal({ type, onClose }: { type: PolicyType; onClose: () => void 
 
         {/* Footer CTA */}
         <div className="px-7 py-4 border-t border-white/[0.08] bg-white/[0.02] flex items-center justify-between">
-          <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-white/30">Thunderbold · 2026</span>
+          <span className="font-display text-[0.65rem] tracking-[0.18em] uppercase text-white/30">Thunderbold · 2026</span>
           <button
             onClick={onClose}
-            className="font-condensed text-[0.7rem] tracking-[0.18em] uppercase text-brass hover:text-white transition-colors duration-200 flex items-center gap-1.5"
+            className="font-display text-[0.7rem] tracking-[0.18em] uppercase text-brass hover:text-white transition-colors duration-200 flex items-center gap-1.5"
           >
             Close <ArrowRight className="w-3 h-3" />
           </button>
@@ -103,7 +103,7 @@ const accountLinks = [
 const FooterLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
   <Link
     to={to}
-    className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
+    className="group inline-flex items-center gap-1.5 font-display text-[0.8rem] font-medium tracking-[0.08em] uppercase text-white/65 hover:text-white transition-colors duration-200"
   >
     <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
     {children}
@@ -113,7 +113,7 @@ const FooterLink = ({ to, children }: { to: string; children: React.ReactNode })
 const FooterBtn = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
   <button
     onClick={onClick}
-    className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200 text-left"
+    className="group inline-flex items-center gap-1.5 font-display text-[0.8rem] font-medium tracking-[0.08em] uppercase text-white/65 hover:text-white transition-colors duration-200 text-left"
   >
     <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
     {children}
@@ -122,7 +122,7 @@ const FooterBtn = ({ onClick, children }: { onClick: () => void; children: React
 
 const ColHeading = ({ children }: { children: React.ReactNode }) => (
   <div className="mb-6">
-    <p className="font-condensed text-[0.7rem] tracking-[0.28em] uppercase text-white font-bold">{children}</p>
+    <p className="font-display text-[0.72rem] tracking-[0.22em] uppercase text-white font-bold">{children}</p>
     <div className="mt-2 w-6 h-px bg-brass/60" />
   </div>
 );
@@ -148,7 +148,7 @@ const CustomerServiceList = ({ onSelect }: { onSelect: (p: PolicyType) => void }
     <li>
       <a
         href="mailto:adminthunderbold@gmail.com"
-        className="group inline-flex items-center gap-1.5 font-condensed text-[0.8rem] tracking-[0.1em] uppercase text-white/65 hover:text-white transition-colors duration-200"
+        className="group inline-flex items-center gap-1.5 font-display text-[0.8rem] font-medium tracking-[0.08em] uppercase text-white/65 hover:text-white transition-colors duration-200"
       >
         <span className="w-0 group-hover:w-2.5 h-px bg-brass transition-all duration-300 ease-out shrink-0" />
         Contact Us
@@ -164,7 +164,7 @@ const ContactBlock = () => (
   <address className="not-italic space-y-4">
     <div className="flex items-start gap-2.5">
       <MapPin className="w-3.5 h-3.5 text-brass/70 shrink-0 mt-0.5" />
-      <p className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 leading-relaxed">
+      <p className="font-display text-[0.78rem] font-medium tracking-[0.04em] text-white/60 leading-relaxed">
         Matrabhumi Circle,<br />
         Near Ring Road,<br />
         Bhusawal – 425201, India
@@ -174,7 +174,7 @@ const ContactBlock = () => (
       <Mail className="w-3.5 h-3.5 text-brass/70 shrink-0" />
       <a
         href="mailto:adminthunderbold@gmail.com"
-        className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+        className="font-display text-[0.78rem] font-medium tracking-[0.04em] text-white/60 hover:text-white transition-colors duration-200"
       >
         adminthunderbold@gmail.com
       </a>
@@ -183,7 +183,7 @@ const ContactBlock = () => (
       <Phone className="w-3.5 h-3.5 text-brass/70 shrink-0" />
       <a
         href="tel:+919561172681"
-        className="font-condensed text-[0.78rem] tracking-[0.06em] text-white/60 hover:text-white transition-colors duration-200"
+        className="font-display text-[0.78rem] font-medium tracking-[0.04em] text-white/60 hover:text-white transition-colors duration-200"
       >
         +91 95611 72681
       </a>
@@ -200,7 +200,7 @@ const BrandBlock = () => (
         className="h-6 w-auto block"
       />
     </Link>
-    <p className="font-condensed text-[0.74rem] tracking-[0.14em] uppercase text-white/45 leading-relaxed max-w-[220px]">
+    <p className="font-display text-[0.74rem] font-normal tracking-[0.1em] uppercase text-white/45 leading-relaxed max-w-[220px]">
       Curated Fashion & Streetwear.<br />Style Within Reach.
     </p>
 
@@ -237,7 +237,7 @@ const BrandBlock = () => (
     {/* Secure badge */}
     <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.03]">
       <Shield className="w-3 h-3 text-brass shrink-0" />
-      <span className="font-condensed text-[0.6rem] tracking-[0.18em] uppercase text-white/40">Secure Shopping</span>
+      <span className="font-display text-[0.6rem] tracking-[0.14em] uppercase text-white/40">Secure Shopping</span>
     </div>
   </div>
 );
@@ -252,7 +252,7 @@ function MobileAccordion({ title, children }: { title: string; children: React.R
         aria-expanded={open}
         className="w-full flex items-center justify-between py-5 group"
       >
-        <span className="font-condensed text-[0.78rem] tracking-[0.28em] uppercase text-white font-bold">
+        <span className="font-display text-[0.78rem] tracking-[0.22em] uppercase text-white font-bold">
           {title}
         </span>
         <motion.span
@@ -354,10 +354,10 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="border-t border-white/[0.07] py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-white/30">
+            <span className="font-display text-[0.65rem] tracking-[0.14em] uppercase text-white/30">
               Copyright © 2026 ThunderBold Private Limited. All rights reserved.
             </span>
-            <span className="font-condensed text-[0.62rem] tracking-[0.14em] uppercase text-white/20">
+            <span className="font-display text-[0.62rem] tracking-[0.14em] uppercase text-white/20">
               Curated Fashion · Style Within Reach
             </span>
           </div>
