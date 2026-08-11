@@ -151,9 +151,8 @@
 @layer base {
   :root {
     --background: 0 0% 4.3%;
-    /* APK banner height offset — 0px because the banner is not currently shown.
-       Set to 36px if/when ApkBanner is re-enabled in AppContent.tsx           */
-    --tb-banner-h: 0px;
+    /* APK banner height offset (36px when banner is active, 0px in installed app) */
+    --tb-banner-h: 36px;
     --foreground: 40 7% 93%;
     --card: 0 0% 6.7%;
     --card-foreground: 40 7% 93%;

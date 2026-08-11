@@ -36,7 +36,7 @@ const Index = () => {
       <Navbar />
       <main className="flex-1">
         {/* pt clears navbar (~64px mobile / ~72px desktop) + optional APK banner */}
-        <div className="pt-[calc(68px+var(--tb-banner-h,0px))] md:pt-[calc(76px+var(--tb-banner-h,0px))]">
+        <div className="pt-[calc(68px+var(--tb-banner-h,36px))] md:pt-[calc(76px+var(--tb-banner-h,36px))]">
           <HeroBanner />
         </div>
         <BrandsSection />
