@@ -1,3 +1,5 @@
+import { cachedFetch } from './apiCache';
+
 export interface ProductHighlights {
   color?: string;
   length?: string;
@@ -20,6 +22,8 @@ export interface Product {
   stock?: number;
   sizeStock?: Record<string, number>;
   highlights?: ProductHighlights | null;
+  topwear?: { sizeStock?: Record<string, number>; stock?: number; highlights?: ProductHighlights | null };
+  bottomwear?: { sizeStock?: Record<string, number>; stock?: number; highlights?: ProductHighlights | null };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -30,38 +34,22 @@ export interface ProductResponse {
   source: 'database';
 }
 
-async function fetchWithRetry(url: string, options?: RequestInit, retries = 2): Promise<Response> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-      return response;
-    } catch (err) {
-      if (attempt < retries) {
-        await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
-      } else {
-        throw err;
-      }
-    }
-  }
-  throw new Error('All fetch attempts failed');
-}
-
 /**
  * Fetch all products from API
  */
 export async function fetchProducts(): Promise<ProductResponse> {
-  const response = await fetchWithRetry('/api/products');
-  if (!response.ok) throw new Error(`API returned ${response.status}`);
-  return response.json();
+  return cachedFetch<ProductResponse>('/api/products');
 }
 
 /**
  * Fetch single product by ID
  */
 export async function fetchProductById(id: string): Promise<Product | null> {
+  if (!id) return null;
   try {
-    const data = await fetchProducts();
-    return data.products.find((p: Product) => p._id === id) || null;
+    const url = `/api/products?id=${encodeURIComponent(id)}`;
+    const data = await cachedFetch<{ product?: Product }>(url);
+    return data.product || null;
   } catch {
     return null;
   }

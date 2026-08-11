@@ -273,23 +273,34 @@ export default function ProductView() {
   }, [emblaApi, onSelect]);
 
   useEffect(() => {
+    let isCancelled = false;
     const loadProduct = async () => {
       try {
         setLoading(true);
         if (productId) {
           const productData = await fetchProductById(productId);
-          setProduct(productData);
+          if (!isCancelled) {
+            setProduct(productData);
+          }
         }
       } catch (error) {
         console.error('Failed to load product:', error);
-        setProduct(null);
+        if (!isCancelled) {
+          setProduct(null);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadProduct();
     window.scrollTo(0, 0);
+
+    return () => {
+      isCancelled = true;
+    };
   }, [productId]);
 
   const handleOrder = requireAuth(() => {

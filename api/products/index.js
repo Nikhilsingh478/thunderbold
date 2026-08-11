@@ -98,6 +98,43 @@ export default async function handler(req, res) {
           res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
         }
 
+        // Single product lookup — GET /api/products?id=<productId>
+        const rawId = req.query?.id;
+        if (rawId && typeof rawId === 'string' && rawId.trim()) {
+          const targetId = rawId.trim();
+          const projection = {
+            name: 1, price: 1, mrp: 1, purchasePrice: 1,
+            image: 1, images: 1, description: 1, categoryId: 1,
+            section: 1, stock: 1, sizeStock: 1, highlights: 1,
+            topwear: 1, bottomwear: 1,
+            createdAt: 1, brandId: 1,
+          };
+
+          let productDoc = null;
+          try {
+            if (ObjectId.isValid(targetId)) {
+              productDoc = await col.findOne({ _id: new ObjectId(targetId) }, { projection });
+            }
+          } catch {}
+
+          if (!productDoc) {
+            productDoc = await col.findOne({ _id: targetId }, { projection });
+          }
+
+          if (!productDoc) {
+            return res.status(404).json({ error: 'Product not found' });
+          }
+
+          const { purchasePrice: costPrice, mrp, ...rest } = productDoc;
+          const product = {
+            ...rest,
+            mrp: mrp ?? costPrice ?? null,
+            ...(isAdminRequest ? { purchasePrice: costPrice ?? null } : {}),
+          };
+
+          return res.status(200).json({ product, source: 'database' });
+        }
+
         const filter = {};
 
         // Price cap filter (deals pages)

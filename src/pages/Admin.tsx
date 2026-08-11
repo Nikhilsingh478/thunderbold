@@ -11,6 +11,7 @@ import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
 import { printInvoice } from '../utils/printInvoice';
 import { formatOrderId } from '../lib/utils';
+import { invalidateCache } from '../lib/apiCache';
 
 
 interface OrderProduct {
@@ -1310,6 +1311,7 @@ export default function Admin() {
           categoryId, price, mrp, purchasePrice, brandId,
           images, image: images[0], description: formData.description, ...localStockFields,
         }, ...prev]);
+        invalidateCache();
         setShowAddProductModal(false);
         return true;
       }
@@ -1369,6 +1371,7 @@ export default function Admin() {
             }
           : p
         ));
+        invalidateCache();
         setEditingProduct(null);
         return true;
       }
@@ -1389,6 +1392,7 @@ export default function Admin() {
       let data = null;
       try { data = await res.json(); } catch {}
       if (res.status === 200 && data?.deletedCount === 1) {
+        invalidateCache();
         setProducts(prev => prev.filter(p => p._id !== productId));
       } else {
         alert('Delete failed — please try again');
