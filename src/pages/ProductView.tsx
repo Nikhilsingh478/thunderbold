@@ -490,7 +490,7 @@ export default function ProductView() {
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => {
-                          if (emblaApi && !emblaApi.clickAllowed()) return;
+                          if (emblaApi && typeof (emblaApi as any).clickAllowed === 'function' && !(emblaApi as any).clickAllowed()) return;
                           setLightboxIndex(index);
                           resetLightboxZoom();
                           setShowLightbox(true);
