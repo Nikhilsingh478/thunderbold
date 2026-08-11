@@ -148,6 +148,28 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+    const ua = navigator.userAgent || '';
+    const href = window.location.href || '';
+    const isTwa = href.includes('app_version=') || href.includes('twa=');
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      (window.navigator as any).standalone === true ||
+      isTwa;
+    const isWebView =
+      isStandalone ||
+      /\bwv\b/i.test(ua) ||
+      /Android.*Version\/[\d.]+ /.test(ua) ||
+      typeof (window as any).Android !== 'undefined';
+
+    if (isWebView) {
+      document.documentElement.style.setProperty('--tb-banner-h', '0px');
+      const banner = document.getElementById('apk-banner');
+      if (banner) banner.style.display = 'none';
+    }
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
