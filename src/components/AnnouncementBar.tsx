@@ -5,6 +5,10 @@ const SEPARATOR = "✦";
 const REPEAT = 8;
 
 const AnnouncementBar = () => {
+  // Commented out top marquee bar as requested — return null to hide
+  return null;
+
+  /*
   const items = Array.from({ length: REPEAT }, (_, i) => (
     <span key={i} className="flex items-center gap-5 flex-shrink-0">
       <span className="font-condensed font-semibold text-[0.65rem] md:text-[0.68rem] tracking-[0.22em] uppercase text-white/90 whitespace-nowrap">
@@ -42,6 +46,7 @@ const AnnouncementBar = () => {
       </div>
     </div>
   );
+  */
 };
 
 export default AnnouncementBar;
