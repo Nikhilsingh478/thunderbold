@@ -66,31 +66,31 @@ export default function Wishlist() {
         <div className="max-w-[1240px] mx-auto">
 
           {/* ── Header ─────────────────────────────────────────── */}
-          <div className="mb-6 md:mb-8 border-b border-white/10 pb-4">
+          <div className="mb-8 pb-5 border-b border-white/10">
             <div className="flex items-center justify-between">
               {/* Left: back + title */}
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={() => navigate(-1)}
                   aria-label="Go back"
-                  className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-150"
+                  className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 active:bg-white/15 transition-colors duration-150"
                 >
-                  <ArrowLeft size={18} className="text-white" />
+                  <ArrowLeft size={16} className="text-tb-white" />
                 </button>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5">
-                    <h1 className="font-display font-bold text-2xl md:text-4xl tracking-[0.08em] text-white uppercase leading-none">
+                    <h1 className="font-display font-normal text-3xl md:text-5xl tracking-[0.08em] text-tb-white uppercase leading-none">
                       Wishlist
                     </h1>
                     {items.length > 0 && (
-                      <span className="shrink-0 inline-flex items-center justify-center h-6 min-w-6 px-2 rounded-full bg-white/15 font-display font-semibold text-xs text-zinc-200 leading-none">
+                      <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-5 px-2 rounded-full bg-white/10 font-display font-medium text-xs text-sv-mid leading-none">
                         {items.length}
                       </span>
                     )}
                   </div>
                   {items.length > 0 && (
-                    <p className="font-display text-xs tracking-wide text-zinc-300 mt-1 hidden md:block">
+                    <p className="font-display text-xs tracking-wide text-sv-mid mt-1 hidden md:block">
                       {items.length} {items.length === 1 ? 'item' : 'items'} saved in your wishlist
                     </p>
                   )}
@@ -101,9 +101,9 @@ export default function Wishlist() {
               {items.length > 0 && (
                 <button
                   onClick={handleClearWishlist}
-                  className="shrink-0 flex items-center gap-1.5 font-display text-xs font-semibold tracking-wider uppercase text-zinc-300 hover:text-red-400 active:text-red-400 transition-colors duration-150"
+                  className="shrink-0 flex items-center gap-1.5 font-display text-xs font-medium tracking-[0.14em] uppercase text-sv-mid hover:text-red-400 active:text-red-400 transition-colors duration-150"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                   <span className="hidden sm:inline">Clear All</span>
                 </button>
               )}
@@ -115,20 +115,20 @@ export default function Wishlist() {
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-20 bg-[#0f0f0f] border border-white/10 rounded-2xl p-8 max-w-lg mx-auto text-center"
+              className="flex flex-col items-center justify-center py-24 bg-[#0a0a0a] border border-white/[0.08] rounded-md p-8 max-w-lg mx-auto text-center"
             >
-              <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-5">
-                <Heart size={36} className="text-brass" />
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-5">
+                <Heart size={28} className="text-brass" />
               </div>
-              <h2 className="font-display font-bold text-2xl tracking-[0.06em] text-white uppercase mb-3">
+              <h2 className="font-display font-normal text-2xl tracking-[0.08em] text-tb-white uppercase mb-3">
                 Nothing saved yet
               </h2>
-              <p className="font-display text-sm text-zinc-300 tracking-wide max-w-xs mb-8 leading-relaxed">
+              <p className="font-display text-sm text-sv-mid tracking-wide max-w-xs mb-8 leading-relaxed">
                 Tap the heart on any product to save it here for later.
               </p>
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-brass text-black font-display font-bold text-xs tracking-[0.16em] uppercase hover:bg-yellow-400 transition-colors duration-200 rounded-xl shadow-lg"
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-tb-white text-void font-display font-bold text-xs tracking-[0.2em] uppercase hover:bg-white transition-colors duration-200 rounded-sm"
               >
                 Browse Collection
               </Link>
@@ -136,7 +136,7 @@ export default function Wishlist() {
           ) : (
             <>
               {/* ── Items Grid ───────────────────────────────── */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 <AnimatePresence mode="popLayout">
                   {items.map((item, index) => (
                     <motion.div
@@ -146,18 +146,18 @@ export default function Wishlist() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.18 } }}
                       transition={{ delay: index * 0.04, duration: 0.22 }}
-                      className="bg-[#0f0f0f] border border-white/15 rounded-2xl overflow-hidden flex flex-col shadow-md hover:border-white/25 transition-colors duration-300"
+                      className="bg-[#0a0a0a] border border-white/[0.08] rounded-md overflow-hidden flex flex-col group hover:border-white/20 transition-colors duration-300"
                     >
                       {/* Image area — tappable → product page */}
                       <Link
                         to={`/product/${item.productId}`}
-                        className="relative block aspect-[3/4] bg-[#0c0c0c] overflow-hidden group"
+                        className="relative block aspect-[3/4] bg-[#070707] overflow-hidden"
                         aria-label={`View ${item.name}`}
                       >
                         <img
                           src={optimizeCloudinaryUrl(item.image, IMG_SIZES.card)}
                           alt={item.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05] text-transparent"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04] text-transparent"
                           loading="lazy"
                           decoding="async"
                           onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }}
@@ -171,9 +171,9 @@ export default function Wishlist() {
                             removeFromWishlist(item.productId);
                           }}
                           aria-label={`Remove ${item.name} from wishlist`}
-                          className="absolute top-2.5 right-2.5 w-8 h-8 flex items-center justify-center rounded-full bg-black/75 backdrop-blur-md text-zinc-300 hover:text-white hover:bg-black/90 active:bg-red-900/80 active:text-white transition-all duration-150 z-10 border border-white/15"
+                          className="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded-full bg-black/70 backdrop-blur-md text-sv-mid hover:text-white hover:bg-black/90 active:bg-red-900/80 active:text-white transition-all duration-150 z-10 border border-white/10"
                         >
-                          <X size={14} strokeWidth={2.5} />
+                          <X size={13} strokeWidth={2} />
                         </button>
                       </Link>
 
@@ -181,12 +181,12 @@ export default function Wishlist() {
                       <div className="p-3.5 flex flex-col flex-1 gap-2.5">
                         <Link
                           to={`/product/${item.productId}`}
-                          className="font-display font-medium text-sm leading-snug text-white line-clamp-2 hover:text-brass transition-colors"
+                          className="font-display font-medium text-sm leading-snug text-tb-white line-clamp-2 hover:text-brass transition-colors tracking-wide"
                         >
                           {item.name}
                         </Link>
 
-                        <p className="font-display font-bold text-base text-brass">
+                        <p className="font-display font-semibold text-base text-brass">
                           {typeof item.price === 'number'
                             ? formatPrice(item.price)
                             : item.price}
@@ -195,9 +195,9 @@ export default function Wishlist() {
                         {/* Add to Cart */}
                         <button
                           onClick={() => moveToCart(item.productId)}
-                          className="mt-auto w-full py-2.5 bg-brass text-black font-display font-bold text-xs tracking-[0.14em] uppercase flex items-center justify-center gap-1.5 hover:bg-yellow-400 active:scale-95 transition-all duration-150 rounded-xl shadow-md"
+                          className="mt-auto w-full py-2.5 bg-tb-white text-void font-display font-bold text-[11px] tracking-[0.16em] uppercase flex items-center justify-center gap-1.5 hover:bg-white transition-colors duration-150 rounded-sm"
                         >
-                          <ShoppingBag size={14} strokeWidth={2.5} />
+                          <ShoppingBag size={13} strokeWidth={2} />
                           Add to Cart
                         </button>
                       </div>
@@ -211,10 +211,10 @@ export default function Wishlist() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mt-8 md:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 border-t border-white/15 pt-6 bg-[#0f0f0f] p-5 rounded-2xl border"
+                className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 border-t border-white/10 pt-6"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-display text-xs tracking-wider text-zinc-300 uppercase">
+                  <p className="font-display text-xs tracking-[0.14em] text-sv-mid uppercase">
                     Total saved value
                   </p>
                   <p className="font-display text-2xl text-brass font-bold mt-0.5">
@@ -225,13 +225,13 @@ export default function Wishlist() {
                 <div className="flex gap-3 sm:shrink-0">
                   <Link
                     to="/"
-                    className="flex-1 sm:flex-none py-3 px-5 text-center font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-200 hover:text-white border border-white/20 hover:border-white/40 transition-all duration-200 rounded-xl"
+                    className="flex-1 sm:flex-none py-3 px-6 text-center font-display font-medium text-xs tracking-[0.16em] uppercase text-sv-mid hover:text-white border border-white/15 hover:border-white/30 transition-all duration-200 rounded-sm"
                   >
                     Keep Shopping
                   </Link>
                   <button
                     onClick={() => navigate('/cart')}
-                    className="flex-1 sm:flex-none py-3 px-6 bg-brass text-black font-display font-bold text-xs tracking-[0.14em] uppercase hover:bg-yellow-400 active:scale-95 transition-all duration-150 rounded-xl shadow-lg"
+                    className="flex-1 sm:flex-none py-3 px-6 bg-tb-white text-void font-display font-bold text-xs tracking-[0.16em] uppercase hover:bg-white transition-all duration-150 rounded-sm"
                   >
                     View Cart
                   </button>
