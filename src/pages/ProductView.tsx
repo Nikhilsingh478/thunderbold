@@ -248,7 +248,7 @@ export default function ProductView() {
       ? [product.image]
       : [];
   
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center', watchDrag: true, skipSnaps: false });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [descExpanded, setDescExpanded] = useState(false);
 
@@ -473,11 +473,11 @@ export default function ProductView() {
                 ))}
               </div>
 
-              {/* Main Swipable Viewport with Inline Zoom & Lightbox Click */}
+              {/* Main Swipable Viewport with Touch Drag & Lightbox Click */}
               <div 
                 className="overflow-hidden bg-[#0c0c0c] border border-white/5 relative aspect-[3/4] w-full max-w-[500px] mx-auto group rounded-sm flex-1 cursor-grab active:cursor-grabbing select-none" 
                 ref={emblaRef}
-                style={{ touchAction: 'pan-y' }}
+                style={{ touchAction: 'pan-y pinch-zoom' }}
               >
                 <div className="flex h-full">
                   {IMAGES.map((img, index) => (
@@ -485,7 +485,9 @@ export default function ProductView() {
                       <img
                         src={optimizeCloudinaryUrl(img, IMG_SIZES.detail)}
                         alt={`Product slide ${index + 1}`}
-                        className="w-full h-full object-cover object-center cursor-pointer transition-transform duration-100 ease-out origin-center text-transparent select-none pointer-events-auto"
+                        draggable={false}
+                        onDragStart={(e) => e.preventDefault()}
+                        className="w-full h-full object-cover object-center cursor-pointer transition-transform duration-100 ease-out origin-center text-transparent select-none touch-pan-y pointer-events-auto"
                         onMouseMove={handleMouseMove}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
@@ -504,26 +506,32 @@ export default function ProductView() {
                   ))}
                 </div>
                 
-                {/* Navigation Buttons - visible on hover */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); scrollPrev(); }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black/40 hover:bg-black/80 rounded-full text-white backdrop-blur-xl transition-all duration-300 border border-white/10 z-[20] opacity-0 group-hover:opacity-100 hidden md:flex"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); scrollNext(); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black/40 hover:bg-black/80 rounded-full text-white backdrop-blur-xl transition-all duration-300 border border-white/10 z-[20] opacity-0 group-hover:opacity-100 hidden md:flex"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
+                {/* Navigation Buttons - visible on mobile tap & desktop hover */}
+                {IMAGES.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); scrollPrev(); }}
+                      aria-label="Previous image"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all duration-200 border border-white/15 z-[20] opacity-80 group-hover:opacity-100"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); scrollNext(); }}
+                      aria-label="Next image"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all duration-200 border border-white/15 z-[20] opacity-80 group-hover:opacity-100"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                  </>
+                )}
 
                 {/* Mobile indicators */}
-                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10 md:hidden">
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10 md:hidden">
                   {IMAGES.map((_, i) => (
                     <div
                       key={i}
-                      className={`h-1 transition-all duration-300 rounded-full ${i === selectedIndex ? 'w-6 bg-brass-bright' : 'w-2 bg-white/40'}`}
+                      className={`h-1.5 transition-all duration-300 rounded-full ${i === selectedIndex ? 'w-6 bg-brass' : 'w-2 bg-white/40'}`}
                     />
                   ))}
                 </div>
@@ -540,7 +548,7 @@ export default function ProductView() {
               <div className="font-condensed font-semibold text-[0.68rem] tracking-[0.40em] uppercase text-brass mb-4">
                 Premium Collection
               </div>
-              <h1 className="font-display text-2xl sm:text-4xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em] metal-text uppercase mb-3 sm:mb-4 leading-tight sm:leading-none">
+              <h1 className="font-display font-normal sm:font-medium text-2xl sm:text-4xl md:text-6xl lg:text-7xl tracking-[0.05em] sm:tracking-[0.08em] metal-text uppercase mb-3 sm:mb-4 leading-tight sm:leading-none">
                 {product?.name || 'Thunderbold Jeans'}
               </h1>
               <div className="mb-4">

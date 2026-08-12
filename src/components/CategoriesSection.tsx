@@ -146,10 +146,10 @@ export default function CategoriesSection() {
     <section className="min-h-screen pt-12 md:pt-20 pb-24 px-6 md:px-16" id="categories">
       <div className="max-w-[1000px] mx-auto">
 
-        {/* ── Denim Collection ─────────────────────────────────────── */}
+        {/* ── Denim ─────────────────────────────────────── */}
         <div className="mb-12 md:mb-20 text-center tb-heading-reveal">
           <h1 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-            The Denim Collection
+            DENIM
           </h1>
         </div>
 
@@ -177,10 +177,10 @@ export default function CategoriesSection() {
           <ThunderboldSlider />
         </div>
 
-        {/* ── T-Shirt Collection ───────────────────────────────────── */}
+        {/* ── T-Shirt ───────────────────────────────────── */}
         {showTshirts && (
           <CollectionSection
-            heading="The T-Shirt Collection"
+            heading="TSHIRT"
             subtitle="Premium cuts. Everyday essentials."
             categories={tshirtCategories}
             loading={loading}
@@ -189,12 +189,12 @@ export default function CategoriesSection() {
           />
         )}
 
-        {/* ── Kurta Collection ─────────────────────────────────────── */}
+        {/* ── Kurta ─────────────────────────────────────── */}
         {showKurta && (
           <div className="mt-12 md:mt-20" id="kurta-products">
             <div className="mb-12 md:mb-16 text-center tb-heading-reveal">
               <h2 className="font-display text-4xl md:text-6xl tracking-[0.12em] metal-text uppercase">
-                The Kurta Collection
+                KURTA
               </h2>
               <p className="font-display text-sv text-sm md:text-base tracking-[0.08em] mt-4">
                 Crafted tradition. Contemporary style.

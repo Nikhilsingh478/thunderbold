@@ -154,7 +154,7 @@ export default function LiveSaleSection() {
                     />
                   </div>
                   <div className="mt-3 md:mt-5 flex flex-col">
-                    <h3 className="font-display font-medium text-sm md:text-base tracking-tight uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 leading-snug">
+                    <h3 className="font-display font-normal sm:font-medium text-sm md:text-base tracking-[0.02em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 leading-snug">
                       {product.name}
                     </h3>
                     <p className="font-display text-xs md:text-sm tracking-tight text-brass mt-1 font-bold">

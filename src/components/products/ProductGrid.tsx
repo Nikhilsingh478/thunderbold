@@ -115,7 +115,7 @@ export default function ProductGrid({
             />
           </div>
           <div className="mt-4 flex flex-col">
-            <h3 className="font-display font-medium text-[0.95rem] sm:text-lg leading-tight sm:leading-snug tracking-tight uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 overflow-hidden">
+            <h3 className="font-display font-normal sm:font-medium text-[0.95rem] sm:text-lg leading-tight sm:leading-snug tracking-[0.02em] uppercase text-tb-white group-hover:text-brass transition-colors duration-300 line-clamp-2 overflow-hidden">
               {prod.name}
             </h3>
             <div className="mt-1">
