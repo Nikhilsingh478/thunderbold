@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell, RotateCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
 import AnalyticsTab from '../components/Analytics/AnalyticsTab';
-import Navbar from '../components/Navbar';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';
 import { useAuth } from '../context/AuthContext';
@@ -1509,9 +1508,8 @@ export default function Admin() {
     <div className="noise-overlay min-h-screen flex flex-col bg-void">
       <CustomCursor />
       <ScrollProgress />
-      <Navbar />
 
-      <main className="flex-1 pt-20 sm:pt-24 md:pt-28 pb-16">
+      <main className="flex-1 pt-6 sm:pt-8 md:pt-10 pb-16">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 lg:px-16">
 
           {/* Header */}
