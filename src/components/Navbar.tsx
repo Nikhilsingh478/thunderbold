@@ -255,14 +255,14 @@ const Navbar = () => {
               variants={itemVariants}
               onClick={() => setIsSearchOpen(true)}
               aria-label="Open search"
-              className="group flex items-center gap-2.5 px-4 py-2 border border-white/[0.11] hover:border-white/30 rounded-sm bg-white/[0.025] hover:bg-white/[0.05] transition-all duration-300 focus:outline-none w-[196px] xl:w-[228px]"
+              className="group flex items-center gap-2.5 px-4 py-2 border border-white/15 hover:border-white/30 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-300 focus:outline-none w-[196px] xl:w-[228px]"
             >
               <Search
-                size={13}
-                strokeWidth={1.8}
-                className="text-sv-mid group-hover:text-white/70 transition-colors duration-300 flex-shrink-0"
+                size={14}
+                strokeWidth={2}
+                className="text-zinc-300 group-hover:text-white transition-colors duration-300 flex-shrink-0"
               />
-              <span className="font-condensed text-[0.65rem] tracking-[0.18em] uppercase text-sv-dim group-hover:text-white/50 transition-colors duration-300 truncate">
+              <span className="font-display font-medium text-[0.7rem] tracking-[0.14em] uppercase text-zinc-300 group-hover:text-white transition-colors duration-300 truncate">
                 Search styles & fits…
               </span>
             </motion.button>
@@ -272,7 +272,7 @@ const Navbar = () => {
               <motion.div variants={itemVariants} key={link.name}>
                 <Link
                   to={link.href}
-                  className="group font-condensed font-semibold text-[0.72rem] tracking-[0.20em] uppercase text-sv-mid hover:text-white transition-colors duration-300 relative"
+                  className="group font-display font-medium text-[0.75rem] tracking-[0.14em] uppercase text-zinc-200 hover:text-white transition-colors duration-300 relative"
                 >
                   {link.name}
                   <span className="absolute -bottom-2 left-0 w-0 h-px bg-brass-bright group-hover:w-full transition-all duration-300 ease-in-out" />
@@ -284,7 +284,7 @@ const Navbar = () => {
             <motion.div variants={itemVariants} className="flex items-center gap-3">
               <Link
                 to="/wishlist"
-                className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+                className="relative p-2 text-zinc-300 hover:text-white transition-colors duration-200 group"
               >
                 <Heart size={20} className="group-hover:scale-110 transition-transform duration-200" />
                 {wishlistItemsCount > 0 && (
@@ -295,7 +295,7 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/cart"
-                className="relative p-2 text-sv-mid hover:text-white transition-colors duration-200 group"
+                className="relative p-2 text-zinc-300 hover:text-white transition-colors duration-200 group"
               >
                 <ShoppingCart size={20} className="group-hover:scale-110 transition-transform duration-200" />
                 {cartItemsCount > 0 && (
@@ -318,11 +318,11 @@ const Navbar = () => {
                     aria-label="Account menu"
                   >
                     <div className="w-8 h-8 rounded-full bg-brass/20 border border-brass/40 flex items-center justify-center flex-shrink-0 group-hover:border-brass/70 transition-colors duration-200">
-                      <span className="font-display text-[0.65rem] tracking-wide brass-text">{initials}</span>
+                      <span className="font-display font-bold text-[0.65rem] tracking-wide text-brass">{initials}</span>
                     </div>
                     <ChevronDown
                       size={14}
-                      className={`text-sv-mid transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                      className={`text-zinc-300 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
 
@@ -333,35 +333,35 @@ const Navbar = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 6, scale: 0.97 }}
                         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute right-0 top-full mt-3 w-52 bg-[#0e0e0e] border border-white/[0.09] rounded-xl shadow-2xl overflow-hidden z-[200]"
+                        className="absolute right-0 top-full mt-3 w-52 bg-[#0e0e0e] border border-white/15 rounded-xl shadow-2xl overflow-hidden z-[200]"
                       >
-                        <div className="px-4 py-3.5 border-b border-white/[0.07]">
-                          <p className="font-body text-xs font-medium text-tb-white truncate">{displayName}</p>
-                          <p className="font-body text-[0.7rem] text-sv-dim truncate mt-0.5">{user.email}</p>
+                        <div className="px-4 py-3.5 border-b border-white/10">
+                          <p className="font-display text-xs font-semibold text-white truncate">{displayName}</p>
+                          <p className="font-display text-[0.7rem] text-zinc-400 truncate mt-0.5">{user.email}</p>
                         </div>
                         <div className="py-1">
                           <Link
                             to="/profile"
                             onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-white hover:bg-white/5 transition-all duration-150"
+                            className="flex items-center gap-3 px-4 py-2.5 font-display font-medium text-[0.7rem] tracking-[0.12em] uppercase text-zinc-200 hover:text-white hover:bg-white/5 transition-all duration-150"
                           >
-                            <User className="w-3.5 h-3.5 flex-shrink-0" />
+                            <User className="w-3.5 h-3.5 flex-shrink-0 text-brass" />
                             My Profile
                           </Link>
                           <Link
                             to="/orders"
                             onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-white hover:bg-white/5 transition-all duration-150"
+                            className="flex items-center gap-3 px-4 py-2.5 font-display font-medium text-[0.7rem] tracking-[0.12em] uppercase text-zinc-200 hover:text-white hover:bg-white/5 transition-all duration-150"
                           >
-                            <Package className="w-3.5 h-3.5 flex-shrink-0" />
+                            <Package className="w-3.5 h-3.5 flex-shrink-0 text-brass" />
                             My Orders
                           </Link>
-                          <div className="h-px bg-white/[0.06] my-1" />
+                          <div className="h-px bg-white/10 my-1" />
                           <button
                             onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 font-condensed text-[0.68rem] tracking-[0.14em] uppercase text-sv-mid hover:text-red-400 hover:bg-red-400/5 transition-all duration-150"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 font-display font-medium text-[0.7rem] tracking-[0.12em] uppercase text-zinc-200 hover:text-red-400 hover:bg-red-400/5 transition-all duration-150"
                           >
-                            <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+                            <LogOut className="w-3.5 h-3.5 flex-shrink-0 text-red-400" />
                             Logout
                           </button>
                         </div>
@@ -372,7 +372,7 @@ const Navbar = () => {
               ) : (
                 <button
                   onClick={handleLogin}
-                  className="text-sm px-4 py-2 border border-neutral-700 hover:border-yellow-500 transition-colors duration-200 text-sv-mid hover:text-white"
+                  className="font-display font-semibold text-xs tracking-wider uppercase px-4 py-2 border border-white/20 hover:border-brass transition-all duration-200 text-white rounded-lg"
                 >
                   Login
                 </button>
@@ -433,7 +433,7 @@ const Navbar = () => {
               className="absolute bottom-12 flex flex-col items-center gap-4"
             >
               <div className="w-px h-12 bg-gradient-to-b from-brass-bright/50 to-transparent" />
-              <span className="font-condensed text-[0.6rem] tracking-[0.4em] text-sv-mid uppercase">
+              <span className="font-display text-[0.65rem] tracking-[0.3em] text-zinc-300 font-medium uppercase">
                 Thunderbold Brand World
               </span>
             </motion.div>
