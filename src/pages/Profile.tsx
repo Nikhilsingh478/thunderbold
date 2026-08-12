@@ -533,65 +533,75 @@ export default function Profile() {
                     </div>
 
                     {/* Address list */}
-                    <div className="space-y-3 mb-4">
+                    <div className="space-y-4 mb-6">
                       {(profile?.addresses || []).length === 0 && !showAddressForm ? (
-                        <div className="flex flex-col items-center py-14 text-center bg-[#0a0a0a] border border-white/[0.08] rounded-md p-6">
+                        <div className="flex flex-col items-center py-16 text-center bg-[#0a0a0a] border border-white/[0.08] rounded-md p-8">
                           <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                             <MapPin className="w-5 h-5 text-brass" />
                           </div>
-                          <p className="font-display font-medium text-sm tracking-[0.1em] uppercase text-tb-white mb-1.5">
+                          <p className="font-display font-medium text-sm tracking-[0.12em] uppercase text-tb-white mb-1.5">
                             No addresses saved
                           </p>
-                          <p className="text-sv-mid font-display text-xs">Add an address to speed up checkout</p>
+                          <p className="text-sv-mid font-display text-xs tracking-wide">Add a shipping address to speed up your checkout</p>
                         </div>
                       ) : (
                         (profile?.addresses || []).map((addr) => (
                           <div
                             key={addr.id}
-                            className={`bg-[#0a0a0a] border rounded-md p-4.5 transition-colors duration-200 ${
-                              addr.isDefault ? 'border-brass/35' : 'border-white/[0.08]'
+                            className={`bg-[#0a0a0a] border rounded-md p-5 transition-all duration-200 relative ${
+                              addr.isDefault ? 'border-brass/40 bg-[#0c0c0c]' : 'border-white/[0.08] hover:border-white/20'
                             }`}
                           >
-                            {/* Name + badge */}
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="font-display font-semibold text-sm text-tb-white">
-                                {addr.fullName}
-                              </span>
-                              {addr.isDefault && (
-                                <span className="flex items-center gap-1 px-2.5 py-0.5 bg-brass/15 border border-brass/30 text-brass font-display font-semibold text-[0.62rem] tracking-[0.14em] uppercase rounded-full">
-                                  <Star className="w-2.5 h-2.5 fill-current" />
-                                  Default
+                            {/* Card Header: Name + Default Badge */}
+                            <div className="flex items-center justify-between gap-3 mb-2.5">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="font-display font-semibold text-base text-tb-white truncate">
+                                  {addr.fullName}
                                 </span>
+                                {addr.isDefault && (
+                                  <span className="shrink-0 flex items-center gap-1 px-2.5 py-0.5 bg-brass/15 border border-brass/30 text-brass font-display font-bold text-[0.6rem] tracking-[0.16em] uppercase rounded-sm">
+                                    <Star className="w-2.5 h-2.5 fill-current" />
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Address details */}
+                            <div className="space-y-1 text-xs font-display text-tb-off leading-relaxed">
+                              <p className="font-medium text-tb-white">{addr.addressLine1}</p>
+                              {addr.addressLine2 && <p className="text-sv-mid">{addr.addressLine2}</p>}
+                              <p className="text-sv-mid">
+                                {addr.city}, {addr.state} — <span className="text-tb-white font-medium">{addr.pincode}</span>
+                              </p>
+                              {addr.landmark && (
+                                <p className="text-sv-dim italic text-[11px]">Landmark: {addr.landmark}</p>
                               )}
                             </div>
 
-                            {/* Address lines */}
-                            <p className="text-sm text-tb-off font-display font-medium leading-snug">
-                              {addr.addressLine1}
-                            </p>
-                            <p className="text-xs text-sv-mid font-display mt-0.5">
-                              {addr.city}, {addr.state} — {addr.pincode}
-                            </p>
-                            <p className="text-xs text-sv-mid font-display mt-0.5">
-                              Phone: <span className="text-tb-white font-medium">{addr.phone}</span>
-                            </p>
-                            
-                            {/* Actions row */}
-                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
-                              {!addr.isDefault && (
+                            {/* Phone number */}
+                            <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
+                              <p className="text-xs text-sv-mid font-display">
+                                Contact: <span className="text-tb-white font-medium">{addr.phone}</span>
+                              </p>
+
+                              {/* Actions row */}
+                              <div className="flex items-center gap-4">
+                                {!addr.isDefault && (
+                                  <button
+                                    onClick={() => handleSetDefault(addr.id)}
+                                    className="text-xs text-brass hover:text-brass-bright font-display font-semibold uppercase tracking-[0.12em] transition-colors"
+                                  >
+                                    Set Default
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => handleSetDefault(addr.id)}
-                                  className="text-xs text-brass hover:text-brass-bright font-display font-medium uppercase tracking-wider"
+                                  onClick={() => handleRemoveAddress(addr.id)}
+                                  className="text-xs text-sv-mid hover:text-red-400 font-display font-medium uppercase tracking-[0.12em] transition-colors"
                                 >
-                                  Set as Default
+                                  Delete
                                 </button>
-                              )}
-                              <button
-                                onClick={() => handleRemoveAddress(addr.id)}
-                                className="text-xs text-sv-mid hover:text-red-400 font-display font-medium uppercase tracking-wider ml-auto"
-                              >
-                                Delete
-                              </button>
+                              </div>
                             </div>
                           </div>
                         ))
@@ -605,50 +615,56 @@ export default function Profile() {
                           initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -8 }}
-                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                          className="bg-white/[0.03] border border-white/[0.09] rounded-2xl p-5 md:p-6"
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="bg-[#0a0a0a] border border-white/10 rounded-md p-6 mb-6"
                         >
-                          <div className="flex items-center justify-between mb-5">
-                            <h3 className="font-condensed text-xs tracking-[0.22em] uppercase text-white/60">
-                              New Address
+                          <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/10">
+                            <h3 className="font-display font-medium text-xs tracking-[0.2em] uppercase text-tb-white">
+                              Add New Address
                             </h3>
                             <button
                               onClick={() => { setShowAddressForm(false); setAddressErrors({}); }}
-                              className="w-7 h-7 flex items-center justify-center rounded-full bg-white/[0.05] text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200"
+                              className="p-1 text-sv-mid hover:text-white transition-colors"
+                              aria-label="Close form"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
 
-                          <form onSubmit={handleAddAddress} noValidate>
+                          <form onSubmit={handleAddAddress} noValidate className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <AddressField
+                                label="Full Name" required
+                                value={addressForm.fullName}
+                                onChange={v => setAddressForm(p => ({ ...p, fullName: v.replace(/[^a-zA-Z\s.'-]/g, '') }))}
+                                error={addressErrors.fullName}
+                                placeholder="Full recipient name"
+                              />
+                              <AddressField
+                                label="Phone Number" required type="tel" inputMode="numeric"
+                                value={addressForm.phone}
+                                onChange={v => setAddressForm(p => ({ ...p, phone: v.replace(/\D/g, '').slice(0, 10) }))}
+                                error={addressErrors.phone}
+                                placeholder="10-digit mobile number"
+                              />
+                            </div>
+
                             <AddressField
-                              label="Full Name" required
-                              value={addressForm.fullName}
-                              onChange={v => setAddressForm(p => ({ ...p, fullName: v.replace(/[^a-zA-Z\s.'-]/g, '') }))}
-                              error={addressErrors.fullName}
-                              placeholder="Your full name"
-                            />
-                            <AddressField
-                              label="Phone" required type="tel" inputMode="numeric"
-                              value={addressForm.phone}
-                              onChange={v => setAddressForm(p => ({ ...p, phone: v.replace(/\D/g, '').slice(0, 10) }))}
-                              error={addressErrors.phone}
-                              placeholder="10-digit mobile number"
-                            />
-                            <AddressField
-                              label="Address Line 1" required
+                              label="Street Address / Line 1" required
                               value={addressForm.addressLine1}
                               onChange={v => setAddressForm(p => ({ ...p, addressLine1: v }))}
                               error={addressErrors.addressLine1}
-                              placeholder="House no., Street, Area"
+                              placeholder="House no., Building, Street, Area"
                             />
+
                             <AddressField
-                              label="Address Line 2"
+                              label="Address Line 2 (Optional)"
                               value={addressForm.addressLine2}
                               onChange={v => setAddressForm(p => ({ ...p, addressLine2: v }))}
-                              placeholder="Apartment, Building (optional)"
+                              placeholder="Apartment, Suite, Unit, etc."
                             />
-                            <div className="grid grid-cols-2 gap-x-4">
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                               <AddressField
                                 label="City" required
                                 value={addressForm.city}
@@ -663,46 +679,49 @@ export default function Profile() {
                                 error={addressErrors.state}
                                 placeholder="State"
                               />
-                              <AddressField
-                                label="Pincode" required type="tel" inputMode="numeric"
-                                value={addressForm.pincode}
-                                onChange={v => setAddressForm(p => ({ ...p, pincode: v.replace(/\D/g, '').slice(0, 6) }))}
-                                error={addressErrors.pincode}
-                                placeholder="6-digit pincode"
-                              />
-                              <AddressField
-                                label="Landmark"
-                                value={addressForm.landmark}
-                                onChange={v => setAddressForm(p => ({ ...p, landmark: v }))}
-                                placeholder="Nearby landmark"
-                              />
+                              <div className="col-span-2 sm:col-span-1">
+                                <AddressField
+                                  label="Pincode" required type="tel" inputMode="numeric"
+                                  value={addressForm.pincode}
+                                  onChange={v => setAddressForm(p => ({ ...p, pincode: v.replace(/\D/g, '').slice(0, 6) }))}
+                                  error={addressErrors.pincode}
+                                  placeholder="6-digit PIN"
+                                />
+                              </div>
                             </div>
+
+                            <AddressField
+                              label="Landmark (Optional)"
+                              value={addressForm.landmark}
+                              onChange={v => setAddressForm(p => ({ ...p, landmark: v }))}
+                              placeholder="Nearby landmark for easy delivery"
+                            />
 
                             {/* Default toggle */}
                             <button
                               type="button"
                               onClick={() => setAddressForm(p => ({ ...p, isDefault: !p.isDefault }))}
-                              className="flex items-center gap-3 mb-5 w-full text-left"
+                              className="flex items-center gap-3 py-2 w-full text-left cursor-pointer group"
                             >
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors duration-200 ${
-                                addressForm.isDefault ? 'border-brass bg-brass' : 'border-white/25'
+                              <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors ${
+                                addressForm.isDefault ? 'border-brass bg-brass text-black' : 'border-white/20 group-hover:border-white/40'
                               }`}>
-                                {addressForm.isDefault && <div className="w-2 h-2 bg-void rounded-full" />}
+                                {addressForm.isDefault && <Check className="w-3 h-3 stroke-[3]" />}
                               </div>
-                              <span className="font-condensed text-xs tracking-[0.14em] uppercase text-white/50 select-none">
-                                Set as default address
+                              <span className="font-display font-medium text-xs tracking-[0.14em] uppercase text-sv-mid group-hover:text-white select-none">
+                                Set as my default delivery address
                               </span>
                             </button>
 
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 pt-2">
                               <button
                                 type="submit"
                                 disabled={addressSubmitting}
-                                className="flex-1 py-3.5 bg-tb-white text-void font-condensed font-bold text-sm tracking-[0.18em] uppercase hover:bg-white active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                                className="flex-1 py-3 px-6 bg-tb-white text-void font-display font-bold text-xs tracking-[0.18em] uppercase hover:bg-white active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
                               >
                                 {addressSubmitting ? (
                                   <span className="flex items-center justify-center gap-2">
-                                    <span className="w-4 h-4 border-2 border-void/30 border-t-void rounded-full animate-spin" />
+                                    <span className="w-3.5 h-3.5 border-2 border-void/30 border-t-void rounded-full animate-spin" />
                                     Saving...
                                   </span>
                                 ) : 'Save Address'}
@@ -710,7 +729,7 @@ export default function Profile() {
                               <button
                                 type="button"
                                 onClick={() => { setShowAddressForm(false); setAddressErrors({}); }}
-                                className="px-5 py-3.5 border border-white/[0.1] text-white/45 font-condensed font-semibold text-sm tracking-[0.16em] uppercase hover:bg-white/5 hover:text-white/65 active:scale-[0.98] transition-all duration-200 rounded-xl"
+                                className="px-6 py-3 border border-white/15 text-sv-mid font-display font-medium text-xs tracking-[0.16em] uppercase hover:bg-white/5 hover:text-white transition-all duration-200 rounded-sm"
                               >
                                 Cancel
                               </button>
@@ -925,7 +944,7 @@ export default function Profile() {
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   disabled={deletingAccount}
-                  className="w-full py-3 font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-300 border border-white/15 hover:border-white/30 hover:text-white active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl"
+                  className="w-full py-3 font-display font-medium text-xs tracking-[0.14em] uppercase text-sv-mid border border-white/15 hover:border-white/30 hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-sm"
                 >
                   Cancel
                 </button>
@@ -951,8 +970,8 @@ interface AddressFieldProps {
 
 function AddressField({ label, value, onChange, error, required, type, inputMode, placeholder }: AddressFieldProps) {
   return (
-    <div className="mb-4">
-      <label className="block font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-200 mb-2">
+    <div className="w-full">
+      <label className="block font-display font-medium text-[11px] tracking-[0.16em] uppercase text-sv-mid mb-1.5">
         {label}{required && <span className="text-brass ml-1">*</span>}
       </label>
       <input
@@ -961,14 +980,14 @@ function AddressField({ label, value, onChange, error, required, type, inputMode
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full bg-[#0f0f0f] border px-4 py-3 font-display text-sm text-white placeholder:text-zinc-400 outline-none transition-all duration-300 rounded-xl ${
+        className={`w-full bg-[#050505] border px-4 py-2.5 font-display font-medium text-xs text-tb-white placeholder:text-sv-dim/40 outline-none transition-colors rounded-sm ${
           error
             ? 'border-red-500/80 focus:border-red-400'
-            : 'border-white/20 focus:border-brass'
+            : 'border-white/10 focus:border-brass'
         }`}
       />
       {error && (
-        <p className="font-display text-xs text-red-400 mt-1.5 font-medium">{error}</p>
+        <p className="font-display text-[11px] text-red-400 mt-1 font-medium">{error}</p>
       )}
     </div>
   );
