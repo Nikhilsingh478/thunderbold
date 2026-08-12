@@ -361,9 +361,9 @@ export default function Profile() {
           {/* Back */}
           <button
             onClick={() => navigate(-1)}
-            className="font-condensed text-xs tracking-[0.18em] uppercase text-white/40 hover:text-white/70 transition-colors duration-200 mb-8 flex items-center gap-2 group"
+            className="font-display font-medium text-xs tracking-[0.14em] uppercase text-zinc-300 hover:text-white transition-colors duration-200 mb-8 flex items-center gap-2 group"
           >
-            <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" />
+            <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
             Back
           </button>
 
@@ -374,12 +374,12 @@ export default function Profile() {
           ) : (
             <>
               {/* ── Profile Card ───────────────────────────────────── */}
-              <div className="bg-white/[0.04] border border-white/[0.09] rounded-2xl p-5 md:p-6 mb-6">
+              <div className="bg-[#0f0f0f] border border-white/15 rounded-2xl p-5 md:p-6 mb-6 shadow-lg">
 
                 {/* Avatar + Name row */}
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-full bg-brass/20 border border-brass/35 flex items-center justify-center shrink-0">
-                    <span className="font-display text-lg tracking-wider brass-text">
+                  <div className="w-14 h-14 rounded-full bg-brass/20 border border-brass/40 flex items-center justify-center shrink-0">
+                    <span className="font-display font-bold text-lg tracking-wider text-brass">
                       {getInitials(profile?.name || user.email || 'U')}
                     </span>
                   </div>
@@ -392,85 +392,84 @@ export default function Profile() {
                           onChange={e => setNameDraft(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
                           autoFocus
-                          className="bg-transparent border-b border-brass/50 focus:border-brass text-white text-base outline-none pb-0.5 flex-1 min-w-0"
+                          className="bg-transparent border-b border-brass focus:border-brass-bright text-white font-display text-base outline-none pb-0.5 flex-1 min-w-0"
                           placeholder="Your full name"
                           maxLength={100}
                         />
                         <button onClick={saveName} disabled={saving} className="p-1.5 text-brass hover:text-brass-bright transition-colors shrink-0">
                           <Check className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { setEditingName(false); setNameDraft(profile?.name || ''); }} className="p-1.5 text-white/40 hover:text-white transition-colors shrink-0">
+                        <button onClick={() => { setEditingName(false); setNameDraft(profile?.name || ''); }} className="p-1.5 text-zinc-400 hover:text-white transition-colors shrink-0">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span className="font-body text-base text-white truncate">
+                        <span className="font-display font-semibold text-lg text-white truncate">
                           {profile?.name || '—'}
                         </span>
                         <button
                           onClick={() => { setEditingName(true); setNameDraft(profile?.name || ''); }}
-                          className="p-1 text-white/30 hover:text-brass transition-colors shrink-0"
+                          className="p-1 text-zinc-400 hover:text-brass transition-colors shrink-0"
                           aria-label="Edit name"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     )}
-                    <p className="font-condensed text-xs text-white/35 tracking-[0.06em] mt-0.5 truncate">
+                    <p className="font-display text-xs text-zinc-300 font-medium tracking-wide mt-0.5 truncate">
                       Member account
                     </p>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-white/[0.07] mb-5" />
+                <div className="border-t border-white/10 mb-5" />
 
                 {/* Email */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.07] flex items-center justify-center shrink-0">
-                    <Mail className="w-3.5 h-3.5 text-white/40" />
+                  <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-zinc-200" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-condensed text-[0.6rem] tracking-[0.22em] uppercase text-white/35 mb-0.5">Email</p>
-                    <p className="font-body text-sm text-white/75 truncate">{profile?.email || user.email}</p>
+                    <p className="font-display text-[0.65rem] tracking-[0.16em] uppercase text-zinc-300 font-medium mb-0.5">Email</p>
+                    <p className="font-display text-sm text-white font-medium truncate">{profile?.email || user.email}</p>
                   </div>
                 </div>
 
                 {/* Phone */}
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.07] flex items-center justify-center shrink-0">
-                    <Phone className="w-3.5 h-3.5 text-white/40" />
+                  <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4 text-zinc-200" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-condensed text-[0.6rem] tracking-[0.22em] uppercase text-white/35 mb-0.5">Phone</p>
+                    <p className="font-display text-[0.65rem] tracking-[0.16em] uppercase text-zinc-300 font-medium mb-0.5">Phone</p>
                     {editingPhone ? (
                       <div className="flex items-center gap-2">
                         <input
                           type="tel"
-                          inputMode="numeric"
                           value={phoneDraft}
-                          onChange={e => setPhoneDraft(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          onChange={e => setPhoneDraft(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') savePhone(); if (e.key === 'Escape') setEditingPhone(false); }}
                           autoFocus
-                          className="bg-transparent border-b border-brass/50 focus:border-brass text-white text-sm outline-none pb-0.5 w-40"
-                          placeholder="10-digit mobile"
+                          className="bg-transparent border-b border-brass focus:border-brass-bright text-white font-display text-sm outline-none pb-0.5 flex-1 min-w-0"
+                          placeholder="Phone number"
                         />
-                        <button onClick={savePhone} disabled={saving} className="p-1.5 text-brass hover:text-brass-bright transition-colors shrink-0">
+                        <button onClick={savePhone} disabled={saving} className="p-1 text-brass hover:text-brass-bright transition-colors shrink-0">
                           <Check className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { setEditingPhone(false); setPhoneDraft(profile?.phone || ''); }} className="p-1.5 text-white/40 hover:text-white transition-colors shrink-0">
+                        <button onClick={() => setEditingPhone(false)} className="p-1 text-zinc-400 hover:text-white transition-colors shrink-0">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span className="font-body text-sm text-white/75">
-                          {profile?.phone || <span className="text-white/35 italic">Not added</span>}
+                        <span className="font-display text-sm text-white font-medium truncate">
+                          {profile?.phone || 'Add phone number'}
                         </span>
                         <button
                           onClick={() => { setEditingPhone(true); setPhoneDraft(profile?.phone || ''); }}
-                          className="p-1 text-white/30 hover:text-brass transition-colors shrink-0"
+                          className="p-1 text-zinc-400 hover:text-brass transition-colors shrink-0"
                           aria-label="Edit phone"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -482,23 +481,23 @@ export default function Profile() {
               </div>
 
               {/* ── Tabs ──────────────────────────────────────────── */}
-              <div className="flex border-b border-white/[0.09] mb-6">
+              <div className="flex border-b border-white/15 mb-6">
                 {(['addresses', 'orders'] as Tab[]).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative flex items-center gap-2 font-condensed text-xs tracking-[0.2em] uppercase px-5 py-3.5 transition-colors duration-200 ${
-                      activeTab === tab ? 'text-white' : 'text-white/40 hover:text-white/65'
+                    className={`relative flex items-center gap-2 font-display text-xs font-bold tracking-[0.16em] uppercase px-5 py-3.5 transition-colors duration-200 ${
+                      activeTab === tab ? 'text-white' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     {tab === 'addresses'
-                      ? <><MapPin className="w-3.5 h-3.5" />Addresses</>
-                      : <><Package className="w-3.5 h-3.5" />Orders</>
+                      ? <><MapPin className="w-4 h-4 text-brass" />Addresses</>
+                      : <><Package className="w-4 h-4 text-brass" />Orders</>
                     }
                     {activeTab === tab && (
                       <motion.div
                         layoutId="profile-tab-indicator"
-                        className="absolute bottom-0 left-0 right-0 h-px bg-brass"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-brass"
                       />
                     )}
                   </button>
@@ -519,13 +518,13 @@ export default function Profile() {
                   >
                     {/* Section header */}
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-condensed text-xs tracking-[0.22em] uppercase text-white/50">
+                      <h2 className="font-display font-bold text-xs tracking-[0.18em] uppercase text-zinc-200">
                         Saved Addresses
                       </h2>
                       {!showAddressForm && (
                         <button
                           onClick={() => { setShowAddressForm(true); setAddressForm({ ...emptyAddress }); setAddressErrors({}); }}
-                          className="flex items-center gap-1.5 px-3.5 py-2 bg-brass/10 border border-brass/30 text-brass font-condensed text-[0.65rem] tracking-[0.16em] uppercase hover:bg-brass/20 active:scale-95 transition-all duration-200 rounded-lg"
+                          className="flex items-center gap-1.5 px-3.5 py-2 bg-brass text-black font-display font-bold text-xs tracking-[0.12em] uppercase hover:bg-yellow-400 active:scale-95 transition-all duration-200 rounded-xl shadow-md"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Address
@@ -536,30 +535,30 @@ export default function Profile() {
                     {/* Address list */}
                     <div className="space-y-3 mb-4">
                       {(profile?.addresses || []).length === 0 && !showAddressForm ? (
-                        <div className="flex flex-col items-center py-14 text-center">
-                          <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center mb-4">
-                            <MapPin className="w-5 h-5 text-white/20" />
+                        <div className="flex flex-col items-center py-14 text-center bg-[#0f0f0f] border border-white/10 rounded-2xl p-6">
+                          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4">
+                            <MapPin className="w-5 h-5 text-brass" />
                           </div>
-                          <p className="font-condensed text-sm tracking-[0.1em] uppercase text-white/45 mb-1.5">
+                          <p className="font-display font-bold text-sm tracking-[0.1em] uppercase text-white mb-1.5">
                             No addresses saved
                           </p>
-                          <p className="text-white/30 text-sm">Add an address to speed up checkout</p>
+                          <p className="text-zinc-300 font-display text-xs">Add an address to speed up checkout</p>
                         </div>
                       ) : (
                         (profile?.addresses || []).map((addr) => (
                           <div
                             key={addr.id}
-                            className={`bg-white/[0.03] border rounded-xl p-4 transition-colors duration-200 ${
-                              addr.isDefault ? 'border-brass/25' : 'border-white/[0.08]'
+                            className={`bg-[#0f0f0f] border rounded-2xl p-4 transition-colors duration-200 shadow-md ${
+                              addr.isDefault ? 'border-brass/40' : 'border-white/15'
                             }`}
                           >
                             {/* Name + badge */}
                             <div className="flex items-center gap-2 mb-1.5">
-                              <span className="font-body font-semibold text-sm text-white">
+                              <span className="font-display font-semibold text-sm text-white">
                                 {addr.fullName}
                               </span>
                               {addr.isDefault && (
-                                <span className="flex items-center gap-1 px-2 py-0.5 bg-brass/10 border border-brass/25 text-brass font-condensed text-[0.56rem] tracking-[0.16em] uppercase rounded-full">
+                                <span className="flex items-center gap-1 px-2.5 py-0.5 bg-brass/20 border border-brass/40 text-brass font-display font-bold text-[0.62rem] tracking-[0.12em] uppercase rounded-full">
                                   <Star className="w-2.5 h-2.5 fill-current" />
                                   Default
                                 </span>
@@ -568,18 +567,15 @@ export default function Profile() {
 
                             {/* Address lines */}
                             <p className="text-sm text-zinc-200 font-display font-medium leading-snug">
-                              Phone: {addr.phone}
+                              {addr.addressLine1}
                             </p>
-                            <p className="text-sm text-zinc-200 font-display leading-snug mt-0.5">
-                              {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}
-                            </p>
-                            <p className="text-sm text-zinc-200 font-display leading-snug">
+                            <p className="text-xs text-zinc-300 font-display mt-0.5">
                               {addr.city}, {addr.state} — {addr.pincode}
                             </p>
-                            {addr.landmark && (
-                              <p className="text-xs text-zinc-300 font-display mt-1">Near: {addr.landmark}</p>
-                            )}
-
+                            <p className="text-xs text-zinc-300 font-display mt-0.5">
+                              Phone: <span className="text-white font-medium">{addr.phone}</span>
+                            </p>
+                            
                             {/* Actions row */}
                             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
                               {!addr.isDefault && (
@@ -738,7 +734,7 @@ export default function Profile() {
                     transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-condensed text-xs tracking-[0.22em] uppercase text-white/50">
+                      <h2 className="font-display font-bold text-xs tracking-[0.18em] uppercase text-zinc-200">
                         Order History
                       </h2>
                     </div>
@@ -748,58 +744,58 @@ export default function Profile() {
                         <div className="w-7 h-7 border-2 border-white/10 border-t-brass rounded-full animate-spin" />
                       </div>
                     ) : orders.length === 0 ? (
-                      <div className="flex flex-col items-center py-14 text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center mb-4">
-                          <Package className="w-5 h-5 text-white/20" />
+                      <div className="flex flex-col items-center py-14 text-center bg-[#0f0f0f] border border-white/10 rounded-2xl p-6">
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4">
+                          <Package className="w-5 h-5 text-brass" />
                         </div>
-                        <p className="font-condensed text-sm tracking-[0.1em] uppercase text-white/45 mb-1.5">
+                        <p className="font-display font-bold text-sm tracking-[0.1em] uppercase text-white mb-1.5">
                           No orders yet
                         </p>
-                        <p className="text-white/30 text-sm mb-6">Your order history will appear here</p>
+                        <p className="text-zinc-300 font-display text-xs mb-6">Your order history will appear here</p>
                         <Link
                           to="/"
-                          className="px-5 py-2.5 bg-brass text-void font-condensed font-bold text-xs tracking-[0.18em] uppercase hover:bg-yellow-400 active:scale-95 transition-all duration-200 rounded-xl"
+                          className="px-6 py-3 bg-brass text-black font-display font-bold text-xs tracking-[0.14em] uppercase hover:bg-yellow-400 active:scale-95 transition-all duration-200 rounded-xl shadow-lg"
                         >
                           Start Shopping
                         </Link>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {orders.map((order) => {
                           const statusCfg = getStatusConfig(order.status);
                           return (
                             <div
                               key={order._id}
-                              className="bg-white/[0.03] border border-white/[0.08] rounded-xl overflow-hidden"
+                              className="bg-[#0f0f0f] border border-white/15 rounded-2xl overflow-hidden shadow-md"
                             >
                               {/* Card header */}
                               <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
                                 <div>
-                                  <p className="font-condensed text-xs tracking-[0.14em] text-white/65 uppercase">
+                                  <p className="font-display font-bold text-xs tracking-[0.12em] text-white uppercase">
                                     {formatOrderId(order)}
                                   </p>
-                                  <div className="flex items-center gap-1.5 mt-0.5 text-white/30 text-xs">
-                                    <Calendar className="w-3 h-3" />
+                                  <div className="flex items-center gap-1.5 mt-0.5 text-zinc-300 text-xs font-display">
+                                    <Calendar className="w-3.5 h-3.5" />
                                     {formatDate(order.createdAt)}
                                   </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-1.5">
-                                  <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[0.62rem] font-condensed uppercase tracking-wider ${statusCfg.color}`}>
+                                  <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[0.65rem] font-display font-bold uppercase tracking-wider ${statusCfg.color}`}>
                                     {statusCfg.icon}
                                     {statusCfg.label}
                                   </span>
-                                  <span className="font-condensed text-sm text-white font-semibold">
+                                  <span className="font-display text-base text-brass font-bold">
                                     ₹{order.totalAmount?.toLocaleString('en-IN')}
                                   </span>
                                 </div>
                               </div>
 
                               {/* Products */}
-                              <div className="border-t border-white/[0.06] px-4 py-3 space-y-2.5">
+                              <div className="border-t border-white/10 px-4 py-3 space-y-2.5">
                                 {(order.products ?? []).map((p, idx) => (
-                                  <div key={idx} className="flex items-start gap-3 border-b border-white/[0.03] last:border-b-0 pb-3 last:pb-0">
+                                  <div key={idx} className="flex items-start gap-3 border-b border-white/5 last:border-b-0 pb-3 last:pb-0">
                                     {/* Product Image */}
-                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#0c0c0c] border border-white/10 shrink-0">
                                       <img
                                         src={optimizeCloudinaryUrl(p.image, IMG_SIZES.thumbnail)}
                                         alt={p.name}
@@ -815,12 +811,12 @@ export default function Profile() {
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-start justify-between gap-3">
                                         <div>
-                                          <p className="text-sm text-white/80 leading-snug line-clamp-2">{p.name}</p>
-                                          <p className="text-xs text-white/35 mt-0.5">
+                                          <p className="text-sm font-display font-medium text-white leading-snug line-clamp-2">{p.name}</p>
+                                          <p className="text-xs font-display text-zinc-300 mt-0.5">
                                             {p.size ? `Size ${p.size} · ` : ''}Qty {p.quantity}
                                           </p>
                                         </div>
-                                        <p className="text-sm text-white/65 shrink-0 font-condensed">₹{p.price?.toLocaleString('en-IN') ?? '—'}</p>
+                                        <p className="text-sm text-brass shrink-0 font-display font-semibold">₹{p.price?.toLocaleString('en-IN') ?? '—'}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -829,11 +825,11 @@ export default function Profile() {
 
                               {/* Cancel action */}
                               {!['cancelled', 'delivered', 'shipped'].includes(order.status) && (
-                                <div className="border-t border-white/[0.06] px-4 py-3">
+                                <div className="border-t border-white/10 px-4 py-3">
                                   <button
                                     onClick={() => cancelOrder(order._id)}
                                     disabled={cancellingOrder === order._id}
-                                    className="flex items-center gap-2 px-3.5 py-2 border border-red-500/20 text-red-400/70 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/5 font-condensed text-[0.62rem] tracking-[0.16em] uppercase transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg active:scale-95"
+                                    className="flex items-center gap-2 px-3.5 py-2 border border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/20 font-display text-[0.68rem] font-bold tracking-[0.14em] uppercase transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl active:scale-95"
                                   >
                                     {cancellingOrder === order._id ? (
                                       <>
@@ -859,19 +855,19 @@ export default function Profile() {
               </AnimatePresence>
 
               {/* ── Delete Account ─────────────────────────────────── */}
-              <div className="mt-14 pt-6 border-t border-white/[0.07]">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="mt-14 pt-6 border-t border-white/10">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#0f0f0f] border border-white/10 p-5 rounded-2xl">
                   <div>
-                    <h3 className="font-condensed text-xs tracking-[0.18em] uppercase text-white/40 mb-1">
+                    <h3 className="font-display font-bold text-xs tracking-[0.16em] uppercase text-zinc-300 mb-1">
                       Delete Account
                     </h3>
-                    <p className="font-body text-sm text-white/28 leading-relaxed">
+                    <p className="font-display text-xs text-zinc-400 leading-relaxed">
                       Permanently deletes your account and all associated data. Irreversible.
                     </p>
                   </div>
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className="shrink-0 px-4 py-2.5 font-condensed font-bold text-[0.68rem] tracking-[0.18em] uppercase text-red-400/60 border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400/80 transition-colors duration-200 rounded-lg active:scale-95"
+                    className="shrink-0 px-4 py-2.5 font-display font-bold text-xs tracking-[0.14em] uppercase text-red-400 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/40 transition-all duration-200 rounded-xl active:scale-95"
                   >
                     Delete Account
                   </button>
@@ -919,7 +915,7 @@ export default function Profile() {
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deletingAccount}
-                  className="w-full py-3 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-white bg-red-700 hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 rounded-xl"
+                  className="w-full py-3 font-display font-bold text-xs tracking-[0.14em] uppercase text-white bg-red-700 hover:bg-red-600 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 rounded-xl"
                 >
                   {deletingAccount ? (
                     <>
@@ -931,7 +927,7 @@ export default function Profile() {
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   disabled={deletingAccount}
-                  className="w-full py-3 font-condensed font-bold text-[0.72rem] tracking-[0.18em] uppercase text-white/50 border border-white/[0.09] hover:border-white/[0.16] hover:text-white/70 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl"
+                  className="w-full py-3 font-display font-semibold text-xs tracking-[0.14em] uppercase text-zinc-300 border border-white/15 hover:border-white/30 hover:text-white active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl"
                 >
                   Cancel
                 </button>
