@@ -445,7 +445,7 @@ const Orders = () => {
             <div className="text-center py-12">
               <p className="text-red-400 font-display text-sm mb-4">{error}</p>
               <button
-                onClick={() => fetchPage(currentPage)}
+                onClick={() => refetchOrders()}
                 className="px-5 py-2.5 bg-brass text-black rounded-lg hover:bg-yellow-400 transition-colors font-display text-xs font-bold uppercase tracking-wider shadow"
               >
                 Try Again
