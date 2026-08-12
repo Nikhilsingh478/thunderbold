@@ -50,11 +50,9 @@ function PageLoader() {
         transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
         aria-hidden
       >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M13.2 2.5L4.8 13.2C4.6 13.5 4.8 14 5.2 14H11L9.8 21.2C9.7 21.8 10.5 22.1 10.9 21.6L19.2 10.8C19.4 10.5 19.2 10 18.8 10H13L14.2 2.8C14.3 2.2 13.6 1.9 13.2 2.5Z"
-            fill="white"
-          />
+        <svg width="32" height="36" viewBox="0 0 718 820" fill="none">
+          <path d="M 465 104 L 150 490 L 352 492 L 226 790 L 604 376 L 604 374 L 378 374 L 354 436 L 446 437 L 403 498 L 402 496 L 418 450 L 331 449 Z" fill="#F8C80A"/>
+          <path d="M 445 139 L 164 483 L 359 483 L 362 486 L 247 759 L 589 381 L 383 381 L 365 429 L 456 429 L 459 432 L 379 545 L 378 539 L 409 458 L 324 457 L 322 455 Z" fill="#FEFEFE"/>
         </svg>
       </motion.div>
 
