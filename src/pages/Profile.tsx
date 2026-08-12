@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '../lib/queryClient';
 import { useAuth } from '../context/AuthContext';
 import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 
@@ -61,6 +63,15 @@ interface Order {
   orderNumber?: string;
 }
 
+interface OrdersApiResponse {
+  orders: Order[];
+  count: number;
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
+
 const emptyAddress = {
   fullName: '', phone: '', addressLine1: '', addressLine2: '',
   city: '', state: '', pincode: '', landmark: '', isDefault: false,
@@ -72,8 +83,6 @@ export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('addresses');
 
   const [editingName, setEditingName] = useState(false);
@@ -87,21 +96,61 @@ export default function Profile() {
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
   const [addressSubmitting, setAddressSubmitting] = useState(false);
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersLoaded, setOrdersLoaded] = useState(false);
   const [cancellingOrder, setCancellingOrder] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
-    if (!user) { navigate('/'); return; }
-    fetchProfile();
-  }, [user]);
+    if (!user) { navigate('/'); }
+  }, [user, navigate]);
+
+  // ── Profile query — staleTime 60s, gcTime 10m ─────────────────────────────
+  const {
+    data: profile,
+    isLoading: profileLoading,
+  } = useQuery<UserProfile | null>({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const token = await user!.getIdToken();
+      const res = await fetch('/api/users', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch profile');
+      const json = await res.json();
+      return json.data;
+    },
+    enabled: !!user,
+    staleTime: 60 * 1000, // 60 seconds
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // ── Orders query — staleTime 30s, gcTime 5m ───────────────────────────────
+  const {
+    data: ordersResponse,
+    isLoading: ordersLoading,
+  } = useQuery<OrdersApiResponse>({
+    queryKey: ['orders', 1],
+    queryFn: async () => {
+      const token = await user!.getIdToken();
+      const res = await fetch('/api/orders?page=1', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch orders');
+      return res.json();
+    },
+    enabled: !!user && activeTab === 'orders',
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const orders: Order[] = ordersResponse?.orders ?? [];
 
   useEffect(() => {
-    if (activeTab === 'orders' && !ordersLoaded) fetchOrders();
-  }, [activeTab]);
+    if (profile) {
+      if (!editingName) setNameDraft(profile.name || '');
+      if (!editingPhone) setPhoneDraft(profile.phone || '');
+    }
+  }, [profile, editingName, editingPhone]);
 
   const getToken = () => user!.getIdToken();
 
@@ -116,6 +165,7 @@ export default function Profile() {
       });
       const authUser = getAuth().currentUser;
       if (authUser) await deleteUser(authUser);
+      queryClient.clear();
       toast.success('Account deleted. Goodbye.');
       navigate('/');
     } catch (err: unknown) {
@@ -130,44 +180,6 @@ export default function Profile() {
     }
   };
 
-  const fetchProfile = async () => {
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data.data);
-        setNameDraft(data.data?.name || '');
-        setPhoneDraft(data.data?.phone || '');
-      }
-    } catch (err) {
-      console.error('Failed to fetch profile:', err);
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  const fetchOrders = async () => {
-    setOrdersLoading(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('/api/orders', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data.orders || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch orders:', err);
-    } finally {
-      setOrdersLoading(false);
-      setOrdersLoaded(true);
-    }
-  };
-
   const cancelOrder = async (orderId: string) => {
     setCancellingOrder(orderId);
     try {
@@ -179,7 +191,7 @@ export default function Profile() {
       });
       const data = await res.json();
       if (res.ok) {
-        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o));
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
         toast.success('Order cancelled successfully');
       } else {
         toast.error(data.error || 'Failed to cancel order');
@@ -203,8 +215,7 @@ export default function Profile() {
         body: JSON.stringify({ name: trimmed }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setProfile(data.data);
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
         setEditingName(false);
         toast.success('Name updated');
       } else {
@@ -232,8 +243,7 @@ export default function Profile() {
         body: JSON.stringify({ phone: trimmed }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setProfile(data.data);
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
         setEditingPhone(false);
         toast.success('Phone updated');
       } else {
@@ -280,7 +290,7 @@ export default function Profile() {
         setShowAddressForm(false);
         setAddressForm({ ...emptyAddress });
         setAddressErrors({});
-        await fetchProfile();
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
       } else {
         const data = await res.json();
         toast.error(data.error || 'Failed to save address');
@@ -302,7 +312,7 @@ export default function Profile() {
       });
       if (res.ok) {
         toast.success('Address removed');
-        await fetchProfile();
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
       } else {
         toast.error('Failed to remove address');
       }
@@ -321,7 +331,7 @@ export default function Profile() {
       });
       if (res.ok) {
         toast.success('Default address updated');
-        await fetchProfile();
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
       } else {
         toast.error('Failed to update default address');
       }

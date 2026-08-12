@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '../lib/queryClient';
 import {
   Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft,
   Pencil, Eye, X, RotateCcw, ChevronLeft, ChevronRight,
@@ -35,6 +37,15 @@ interface Order {
   adminNotes?: string;
   giftMessage?: string;
   giftCardId?: string;
+}
+
+interface OrdersApiResponse {
+  orders: Order[];
+  count: number;
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
 }
 
 const RETURN_STATUSES = ['return_requested', 'return_approved', 'return_rejected', 'refund_issued'];
@@ -126,12 +137,36 @@ const Orders = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [orders, setOrders]           = useState<Order[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-  const [error, setError]             = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages]   = useState(1);
-  const [totalOrders, setTotalOrders] = useState(0);
+
+  // ── TanStack Query for orders — staleTime 30s, gcTime 5m, placeholderData keepPreviousData ──
+  const {
+    data: ordersResponse,
+    isLoading: ordersLoading,
+    isError,
+    error: ordersQueryError,
+    refetch: refetchOrders,
+  } = useQuery<OrdersApiResponse>({
+    queryKey: ['orders', currentPage],
+    queryFn: async () => {
+      const token = await user!.getIdToken();
+      const r = await fetch(`/api/orders?page=${currentPage}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error('Failed to load orders. Please try again.');
+      return r.json();
+    },
+    enabled: !!user && !authLoading,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: (previousData) => previousData,
+    refetchInterval: 10_000, // 10s background poll for order status updates
+  });
+
+  const orders: Order[] = ordersResponse?.orders ?? [];
+  const totalPages = ordersResponse?.totalPages ?? 1;
+  const totalOrders = ordersResponse?.total ?? orders.length;
+  const error = isError ? (ordersQueryError instanceof Error ? ordersQueryError.message : 'Failed to load orders') : '';
 
   // ── Reviews state ──────────────────────────────────────────────────────────
   const [myReviews, setMyReviews] = useState<Record<string, ReviewData>>({});
@@ -142,49 +177,6 @@ const Orders = () => {
 
   // ── Return request state ───────────────────────────────────────────────────
   const [returnTarget, setReturnTarget] = useState<Order | null>(null);
-
-  // ── Fetch a page ──────────────────────────────────────────────────────────
-  const fetchPage = useCallback(
-    async (page: number, silent = false) => {
-      if (!user) return;
-      if (!silent) setOrdersLoading(true);
-      try {
-        const token = await user.getIdToken();
-        const r = await fetch(`/api/orders?page=${page}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (r.ok) {
-          const data = await r.json();
-          setOrders(data.orders ?? []);
-          setTotalPages(data.totalPages ?? 1);
-          setTotalOrders(data.total ?? (data.orders ?? []).length);
-        } else if (!silent) {
-          setError('Failed to load orders. Please try again.');
-        }
-      } catch {
-        if (!silent) setError('Network error — please check your connection.');
-      } finally {
-        if (!silent) setOrdersLoading(false);
-      }
-    },
-    [user]
-  );
-
-  // Initial load + page changes
-  useEffect(() => {
-    if (authLoading || !user) {
-      setOrdersLoading(false);
-      return;
-    }
-    fetchPage(currentPage);
-  }, [user, authLoading, currentPage, fetchPage]);
-
-  // 10s background poll for current page (updates status without full reload)
-  useEffect(() => {
-    if (authLoading || !user) return;
-    const id = setInterval(() => fetchPage(currentPage, true), 10_000);
-    return () => clearInterval(id);
-  }, [user, authLoading, currentPage, fetchPage]);
 
   // Fetch user's reviews (for review buttons)
   useEffect(() => {
@@ -287,7 +279,7 @@ const Orders = () => {
       });
       const data = await r.json();
       if (r.ok) {
-        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o));
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
       } else {
         alert(data.error || 'Failed to cancel order');
       }
@@ -307,7 +299,7 @@ const Orders = () => {
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data?.error || 'Failed to submit return request');
-    setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'return_requested' } : o));
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
   };
 
   // ── Status helpers ─────────────────────────────────────────────────────────
