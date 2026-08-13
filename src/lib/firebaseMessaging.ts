@@ -1,13 +1,18 @@
-import { getMessaging, getToken, Messaging } from 'firebase/messaging';
-import app from './firebase';
+import { Capacitor } from '@capacitor/core';
+
+// firebase/messaging is web-only — do NOT use on native platform
+let _getMessaging: any = null;
+let _getToken: any = null;
+type Messaging = any;
 
 let messagingInstance: Messaging | null = null;
 
 /**
  * Returns the Firebase Messaging instance.
- * Returns null if messaging is not supported or SW is not available.
+ * Returns null if messaging is not supported, SW is not available, or running on native.
  */
 export async function initMessaging(): Promise<Messaging | null> {
+  if (Capacitor.isNativePlatform()) return null;
   if (messagingInstance) return messagingInstance;
   if (!('serviceWorker' in navigator) || !('Notification' in window)) {
     console.warn('[FCM] serviceWorker or Notification API not supported by browser.');
@@ -15,7 +20,11 @@ export async function initMessaging(): Promise<Messaging | null> {
   }
 
   try {
-    messagingInstance = getMessaging(app);
+    // Dynamic import — keeps firebase/messaging OUT of the main bundle evaluated on native
+    const { getMessaging } = await import('firebase/messaging');
+    const { default: app } = await import('./firebase');
+    _getMessaging = getMessaging;
+    messagingInstance = _getMessaging(app);
     return messagingInstance;
   } catch (error) {
     console.error('[FCM] Failed to initialize messaging instance:', error);
@@ -70,6 +79,7 @@ export async function requestAndRegisterToken(
 
       if (mainReg) {
         console.log('[FCM] Registering token through main PWA service worker...');
+        const { getToken } = await import('firebase/messaging');
         token = await getToken(messaging, {
           vapidKey,
           serviceWorkerRegistration: mainReg,
@@ -81,14 +91,14 @@ export async function requestAndRegisterToken(
       console.warn('[FCM] Failed to fetch token using main PWA service worker:', swErr);
     }
 
-    // Fallback: use default FCM registration (registers /firebase-messaging-sw.js) ONLY in development
     if (!token && import.meta.env.DEV) {
       console.log('[FCM] Dev fallback: Attempting default FCM service worker token registration (/firebase-messaging-sw.js)...');
       try {
+        const { getToken } = await import('firebase/messaging');
         token = await getToken(messaging, { vapidKey });
       } catch (fallbackErr) {
         console.error('[FCM] Default FCM token generation failed:', fallbackErr);
-        throw fallbackErr; // Propagate to outer catch
+        throw fallbackErr;
       }
     }
 

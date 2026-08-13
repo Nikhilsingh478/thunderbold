@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from './AuthContext';
-import { requestAndRegisterToken, initMessaging } from '../lib/firebaseMessaging';
 import { initNativePush } from '../lib/nativePushNotifications';
-import { onMessage } from 'firebase/messaging';
 import { toast } from 'sonner';
+// NOTE: firebase/messaging and firebaseMessaging are loaded dynamically (web-only)
+// to avoid crashing Android WebView during module initialization.
 
 export const isStandaloneApp = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -148,6 +148,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Web-only: dynamic import to avoid bundling firebase/messaging on native
+    const { requestAndRegisterToken } = await import('../lib/firebaseMessaging');
     await requestAndRegisterToken(sendToken);
     setShouldPromptState(false);
   }, [user]);
@@ -223,7 +225,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user, registerToken]);
 
-  // Listen for Web FCM foreground notifications
+  // Listen for Web FCM foreground notifications (web-only, dynamic import)
   useEffect(() => {
     if (!user || Capacitor.isNativePlatform()) return;
 
@@ -231,6 +233,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
     const setupForegroundListener = async () => {
       try {
+        const { initMessaging } = await import('../lib/firebaseMessaging');
+        const { onMessage } = await import('firebase/messaging');
         const messaging = await initMessaging();
         if (!messaging) return;
 

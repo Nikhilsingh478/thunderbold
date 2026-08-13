@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Thunderbold',
   webDir: 'dist',
   server: {
-    // Load the live website directly — avoids all local bundle CORS/SW conflicts
-    url: 'https://thunderbold.shop',
+    // Use local bundle served from Android assets via https://localhost
+    androidScheme: 'https',
     cleartext: false,
   },
   android: {
