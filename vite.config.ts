@@ -36,6 +36,7 @@ export default defineConfig(() => ({
     __APP_VERSION__: JSON.stringify(buildVersion),
   },
   build: {
+    outDir: 'dist',
     sourcemap: false,
     rollupOptions: {
       output: {

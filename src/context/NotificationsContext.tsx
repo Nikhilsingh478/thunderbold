@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from './AuthContext';
 import { requestAndRegisterToken, initMessaging } from '../lib/firebaseMessaging';
+import { initNativePush } from '../lib/nativePushNotifications';
 import { onMessage } from 'firebase/messaging';
 import { toast } from 'sonner';
 
 export const isStandaloneApp = (): boolean => {
   if (typeof window === 'undefined') return false;
   return (
+    Capacitor.isNativePlatform() ||
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: fullscreen)').matches ||
     window.matchMedia('(display-mode: minimal-ui)').matches ||
@@ -58,6 +61,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const triggerPrompt = useCallback(() => {
+    if (Capacitor.isNativePlatform()) return; // Native app handles permissions automatically
     if (!browserSupported()) return;
     if (!isStandaloneApp()) return; // App-only requirement — never prompt on browser website
     if (Notification.permission === 'granted') return;
@@ -104,13 +108,111 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    if (Capacitor.isNativePlatform()) {
+      initNativePush(
+        sendToken,
+        (notification) => {
+          const title = notification.title || 'Thunderbold';
+          const body = notification.body || '';
+          const data = notification.data || {};
+          toast(title, {
+            description: body,
+            duration: 8000,
+            action: data.orderId ? {
+              label: 'View Order',
+              onClick: () => {
+                const isValidObjectId = /^[a-f0-9]{24}$/i.test(data.orderId);
+                if (isValidObjectId) {
+                  window.location.href = `/orders?orderId=${data.orderId}`;
+                } else if (data.link) {
+                  window.location.href = data.link;
+                } else {
+                  window.location.href = '/orders';
+                }
+              }
+            } : undefined,
+          });
+        },
+        (action) => {
+          const data = action.notification?.data;
+          if (data?.orderId && /^[a-f0-9]{24}$/i.test(data.orderId)) {
+            window.location.href = `/orders?orderId=${data.orderId}`;
+          } else if (data?.link) {
+            window.location.href = data.link;
+          } else {
+            window.location.href = '/orders';
+          }
+        }
+      );
+      setShouldPromptState(false);
+      return;
+    }
+
     await requestAndRegisterToken(sendToken);
     setShouldPromptState(false);
   }, [user]);
 
-  // Auto-register/refresh FCM token on login/startup if permission is already granted
+  // Native push initialization or Web FCM auto-register
   useEffect(() => {
-    if (user && browserSupported() && Notification.permission === 'granted') {
+    if (!user) return;
+
+    if (Capacitor.isNativePlatform()) {
+      initNativePush(
+        async (token) => {
+          try {
+            const idToken = await user.getIdToken();
+            const deviceId = getOrCreateDeviceId();
+            await fetch('/api/users/fcm-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({ token, deviceId }),
+            });
+            console.log('[Native Push] FCM Token registered with backend.');
+          } catch (err) {
+            console.error('[Native Push] Token registration failed:', err);
+          }
+        },
+        (notification) => {
+          const title = notification.title || 'Thunderbold';
+          const body = notification.body || '';
+          const data = notification.data || {};
+          toast(title, {
+            description: body,
+            duration: 8000,
+            action: data.orderId ? {
+              label: 'View Order',
+              onClick: () => {
+                const isValidObjectId = /^[a-f0-9]{24}$/i.test(data.orderId);
+                if (isValidObjectId) {
+                  window.location.href = `/orders?orderId=${data.orderId}`;
+                } else if (data.link) {
+                  window.location.href = data.link;
+                } else {
+                  window.location.href = '/orders';
+                }
+              }
+            } : undefined,
+          });
+        },
+        (action) => {
+          const data = action.notification?.data;
+          if (data?.orderId && /^[a-f0-9]{24}$/i.test(data.orderId)) {
+            window.location.href = `/orders?orderId=${data.orderId}`;
+          } else if (data?.link) {
+            window.location.href = data.link;
+          } else {
+            window.location.href = '/orders';
+          }
+        }
+      );
+      return;
+    }
+
+    // Auto-register/refresh Web FCM token on login/startup if permission is already granted
+    if (browserSupported() && Notification.permission === 'granted') {
       try {
         if (sessionStorage.getItem(`fcm_synced_${user.uid}`) === 'true') {
           return;
@@ -121,9 +223,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user, registerToken]);
 
-  // Listen for foreground notifications
+  // Listen for Web FCM foreground notifications
   useEffect(() => {
-    if (!user) return;
+    if (!user || Capacitor.isNativePlatform()) return;
 
     let unsubscribe: (() => void) | null = null;
 

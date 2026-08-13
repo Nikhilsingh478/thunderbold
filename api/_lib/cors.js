@@ -2,7 +2,7 @@
  * Shared CORS helper for Vercel serverless API functions.
  *
  * In production Vercel executes each api/*.js file as an isolated serverless
- * function — server.js Express middleware never runs. This helper must be
+ * function â€” server.js Express middleware never runs. This helper must be
  * imported and called at the top of every handler so CORS headers are set
  * correctly on every response, including OPTIONS preflight requests.
  *
@@ -20,8 +20,12 @@
 const ALLOWED_ORIGINS = [
   'https://thunderbold.shop',
   'https://www.thunderbold.shop',
+  'capacitor://localhost',
+  'http://localhost',
   'http://localhost:5000',
   'http://localhost:3000',
+  'http://127.0.0.1:5000',
+  'http://127.0.0.1:3000',
 ];
 
 /**
@@ -38,7 +42,7 @@ export function setCorsHeaders(req, res, methods = 'GET, POST, PUT, PATCH, DELET
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    // Do not reflect unknown origins — fall back to production origin so the
+    // Do not reflect unknown origins â€” fall back to production origin so the
     // browser CORS check fails for cross-origin requests from untrusted sources.
     res.setHeader('Access-Control-Allow-Origin', 'https://thunderbold.shop');
   }

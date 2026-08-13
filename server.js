@@ -37,6 +37,8 @@ app.use((req, res, next) => {
 const ALLOWED_ORIGINS = [
   'https://thunderbold.shop',
   'https://www.thunderbold.shop',
+  'capacitor://localhost',
+  'http://localhost',
   'http://localhost:5000',
   'http://localhost:3000',
 ];

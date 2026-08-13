@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 export default function AppUpdatePrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [playStoreUrl, setPlayStoreUrl] = useState(
-    'https://play.google.com/store/apps/details?id=shop.thunderbold.twa'
+    'https://play.google.com/store/apps/details?id=shop.thunderbold.app'
   );
   const [currentVersionCode, setCurrentVersionCode] = useState(0);
 
@@ -15,34 +17,48 @@ export default function AppUpdatePrompt() {
       return;
     }
 
-    // 2. Read app_version from URL params
-    const params = new URLSearchParams(window.location.search);
-    const rawVersion = params.get('app_version');
-    const versionNum = parseInt(rawVersion || '0', 10);
-
-    // If 0, NaN, or not present in URL → web browser visit, not a TWA install. Do NOT show prompt.
-    if (!versionNum || isNaN(versionNum) || versionNum <= 0) {
-      return;
-    }
-
-    setCurrentVersionCode(versionNum);
-
-    // 3. Clear stale dismiss state if stored dismissed version < current app version
-    let dismissedFor = localStorage.getItem('thunderbold_update_dismissed_for');
-    if (dismissedFor && parseInt(dismissedFor, 10) < versionNum) {
-      localStorage.removeItem('thunderbold_update_dismissed_for');
-      dismissedFor = null;
-    }
-
     let timerId: ReturnType<typeof setTimeout> | null = null;
 
-    // 4. Fetch /app-version.json with cache busting
-    fetch(`/app-version.json?t=${Date.now()}`, { cache: 'no-store' })
-      .then((r) => {
+    const checkAppVersion = async () => {
+      let versionNum = 0;
+
+      // 2a. Native Capacitor platform version check
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const info = await App.getInfo();
+          versionNum = parseInt(info.build || '0', 10);
+        } catch {
+          versionNum = 0;
+        }
+      }
+
+      // 2b. URL params fallback for TWA / Web
+      if (!versionNum || isNaN(versionNum) || versionNum <= 0) {
+        const params = new URLSearchParams(window.location.search);
+        const rawVersion = params.get('app_version');
+        versionNum = parseInt(rawVersion || '0', 10);
+      }
+
+      // If 0, NaN, or not present → web browser visit. Do NOT show prompt.
+      if (!versionNum || isNaN(versionNum) || versionNum <= 0) {
+        return;
+      }
+
+      setCurrentVersionCode(versionNum);
+
+      // 3. Clear stale dismiss state if stored dismissed version < current app version
+      let dismissedFor = localStorage.getItem('thunderbold_update_dismissed_for');
+      if (dismissedFor && parseInt(dismissedFor, 10) < versionNum) {
+        localStorage.removeItem('thunderbold_update_dismissed_for');
+        dismissedFor = null;
+      }
+
+      // 4. Fetch /app-version.json with cache busting
+      try {
+        const r = await fetch(`/app-version.json?t=${Date.now()}`, { cache: 'no-store' });
         if (!r.ok) throw new Error('Failed to fetch app-version.json');
-        return r.json();
-      })
-      .then((data) => {
+        const data = await r.json();
+
         const latestVersionCode = parseInt(data.latestVersionCode, 10);
         if (data.playStoreUrl) {
           setPlayStoreUrl(data.playStoreUrl);
@@ -72,12 +88,14 @@ export default function AppUpdatePrompt() {
             setShowPrompt(true);
           }, 3000);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (import.meta.env.DEV) {
           console.error('[AppUpdatePrompt] Fetch error:', err);
         }
-      });
+      }
+    };
+
+    checkAppVersion();
 
     return () => {
       if (timerId) clearTimeout(timerId);
