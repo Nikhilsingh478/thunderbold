@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "491240288125",
+    "project_id": "thunderbolt-auth",
+    "storage_bucket": "thunderbolt-auth.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:491240288125:android:3e3979eb9943130f442614",
+        "android_client_info": {
+          "package_name": "shop.thunderbold.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPX-Cothuj5QWI7aQQcNl4BZrFVeP2GZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
