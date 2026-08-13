@@ -49,11 +49,19 @@ if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
   StatusBar.setBackgroundColor({ color: '#080808' }).catch(() => {});
   SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+  // Ensure no service workers intercept local assets in native WebView
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const reg of registrations) {
+        reg.unregister().catch(() => {});
+      }
+    }).catch(() => {});
+  }
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !Capacitor.isNativePlatform()) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
     for (const reg of registrations) {
       const scriptURL = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || '';
