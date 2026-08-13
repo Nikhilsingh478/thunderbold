@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Thunderbold',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
+    // Load the live website directly — avoids all local bundle CORS/SW conflicts
+    url: 'https://thunderbold.shop',
     cleartext: false,
   },
   android: {
@@ -18,7 +19,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2400,
+      launchShowDuration: 2000,
       launchAutoHide: true,
       backgroundColor: '#080808',
       androidSplashResourceName: 'splash',
