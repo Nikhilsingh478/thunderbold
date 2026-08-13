@@ -38,6 +38,7 @@ export default defineConfig(() => ({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    modulePreload: false,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -67,6 +68,12 @@ export default defineConfig(() => ({
     }
   },
   plugins: [
+    {
+      name: 'remove-crossorigin',
+      transformIndexHtml(html: string) {
+        return html.replace(/ crossorigin=""/g, '').replace(/ crossorigin/g, '');
+      },
+    },
     react(),
     VitePWA({
       selfDestroying: true,
