@@ -50,15 +50,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return unsubscribe;
   }, []);
 
+const GOOGLE_WEB_CLIENT_ID = '491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com';
+
   const loginWithGoogle = async (): Promise<User> => {
     const auth = getFirebaseAuth();
     
     // ── Native Android / iOS Platform (Zero Browser Redirect) ────────────────
     if (Capacitor.isNativePlatform()) {
       try {
-        console.log('[Auth] Launching Native Google Sign-In...');
-        const result = await FirebaseAuthentication.signInWithGoogle();
-        const idToken = result.credential?.idToken;
+        console.log('[Auth] Launching Native Google Sign-In with Web Client ID...');
+        const result = await FirebaseAuthentication.signInWithGoogle({
+          clientId: GOOGLE_WEB_CLIENT_ID,
+        });
+
+        const idToken = result.credential?.idToken || (result as any).idToken;
 
         if (!idToken) {
           throw new Error('Native Google Sign-In failed: No ID token returned');
@@ -72,6 +77,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return user;
       } catch (error: any) {
         console.error('[Auth] Native Google Sign-In error:', error);
+        const msg = error?.message || 'Failed to sign in with Google';
+        if (msg.includes('canceled') || msg.includes('cancelled')) {
+          toast.info('Google Sign-In was cancelled');
+        } else {
+          toast.error(msg.replace(/^Error:\s*/, ''));
+        }
         throw error;
       }
     }

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
 import gsap from 'gsap';
 
 export default function SplashScreen() {
   const [visible, setVisible] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    if (Capacitor.isNativePlatform()) return false;
     return !sessionStorage.getItem('tb_splash_shown');
   });
 
@@ -297,7 +295,7 @@ export default function SplashScreen() {
         document.dispatchEvent(new CustomEvent('thunderbold:loaderDone'));
       }
     });
-    tl.timeScale(2.0);
+    tl.timeScale(1.4);
 
     // t=0.00 — Bolt icon fade-in and subtle scale bounce
     tl.fromTo(boltIconRef.current, {
