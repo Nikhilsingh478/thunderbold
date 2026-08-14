@@ -99,7 +99,7 @@ export default function ProductReviewsSection({ productId, productName, productI
   const submitReview = async (input: { rating: number; comment: string }) => {
     if (!user) throw new Error('Sign in to leave a review');
     const token = await user.getIdToken();
-    const r = await fetch('/api/reviews', {
+    const r = await fetch(apiUrl('/api/reviews'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ productId, ...input }),

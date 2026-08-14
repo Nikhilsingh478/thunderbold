@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { useAuth } from './AuthContext';
 import { CartItem, getCart, setCart, clearCart, mergeCartItems } from '../lib/storage';
 import { toast } from 'sonner';
+import { apiUrl } from '../lib/apiBase';
 
 interface CartState {
   items: CartItem[];
@@ -88,7 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const syncToDb = async (items: CartItem[]) => {
     if (!user) return;
     try {
-      fetch('/api/cart', {
+      fetch(apiUrl('/api/cart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await user.getIdToken()}` },
         body: JSON.stringify({ items }),

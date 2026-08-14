@@ -41,8 +41,8 @@ export default function BrandView() {
       setLoading(true);
       try {
         const [brandsRes, productsRes] = await Promise.all([
-          fetch('/api/brands'),
-          fetch('/api/products'),
+          fetch(apiUrl('/api/brands')),
+          fetch(apiUrl('/api/products')),
         ]);
 
         if (brandsRes.ok) {

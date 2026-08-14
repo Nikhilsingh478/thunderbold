@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { useAuth } from './AuthContext';
 import { WishlistItem, CartItem, getWishlist, setWishlist, clearWishlist, mergeWishlistItems } from '../lib/storage';
 import { toast } from 'sonner';
+import { apiUrl } from '../lib/apiBase';
 
 interface WishlistState {
   items: WishlistItem[];
@@ -60,7 +61,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       if (user) {
         const token = await user.getIdToken();
-        const response = await fetch('/api/wishlist', { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch(apiUrl('/api/wishlist'), { headers: { 'Authorization': `Bearer ${token}` } });
         if (response.ok) {
           const data = await response.json();
           dispatch({ type: 'SET_WISHLIST', payload: data.items || [] });
@@ -83,10 +84,10 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       const localWishlist = getWishlist();
       if (localWishlist.length === 0) return;
       const token = await user.getIdToken();
-      const response = await fetch('/api/wishlist', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(apiUrl('/api/wishlist'), { headers: { 'Authorization': `Bearer ${token}` } });
       const dbWishlist = response.ok ? (await response.json()).items || [] : [];
       const mergedWishlist = mergeWishlistItems(localWishlist, dbWishlist);
-      const saveResponse = await fetch('/api/wishlist', {
+      const saveResponse = await fetch(apiUrl('/api/wishlist'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ items: mergedWishlist }),
@@ -101,7 +102,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   const saveWishlist = async (items: WishlistItem[]) => {
     if (user) {
       const token = await user.getIdToken();
-      const response = await fetch('/api/wishlist', {
+      const response = await fetch(apiUrl('/api/wishlist'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ items }),
@@ -149,7 +150,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       dispatch({ type: 'CLEAR_WISHLIST' });
       if (user) {
-        await fetch('/api/wishlist', { method: 'DELETE' });
+        await fetch(apiUrl('/api/wishlist'), { method: 'DELETE' });
       } else {
         clearWishlist();
       }

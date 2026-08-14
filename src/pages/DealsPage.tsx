@@ -1,3 +1,4 @@
+import { apiUrl } from '../lib/apiBase';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';

@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { useAuth } from './AuthContext';
 import { initNativePush } from '../lib/nativePushNotifications';
 import { toast } from 'sonner';
+import { apiUrl } from '../lib/apiBase';
 // NOTE: firebase/messaging and firebaseMessaging are loaded dynamically (web-only)
 // to avoid crashing Android WebView during module initialization.
 
@@ -85,7 +86,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       try {
         const idToken = await user.getIdToken();
         const deviceId = getOrCreateDeviceId();
-        const response = await fetch('/api/users/fcm-token', {
+        const response = await fetch(apiUrl('/api/users/fcm-token'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -164,7 +165,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           try {
             const idToken = await user.getIdToken();
             const deviceId = getOrCreateDeviceId();
-            await fetch('/api/users/fcm-token', {
+            await fetch(apiUrl('/api/users/fcm-token'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

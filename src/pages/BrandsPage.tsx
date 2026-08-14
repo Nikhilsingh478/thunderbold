@@ -53,7 +53,7 @@ export default function BrandsPage() {
     }
 
     // 2. Fetch fresh data in the background (Stale-While-Revalidate)
-    fetch('/api/brands')
+    fetch(apiUrl('/api/brands'))
       .then(r => r.json())
       .then(d => {
         const freshBrands = d.brands || [];

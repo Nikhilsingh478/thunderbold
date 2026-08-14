@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { getFirebaseAuth, googleProvider } from '../lib/firebase';
 import { schedulePrefetchOrders, clearOrdersCache } from '../lib/ordersCache';
+import { apiUrl } from '../lib/apiBase';
 
 interface AuthContextType {
   user: User | null;
@@ -158,7 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sync user with database
   const syncUserWithDatabase = async (user: User): Promise<void> => {
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch(apiUrl('/api/users'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

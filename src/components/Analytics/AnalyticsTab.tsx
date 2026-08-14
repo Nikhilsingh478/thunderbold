@@ -1,3 +1,4 @@
+import { apiUrl } from '../lib/apiBase';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, IndianRupee, ShoppingBag, TrendingUp, Users, Wallet, BarChart3 } from 'lucide-react';

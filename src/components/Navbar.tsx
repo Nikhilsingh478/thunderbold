@@ -187,7 +187,7 @@ const Navbar = () => {
         variants={navVariants}
         initial={shouldAnimate ? "hidden" : false}
         animate="visible"
-        style={{ top: 'var(--tb-banner-h, 36px)', willChange: 'transform, opacity' }}
+        style={{ top: 'var(--tb-banner-h, 36px)', paddingTop: 'env(safe-area-inset-top)', willChange: 'transform, opacity' }}
         className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-300 z-[100] ${
           scrolled ? 'py-4 bg-[#070707]/95 backdrop-blur-lg border-b border-white/5 shadow-lg' : 'pt-4 pb-5 bg-transparent'
         }`}

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import { useAuth } from '../context/AuthContext';
 import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
+import { apiUrl } from '../lib/apiBase';
 
 import { deleteUser, getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
@@ -112,7 +113,7 @@ export default function Profile() {
     queryKey: ['profile'],
     queryFn: async () => {
       const token = await user!.getIdToken();
-      const res = await fetch('/api/users', {
+      const res = await fetch(apiUrl('/api/users'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch profile');
@@ -132,7 +133,7 @@ export default function Profile() {
     queryKey: ['orders', 1],
     queryFn: async () => {
       const token = await user!.getIdToken();
-      const res = await fetch('/api/orders?page=1', {
+      const res = await fetch(apiUrl('/api/orders?page=1'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch orders');
@@ -159,7 +160,7 @@ export default function Profile() {
     setDeletingAccount(true);
     try {
       const token = await getToken();
-      await fetch('/api/users', {
+      await fetch(apiUrl('/api/users'), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -184,7 +185,7 @@ export default function Profile() {
     setCancellingOrder(orderId);
     try {
       const token = await getToken();
-      const res = await fetch('/api/orders/cancel', {
+      const res = await fetch(apiUrl('/api/orders/cancel'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ orderId }),
@@ -209,7 +210,7 @@ export default function Profile() {
     setSaving(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/users', {
+      const res = await fetch(apiUrl('/api/users'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: trimmed }),
@@ -237,7 +238,7 @@ export default function Profile() {
     setSaving(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/users', {
+      const res = await fetch(apiUrl('/api/users'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ phone: trimmed }),
@@ -280,7 +281,7 @@ export default function Profile() {
     setAddressSubmitting(true);
     try {
       const token = await getToken();
-      const res = await fetch('/api/users', {
+      const res = await fetch(apiUrl('/api/users'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...addressForm, phone: addressForm.phone.replace(/\D/g, '') }),
@@ -305,7 +306,7 @@ export default function Profile() {
   const handleRemoveAddress = async (id: string) => {
     try {
       const token = await getToken();
-      const res = await fetch('/api/users', {
+      const res = await fetch(apiUrl('/api/users'), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id }),
@@ -324,7 +325,7 @@ export default function Profile() {
   const handleSetDefault = async (id: string) => {
     try {
       const token = await getToken();
-      const res = await fetch('/api/users', {
+      const res = await fetch(apiUrl('/api/users'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: 'set_default_address', id }),

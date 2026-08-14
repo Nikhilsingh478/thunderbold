@@ -18,7 +18,7 @@ const Index = () => {
   useEffect(() => {
     // Prefetch brands in background to warm session cache for instant load times
     if (!sessionStorage.getItem('tb_brands_cache')) {
-      fetch('/api/brands')
+      fetch(apiUrl('/api/brands'))
         .then(r => r.json())
         .then(d => {
           if (d.brands) {

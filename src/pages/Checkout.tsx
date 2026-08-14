@@ -66,7 +66,7 @@ export default function Checkout() {
     const fetchDefaultAddress = async () => {
       try {
         const token = await user.getIdToken();
-        const res = await fetch('/api/users', {
+        const res = await fetch(apiUrl('/api/users'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -169,7 +169,7 @@ export default function Checkout() {
       let response: Response | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          response = await fetch('/api/orders/create', {
+          response = await fetch(apiUrl('/api/orders/create'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

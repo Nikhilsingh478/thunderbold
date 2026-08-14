@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
+import { apiUrl } from '../lib/apiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Package, Folder, X, Pencil, Trash2, Plus, ChevronDown, ImagePlus, ExternalLink, MessageSquare, ArrowLeft, BarChart3, Tag, Printer, SlidersHorizontal, Bell, RotateCcw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import LightningRating from '../components/reviews/LightningRating';
@@ -464,11 +465,11 @@ function ProductModal({
   const [brands, setBrands] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch(apiUrl('/api/categories'))
       .then(r => r.json())
       .then(d => setCategories(d.categories || []))
       .catch(() => {});
-    fetch('/api/brands')
+    fetch(apiUrl('/api/brands'))
       .then(r => r.json())
       .then(d => setBrands(d.brands || []))
       .catch(() => {});
@@ -950,7 +951,7 @@ export default function Admin() {
     if (!silent) setReturnsLoading(true);
     try {
       const token = await user.getIdToken();
-      const r = await fetch('/api/returns', { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(apiUrl('/api/returns'), { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) {
         const d = await r.json();
         setReturns(d.returns ?? []);
@@ -970,7 +971,7 @@ export default function Admin() {
     const checkAdmin = async () => {
       try {
         const token = await user.getIdToken();
-        const r = await fetch('/api/users/me/admin-status', {
+        const r = await fetch(apiUrl('/api/users/me/admin-status'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await r.json();
@@ -1014,7 +1015,7 @@ export default function Admin() {
 
   const fetchBrands = async (silent = false) => {
     try {
-      const r = await fetch('/api/brands');
+      const r = await fetch(apiUrl('/api/brands'));
       if (r.ok) {
         const d = await r.json();
         const fresh = d.brands ?? [];
@@ -1027,9 +1028,9 @@ export default function Admin() {
     if (!user) return;
     try {
       const [sliderRes, productsRes, heroBannerRes] = await Promise.all([
-        fetch('/api/slider'),
-        fetch('/api/products?section=outfits'),
-        fetch('/api/slider?type=hero'),
+        fetch(apiUrl('/api/slider')),
+        fetch(apiUrl('/api/products?section=outfits')),
+        fetch(apiUrl('/api/slider?type=hero')),
       ]);
       if (sliderRes.ok) {
         const d = await sliderRes.json();
@@ -1064,7 +1065,7 @@ export default function Admin() {
     setSliderSaving(true);
     try {
       const token = await user.getIdToken();
-      const r = await fetch('/api/slider', {
+      const r = await fetch(apiUrl('/api/slider'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -1089,7 +1090,7 @@ export default function Admin() {
     try {
       const token = await user.getIdToken();
       const images = heroBanners.filter(url => url.trim() !== '');
-      const r = await fetch('/api/slider?type=hero', {
+      const r = await fetch(apiUrl('/api/slider?type=hero'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ images }),
@@ -1106,7 +1107,7 @@ export default function Admin() {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
-      const r = await fetch('/api/brands', {
+      const r = await fetch(apiUrl('/api/brands'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
@@ -1178,7 +1179,7 @@ export default function Admin() {
     if (!silent) setLoading(true);
     try {
       const token = await user.getIdToken();
-      const r = await fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(apiUrl('/api/orders'), { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) {
         const d = await r.json();
         const fresh = d.orders ?? [];
@@ -1191,7 +1192,7 @@ export default function Admin() {
     if (!user) return;
     if (!silent) setLoading(true);
     try {
-      const r = await fetch('/api/products');
+      const r = await fetch(apiUrl('/api/products'));
       const d = await r.json();
       const fresh = d.products ?? [];
       setProducts(prev => JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev);
@@ -1202,7 +1203,7 @@ export default function Admin() {
     if (!user) return;
     if (!silent) setLoading(true);
     try {
-      const r = await fetch('/api/categories');
+      const r = await fetch(apiUrl('/api/categories'));
       const d = await r.json();
       const fresh = d.categories ?? [];
       setCategories(prev => JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev);
@@ -1298,7 +1299,7 @@ export default function Admin() {
         localStockFields = { stock, sizeStock, highlights };
       }
 
-      const r = await fetch('/api/products', {
+      const r = await fetch(apiUrl('/api/products'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(bodyPayload),
@@ -1416,7 +1417,7 @@ export default function Admin() {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
-      const r = await fetch('/api/categories', {
+      const r = await fetch(apiUrl('/api/categories'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
@@ -1460,7 +1461,7 @@ export default function Admin() {
     setNotifError('');
     try {
       const idToken = await user.getIdToken();
-      const res = await fetch('/api/notifications/broadcast', {
+      const res = await fetch(apiUrl('/api/notifications/broadcast'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ 

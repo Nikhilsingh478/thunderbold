@@ -1,5 +1,6 @@
 import type { User } from 'firebase/auth';
 import { queryClient } from './queryClient';
+import { apiUrl } from './apiBase';
 
 interface OrderProduct {
   productId?: string;
@@ -70,7 +71,7 @@ export async function prefetchOrders(user: User | null): Promise<OrdersApiRespon
   inFlight = (async () => {
     try {
       const token = await user.getIdToken();
-      const res = await fetch('/api/orders?page=1', {
+      const res = await fetch(apiUrl('/api/orders?page=1'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return null;

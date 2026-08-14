@@ -25,7 +25,7 @@ export default function HeroBanner() {
   // Fetch admin-configured banner images only — no fallback defaults
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/slider?type=hero')
+    fetch(apiUrl('/api/slider?type=hero'))
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
         if (cancelled) return;

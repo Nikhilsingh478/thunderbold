@@ -185,7 +185,7 @@ const Orders = () => {
     (async () => {
       try {
         const token = await user.getIdToken();
-        const r = await fetch('/api/reviews?mine=true', { headers: { Authorization: `Bearer ${token}` } });
+        const r = await fetch(apiUrl('/api/reviews?mine=true'), { headers: { Authorization: `Bearer ${token}` } });
         if (!r.ok || cancelled) return;
         const { reviews } = await r.json();
         if (cancelled) return;
@@ -216,7 +216,7 @@ const Orders = () => {
   const submitReview = async (productId: string, input: { rating: number; comment: string }) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
-    const r = await fetch('/api/reviews', {
+    const r = await fetch(apiUrl('/api/reviews'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ productId, ...input }),
@@ -272,7 +272,7 @@ const Orders = () => {
     if (!user || !confirm('Are you sure you want to cancel this order?')) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch('/api/orders/cancel', {
+      const r = await fetch(apiUrl('/api/orders/cancel'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ orderId }),
@@ -292,7 +292,7 @@ const Orders = () => {
   const submitReturn = async (orderId: string, reason: string, description: string, upiId: string) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
-    const r = await fetch('/api/returns', {
+    const r = await fetch(apiUrl('/api/returns'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ orderId, reason, description, upiId }),
