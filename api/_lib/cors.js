@@ -20,8 +20,10 @@
 const ALLOWED_ORIGINS = [
   'https://thunderbold.shop',
   'https://www.thunderbold.shop',
-  'capacitor://localhost',
+  'https://localhost',
   'http://localhost',
+  'capacitor://localhost',
+  'ionic://localhost',
   'http://localhost:5000',
   'http://localhost:3000',
   'http://127.0.0.1:5000',
