@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import gsap from 'gsap';
 
 export default function SplashScreen() {
   const [visible, setVisible] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
+    if (Capacitor.isNativePlatform()) return false;
     return !sessionStorage.getItem('tb_splash_shown');
   });
 

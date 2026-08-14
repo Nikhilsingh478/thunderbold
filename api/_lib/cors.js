@@ -41,15 +41,24 @@ const ALLOWED_ORIGINS = [
  */
 export function setCorsHeaders(req, res, methods = 'GET, POST, PUT, PATCH, DELETE, OPTIONS') {
   const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+
+  if (!origin) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (
+    ALLOWED_ORIGINS.includes(origin) ||
+    origin.includes('localhost') ||
+    origin.startsWith('capacitor://') ||
+    origin.startsWith('ionic://') ||
+    origin.startsWith('http://localhost') ||
+    origin.startsWith('https://localhost')
+  ) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    // Do not reflect unknown origins — fall back to production origin so the
-    // browser CORS check fails for cross-origin requests from untrusted sources.
     res.setHeader('Access-Control-Allow-Origin', 'https://thunderbold.shop');
   }
+
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', methods);
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 }

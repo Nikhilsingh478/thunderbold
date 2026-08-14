@@ -47,15 +47,25 @@ const ALLOWED_ORIGINS = [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
+  if (!origin) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (
+    ALLOWED_ORIGINS.includes(origin) ||
+    origin.includes('localhost') ||
+    origin.startsWith('capacitor://') ||
+    origin.startsWith('ionic://')
+  ) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://thunderbold.shop');
   }
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
+    return res.status(200).end();
   }
   next();
 });
