@@ -892,7 +892,7 @@ export default function Admin() {
           body.refundAmount = parseFloat(returnRefundAmount) || 0;
         }
       }
-      const r = await fetch(`/api/returns?id=${managingReturn._id}`, {
+      const r = await fetch(apiUrl(`/api/returns?id=${managingReturn._id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
@@ -928,7 +928,7 @@ export default function Admin() {
     setIssueRefundError(prev => { const n = { ...prev }; delete n[returnId]; return n; });
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/returns?id=${returnId}`, {
+      const r = await fetch(apiUrl(`/api/returns?id=${returnId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: 'issue_refund' }),
@@ -1122,7 +1122,7 @@ export default function Admin() {
     if (!user) return false;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/brands?id=${id}`, {
+      const r = await fetch(apiUrl(`/api/brands?id=${id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
@@ -1141,7 +1141,7 @@ export default function Admin() {
     if (!confirm('Delete this brand? Products assigned to it will become unbranded.')) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/brands?id=${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(apiUrl(`/api/brands?id=${id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) setBrands(prev => prev.filter(b => b._id !== id));
     } catch { console.error('Failed to delete brand'); }
   };
@@ -1149,7 +1149,7 @@ export default function Admin() {
   const fetchReviewsForProduct = async (productId: string) => {
     setReviewsLoading(true);
     try {
-      const r = await fetch(`/api/reviews?productId=${encodeURIComponent(productId)}`);
+      const r = await fetch(apiUrl(`/api/reviews?productId=${encodeURIComponent(productId)}`));
       if (r.ok) {
         const d = await r.json();
         setProductReviews(d.reviews ?? []);
@@ -1165,7 +1165,7 @@ export default function Admin() {
     if (!confirm('Soft-delete this review? It will be hidden from the public.')) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/reviews?id=${reviewId}`, {
+      const r = await fetch(apiUrl(`/api/reviews?id=${reviewId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1214,7 +1214,7 @@ export default function Admin() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/orders/manage?id=${orderId}`, {
+      const r = await fetch(apiUrl(`/api/orders/manage?id=${orderId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
@@ -1240,7 +1240,7 @@ export default function Admin() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/orders/manage?id=${orderId}`, {
+      const r = await fetch(apiUrl(`/api/orders/manage?id=${orderId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1356,7 +1356,7 @@ export default function Admin() {
         putLocalStockFields = { stock, sizeStock, highlights: highlightsPut };
       }
 
-      const r = await fetch(`/api/products?id=${editingProduct._id}`, {
+      const r = await fetch(apiUrl(`/api/products?id=${editingProduct._id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(putBodyPayload),
@@ -1385,7 +1385,7 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
       const token = await user.getIdToken();
-      const res = await fetch(`/api/products?id=${productId}`, {
+      const res = await fetch(apiUrl(`/api/products?id=${productId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1405,7 +1405,7 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this category?')) return;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/categories?id=${categoryId}`, {
+      const r = await fetch(apiUrl(`/api/categories?id=${categoryId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1436,7 +1436,7 @@ export default function Admin() {
     if (!user || !editingCategory) return false;
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/categories?id=${editingCategory._id}`, {
+      const r = await fetch(apiUrl(`/api/categories?id=${editingCategory._id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),

@@ -8,6 +8,8 @@
  * - Thread-safe for the single-threaded JS event loop.
  */
 
+import { apiUrl } from './apiBase';
+
 const TTL_MS = 60_000;
 
 interface CacheEntry<T> {
@@ -19,31 +21,32 @@ const cache = new Map<string, CacheEntry<unknown>>();
 const inflight = new Map<string, Promise<unknown>>();
 
 export async function cachedFetch<T = unknown>(url: string): Promise<T> {
+  const fullUrl = apiUrl(url);
   const now = Date.now();
-  const hit = cache.get(url);
+  const hit = cache.get(fullUrl);
   if (hit && now - hit.ts < TTL_MS) {
     return hit.data as T;
   }
 
-  const existing = inflight.get(url);
+  const existing = inflight.get(fullUrl);
   if (existing) return existing as Promise<T>;
 
-  const promise = fetch(url)
+  const promise = fetch(fullUrl)
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json() as Promise<T>;
     })
     .then((data) => {
-      cache.set(url, { data, ts: Date.now() });
-      inflight.delete(url);
+      cache.set(fullUrl, { data, ts: Date.now() });
+      inflight.delete(fullUrl);
       return data;
     })
     .catch((err) => {
-      inflight.delete(url);
+      inflight.delete(fullUrl);
       throw err;
     });
 
-  inflight.set(url, promise);
+  inflight.set(fullUrl, promise);
   return promise as Promise<T>;
 }
 

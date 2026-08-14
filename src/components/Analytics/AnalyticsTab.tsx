@@ -1,4 +1,4 @@
-import { apiUrl } from '../lib/apiBase';
+import { apiUrl } from '../../lib/apiBase';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, IndianRupee, ShoppingBag, TrendingUp, Users, Wallet, BarChart3 } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function AnalyticsTab() {
         const token = await user.getIdToken();
         const params = new URLSearchParams({ range });
         if (range === 'month' && selectedMonth) params.set('month', selectedMonth);
-        const r = await fetch(`/api/admin/analytics?${params.toString()}`, {
+        const r = await fetch(apiUrl(`/api/admin/analytics?${params.toString()}`), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!r.ok) {

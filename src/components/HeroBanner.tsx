@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { optimizeCloudinaryUrl, IMG_SIZES } from '../lib/cloudinary';
+import { apiUrl } from '../lib/apiBase';
 
 interface Slide {
   src: string;

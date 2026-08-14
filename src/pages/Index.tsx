@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { useSEO } from '../hooks/useSEO';
 import CustomCursor from '../components/CustomCursor';
 import ScrollProgress from '../components/ScrollProgress';

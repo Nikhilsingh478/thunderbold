@@ -4,6 +4,7 @@ import { Pencil } from 'lucide-react';
 import LightningRating from './LightningRating';
 import ReviewModal, { ReviewData } from './ReviewModal';
 import { useAuth } from '../../context/AuthContext';
+import { apiUrl } from '../../lib/apiBase';
 
 interface PublicReview {
   _id: string;
@@ -59,7 +60,7 @@ export default function ProductReviewsSection({ productId, productName, productI
   const loadPublicReviews = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`/api/reviews?productId=${encodeURIComponent(productId)}`);
+      const r = await fetch(apiUrl(`/api/reviews?productId=${encodeURIComponent(productId)}`));
       if (!r.ok) throw new Error('failed');
       const data = await r.json();
       setReviews(data.reviews ?? []);
@@ -81,7 +82,7 @@ export default function ProductReviewsSection({ productId, productName, productI
     }
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`/api/reviews?mine=true&productId=${encodeURIComponent(productId)}`, {
+      const r = await fetch(apiUrl(`/api/reviews?mine=true&productId=${encodeURIComponent(productId)}`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!r.ok) return;
@@ -113,7 +114,7 @@ export default function ProductReviewsSection({ productId, productName, productI
   const updateReview = async (input: { rating: number; comment: string }) => {
     if (!user || !myReview) throw new Error('No review to update');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews?id=${myReview._id}`, {
+    const r = await fetch(apiUrl(`/api/reviews?id=${myReview._id}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(input),
@@ -127,7 +128,7 @@ export default function ProductReviewsSection({ productId, productName, productI
   const deleteReview = async () => {
     if (!user || !myReview) throw new Error('No review to delete');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews?id=${myReview._id}`, {
+    const r = await fetch(apiUrl(`/api/reviews?id=${myReview._id}`), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { apiUrl } from '../lib/apiBase';
 
 export default function AppUpdatePrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -56,7 +55,7 @@ export default function AppUpdatePrompt() {
 
       // 4. Fetch /app-version.json with cache busting
       try {
-        const r = await fetch(apiUrl(`/app-version.json?t=${Date.now()}`), { cache: 'no-store' });
+        const r = await fetch(`/app-version.json?t=${Date.now()}`, { cache: 'no-store' });
         if (!r.ok) throw new Error('Failed to fetch app-version.json');
         const data = await r.json();
 

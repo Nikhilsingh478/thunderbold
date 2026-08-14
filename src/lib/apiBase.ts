@@ -19,4 +19,8 @@ export const API_BASE = Capacitor.isNativePlatform()
  *   fetch(apiUrl('/api/orders'))
  *   fetch(apiUrl(`/api/products?page=${page}`))
  */
-export const apiUrl = (path: string): string => `${API_BASE}${path}`;
+export const apiUrl = (path: string): string => {
+  if (!path) return path;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return `${API_BASE}${path}`;
+};

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
+import { apiUrl } from '../lib/apiBase';
 import {
   Package, Calendar, CheckCircle, Clock, Truck, Home, ArrowLeft,
   Pencil, Eye, X, RotateCcw, ChevronLeft, ChevronRight,
@@ -150,7 +151,7 @@ const Orders = () => {
     queryKey: ['orders', currentPage],
     queryFn: async () => {
       const token = await user!.getIdToken();
-      const r = await fetch(`/api/orders?page=${currentPage}`, {
+      const r = await fetch(apiUrl(`/api/orders?page=${currentPage}`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!r.ok) throw new Error('Failed to load orders. Please try again.');
@@ -229,7 +230,7 @@ const Orders = () => {
   const updateReview = async (reviewId: string, productId: string, input: { rating: number; comment: string }) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews?id=${reviewId}`, {
+    const r = await fetch(apiUrl(`/api/reviews?id=${reviewId}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(input),
@@ -242,7 +243,7 @@ const Orders = () => {
   const deleteReview = async (reviewId: string, productId: string) => {
     if (!user) throw new Error('Not signed in');
     const token = await user.getIdToken();
-    const r = await fetch(`/api/reviews?id=${reviewId}`, {
+    const r = await fetch(apiUrl(`/api/reviews?id=${reviewId}`), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
