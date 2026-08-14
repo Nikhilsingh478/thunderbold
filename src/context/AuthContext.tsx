@@ -62,7 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('[Auth] Attempting Native Google Sign-In...');
         const result = await FirebaseAuthentication.signInWithGoogle({
           clientId: GOOGLE_WEB_CLIENT_ID,
-        });
+        } as any);
 
         const idToken = result.credential?.idToken || (result as any).idToken;
 
