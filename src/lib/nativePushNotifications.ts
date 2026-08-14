@@ -20,57 +20,55 @@ export async function initNativePush(
   onAction: (a: ActionPerformed) => void,
 ): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  if (isInitialized) return;
   
   registeredTokenCallback = onToken;
   notificationReceivedCallback = onNotification;
   notificationActionCallback = onAction;
 
-  // Remove any existing listeners to prevent duplicates
-  await PushNotifications.removeAllListeners();
-
-  // Request permission
-  const permission = await PushNotifications.requestPermissions();
-  
-  if (permission.receive === 'denied') {
-    console.log('[Push] Permission denied');
+  if (isInitialized) {
+    // If already initialized, trigger registration to ensure token listener receives token
+    try {
+      await PushNotifications.register();
+    } catch {}
     return;
   }
 
-  // Register for push notifications
-  await PushNotifications.register();
+  // Remove any existing listeners to prevent duplicates
+  await PushNotifications.removeAllListeners();
 
-  // FCM Token received
-  PushNotifications.addListener(
+  // CRITICAL: Attach listeners BEFORE calling PushNotifications.register()
+  // Otherwise, the native registration event fires before the JS listener is registered!
+
+  // FCM Token received listener
+  await PushNotifications.addListener(
     'registration',
     (token: Token) => {
-      console.log('[Push] Token:', token.value);
+      console.log('[Push] Native FCM Token received:', token.value);
       if (registeredTokenCallback) {
         registeredTokenCallback(token.value);
       }
     }
   );
 
-  // Registration error
-  PushNotifications.addListener(
+  // Registration error listener
+  await PushNotifications.addListener(
     'registrationError',
     (error: any) => {
       console.error('[Push] Registration error:', JSON.stringify(error));
     }
   );
 
-  // Foreground notification received
-  PushNotifications.addListener(
+  // Foreground notification received listener
+  await PushNotifications.addListener(
     'pushNotificationReceived',
     async (notification: PushNotificationSchema) => {
       console.log('[Push] Foreground notification:', JSON.stringify(notification));
       
-      // Haptic vibration — RELIABLE native
+      // Haptic vibration
       try {
         await Haptics.impact({ 
           style: ImpactStyle.Medium 
         });
-        // Double vibration for emphasis
         setTimeout(async () => {
           await Haptics.impact({ 
             style: ImpactStyle.Light 
@@ -86,13 +84,12 @@ export async function initNativePush(
     }
   );
 
-  // User tapped notification (background or killed state)
-  PushNotifications.addListener(
+  // User tapped notification listener
+  await PushNotifications.addListener(
     'pushNotificationActionPerformed',
     async (action: ActionPerformed) => {
       console.log('[Push] Action performed:', JSON.stringify(action));
       
-      // Haptic feedback on tap
       try {
         await Haptics.impact({ 
           style: ImpactStyle.Light 
@@ -105,8 +102,19 @@ export async function initNativePush(
     }
   );
 
+  // Request permission
+  const permission = await PushNotifications.requestPermissions();
+  
+  if (permission.receive === 'denied') {
+    console.log('[Push] Permission denied');
+    return;
+  }
+
+  // Register NOW that listeners are attached
+  await PushNotifications.register();
+
   isInitialized = true;
-  console.log('[Push] Native push initialized');
+  console.log('[Push] Native push initialized successfully');
 }
 
 export async function vibrateOnNotification() {

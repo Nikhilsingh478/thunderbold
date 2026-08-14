@@ -94,7 +94,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
       if (currentUser) {
         const idToken = await currentUser.getIdToken();
-        const response = await fetch('https://thunderbold.shop/api/users/fcm-token', {
+        const endpoint = apiUrl('/api/users/fcm-token');
+        console.log(`[Push] Registering token for user ${currentUser.email} to ${endpoint}`);
+        
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -104,7 +107,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         });
 
         if (response.ok) {
-          console.log('[Push] FCM token registered with backend successfully.');
+          console.log('[Push] FCM token stored in backend database successfully.');
           localStorage.removeItem('thunderbold_pending_fcm_token');
           try {
             sessionStorage.setItem(`fcm_synced_${currentUser.uid}`, 'true');
