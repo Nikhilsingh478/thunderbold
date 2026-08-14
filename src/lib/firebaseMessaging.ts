@@ -39,6 +39,11 @@ export async function initMessaging(): Promise<Messaging | null> {
 export async function requestAndRegisterToken(
   updateTokenFn: (token: string) => Promise<void>
 ): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    console.log('[FCM] Native platform — skipping web FCM init');
+    return;
+  }
+
   const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
   if (!vapidKey) {
     console.warn('[FCM] VITE_FIREBASE_VAPID_KEY is missing. Token registration aborted.');

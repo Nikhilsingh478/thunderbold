@@ -1,72 +1,138 @@
-import { PushNotifications } from '@capacitor/push-notifications';
+import { 
+  PushNotifications,
+  PushNotificationSchema,
+  ActionPerformed,
+  Token
+} from '@capacitor/push-notifications';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
+
+let isInitialized = false;
+let registeredTokenCallback: ((token: string) => void) | null = null;
+let notificationReceivedCallback: ((notification: PushNotificationSchema) => void) | null = null;
+let notificationActionCallback: ((action: ActionPerformed) => void) | null = null;
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
 
 export async function initNativePush(
-  onTokenReceived: (token: string) => void,
-  onNotificationReceived: (notification: any) => void,
-  onNotificationActionPerformed: (action: any) => void,
-) {
+  onToken: (token: string) => void,
+  onNotification: (n: PushNotificationSchema) => void,
+  onAction: (a: ActionPerformed) => void,
+): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
+  if (isInitialized) return;
+  
+  registeredTokenCallback = onToken;
+  notificationReceivedCallback = onNotification;
+  notificationActionCallback = onAction;
+
+  // Remove any existing listeners to prevent duplicates
+  await PushNotifications.removeAllListeners();
 
   // Request permission
-  const permStatus = await PushNotifications.requestPermissions();
-
-  if (permStatus.receive !== 'granted') {
-    console.log('[Push] Permission not granted');
+  const permission = await PushNotifications.requestPermissions();
+  
+  if (permission.receive === 'denied') {
+    console.log('[Push] Permission denied');
     return;
   }
 
-  // Register with FCM
+  // Register for push notifications
   await PushNotifications.register();
 
-  // Listen for FCM token
+  // FCM Token received
   PushNotifications.addListener(
     'registration',
-    (token) => {
-      console.log('[Push] FCM Token:', token.value);
-      onTokenReceived(token.value);
+    (token: Token) => {
+      console.log('[Push] Token:', token.value);
+      if (registeredTokenCallback) {
+        registeredTokenCallback(token.value);
+      }
     }
   );
 
   // Registration error
   PushNotifications.addListener(
     'registrationError',
-    (error) => {
-      console.error('[Push] Registration error:', error);
+    (error: any) => {
+      console.error('[Push] Registration error:', JSON.stringify(error));
     }
   );
 
   // Foreground notification received
   PushNotifications.addListener(
     'pushNotificationReceived',
-    (notification) => {
-      console.log('[Push] Received:', notification);
-      // Vibrate on notification
-      Haptics.impact({ style: ImpactStyle.Medium })
-        .catch(() => {});
-      onNotificationReceived(notification);
+    async (notification: PushNotificationSchema) => {
+      console.log('[Push] Foreground notification:', JSON.stringify(notification));
+      
+      // Haptic vibration — RELIABLE native
+      try {
+        await Haptics.impact({ 
+          style: ImpactStyle.Medium 
+        });
+        // Double vibration for emphasis
+        setTimeout(async () => {
+          await Haptics.impact({ 
+            style: ImpactStyle.Light 
+          });
+        }, 200);
+      } catch (e) {
+        console.warn('[Push] Haptics failed:', e);
+      }
+      
+      if (notificationReceivedCallback) {
+        notificationReceivedCallback(notification);
+      }
     }
   );
 
-  // User tapped notification
+  // User tapped notification (background or killed state)
   PushNotifications.addListener(
     'pushNotificationActionPerformed',
-    (action) => {
-      console.log('[Push] Action:', action);
-      onNotificationActionPerformed(action);
+    async (action: ActionPerformed) => {
+      console.log('[Push] Action performed:', JSON.stringify(action));
+      
+      // Haptic feedback on tap
+      try {
+        await Haptics.impact({ 
+          style: ImpactStyle.Light 
+        });
+      } catch (e) {}
+      
+      if (notificationActionCallback) {
+        notificationActionCallback(action);
+      }
     }
   );
+
+  isInitialized = true;
+  console.log('[Push] Native push initialized');
 }
 
-export async function requestVibrateOnNotification() {
+export async function vibrateOnNotification() {
+  if (!Capacitor.isNativePlatform()) return;
   try {
-    await Haptics.impact({
-      style: ImpactStyle.Medium,
+    await Haptics.impact({ 
+      style: ImpactStyle.Medium 
     });
-  } catch (e) {
-    // Haptics not available, ignore
+  } catch (e) {}
+}
+
+export async function getNativeFCMToken(): Promise<string | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  try {
+    const permission = await PushNotifications.checkPermissions();
+    if (permission.receive !== 'granted') return null;
+    return new Promise((resolve) => {
+      PushNotifications.addListener(
+        'registration',
+        (token: Token) => {
+          resolve(token.value);
+        }
+      );
+      PushNotifications.register();
+    });
+  } catch {
+    return null;
   }
 }

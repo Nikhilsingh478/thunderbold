@@ -4,8 +4,6 @@ import { useAuth } from './AuthContext';
 import { initNativePush } from '../lib/nativePushNotifications';
 import { toast } from 'sonner';
 import { apiUrl } from '../lib/apiBase';
-// NOTE: firebase/messaging and firebaseMessaging are loaded dynamically (web-only)
-// to avoid crashing Android WebView during module initialization.
 
 export const isStandaloneApp = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -39,7 +37,7 @@ function getOrCreateDeviceId(): string {
   try {
     let id = localStorage.getItem('thunderbold_device_id');
     if (!id) {
-      id = 'dev_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
+      id = Math.random().toString(36).substring(2) + Date.now().toString(36);
       localStorage.setItem('thunderbold_device_id', id);
     }
     return id;
@@ -62,12 +60,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const triggerPrompt = useCallback(() => {
-    if (Capacitor.isNativePlatform()) return; // Native app handles permissions automatically
+    if (Capacitor.isNativePlatform()) return;
     if (!browserSupported()) return;
-    if (!isStandaloneApp()) return; // App-only requirement — never prompt on browser website
+    if (!isStandaloneApp()) return;
     if (Notification.permission === 'granted') return;
 
-    // Suppress prompt if dismissed in last 3 days
     try {
       const dismissedAt = localStorage.getItem('tb_notif_prompt_dismissed');
       if (dismissedAt) {
@@ -86,7 +83,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       try {
         const idToken = await user.getIdToken();
         const deviceId = getOrCreateDeviceId();
-        const response = await fetch(apiUrl('/api/users/fcm-token'), {
+        const response = await fetch('https://thunderbold.shop/api/users/fcm-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -110,42 +107,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     };
 
     if (Capacitor.isNativePlatform()) {
-      initNativePush(
-        sendToken,
-        (notification) => {
-          const title = notification.title || 'Thunderbold';
-          const body = notification.body || '';
-          const data = notification.data || {};
-          toast(title, {
-            description: body,
-            duration: 8000,
-            action: data.orderId ? {
-              label: 'View Order',
-              onClick: () => {
-                const isValidObjectId = /^[a-f0-9]{24}$/i.test(data.orderId);
-                if (isValidObjectId) {
-                  window.location.href = `/orders?orderId=${data.orderId}`;
-                } else if (data.link) {
-                  window.location.href = data.link;
-                } else {
-                  window.location.href = '/orders';
-                }
-              }
-            } : undefined,
-          });
-        },
-        (action) => {
-          const data = action.notification?.data;
-          if (data?.orderId && /^[a-f0-9]{24}$/i.test(data.orderId)) {
-            window.location.href = `/orders?orderId=${data.orderId}`;
-          } else if (data?.link) {
-            window.location.href = data.link;
-          } else {
-            window.location.href = '/orders';
-          }
-        }
-      );
-      setShouldPromptState(false);
       return;
     }
 
@@ -155,53 +116,63 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setShouldPromptState(false);
   }, [user]);
 
-  // Native push initialization or Web FCM auto-register
+  // Native Push Setup (runs once on mount on native platforms)
   useEffect(() => {
-    if (!user) return;
+    if (!Capacitor.isNativePlatform()) return;
 
-    if (Capacitor.isNativePlatform()) {
-      initNativePush(
-        async (token) => {
+    const setupNativePush = async () => {
+      await initNativePush(
+        // TOKEN RECEIVED — register with backend
+        async (fcmToken: string) => {
           try {
-            const idToken = await user.getIdToken();
-            const deviceId = getOrCreateDeviceId();
-            await fetch(apiUrl('/api/users/fcm-token'), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${idToken}`,
-              },
-              body: JSON.stringify({ token, deviceId }),
-            });
-            console.log('[Native Push] FCM Token registered with backend.');
-          } catch (err) {
-            console.error('[Native Push] Token registration failed:', err);
+            let deviceId = localStorage.getItem('thunderbold_device_id');
+            if (!deviceId) {
+              deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+              localStorage.setItem('thunderbold_device_id', deviceId);
+            }
+
+            localStorage.setItem('thunderbold_pending_fcm_token', fcmToken);
+
+            if (user) {
+              const idToken = await user.getIdToken();
+              await fetch('https://thunderbold.shop/api/users/fcm-token', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({ token: fcmToken, deviceId }),
+              });
+              console.log('[Push] FCM token registered');
+            }
+          } catch (error) {
+            console.error('[Push] Token registration error:', error);
           }
         },
+
+        // FOREGROUND NOTIFICATION RECEIVED
         (notification) => {
           const title = notification.title || 'Thunderbold';
           const body = notification.body || '';
-          const data = notification.data || {};
+
           toast(title, {
             description: body,
-            duration: 8000,
-            action: data.orderId ? {
+            duration: 5000,
+            action: notification.data?.orderId ? {
               label: 'View Order',
               onClick: () => {
-                const isValidObjectId = /^[a-f0-9]{24}$/i.test(data.orderId);
-                if (isValidObjectId) {
-                  window.location.href = `/orders?orderId=${data.orderId}`;
-                } else if (data.link) {
-                  window.location.href = data.link;
-                } else {
-                  window.location.href = '/orders';
+                const orderId = notification.data.orderId;
+                if (/^[a-f0-9]{24}$/i.test(orderId)) {
+                  window.location.href = `/orders?orderId=${orderId}`;
                 }
               }
             } : undefined,
           });
         },
+
+        // NOTIFICATION TAPPED (background/killed)
         (action) => {
-          const data = action.notification?.data;
+          const data = action.notification.data;
           if (data?.orderId && /^[a-f0-9]{24}$/i.test(data.orderId)) {
             window.location.href = `/orders?orderId=${data.orderId}`;
           } else if (data?.link) {
@@ -211,10 +182,48 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           }
         }
       );
-      return;
-    }
+    };
 
-    // Auto-register/refresh Web FCM token on login/startup if permission is already granted
+    setupNativePush();
+  }, [user]);
+
+  // ALSO — register pending token when user logs in
+  useEffect(() => {
+    if (!user || !Capacitor.isNativePlatform()) return;
+
+    const registerPendingToken = async () => {
+      const pendingToken = localStorage.getItem('thunderbold_pending_fcm_token');
+      if (!pendingToken) return;
+
+      try {
+        let deviceId = localStorage.getItem('thunderbold_device_id');
+        if (!deviceId) {
+          deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+          localStorage.setItem('thunderbold_device_id', deviceId);
+        }
+
+        const idToken = await user.getIdToken();
+        await fetch('https://thunderbold.shop/api/users/fcm-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ token: pendingToken, deviceId }),
+        });
+        console.log('[Push] Pending token registered');
+      } catch (error) {
+        console.error('[Push] Pending token error:', error);
+      }
+    };
+
+    registerPendingToken();
+  }, [user]);
+
+  // Web FCM auto-register and foreground listener
+  useEffect(() => {
+    if (!user || Capacitor.isNativePlatform()) return;
+
     if (browserSupported() && Notification.permission === 'granted') {
       try {
         if (sessionStorage.getItem(`fcm_synced_${user.uid}`) === 'true') {
@@ -226,7 +235,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user, registerToken]);
 
-  // Listen for Web FCM foreground notifications (web-only, dynamic import)
   useEffect(() => {
     if (!user || Capacitor.isNativePlatform()) return;
 
@@ -247,7 +255,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           const toastBody = body || '';
           const data = payload.data || {};
 
-          // Trigger a premium custom toast notification
           toast(toastTitle, {
             description: toastBody,
             duration: 8000,
