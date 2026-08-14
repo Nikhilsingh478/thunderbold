@@ -295,6 +295,7 @@ export default function SplashScreen() {
         document.dispatchEvent(new CustomEvent('thunderbold:loaderDone'));
       }
     });
+    tl.timeScale(2.0);
 
     // t=0.00 — Bolt icon fade-in and subtle scale bounce
     tl.fromTo(boltIconRef.current, {

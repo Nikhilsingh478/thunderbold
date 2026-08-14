@@ -8,7 +8,15 @@ import { Capacitor } from '@capacitor/core';
  * On web (browser), relative /api/* paths work fine because Vercel/Express
  * serves the API on the same origin.
  */
-export const API_BASE = Capacitor.isNativePlatform()
+const isNativeEnvironment = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  if (Capacitor.isNativePlatform()) return true;
+  const h = window.location.hostname;
+  const p = window.location.protocol;
+  return h === 'localhost' || h === '127.0.0.1' || p === 'capacitor:' || p === 'ionic:';
+};
+
+export const API_BASE = isNativeEnvironment()
   ? 'https://thunderbold.shop'
   : '';
 
