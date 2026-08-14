@@ -17,7 +17,7 @@ const isNativeEnvironment = (): boolean => {
 };
 
 export const API_BASE = isNativeEnvironment()
-  ? 'https://thunderbold.shop'
+  ? 'https://www.thunderbold.shop'
   : '';
 
 /**
