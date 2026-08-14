@@ -14,6 +14,7 @@ import {
 import { getFirebaseAuth, googleProvider } from '../lib/firebase';
 import { schedulePrefetchOrders, clearOrdersCache } from '../lib/ordersCache';
 import { apiUrl } from '../lib/apiBase';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -50,51 +51,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return unsubscribe;
   }, []);
 
-const GOOGLE_WEB_CLIENT_ID = '491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com';
+  const GOOGLE_WEB_CLIENT_ID = '491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com';
 
   const loginWithGoogle = async (): Promise<User> => {
     const auth = getFirebaseAuth();
     
-    // ── Native Android / iOS Platform (Zero Browser Redirect) ────────────────
+    // ── Native Android / iOS Platform ───────────────────────────────────────
     if (Capacitor.isNativePlatform()) {
       try {
-        console.log('[Auth] Launching Native Google Sign-In with Web Client ID...');
+        console.log('[Auth] Attempting Native Google Sign-In...');
         const result = await FirebaseAuthentication.signInWithGoogle({
           clientId: GOOGLE_WEB_CLIENT_ID,
         });
 
         const idToken = result.credential?.idToken || (result as any).idToken;
 
-        if (!idToken) {
-          throw new Error('Native Google Sign-In failed: No ID token returned');
+        if (idToken) {
+          const credential = GoogleAuthProvider.credential(idToken);
+          const userCredential = await signInWithCredential(auth, credential);
+          const user = userCredential.user;
+
+          await syncUserWithDatabase(user);
+          return user;
         }
-
-        const credential = GoogleAuthProvider.credential(idToken);
-        const userCredential = await signInWithCredential(auth, credential);
-        const user = userCredential.user;
-
-        await syncUserWithDatabase(user);
-        return user;
       } catch (error: any) {
-        console.error('[Auth] Native Google Sign-In error:', error);
-        const msg = error?.message || 'Failed to sign in with Google';
-        if (msg.includes('canceled') || msg.includes('cancelled')) {
-          toast.info('Google Sign-In was cancelled');
-        } else {
-          toast.error(msg.replace(/^Error:\s*/, ''));
-        }
-        throw error;
+        console.warn('[Auth] Native Google Sign-In failed or unsupported, falling back to popup:', error);
+        // Fall through to Popup fallback below
       }
     }
 
-    // ── Web Browser Platform ────────────────────────────────────────────────
+    // ── Web Browser / Fallback Platform ─────────────────────────────────────
     try {
+      console.log('[Auth] Attempting signInWithPopup...');
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       await syncUserWithDatabase(user);
       return user;
     } catch (error: any) {
-      console.error('Google sign-in error:', error);
+      console.error('[Auth] Google sign-in error:', error);
       throw error;
     }
   };
