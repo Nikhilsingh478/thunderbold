@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "491240288125-b6rlvfffjc7022hj9867lh3nmljdg345.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "shop.thunderbold.app",
+            "certificate_hash": "b0d7e8d9e8720c67820948236c3cb132857a25a9"
+          }
+        },
+        {
           "client_id": "491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -51,46 +51,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return unsubscribe;
   }, []);
 
+  // Web Client ID (client_type: 3) from android/app/google-services.json
   const GOOGLE_WEB_CLIENT_ID = '491240288125-clhf9bs0fuu53lg0c48vhdc46bi2gvv1.apps.googleusercontent.com';
 
   const loginWithGoogle = async (): Promise<User> => {
     const auth = getFirebaseAuth();
     
     // ── Native Android / iOS Platform ───────────────────────────────────────
+    // Uses @capacitor-firebase/authentication which calls Android native
+    // Google Play Services directly — NO browser opens.
     if (Capacitor.isNativePlatform()) {
-      try {
-        console.log('[Auth] Attempting Native Google Sign-In...');
-        const result = await FirebaseAuthentication.signInWithGoogle({
-          clientId: GOOGLE_WEB_CLIENT_ID,
-        } as any);
+      const result = await FirebaseAuthentication.signInWithGoogle();
 
-        const idToken = result.credential?.idToken || (result as any).idToken;
-
-        if (idToken) {
-          const credential = GoogleAuthProvider.credential(idToken);
-          const userCredential = await signInWithCredential(auth, credential);
-          const user = userCredential.user;
-
-          await syncUserWithDatabase(user);
-          return user;
-        }
-      } catch (error: any) {
-        console.warn('[Auth] Native Google Sign-In failed or unsupported, falling back to popup:', error);
-        // Fall through to Popup fallback below
+      const idToken = result.credential?.idToken;
+      if (!idToken) {
+        throw new Error('Google Sign-In failed: No ID token received from native provider');
       }
-    }
 
-    // ── Web Browser / Fallback Platform ─────────────────────────────────────
-    try {
-      console.log('[Auth] Attempting signInWithPopup...');
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      const credential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      const user = userCredential.user;
       await syncUserWithDatabase(user);
       return user;
-    } catch (error: any) {
-      console.error('[Auth] Google sign-in error:', error);
-      throw error;
     }
+
+    // ── Web Browser Platform ─────────────────────────────────────────────────
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    await syncUserWithDatabase(user);
+    return user;
   };
 
   const loginWithEmail = async (email: string, password: string): Promise<User> => {
