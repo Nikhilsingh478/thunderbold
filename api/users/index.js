@@ -75,7 +75,8 @@ export default async function handler(req, res) {
           }
         );
 
-        // Push the new token with device metadata
+        // Push the new token with device metadata (upsert if user doc missing)
+        const uid = decoded.uid || decoded.user_id;
         await users.updateOne(
           { email: userEmail },
           {
@@ -86,9 +87,19 @@ export default async function handler(req, res) {
                 updatedAt: new Date()
               }
             },
-            $set: { updatedAt: new Date() }
-          }
+            $set: { updatedAt: new Date() },
+            $setOnInsert: {
+              uid: uid || userEmail,
+              email: userEmail,
+              name: (userEmail.split('@')[0] || 'User'),
+              role: 'user',
+              addresses: [],
+              createdAt: new Date()
+            }
+          },
+          { upsert: true }
         );
+        console.log('[FCM] Token stored for user:', userEmail, 'deviceId:', activeDeviceId);
         return res.status(200).json(successResponse({ message: 'FCM token registered' }));
       } catch (err) {
         return res.status(500).json(errorResponse('Server error: ' + err.message));

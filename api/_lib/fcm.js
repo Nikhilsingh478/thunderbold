@@ -21,7 +21,7 @@ const INVALID_TOKEN_CODES = [
  * This function NEVER throws. All errors are caught and logged so callers
  * (order creation, status updates) are never blocked by notification failures.
  */
-export async function sendToUser(db, userId, { title, body, data = {} }, origin = 'https://thunderbold.shop') {
+export async function sendToUser(db, userId, { title, body, data = {} }, origin = 'https://www.thunderbold.shop') {
   try {
     const messaging = getAdminMessaging();
     if (!messaging) {
@@ -88,6 +88,7 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
           android: {
             priority: 'high',
             notification: {
+              channelId: 'thunderbold_orders',
               sound: 'default',
               ...(imageUrl ? { imageUrl } : {})
             }
@@ -164,7 +165,7 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
  * @param {{ title, body, data? }} payload
  * @returns {{ sent: number, failed: number, invalidTokens: string[] }}
  */
-export async function sendMulticast(messaging, tokens, { title, body, data = {} }, origin = 'https://thunderbold.shop') {
+export async function sendMulticast(messaging, tokens, { title, body, data = {} }, origin = 'https://www.thunderbold.shop') {
   console.log(`[FCM-Multicast] Starting broadcast to ${tokens.length} token(s)`);
   
   let sent = 0;
@@ -209,6 +210,7 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
         android: {
           priority: 'high',
           notification: {
+            channelId: 'thunderbold_orders',
             sound: 'default',
             ...(imageUrl ? { imageUrl } : {})
           }

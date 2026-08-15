@@ -33,19 +33,6 @@ const browserSupported = (): boolean =>
   'Notification' in window &&
   'serviceWorker' in navigator;
 
-function getOrCreateDeviceId(): string {
-  try {
-    let id = localStorage.getItem('thunderbold_device_id');
-    if (!id) {
-      id = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      localStorage.setItem('thunderbold_device_id', id);
-    }
-    return id;
-  } catch {
-    return 'temp_device_' + Date.now();
-  }
-}
-
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const userRef = useRef(user);
@@ -96,7 +83,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         const idToken = await currentUser.getIdToken();
         const endpoint = apiUrl('/api/users/fcm-token');
         console.log(`[Push] Registering token for user ${currentUser.email} to ${endpoint}`);
-        
+
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -124,6 +111,69 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const registerNativeFcmToken = useCallback(async (fcmToken: string) => {
+    console.log('[Push] Token callback fired');
+    console.log('[Push] Token received, length:', fcmToken.length);
+    console.log('[Push] Current user:', userRef.current?.email);
+
+    localStorage.setItem('thunderbold_native_fcm_token', fcmToken);
+    localStorage.removeItem('thunderbold_token_registered');
+
+    let deviceId = localStorage.getItem('thunderbold_device_id');
+    if (!deviceId) {
+      deviceId = 'android_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('thunderbold_device_id', deviceId);
+    }
+
+    const registerTokenWithRetry = async (attempt: number = 1): Promise<void> => {
+      const currentUser = userRef.current;
+
+      if (!currentUser) {
+        if (attempt <= 5) {
+          console.log(`[Push] User not ready, retry ${attempt}/5 in ${attempt * 2}s`);
+          setTimeout(() => registerTokenWithRetry(attempt + 1), attempt * 2000);
+        }
+        return;
+      }
+
+      try {
+        console.log('[Push] Calling backend...');
+        const idToken = await currentUser.getIdToken(true);
+        console.log('[Push] Registering token with backend, attempt:', attempt);
+
+        const response = await fetch(apiUrl('/api/users/fcm-token'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ token: fcmToken, deviceId }),
+        });
+
+        console.log('[Push] Backend response status:', response.status);
+        const responseText = await response.text();
+        console.log('[Push] Backend response:', responseText);
+
+        if (response.ok) {
+          console.log('[Push] Token registered successfully');
+          localStorage.setItem('thunderbold_token_registered', 'true');
+        } else {
+          console.error('[Push] Registration failed:', response.status, responseText);
+          if (response.status >= 500 && attempt <= 5) {
+            setTimeout(() => registerTokenWithRetry(attempt + 1), attempt * 2000);
+          }
+        }
+      } catch (error) {
+        console.error('[Push] Registration error:', error);
+        if (attempt <= 5) {
+          setTimeout(() => registerTokenWithRetry(attempt + 1), attempt * 2000);
+        }
+      }
+    };
+
+    await registerTokenWithRetry();
+  }, []);
+
   const registerToken = useCallback(async (): Promise<void> => {
     if (!user) return;
 
@@ -143,9 +193,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
     const setupNativePush = async () => {
       await initNativePush(
-        // TOKEN RECEIVED — register with backend
         (fcmToken: string) => {
-          sendTokenToBackend(fcmToken);
+          registerNativeFcmToken(fcmToken);
         },
 
         // FOREGROUND NOTIFICATION RECEIVED
@@ -183,18 +232,42 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     };
 
     setupNativePush();
-  }, [sendTokenToBackend]);
+  }, [registerNativeFcmToken]);
 
-  // Register pending token as soon as user becomes logged in
+  // Re-register stored FCM token after user login
   useEffect(() => {
     if (!user || !Capacitor.isNativePlatform()) return;
 
-    const pendingToken = localStorage.getItem('thunderbold_pending_fcm_token');
-    if (pendingToken) {
-      console.log('[Push] Found pending FCM token after user login. Registering...');
-      sendTokenToBackend(pendingToken);
+    const storedToken = localStorage.getItem('thunderbold_native_fcm_token');
+    const alreadyRegistered = localStorage.getItem('thunderbold_token_registered');
+
+    if (storedToken && !alreadyRegistered) {
+      console.log('[Push] Re-registering stored token after login');
+
+      let deviceId = localStorage.getItem('thunderbold_device_id');
+      if (!deviceId) {
+        deviceId = 'android_' + Math.random().toString(36).substring(2);
+        localStorage.setItem('thunderbold_device_id', deviceId);
+      }
+
+      user.getIdToken(true)
+        .then((idToken) => fetch(apiUrl('/api/users/fcm-token'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ token: storedToken, deviceId }),
+        }))
+        .then((r) => {
+          if (r.ok) {
+            console.log('[Push] Token re-registered after login');
+            localStorage.setItem('thunderbold_token_registered', 'true');
+          }
+        })
+        .catch((e) => console.error('[Push] Re-registration error:', e));
     }
-  }, [user, sendTokenToBackend]);
+  }, [user]);
 
   // Web FCM auto-register and foreground listener
   useEffect(() => {

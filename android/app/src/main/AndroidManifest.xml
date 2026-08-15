@@ -40,14 +40,7 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- FCM Messaging Service -->
-        <service
-            android:name="com.google.firebase.messaging.FirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
+        <!-- FCM MessagingService is provided by @capacitor/push-notifications (manifest merge) -->
 
         <!-- FCM Notification Channel & Default Metadata -->
         <meta-data
