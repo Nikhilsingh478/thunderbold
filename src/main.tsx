@@ -51,8 +51,8 @@ if (Capacitor.isNativePlatform()) {
 
   // Wait for React to fully mount before hiding splash screen
   setTimeout(() => {
-    SplashScreen.hide({ fadeOutDuration: 500 }).catch(() => {});
-  }, 1500);
+    SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+  }, 300);
 
   // Ensure no service workers intercept local assets in native WebView
   if ('serviceWorker' in navigator) {
