@@ -82,16 +82,29 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
             body,
             ...(imageUrl ? { imageUrl } : {})
           },
-          data: Object.fromEntries(
-            Object.entries(data).map(([k, v]) => [k, String(v)])
-          ),
+          data: {
+            ...Object.fromEntries(
+              Object.entries(data).map(([k, v]) => [k, String(v)])
+            ),
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+          },
           android: {
             priority: 'high',
             notification: {
               channelId: 'thunderbold_orders',
               sound: 'default',
+              defaultVibrateTimings: true,
+              notificationPriority: 'PRIORITY_HIGH',
               ...(imageUrl ? { imageUrl } : {})
             }
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: 'default',
+                badge: 1,
+              },
+            },
           },
           webpush: {
             headers: {
@@ -204,16 +217,29 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
           body,
           ...(imageUrl ? { imageUrl } : {})
         },
-        data: Object.fromEntries(
-          Object.entries(data).map(([k, v]) => [k, String(v)])
-        ),
+        data: {
+          ...Object.fromEntries(
+            Object.entries(data).map(([k, v]) => [k, String(v)])
+          ),
+          click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        },
         android: {
           priority: 'high',
           notification: {
             channelId: 'thunderbold_orders',
             sound: 'default',
+            defaultVibrateTimings: true,
+            notificationPriority: 'PRIORITY_HIGH',
             ...(imageUrl ? { imageUrl } : {})
           }
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1,
+            },
+          },
         },
         webpush: {
           headers: {
