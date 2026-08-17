@@ -112,9 +112,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ sent: 0, failed: 0, usersReached: 0 });
     }
 
-    const allTokens = usersWithTokens.flatMap((u) => 
+    const rawTokens = usersWithTokens.flatMap((u) => 
       (u.fcmTokens || []).map((t) => (typeof t === 'string' ? t : t?.token)).filter(Boolean)
     );
+    const allTokens = [...new Set(rawTokens)];
     const usersReached = usersWithTokens.length;
 
     // Resolve dynamic request origin

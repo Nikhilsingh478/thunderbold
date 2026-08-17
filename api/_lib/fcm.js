@@ -40,13 +40,14 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
       return { sent: 0, failed: 0 };
     }
 
-    const tokenStrings = tokens.map(t => typeof t === 'string' ? t : t?.token).filter(Boolean);
+    const rawTokenStrings = tokens.map(t => typeof t === 'string' ? t : t?.token).filter(Boolean);
+    const tokenStrings = [...new Set(rawTokenStrings)];
     if (tokenStrings.length === 0) {
       console.log(`[FCM-Send] No valid FCM tokens resolved for user: ${userId}. Skipping.`);
       return { sent: 0, failed: 0 };
     }
 
-    console.log(`[FCM-Send] Attempting to send notification to ${userId} (${tokenStrings.length} active token(s))`);
+    console.log(`[FCM-Send] Attempting to send notification to ${userId} (${tokenStrings.length} unique token(s))`);
     
     // Resolve dynamic image and click link
     const imageUrl = data.imageUrl || data.image || '';
@@ -97,7 +98,7 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
               notificationPriority: 'PRIORITY_HIGH',
               sound: 'default',
               color: '#B8820F',
-              icon: 'ic_launcher_foreground',
+              icon: 'ic_launcher',
               visibility: 'PUBLIC',
               defaultSound: true,
               defaultLightSettings: true,
@@ -185,7 +186,8 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
  * @returns {{ sent: number, failed: number, invalidTokens: string[] }}
  */
 export async function sendMulticast(messaging, tokens, { title, body, data = {} }, origin = 'https://www.thunderbold.shop') {
-  console.log(`[FCM-Multicast] Starting broadcast to ${tokens.length} token(s)`);
+  const uniqueTokens = [...new Set((tokens || []).filter(Boolean))];
+  console.log(`[FCM-Multicast] Starting broadcast to ${uniqueTokens.length} unique token(s) (from ${tokens.length} total)`);
   
   let sent = 0;
   let failed = 0;
@@ -210,8 +212,8 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
   }
 
   const batches = [];
-  for (let i = 0; i < tokens.length; i += 500) {
-    batches.push(tokens.slice(i, i + 500));
+  for (let i = 0; i < uniqueTokens.length; i += 500) {
+    batches.push(uniqueTokens.slice(i, i + 500));
   }
 
   for (const batch of batches) {
@@ -238,7 +240,7 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
             notificationPriority: 'PRIORITY_HIGH',
             sound: 'default',
             color: '#B8820F',
-            icon: 'ic_launcher_foreground',
+            icon: 'ic_launcher',
             visibility: 'PUBLIC',
             defaultSound: true,
             defaultLightSettings: true,
