@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { useAuth } from './AuthContext';
 import { initNativePush } from '../lib/nativePushNotifications';
 import { toast } from 'sonner';
@@ -85,24 +85,45 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         const endpoint = apiUrl('/api/users/fcm-token');
         console.log(`[Push] Registering token for user ${currentUser.email} to ${endpoint}`);
 
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({ token: fcmToken, deviceId }),
-        });
+        if (Capacitor.isNativePlatform()) {
+          const response = await CapacitorHttp.post({
+            url: endpoint,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            data: { token: fcmToken, deviceId },
+          });
 
-        if (response.ok) {
-          console.log('[Push] FCM token stored in backend database successfully.');
-          localStorage.removeItem('thunderbold_pending_fcm_token');
-          try {
-            sessionStorage.setItem(`fcm_synced_${currentUser.uid}`, 'true');
-          } catch {}
+          if (response.status === 200 || response.status === 201) {
+            console.log('[Push] FCM token stored in backend database successfully.');
+            localStorage.removeItem('thunderbold_pending_fcm_token');
+            try {
+              sessionStorage.setItem(`fcm_synced_${currentUser.uid}`, 'true');
+            } catch {}
+          } else {
+            console.error('[Push] Backend failed to store FCM token:', response.status, JSON.stringify(response.data));
+          }
         } else {
-          const errData = await response.json().catch(() => ({}));
-          console.error('[Push] Backend failed to store FCM token:', errData.error || response.statusText);
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ token: fcmToken, deviceId }),
+          });
+
+          if (response.ok) {
+            console.log('[Push] FCM token stored in backend database successfully.');
+            localStorage.removeItem('thunderbold_pending_fcm_token');
+            try {
+              sessionStorage.setItem(`fcm_synced_${currentUser.uid}`, 'true');
+            } catch {}
+          } else {
+            const errData = await response.json().catch(() => ({}));
+            console.error('[Push] Backend failed to store FCM token:', errData.error || response.statusText);
+          }
         }
       } else {
         console.log('[Push] User not logged in yet. Token stored in pending state.');
@@ -143,27 +164,27 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       try {
         console.log('[Push] Calling backend...');
         const idToken = await currentUser.getIdToken(true);
+        console.log('[Push] Got ID token:', idToken.substring(0, 20) + '...');
         console.log('[Push CB] About to fetch backend');
         console.log('[Push CB] URL: https://www.thunderbold.shop/api/users/fcm-token');
 
-        const response = await fetch(apiUrl('/api/users/fcm-token'), {
-          method: 'POST',
+        const response = await CapacitorHttp.post({
+          url: 'https://www.thunderbold.shop/api/users/fcm-token',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ token: fcmToken, deviceId }),
+          data: { token: fcmToken, deviceId },
         });
 
         console.log('[Push CB] Fetch completed, status:', response.status);
-        const responseBody = await response.clone().text();
-        console.log('[Push CB] Response body:', responseBody);
+        console.log('[Push CB] Response body:', JSON.stringify(response.data));
 
-        if (response.ok) {
-          console.log('[Push] Token registered successfully');
-          localStorage.setItem('thunderbold_token_registered', 'true');
+        if (response.status === 200 || response.status === 201) {
+          console.log('[Push] Token registered successfully!');
+          localStorage.setItem('thunderbold_token_registered', fcmToken);
         } else {
-          console.error('[Push] Registration failed:', response.status, responseBody);
+          console.error('[Push] Registration failed:', response.status, JSON.stringify(response.data));
           if (response.status >= 500 && attempt <= 5) {
             setTimeout(() => registerTokenWithRetry(attempt + 1), attempt * 2000);
           }
@@ -200,23 +221,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       const idToken = await userRef.current.getIdToken(true);
       console.log('[Test] Got Firebase ID token');
       
-      const response = await fetch(
-        'https://www.thunderbold.shop/api/users/fcm-token',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({
-            token: stored,
-            deviceId: localStorage.getItem('thunderbold_device_id') || 'test_device',
-          }),
-        }
-      );
+      const response = await CapacitorHttp.post({
+        url: 'https://www.thunderbold.shop/api/users/fcm-token',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        data: {
+          token: stored,
+          deviceId: localStorage.getItem('thunderbold_device_id') || 'test_device',
+        },
+      });
       
-      const body = await response.text();
-      console.log('[Test] Response:', response.status, body);
+      console.log('[Test] Response:', response.status, JSON.stringify(response.data));
     } catch (error) {
       console.error('[Test] Error:', error);
     }
@@ -299,18 +316,18 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       }
 
       user.getIdToken(true)
-        .then((idToken) => fetch(apiUrl('/api/users/fcm-token'), {
-          method: 'POST',
+        .then((idToken) => CapacitorHttp.post({
+          url: 'https://www.thunderbold.shop/api/users/fcm-token',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ token: storedToken, deviceId }),
+          data: { token: storedToken, deviceId },
         }))
         .then((r) => {
-          if (r.ok) {
+          if (r.status === 200 || r.status === 201) {
             console.log('[Push] Token re-registered after login');
-            localStorage.setItem('thunderbold_token_registered', 'true');
+            localStorage.setItem('thunderbold_token_registered', storedToken);
           }
         })
         .catch((e) => console.error('[Push] Re-registration error:', e));
