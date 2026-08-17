@@ -196,7 +196,7 @@ const Navbar = () => {
           willChange: 'transform, opacity',
         }}
         className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-300 z-[100] ${
-          scrolled ? 'py-4 bg-[#070707]/95 backdrop-blur-lg border-b border-white/5 shadow-lg' : 'pt-4 pb-5 bg-transparent'
+          scrolled ? 'py-4 bg-[#070707] border-b border-white/5 shadow-lg' : 'pt-4 pb-5 bg-transparent'
         }`}
       >
         {/* Mobile Layout */}
@@ -397,7 +397,7 @@ const Navbar = () => {
             initial="closed"
             animate="open"
             exit="closed"
-            className="fixed inset-0 bg-[#070707]/95 backdrop-blur-xl z-[90] flex flex-col items-center justify-center overflow-hidden"
+            className="fixed inset-0 bg-[#070707] z-[90] flex flex-col items-center justify-center overflow-hidden"
           >
             <div className="flex flex-col items-center gap-6">
               {links.map((link, i) => (

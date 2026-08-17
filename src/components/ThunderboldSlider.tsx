@@ -39,21 +39,23 @@ function roleStyle(role: Role, isMobile: boolean): React.CSSProperties {
     position: 'absolute',
     bottom: liftBottom,
     aspectRatio: '0.6 / 1',
-    transition: `transform ${DURATION}ms ${EASE}, filter ${DURATION}ms ${EASE}, opacity ${DURATION}ms ${EASE}, left ${DURATION}ms ${EASE}, width ${DURATION}ms ${EASE}`,
+    // Only transition properties that are GPU-composited (transform, opacity).
+    // Removing filter from transition avoids rasterization on every frame.
+    transition: `transform ${DURATION}ms ${EASE}, opacity ${DURATION}ms ${EASE}, left ${DURATION}ms ${EASE}, width ${DURATION}ms ${EASE}`,
     transformOrigin: 'bottom center',
-    willChange: 'transform, filter, opacity, left',
+    willChange: 'transform, opacity',
     pointerEvents: 'none',
   };
 
   switch (role) {
     case 'center':
-      return { ...common, left: '50%', width: baseW, transform: 'translateX(-50%) translateY(0) scale(1)', filter: 'blur(0px)', opacity: 1, zIndex: 30 };
+      return { ...common, left: '50%', width: baseW, transform: 'translateX(-50%) translateY(0) scale(1)', opacity: 1, zIndex: 30 };
     case 'left':
-      return { ...common, left: isMobile ? '4%' : '18%', width: sideW, transform: 'translateX(-50%) translateY(4%) scale(0.78)', filter: 'blur(1.5px)', opacity: isMobile ? 0.45 : 0.85, zIndex: 20 };
+      return { ...common, left: isMobile ? '4%' : '18%', width: sideW, transform: 'translateX(-50%) translateY(4%) scale(0.78)', opacity: isMobile ? 0.4 : 0.75, zIndex: 20 };
     case 'right':
-      return { ...common, left: isMobile ? '96%' : '82%', width: sideW, transform: 'translateX(-50%) translateY(4%) scale(0.78)', filter: 'blur(1.5px)', opacity: isMobile ? 0.45 : 0.85, zIndex: 20 };
+      return { ...common, left: isMobile ? '96%' : '82%', width: sideW, transform: 'translateX(-50%) translateY(4%) scale(0.78)', opacity: isMobile ? 0.4 : 0.75, zIndex: 20 };
     default:
-      return { ...common, left: '50%', width: backW, transform: 'translateX(-50%) translateY(8%) scale(0.55)', filter: 'blur(4px)', opacity: 0.25, zIndex: 10 };
+      return { ...common, left: '50%', width: backW, transform: 'translateX(-50%) translateY(8%) scale(0.55)', opacity: 0.2, zIndex: 10 };
   }
 }
 
@@ -210,15 +212,15 @@ export default function ThunderboldSlider() {
         {slides.map((slide, i) => {
           const role = getRole(i, activeIndex);
           return (
-            <div key={i} style={roleStyle(role, isMobile)}>
+            <div key={i} style={{ ...roleStyle(role, isMobile), backgroundColor: '#111111' }}>
               {slide.imageUrl ? (
                 <img
                   src={optimizeCloudinaryUrl(slide.imageUrl, 600)}
                   alt={slide.heading || `Slide ${i + 1}`}
                   draggable={false}
-                  loading={i === 0 ? 'eager' : 'lazy'}
+                  loading="eager"
                   fetchPriority={i === 0 ? 'high' : 'low'}
-                  decoding={i === 0 ? 'sync' : 'async'}
+                  decoding="async"
                   style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom center', display: 'block', userSelect: 'none' }}
                   className="text-transparent"
                   onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER; }}
