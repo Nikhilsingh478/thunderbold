@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
-import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from './AuthContext';
 import { initNativePush } from '../lib/nativePushNotifications';
 import { toast } from 'sonner';
@@ -86,6 +86,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         console.log(`[Push] Registering token for user ${currentUser.email} to ${endpoint}`);
 
         if (Capacitor.isNativePlatform()) {
+          const { CapacitorHttp } = await import('@capacitor/core');
           const response = await CapacitorHttp.post({
             url: endpoint,
             headers: {
@@ -168,6 +169,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         console.log('[Push CB] About to fetch backend');
         console.log('[Push CB] URL: https://www.thunderbold.shop/api/users/fcm-token');
 
+        const { CapacitorHttp } = await import('@capacitor/core');
         const response = await CapacitorHttp.post({
           url: 'https://www.thunderbold.shop/api/users/fcm-token',
           headers: {
@@ -221,6 +223,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       const idToken = await userRef.current.getIdToken(true);
       console.log('[Test] Got Firebase ID token');
       
+      const { CapacitorHttp } = await import('@capacitor/core');
       const response = await CapacitorHttp.post({
         url: 'https://www.thunderbold.shop/api/users/fcm-token',
         headers: {
@@ -316,14 +319,17 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       }
 
       user.getIdToken(true)
-        .then((idToken) => CapacitorHttp.post({
-          url: 'https://www.thunderbold.shop/api/users/fcm-token',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${idToken}`,
-          },
-          data: { token: storedToken, deviceId },
-        }))
+        .then(async (idToken) => {
+          const { CapacitorHttp } = await import('@capacitor/core');
+          return CapacitorHttp.post({
+            url: 'https://www.thunderbold.shop/api/users/fcm-token',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            data: { token: storedToken, deviceId },
+          });
+        })
         .then((r) => {
           if (r.status === 200 || r.status === 201) {
             console.log('[Push] Token re-registered after login');
