@@ -48,7 +48,12 @@ document.addEventListener('contextmenu', (e) => {
 if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
   StatusBar.setBackgroundColor({ color: '#080808' }).catch(() => {});
-  SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+
+  // Wait for React to fully mount before hiding splash screen
+  setTimeout(() => {
+    SplashScreen.hide({ fadeOutDuration: 500 }).catch(() => {});
+  }, 1500);
+
   // Ensure no service workers intercept local assets in native WebView
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {

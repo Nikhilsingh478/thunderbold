@@ -169,25 +169,46 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         console.log('[Push CB] About to fetch backend');
         console.log('[Push CB] URL: https://www.thunderbold.shop/api/users/fcm-token');
 
-        const { CapacitorHttp } = await import('@capacitor/core');
-        const response = await CapacitorHttp.post({
-          url: 'https://www.thunderbold.shop/api/users/fcm-token',
+        try {
+          const { CapacitorHttp } = await import('@capacitor/core');
+          const response = await CapacitorHttp.post({
+            url: 'https://www.thunderbold.shop/api/users/fcm-token',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            data: { token: fcmToken, deviceId },
+          });
+
+          console.log('[Push CB] CapacitorHttp completed, status:', response.status);
+          console.log('[Push CB] Response body:', JSON.stringify(response.data));
+
+          if (response.status === 200 || response.status === 201) {
+            localStorage.setItem('thunderbold_token_registered', fcmToken);
+            console.log('[Push] Token registered via CapacitorHttp!');
+            return;
+          }
+        } catch (capacitorError) {
+          console.warn('[Push] CapacitorHttp failed, falling back to fetch:', capacitorError);
+        }
+
+        // Fallback to regular fetch
+        const fetchResponse = await fetch('https://www.thunderbold.shop/api/users/fcm-token', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${idToken}`,
           },
-          data: { token: fcmToken, deviceId },
+          body: JSON.stringify({ token: fcmToken, deviceId }),
         });
 
-        console.log('[Push CB] Fetch completed, status:', response.status);
-        console.log('[Push CB] Response body:', JSON.stringify(response.data));
-
-        if (response.status === 200 || response.status === 201) {
-          console.log('[Push] Token registered successfully!');
+        if (fetchResponse.ok) {
           localStorage.setItem('thunderbold_token_registered', fcmToken);
+          console.log('[Push] Token registered via fetch fallback');
         } else {
-          console.error('[Push] Registration failed:', response.status, JSON.stringify(response.data));
-          if (response.status >= 500 && attempt <= 5) {
+          const fetchBody = await fetchResponse.text().catch(() => '');
+          console.error('[Push] Registration failed via fetch fallback:', fetchResponse.status, fetchBody);
+          if (fetchResponse.status >= 500 && attempt <= 5) {
             setTimeout(() => registerTokenWithRetry(attempt + 1), attempt * 2000);
           }
         }

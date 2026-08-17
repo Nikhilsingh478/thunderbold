@@ -20,7 +20,14 @@ if (!firebaseConfig.apiKey) {
   console.error('[Firebase] Config missing — check VITE_FIREBASE_* env vars');
 }
 
-const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+let firebaseApp: FirebaseApp | undefined;
+
+try {
+  firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  console.log('[Firebase] Initialized successfully');
+} catch (error) {
+  console.error('[Firebase] Init failed:', error);
+}
 
 /**
  * Lazy Firebase Auth getter.
@@ -37,7 +44,8 @@ let _auth: Auth | null = null;
 
 export function getFirebaseAuth(): Auth {
   if (_auth) return _auth;
-  _auth = getAuth(firebaseApp);
+  const appToUse = firebaseApp || (getApps().length ? getApp() : initializeApp(firebaseConfig));
+  _auth = getAuth(appToUse);
   setPersistence(_auth, browserLocalPersistence).catch(() => {});
   return _auth;
 }

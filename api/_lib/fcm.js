@@ -92,9 +92,15 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
             priority: 'high',
             notification: {
               channelId: 'thunderbold_orders',
-              sound: 'default',
-              defaultVibrateTimings: true,
+              defaultVibrateTimings: false,
+              vibrateTimingsMillis: [0, 250, 150, 250],
               notificationPriority: 'PRIORITY_HIGH',
+              sound: 'default',
+              color: '#B8820F',
+              icon: 'ic_launcher_foreground',
+              visibility: 'PUBLIC',
+              defaultSound: true,
+              defaultLightSettings: true,
               ...(imageUrl ? { imageUrl } : {})
             }
           },
@@ -227,9 +233,15 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
           priority: 'high',
           notification: {
             channelId: 'thunderbold_orders',
-            sound: 'default',
-            defaultVibrateTimings: true,
+            defaultVibrateTimings: false,
+            vibrateTimingsMillis: [0, 250, 150, 250],
             notificationPriority: 'PRIORITY_HIGH',
+            sound: 'default',
+            color: '#B8820F',
+            icon: 'ic_launcher_foreground',
+            visibility: 'PUBLIC',
+            defaultSound: true,
+            defaultLightSettings: true,
             ...(imageUrl ? { imageUrl } : {})
           }
         },
