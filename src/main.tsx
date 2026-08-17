@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { SplashScreen } from '@capacitor/splash-screen';
 import App from "./App.tsx";
 import "./index.css";
 
@@ -48,11 +47,6 @@ document.addEventListener('contextmenu', (e) => {
 if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
   StatusBar.setBackgroundColor({ color: '#080808' }).catch(() => {});
-
-  // Wait for React to fully mount before hiding splash screen
-  setTimeout(() => {
-    SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
-  }, 300);
 
   // Ensure no service workers intercept local assets in native WebView
   if ('serviceWorker' in navigator) {
