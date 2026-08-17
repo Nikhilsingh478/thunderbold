@@ -43,7 +43,7 @@ export async function initNativePush(
   await PushNotifications.addListener(
     'registration',
     (token: Token) => {
-      console.log('[Push] TOKEN RECEIVED:', token.value.substring(0, 20) + '...');
+      console.log('[Push] Step 4: TOKEN RECEIVED:', token.value);
       if (registeredTokenCallback) {
         registeredTokenCallback(token.value);
       }
@@ -54,7 +54,7 @@ export async function initNativePush(
   await PushNotifications.addListener(
     'registrationError',
     (error: any) => {
-      console.log('[Push] REGISTRATION ERROR:', JSON.stringify(error));
+      console.log('[Push] Step 4 ERROR:', JSON.stringify(error));
     }
   );
 
@@ -103,8 +103,9 @@ export async function initNativePush(
   );
 
   // Request permission
+  console.log('[Push] Step 1: Requesting permissions');
   const permission = await PushNotifications.requestPermissions();
-  console.log('[Push] Permission status:', JSON.stringify(permission));
+  console.log('[Push] Step 2: Permission result:', JSON.stringify(permission));
 
   if (permission.receive === 'denied') {
     console.log('[Push] Permission denied');
@@ -112,6 +113,7 @@ export async function initNativePush(
   }
 
   // Register NOW that listeners are attached
+  console.log('[Push] Step 3: Calling register()');
   await PushNotifications.register();
   console.log('[Push] register() called');
 

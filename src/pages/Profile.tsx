@@ -4,6 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import { useAuth } from '../context/AuthContext';
+import { useNotificationsContext } from '../context/NotificationsContext';
+import { Capacitor } from '@capacitor/core';
 import { optimizeCloudinaryUrl, IMG_SIZES, PLACEHOLDER } from '../lib/cloudinary';
 import { apiUrl } from '../lib/apiBase';
 
@@ -82,6 +84,7 @@ type Tab = 'addresses' | 'orders';
 
 export default function Profile() {
   const { user } = useAuth();
+  const { testTokenRegistration } = useNotificationsContext();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<Tab>('addresses');
@@ -964,6 +967,25 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {Capacitor.isNativePlatform() && (
+        <button
+          onClick={() => testTokenRegistration()}
+          style={{
+            position: 'fixed',
+            bottom: 100,
+            right: 20,
+            zIndex: 9999,
+            background: 'red',
+            color: 'white',
+            padding: '10px',
+            borderRadius: '8px',
+            fontSize: '12px',
+          }}
+        >
+          Test FCM
+        </button>
+      )}
     </div>
   );
 }
