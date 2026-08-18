@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { outfitImageUrl, PLACEHOLDER } from '../lib/cloudinary';
+import { optimizeCloudinaryUrl, PLACEHOLDER } from '../lib/cloudinary';
 
 interface SlideData {
   imageUrl: string;
@@ -68,9 +68,9 @@ function SlideImagePlaceholder() {
 }
 
 /**
- * ThunderboldSlider — dynamic editorial carousel.
- * Navigation: touch/pointer swipe (horizontal drag ≥ 50 px triggers advance).
- * Arrows removed — swipe only for native-app feel.
+ * ThunderboldSlider ΓÇö dynamic editorial carousel.
+ * Navigation: touch/pointer swipe (horizontal drag ΓëÑ 50 px triggers advance).
+ * Arrows removed ΓÇö swipe only for native-app feel.
  */
 export default function ThunderboldSlider() {
   const navigate = useNavigate();
@@ -110,7 +110,7 @@ export default function ThunderboldSlider() {
     window.setTimeout(() => { animatingRef.current = false; }, DURATION);
   };
 
-  // Pointer event handlers — works for both mouse and touch via pointer events API
+  // Pointer event handlers ΓÇö works for both mouse and touch via pointer events API
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // If the click is on an interactive element (button, link, or its children), ignore it for slider drag
     if ((e.target as HTMLElement).closest('button, a')) {
@@ -204,7 +204,7 @@ export default function ThunderboldSlider() {
               margin: 0,
             }}
           >
-            {active.heading || '—'}
+            {active.heading || 'ΓÇö'}
           </h1>
         </div>
 
@@ -212,12 +212,10 @@ export default function ThunderboldSlider() {
         {slides.map((slide, i) => {
           const role = getRole(i, activeIndex);
           return (
-            // No backgroundColor here — PNG transparency is filled at CDN level
-            // via b_rgb:080808 in outfitImageUrl(), so no background bleeds through.
-            <div key={i} style={roleStyle(role, isMobile)}>
+            <div key={i} style={{ ...roleStyle(role, isMobile), backgroundColor: 'transparent' }}>
               {slide.imageUrl ? (
                 <img
-                  src={outfitImageUrl(slide.imageUrl, 600)}
+                  src={optimizeCloudinaryUrl(slide.imageUrl, 600)}
                   alt={slide.heading || `Slide ${i + 1}`}
                   draggable={false}
                   loading="eager"

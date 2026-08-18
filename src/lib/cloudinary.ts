@@ -39,26 +39,6 @@ export function optimizeCloudinaryUrl(
 }
 
 /**
- * Same as optimizeCloudinaryUrl but adds b_rgb:080808 before f_auto.
- * Use this for outfit/slider images that are PNGs with transparent
- * backgrounds — the transparent areas get filled with the app's dark
- * background color (#080808) at the CDN level, so no container
- * background bleeds through regardless of objectFit mode.
- */
-export function outfitImageUrl(
-  url: string | null | undefined,
-  width: number = 800,
-): string {
-  if (!url || url === '/placeholder.png') return PLACEHOLDER;
-  if (!url.includes('res.cloudinary.com')) return url;
-  // Already transformed with our outfit params — skip
-  if (url.includes('/upload/b_rgb:080808,f_auto,q_auto,w_')) return url;
-  // Strip any existing f_auto,q_auto transform so we don't double-transform
-  const stripped = url.replace('/upload/f_auto,q_auto,w_\d+/', '/upload/');
-  return stripped.replace('/upload/', `/upload/b_rgb:080808,f_auto,q_auto,w_${width}/`);
-}
-
-/**
  * Builds a Cloudinary URL from a public ID and optional cloud name.
  * Defaults to CLOUD_NAME (djptdutak). Pass CLOUD_NAME_2 for the second account.
  */
