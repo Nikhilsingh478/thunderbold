@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl, PLACEHOLDER } from '../lib/cloudinary';
+import { outfitImageUrl, PLACEHOLDER } from '../lib/cloudinary';
 
 interface SlideData {
   imageUrl: string;
@@ -212,10 +212,12 @@ export default function ThunderboldSlider() {
         {slides.map((slide, i) => {
           const role = getRole(i, activeIndex);
           return (
-            <div key={i} style={{ ...roleStyle(role, isMobile), backgroundColor: '#111111' }}>
+            // No backgroundColor here — PNG transparency is filled at CDN level
+            // via b_rgb:080808 in outfitImageUrl(), so no background bleeds through.
+            <div key={i} style={roleStyle(role, isMobile)}>
               {slide.imageUrl ? (
                 <img
-                  src={optimizeCloudinaryUrl(slide.imageUrl, 600)}
+                  src={outfitImageUrl(slide.imageUrl, 600)}
                   alt={slide.heading || `Slide ${i + 1}`}
                   draggable={false}
                   loading="eager"
