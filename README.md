@@ -1,8 +1,8 @@
-# Thunderbold — Production-Grade Premium Fashion E-Commerce PWA
+# Thunderbold — Production-Grade Premium Fashion E-Commerce PWA & Native Android App
 
-A full-stack, installable Progressive Web App for a curated Indian streetwear brand. React 18 + Vite frontend, Express/MongoDB backend, Firebase Auth, Firebase Cloud Messaging, and a Workbox service worker.
+A full-stack, installable Progressive Web App (PWA) and native Capacitor Android application for a curated Indian streetwear brand. React 18 + Vite frontend, Express/MongoDB backend, Firebase Auth, Firebase Cloud Messaging (FCM), Capacitor 8 native bridge, and a Workbox service worker.
 
-> **Brand:** Thunderbold · **Market:** India · **Domain:** thunderbold.shop · **Payment:** Cash on Delivery only
+> **Brand:** Thunderbold · **Market:** India · **Domain:** thunderbold.shop · **Android App ID:** shop.thunderbold.app · **Payment:** Cash on Delivery only
 
 ---
 
@@ -11,33 +11,27 @@ A full-stack, installable Progressive Web App for a curated Indian streetwear br
 1. [Tech Stack](#1-tech-stack)
 2. [Architecture Overview](#2-architecture-overview)
 3. [Environment Setup](#3-environment-setup)
-4. [Running the App](#4-running-the-app)
-5. [Project Structure](#5-project-structure)
-6. [Frontend Architecture](#6-frontend-architecture)
-7. [Backend Architecture](#7-backend-architecture)
-8. [Authentication System](#8-authentication-system)
-9. [API Reference](#9-api-reference)
-10. [Order Management System](#10-order-management-system)
-11. [Returns System](#11-returns-system)
-12. [Cart & Wishlist](#12-cart--wishlist)
-13. [Review System](#13-review-system)
-14. [Admin Panel & Analytics](#14-admin-panel--analytics)
-15. [Push Notifications (FCM)](#15-push-notifications-fcm)
-16. [Performance Architecture](#16-performance-architecture)
-17. [Security Model](#17-security-model)
-18. [PWA Architecture](#18-pwa-architecture)
-19. [Service Worker & Caching](#19-service-worker--caching)
-20. [Web App Manifest](#20-web-app-manifest)
-21. [App Capabilities](#21-app-capabilities)
-22. [Update Lifecycle](#22-update-lifecycle)
-23. [Icons & Splash Screen](#23-icons--splash-screen)
-24. [Deployment — Vercel](#24-deployment--vercel)
-25. [TWA / Play Store Readiness](#25-twa--play-store-readiness)
-26. [Database Schema Summary](#26-database-schema-summary)
-27. [Pricing System](#27-pricing-system)
-28. [Known Limitations](#28-known-limitations)
-29. [Edge Cases Handled](#29-edge-cases-handled)
-30. [Troubleshooting](#30-troubleshooting)
+4. [Running & Building the App](#4-running--building-the-app)
+5. [Capacitor Native Android App](#5-capacitor-native-android-app)
+6. [Project Structure](#6-project-structure)
+7. [Frontend Architecture](#7-frontend-architecture)
+8. [Backend Architecture](#8-backend-architecture)
+9. [Authentication System](#9-authentication-system)
+10. [API Reference](#10-api-reference)
+11. [Order Management System](#11-order-management-system)
+12. [Gift Card & Gifting System](#12-gift-card--gifting-system)
+13. [Returns System](#13-returns-system)
+14. [Cart & Wishlist](#14-cart--wishlist)
+15. [Review System](#15-review-system)
+16. [Admin Panel & Analytics](#16-admin-panel--analytics)
+17. [Push Notifications (Native & Web FCM)](#17-push-notifications-native--web-fcm)
+18. [Performance Architecture & Caching](#18-performance-architecture--caching)
+19. [Security Model & Audit Fixes](#19-security-model--audit-fixes)
+20. [PWA Architecture & Self-Hosting](#20-pwa-architecture--self-hosting)
+21. [App Update Lifecycle](#21-app-update-lifecycle)
+22. [Database Schema & Indexing](#22-database-schema--indexing)
+23. [Pricing System](#23-pricing-system)
+24. [Troubleshooting & FAQ](#24-troubleshooting--faq)
 
 ---
 
@@ -46,220 +40,155 @@ A full-stack, installable Progressive Web App for a curated Indian streetwear br
 | Layer | Technology | Version (package.json) |
 |---|---|---|
 | Frontend | React, TypeScript, Vite, Tailwind CSS | react ^18.3.1, typescript ^5.9.3, vite ^5.4.21, tailwindcss ^3.4.19 |
-| Routing | React Router | react-router-dom ^6.30.4 |
-| Server State | TanStack Query | @tanstack/react-query ^5.101.0 |
-| Animations | Framer Motion, GSAP | framer-motion ^12.40.0, gsap ^3.15.0 |
-| Charts | Recharts | recharts ^2.15.4 |
-| Carousel | Embla Carousel | embla-carousel-react ^8.6.0 |
-| Icons | Lucide React | lucide-react ^0.462.0 |
-| Toasts | Sonner | sonner ^1.7.4 |
-| UI Primitives | Radix UI + shadcn/ui patterns | Multiple @radix-ui/* packages |
-| Forms | React Hook Form + Zod | react-hook-form ^7.79.0, zod ^3.25.76 |
-| Authentication | Firebase Authentication (Google OAuth + Email/Password) | firebase ^10.14.1 |
-| Push Notifications | Firebase Cloud Messaging (FCM) | firebase ^10.14.1, firebase-admin ^13.10.0 |
-| Database | MongoDB Atlas (Native Node.js Driver) | mongodb ^6.21.0 |
-| Backend — dev | Node.js + Express 5 (`server.js`, port 3001) | express ^5.2.1 |
+| Native Runtime | Capacitor Android Runtime & CLI | @capacitor/core ^8.5.0, @capacitor/android ^8.5.0, @capacitor/cli ^8.5.0 |
+| Native Plugins | Push, Haptics, App, StatusBar, Splash, Auth | @capacitor/push-notifications ^8.1.2, @capacitor/haptics ^8.0.2, @capacitor/app ^8.1.1, @capacitor/status-bar ^8.0.3, @capacitor/splash-screen ^8.0.2, @capacitor-firebase/authentication 6.3.1 |
+| Routing | React Router DOM | react-router-dom 6.30.4 |
+| Server State | TanStack Query | @tanstack/react-query 5.101.0 |
+| Animations | Framer Motion, GSAP | framer-motion 12.40.0, gsap 3.15.0 |
+| Charts | Recharts | recharts 2.15.4 |
+| Carousel | Embla Carousel | embla-carousel-react 8.6.0 |
+| Icons | Lucide React | lucide-react 0.462.0 |
+| Toasts | Sonner | sonner 1.7.4 |
+| UI Primitives | Radix UI + shadcn/ui patterns | @radix-ui/* packages |
+| Forms & Validation | React Hook Form + Zod | react-hook-form 7.79.0, zod 3.25.76 |
+| Authentication | Firebase Auth (Google OAuth + Email/Password + Native) | firebase 10.14.1, @capacitor-firebase/authentication 6.3.1 |
+| Push Notifications | Firebase Cloud Messaging (FCM) | firebase 10.14.1, firebase-admin 13.10.0 |
+| Database | MongoDB Atlas (Native Node.js Driver) | mongodb 6.21.0 |
+| Backend — dev | Node.js + Express 5 (`server.js`, port 3001) | express 5.2.1 |
 | Backend — prod | Vercel Serverless Functions (`api/*.js`) | @vercel/node ^5.7.5 |
-| Media CDN | Cloudinary (URL transforms client-side) | — |
-| PWA | vite-plugin-pwa + Workbox `generateSW` | vite-plugin-pwa ^1.3.0, workbox-* ^7.4.1 |
-| Build | Vite with manual chunk splitting | @vitejs/plugin-react ^4.7.0 |
-| Testing | Vitest + Testing Library | vitest ^3.2.4 |
-
-> `helmet` is listed in `package.json` but is **not** used — `server.js` sets security headers manually via plain middleware.
+| Media CDN | Cloudinary (f_auto, q_auto, width resizing) | — |
+| PWA | vite-plugin-pwa + Workbox `generateSW` | vite-plugin-pwa ^1.3.0, workbox-* 7.4.1 |
 
 ---
 
 ## 2. Architecture Overview
 
-The project has two distinct runtime environments that share the same `api/` handler files.
-
-### Development
+Thunderbold operates seamlessly across Web browsers, PWAs, and Native Android devices using a unified backend API.
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                          Browser                              │
-│  React 18 SPA — Vite dev server (port 5000)                   │
-│  ├── React Router v6 (client-side routing)                    │
-│  ├── TanStack Query (server state / caching)                  │
-│  ├── Framer Motion + GSAP (animations)                        │
-│  ├── Firebase Auth SDK (lazy getFirebaseAuth())               │
-│  ├── Firebase Messaging SDK (FCM push notifications)          │
-│  └── Service Worker disabled (devOptions.enabled: false)      │
-└───────────────────────────┬──────────────────────────────────┘
-                            │  /api/* proxied by Vite → localhost:3001
-┌───────────────────────────▼──────────────────────────────────┐
-│         Express dev server  ·  server.js  ·  port 3001        │
-│  Dynamically imports api/*.js handlers on first request       │
-│  ├── Firebase Admin SDK (token verification)                  │
-│  ├── MongoDB Atlas — getDb() singleton (thunderbold DB)       │
-│  ├── FCM sendToUser / sendMulticast                           │
-│  └── In-memory rate limiter (10 req/min per IP)               │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                         Clients                                  │
+│                                                                  │
+│  ┌───────────────────────────┐      ┌─────────────────────────┐  │
+│  │   Web / PWA Browser       │      │   Capacitor Android     │  │
+│  │   React 18 SPA            │      │   Native WebView        │  │
+│  │   firebaseMessaging.ts    │      │   nativePushNotifications│  │
+│  └─────────────┬─────────────┘      └────────────┬────────────┘  │
+└────────────────│─────────────────────────────────│───────────────┘
+                 │ relative /api/*                 │ apiUrl() → https://www.thunderbold.shop
+┌────────────────▼─────────────────────────────────▼───────────────┐
+│                    Thunderbold API Layer                         │
+│   Serverless (Vercel) / Express 5 (Local Server.js :3001)        │
+│   ├── verifyFirebaseToken() authentication                        │
+│   ├── MongoDB Atlas singleton pool (thunderbold DB)              │
+│   ├── FCM Admin SDK (sendToUser & sendMulticast)                 │
+│   └── Shared api/_lib/ utilities & CORS handlers                 │
+└──────────────────────────────────────────────────────────────────┘
 ```
-
-### Production (Vercel)
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                          Browser                              │
-│  React 18 SPA — served from Vercel CDN (dist/)               │
-│  └── Service Worker active (Workbox generateSW)              │
-└──────┬───────────────────────────────┬────────────────────────┘
-       │  Static assets (CDN)          │  /api/* (vercel.json rewrites)
-┌──────▼──────────────────────────────▼────────────────────────┐
-│              Vercel Serverless Functions                       │
-│  api/admin.js · api/orders/index.js · api/users/index.js      │
-│  api/products · api/cart · api/wishlist · api/categories      │
-│  api/brands · api/reviews · api/returns · api/notifications   │
-│  api/address  (12 functions — at Vercel Hobby limit)          │
-│  ├── Firebase Admin SDK (token verification)                  │
-│  ├── MongoDB Atlas — getDb() singleton (thunderbold DB)       │
-│  └── FCM sendToUser / sendMulticast                           │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Key design decisions:**
-
-- Frontend uses only relative `/api/...` URLs — no environment-specific URL switching needed
-- `server.js` is a thin Express wrapper that dynamically imports the same `api/*.js` files Vercel uses, keeping dev/prod parity
-- Twelve serverless handler files in `api/` stay within Vercel Hobby's 12-function limit via consolidated sub-route patterns (e.g. `?subpath=create|cancel|manage` on orders)
-- `purchasePrice` (internal cost) is stripped from non-admin product API responses
-- Email (not Firebase UID) is used as `userId` across orders, cart, wishlist, and reviews — stable across account re-linking
-- There is **no** dedicated `GET /api/products/:id` endpoint — single-product pages fetch the full catalogue client-side via `src/lib/products.ts`
 
 ---
 
 ## 3. Environment Setup
 
-Set these as environment variables locally or in your deployment platform. **Never commit secrets.**
+Copy `.env.example` to `.env` for local execution.
 
-| Variable | Used By | Description |
-|---|---|---|
-| `MONGO_URI` | `api/_lib/mongodb.js` | MongoDB Atlas connection string |
-| `FIREBASE_SERVICE_ACCOUNT` | `api/_lib/firebaseAdmin.js` | Stringified Firebase service account JSON (server-only) |
-| `VITE_FIREBASE_VAPID_KEY` | `src/lib/firebaseMessaging.ts` | FCM Web Push VAPID public key — required for push token registration |
-
-**Firebase client SDK config** is currently **hardcoded** in `src/lib/firebase.ts` and `public/firebase-messaging-sw-part.js`, not read from `VITE_FIREBASE_*` variables. The `.env.example` file lists additional `VITE_FIREBASE_*` keys for reference if you migrate to env-driven config.
-
-| Variable | Status |
-|---|---|
-| `VITE_FIREBASE_API_KEY` | Listed in `.env.example` — not wired in `firebase.ts` |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Listed in `.env.example` — not wired in `firebase.ts` |
-| `VITE_FIREBASE_PROJECT_ID` | Listed in `.env.example` — not wired in `firebase.ts` |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Listed in `.env.example` — not wired in `firebase.ts` |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Listed in `.env.example` — not wired in `firebase.ts` |
-| `VITE_FIREBASE_APP_ID` | Listed in `.env.example` — not wired in `firebase.ts` |
-
-> `FIREBASE_SERVICE_ACCOUNT` and `MONGO_URI` are **server-only** and must **never** carry the `VITE_` prefix.
-
-Without `MONGO_URI`, all data endpoints return `500 Database unavailable` — no silent fallbacks.
-
-Without `VITE_FIREBASE_VAPID_KEY`, the app works fully but FCM token registration silently skips.
+| Variable | Used By | Required | Description |
+|---|---|---|---|
+| `MONGO_URI` | `api/_lib/mongodb.js` | **Yes** | MongoDB Atlas connection string |
+| `FIREBASE_SERVICE_ACCOUNT` | `api/_lib/firebaseAdmin.js` | **Yes** | Stringified Firebase service account JSON |
+| `VITE_FIREBASE_VAPID_KEY` | `src/lib/firebaseMessaging.ts` | **Yes** | FCM Web Push VAPID public key |
+| `VITE_FIREBASE_API_KEY` | `src/lib/firebase.ts` | **Yes** | Firebase client API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | `src/lib/firebase.ts` | **Yes** | Firebase Auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | `src/lib/firebase.ts` | **Yes** | Firebase Project ID (`thunderbolt-auth`) |
+| `VITE_FIREBASE_STORAGE_BUCKET` | `src/lib/firebase.ts` | **Yes** | Firebase Storage Bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `src/lib/firebase.ts` | **Yes** | Firebase Messaging Sender ID |
+| `VITE_FIREBASE_APP_ID` | `src/lib/firebase.ts` | **Yes** | Firebase App ID |
 
 ---
 
-## 4. Running the App
+## 4. Running & Building the App
 
 ```bash
 # Development
-npm run dev        # Starts both: node server.js (port 3001) + vite (port 5000)
-npm run dev:client # Vite only — if you want to run the frontend without the Express server
-npm run server     # Express API server only (port 3001)
+npm run dev        # Starts server.js (3001) + Vite dev client (5000) concurrently
+npm run dev:client # Starts Vite dev server only
+npm run server     # Starts Express backend only (port 3001)
 
-# Production build
-npm run build      # Vite build → dist/; also writes public/version.json
-npm run preview    # Serve the production build locally for inspection
+# Web & Production Build
+npm run build      # Vite production build -> dist/
+npm run preview    # Preview production bundle locally
 
-# Quality
-npm test           # Run Vitest test suite once
-npm run lint       # ESLint
+# Capacitor Android Commands
+npm run cap:sync   # Builds web bundle & syncs to android/ project
+npm run cap:open   # Opens android/ directory in Android Studio
+npm run cap:build  # Builds web, syncs Android, and compiles Android APK
 ```
-
-The service worker is **only active in production builds** (`npm run build`). During development, `devOptions.enabled: false` in `vite.config.ts` keeps Vite HMR and the `/api` proxy working cleanly without SW interference.
-
-> **Local secrets:** Copy `.env.example` to `.env` and fill in `MONGO_URI` and `FIREBASE_SERVICE_ACCOUNT`. The client Firebase config is currently hardcoded in `src/lib/firebase.ts` — only `VITE_FIREBASE_VAPID_KEY` is read from env.
 
 ---
 
-## 5. Project Structure
+## 5. Capacitor Native Android App
+
+Thunderbold is fully packaged as a native Android application using Capacitor 8 (`appId: shop.thunderbold.app`).
+
+### Key Native Integrations
+- **API Routing (`src/lib/apiBase.ts`):** On native Android, the WebView runs at `https://localhost`. `apiUrl('/api/path')` dynamically prepends `https://www.thunderbold.shop` for native requests so API calls hit production correctly.
+- **Native Push Notifications (`src/lib/nativePushNotifications.ts`):** Native FCM registration with `@capacitor/push-notifications`, background intent filters, and haptic feedback via `@capacitor/haptics`.
+- **Native Google Sign-In (`@capacitor-firebase/authentication`):** Seamless native Google Credential Manager login bypassing web popup blocks.
+- **Native Splash & Status Bar:** Configured via `capacitor.config.ts` with custom splash hide timing in `App.tsx` post-mount to prevent blank screen flashes.
+
+---
+
+## 6. Project Structure
 
 ```
 thunderbold/
-├── api/                              # Shared handlers: Express (dev) + Vercel Serverless (prod)
+├── android/                          # Native Android Studio project (Capacitor)
+│   ├── app/src/main/AndroidManifest.xml
+│   ├── app/src/main/res/drawable/ic_stat_notification.xml # White monochrome status bar icon
+│   └── app/build.gradle
+├── api/                              # Backend Serverless & Dev Handlers
 │   ├── _lib/
-│   │   ├── mongodb.js                # Singleton pool (maxPoolSize 10) + index bootstrap
+│   │   ├── mongodb.js                # Singleton connection & 20 index bootstrap
 │   │   ├── firebaseAdmin.js          # verifyFirebaseToken() + getAdminMessaging()
-│   │   ├── fcm.js                    # sendToUser() + sendMulticast() (500 tokens/batch)
-│   │   ├── adminHelper.js            # isAdmin() — DB role check + hardcoded allowlist
-│   │   ├── rateLimit.js              # In-memory sliding-window, 10 req/min/IP
-│   │   ├── response.js               # successResponse() / errorResponse() helpers
-│   │   └── validator.js              # validateAddress / validatePhone / validatePincode
-│   ├── admin.js                      # Analytics + slider/hero config (subpath routing)
-│   ├── address/index.js              # Legacy unauthenticated addresses collection
-│   ├── brands/index.js
-│   ├── cart/index.js
-│   ├── categories/index.js
-│   ├── notifications/index.js        # broadcast + test-send (subpath routing)
-│   ├── orders/index.js               # CRUD + atomic stock decrement (subpath routing)
-│   ├── products/index.js             # Full catalogue — no individual-product endpoint
-│   ├── returns/index.js
-│   ├── reviews/index.js
-│   ├── users/index.js                # Profile, embedded addresses, FCM tokens
-│   └── wishlist/index.js
-│                                     # 12 serverless function files (Vercel Hobby limit)
+│   │   ├── fcm.js                    # sendToUser() & sendMulticast() FCM engines
+│   │   ├── cors.js                   # Strict CORS headers helper
+│   │   ├── rateLimit.js              # IP rate limiter
+│   │   └── validator.js              # Order, address, phone & pincode validators
+│   ├── admin.js, cart/index.js, orders/index.js, products/index.js, ...
 ├── src/
-│   ├── App.tsx                       # Root provider tree (Auth → Notifications → Cart → Query)
-│   ├── AppContent.tsx                # BrowserRouter + Routes + Suspense + modals
-│   ├── main.tsx                      # Vite entry · PWA SW registration · version polling
-│   ├── context/
-│   │   ├── AuthContext.tsx
-│   │   ├── CartContext.tsx
-│   │   ├── WishlistContext.tsx
-│   │   └── NotificationsContext.tsx
-│   ├── pages/                        # 15 route-level pages (see §6.2)
-│   ├── components/                   # Navbar, Footer, checkout/, reviews/, auth/, Analytics/, ui/, …
-│   ├── lib/                          # firebase, apiCache, ordersCache, pricing, cloudinary, …
-│   ├── hooks/                        # useSEO, etc.
-│   └── utils/
-│
+│   ├── components/                   # UI components, AppUpdatePrompt, GiftCardPicker, etc.
+│   ├── context/                      # AuthContext, CartContext, WishlistContext, NotificationsContext
+│   ├── lib/
+│   │   ├── apiBase.ts                # Native vs Web API URL resolver
+│   │   ├── nativePushNotifications.ts# Native FCM & Haptics bridge
+│   │   ├── queryClient.ts            # Shared TanStack query client
+│   │   ├── cloudinary.ts             # Cloudinary image URL optimizer
+│   │   └── printInvoice.ts           # XSS-escaped invoice generator
+│   ├── pages/                        # App route views
+│   ├── index.css                     # Global styles & self-hosted @font-face rules
 ├── public/
-│   ├── icons/                        # 9 PWA icon files (72 → 512 px + maskable 512 px)
-│   ├── screenshots/                  # mobile.png, desktop.png (PWA install dialog)
-│   ├── banners/                      # Deal page banner images
-│   ├── .well-known/assetlinks.json   # TWA Digital Asset Links
-│   ├── firebase-messaging-sw-part.js # FCM handler imported by Workbox-generated SW
-│   ├── firebase-messaging-sw.js      # Dev-only standalone FCM SW
-│   ├── offline.html                  # Offline fallback page
-│   ├── sitemap.xml
-│   ├── robots.txt
-│   ├── Thunderbold.apk               # Sideload APK
-│   └── version.json                  # Written by vite.config.ts at build time
-│
-├── server.js                         # Express dev server (port 3001) — not deployed
-├── vite.config.ts                    # Vite + PWA + proxy config
-├── vercel.json                       # Serverless rewrites + static cache headers
-├── index.html                        # Vite HTML entry
-├── tailwind.config.ts
-├── package.json
-├── README.md
-├── DOCS.md
-└── DATABASE.md
+│   ├── fonts/                        # Self-hosted Bebas Neue, Barlow Condensed, Inter, Barlow
+│   ├── gift-cards/                   # Gift card selection assets (1-5)
+│   ├── loader_assets/
+│   └── app-version.json              # App update version manifest
+├── capacitor.config.ts               # Capacitor app configuration
+├── vercel.json                       # Vercel rewrites, CSP & security headers
+├── server.js                         # Local Express dev server
 ```
 
 ---
 
-## 6. Frontend Architecture
+## 7. Frontend Architecture
 
-### 6.1 Provider Tree
-
-```
+### Provider Tree
+```tsx
 <AuthProvider>
   <NotificationsProvider>
     <CartProvider>
       <WishlistProvider>
-        <QueryClientProvider>       ← TanStack Query (30s staleTime)
+        <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <AppContent />          ← BrowserRouter + routes + modals
+            <AppContent />
           </TooltipProvider>
         </QueryClientProvider>
       </WishlistProvider>
@@ -268,634 +197,190 @@ thunderbold/
 </AuthProvider>
 ```
 
-### 6.2 Routing & Code Splitting
-
-Routes are defined in `src/AppContent.tsx`. A branded `<PageLoader />` is shown via `<Suspense>` while lazy chunks download.
-
-| Path | Component | Strategy |
-|---|---|---|
-| `/` | `Index` | Eager |
-| `/about` | `About` | Eager |
-| `/category/:categoryId` | `CategoryView` | Eager |
-| `/brands` | `BrandsPage` | Eager |
-| `/brand/:brandId` | `BrandView` | Eager |
-| `/product/:productId` | `ProductView` | Lazy |
-| `/cart` | `Cart` | Lazy |
-| `/checkout` | `Checkout` | Lazy |
-| `/orders` | `Orders` | Lazy |
-| `/wishlist` | `Wishlist` | Lazy |
-| `/profile` | `Profile` | Lazy |
-| `/admin` | `Admin` | Lazy |
-| `/deals/:dealKey` | `DealsPage` | Lazy (`under-999`, `under-699`) |
-| `/policies` | `Policies` | Lazy (accordion — no slug param) |
-| `*` | `NotFound` | Eager |
-
-### 6.3 State Management
-
-**Server state** — TanStack Query (`useQuery` / `useMutation`) with 30-second default `staleTime`, refetch on window focus, reconnect, and mount.
-
-**Client state** — Cart and wishlist use `useReducer` in context providers. Both read from `localStorage` on mount, sync to MongoDB when authenticated, and merge on login (deduplicated by `productId + size`).
-
-**Auth state** — Firebase `onAuthStateChanged` in `AuthContext`. On login, `POST /api/users` upserts the MongoDB user record. Orders are prefetched via `schedulePrefetchOrders()` in `src/lib/ordersCache.ts`.
-
-### 6.4 Login Modal System
-
-`src/lib/modalController.ts` event bus triggers the login modal from anywhere:
-
-| Source | Condition |
-|---|---|
-| `requireAuth` | Protected action while unauthenticated |
-| `delayedPrompt` | 10 seconds after page load, once per session |
-| `manual` | User clicks sign-in |
-
-After login, `executeStoredAction()` in `src/lib/requireAuth.ts` re-runs any pending action.
-
-### 6.5 Firebase Auth — Lazy Initialisation
-
-`getFirebaseAuth()` in `src/lib/firebase.ts` defers `getAuth()` until first call, keeping the Auth iframe off the critical render path.
+### State Management & Caching
+- **Server State:** Managed via **TanStack Query** (`@tanstack/react-query`). Orders use `staleTime: 30000`, user profile uses `staleTime: 60000`. Caches automatically invalidate on order placement, cancellation, or return request.
+- **Client State:** Cart and Wishlist use React Context backed by `localStorage` (guest) and synced with MongoDB (authenticated).
 
 ---
 
-## 7. Backend Architecture
+## 8. Backend Architecture
 
-### 7.1 Express Server (`server.js`)
-
-Runs on **port 3001**. Each route dynamically imports its handler on first request.
-
-In development, Vite on **port 5000** proxies `/api/*` to `localhost:3001`.
-
-### 7.2 Shared Library Modules
-
-| Module | Purpose |
-|---|---|
-| `mongodb.js` | Singleton pool (`maxPoolSize: 10`, `minPoolSize: 2`); database `thunderbold`; async index bootstrap |
-| `firebaseAdmin.js` | `verifyFirebaseToken()` with revocation check; `getAdminMessaging()` |
-| `fcm.js` | `sendToUser()` per-user push; `sendMulticast()` batched broadcast (500 tokens/batch) |
-| `adminHelper.js` | `isAdmin()` — DB `role: 'admin'` first, then `ADMIN_EMAILS` allowlist |
-| `rateLimit.js` | In-memory 10 req/min per IP; stale entries purged every 5 minutes |
-| `validator.js` | `validateAddress()`, `validatePhone()`, `validatePincode()`, `validateOrder()` |
-| `response.js` | `successResponse()`, `errorResponse()`, etc. |
-
-### 7.3 Cache-Control Headers
-
-Applied in `server.js` and within handlers for public GET routes:
-
-| Route | Cache-Control |
-|---|---|
-| `/api/products` | `public, s-maxage=60, stale-while-revalidate=300` (skipped for admin requests) |
-| `/api/categories` | `public, s-maxage=120, stale-while-revalidate=600` |
-| `/api/brands` | `public, s-maxage=120, stale-while-revalidate=600` |
-| `/api/slider` | `public, s-maxage=60, stale-while-revalidate=300` |
-
-Auth-sensitive routes (orders, cart, wishlist, users, returns, reviews) have no cache headers.
+- **Development (`server.js`):** Express 5 running on port 3001. Proxied by Vite on port 5000.
+- **Production (Vercel):** 12 consolidated serverless functions in `api/`.
+- **Database Connection:** Single MongoDB pool with `minPoolSize: 2`, `maxPoolSize: 10`, and cached `global.mongo` client for warm-start reuse.
 
 ---
 
-## 8. Authentication System
+## 9. Authentication System
 
-### 8.1 Client-Side
-
-Supported methods: Google OAuth (`signInWithPopup` / redirect fallback) and Email+Password. Persistence: `browserLocalPersistence`.
-
-### 8.2 Server-Side Token Verification
-
-Most protected endpoints use `verifyFirebaseToken()` (cryptographic verification with revocation checking).
-
-**Exception:** `GET`, `PATCH`, and `DELETE` on `/api/users` (non-FCM routes) decode the JWT with `jwt.decode()` without signature verification. FCM token routes use full `verifyFirebaseToken()`.
-
-### 8.3 Admin Access
-
-`isAdmin(email, db)` checks DB role first, then hardcoded `ADMIN_EMAILS` in `api/_lib/adminHelper.js`. Verified on every admin request — no session caching.
-
-### 8.4 User Identity
-
-Cart, wishlist, orders, returns, and reviews use **email** as `userId`. Profile CRUD uses Firebase **uid** as the lookup key on the `users` collection.
+- **Methods:** Native Google Sign-In (Capacitor), Web Google OAuth popup/redirect, Email & Password.
+- **Token Verification:** Server endpoints cryptographically verify Firebase ID tokens using `verifyFirebaseToken()` from `firebase-admin`.
+- **Admin Verification:** Endpoint `/api/users/me/admin-status` and server helper `isAdmin()` check MongoDB `role: "admin"` and secure allowlist.
 
 ---
 
-## 9. API Reference
+## 10. API Reference
 
-All endpoints accept and return JSON unless noted. Protected endpoints require `Authorization: Bearer <firebase-id-token>`.
+All protected endpoints require `Authorization: Bearer <firebase-id-token>`.
 
-### Products
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/products` | Public | All products; `?section=` and `?maxPrice=` filters. Admin Bearer token includes `purchasePrice`. |
-| `POST` | `/api/products` | Admin | Create product |
-| `PUT` | `/api/products?id=:id` | Admin | Full replace |
-| `DELETE` | `/api/products?id=:id` | Admin | Hard delete |
-
-> No `GET /api/products/:id` exists. `ProductView` calls `fetchProductById()` which fetches `/api/products` and filters client-side.
-
-### Orders
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/orders` | User/Admin | User: paginated own orders (`?page=`, 10/page). Admin: all orders. |
-| `POST` | `/api/orders/create` | User | Create order + atomic stock decrement + FCM confirmation |
-| `PUT` | `/api/orders/cancel` | User/Admin | Cancel + restore stock |
-| `PATCH` | `/api/orders/manage?id=:id` | Admin | Update status (triggers FCM on key transitions) |
-| `DELETE` | `/api/orders/manage?id=:id` | Admin | Delete order record |
-
-### Returns
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/returns` | User/Admin | Own requests; admin sees all |
-| `POST` | `/api/returns` | User | Submit return (delivered orders only; requires `upiId`) |
-| `PATCH` | `/api/returns?id=:id` | Admin | `approve` / `reject` / `issue_refund` |
-
-### Users
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/users` | User | Fetch profile by Firebase UID (`jwt.decode`) |
-| `POST` | `/api/users` | Open / User | `{ uid, email, name }` upsert on login (open); or add address (auth) |
-| `PATCH` | `/api/users` | User | Update name/phone or `action: set_default_address` |
-| `DELETE` | `/api/users` | User | Remove address from embedded `addresses[]` |
-| `POST` | `/api/users/fcm-token` | User | Register FCM token + deviceId |
-| `DELETE` | `/api/users/fcm-token` | User | Remove FCM token |
-
-### Cart / Wishlist
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/cart` | User | Fetch cart items |
-| `POST` | `/api/cart` | User | Replace entire cart |
-| `DELETE` | `/api/cart` | User | Clear cart |
-| `GET` | `/api/wishlist` | User | Fetch wishlist |
-| `POST` | `/api/wishlist` | User | Replace entire wishlist |
-| `DELETE` | `/api/wishlist` | User | Clear wishlist |
-
-> Rate limiting on cart/wishlist applies to **all methods** including GET (see Known Limitations).
-
-### Reviews
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/reviews?productId=:id` | Public | Active reviews for product |
-| `GET` | `/api/reviews?mine=true` | User | User's reviews |
-| `GET` | `/api/reviews?mine=true&productId=:id` | User | Own review + eligibility flag |
-| `POST` | `/api/reviews` | User | Submit (requires delivered order) |
-| `PUT` | `/api/reviews?id=:id` | User | Edit own review |
-| `DELETE` | `/api/reviews?id=:id` | User/Admin | Soft-delete |
-
-### Catalogue & Content
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/categories` | Public | List categories |
-| `POST/PUT/DELETE` | `/api/categories` | Admin | Manage (`?id=` for PUT/DELETE) |
-| `GET` | `/api/brands` | Public | List brands |
-| `POST/PUT/DELETE` | `/api/brands` | Admin | Manage (`?id=` for PUT/DELETE; body uses `logoUrl`) |
-| `GET` | `/api/slider` | Public | ThunderboltSlider 4-slot config |
-| `PUT` | `/api/slider` | Admin | Update slider config |
-| `GET` | `/api/slider?type=hero` | Public | Hero banner image URLs |
-| `PUT` | `/api/slider?type=hero` | Admin | Update hero banner (1–3 images) |
-
-### Admin & Notifications
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/admin/analytics` | Admin | Analytics dashboard (`?range=7d\|30d`, `?month=YYYY-MM`) |
-| `POST` | `/api/notifications/broadcast` | Admin | Push to all users with FCM tokens |
-| `POST` | `/api/notifications/test-send` | User | Test push to own devices |
-
-### Legacy
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/address?userId=` | **None** | Legacy standalone `addresses` collection |
-| `POST` | `/api/address` | **None** | Save address to legacy collection |
+- `GET /api/products` — Product catalogue (`?section=`, `?maxPrice=`)
+- `POST /api/orders/create` — Create order (server-side price validation, atomic stock decrement)
+- `GET /api/orders` — User/Admin order history
+- `PUT /api/orders/cancel` — Cancel pending order & restore stock
+- `PATCH /api/orders/manage?id=:id` — Admin order status update
+- `POST /api/returns` — Submit return request (requires delivered order & UPI ID)
+- `POST /api/users/fcm-token` — Register FCM token & deviceId
+- `GET /api/users/me/admin-status` — Fetch authenticated user admin status
 
 ---
 
-## 10. Order Management System
+## 11. Order Management System
 
-### 10.1 Order Status Lifecycle
-
+### Order Lifecycle
 ```
 pending → confirmed → packed → shipped → delivered
-    └──────────────────────────→ cancelled
+   │
+   └──► cancelled (restores stock)
+
 delivered → return_requested → return_approved → refund_issued
-                            └→ return_rejected
+                         └─► return_rejected
 ```
 
-Valid admin PATCH statuses (`/api/orders/manage`): `pending`, `confirmed`, `packed`, `shipped`, `delivered`, `cancelled`, `return_requested`, `return_approved`, `return_rejected`.
-
-**Customer cancellation:** only while `status === "pending"`. Admins can cancel non-delivered, non-return orders.
-
-### 10.2 Order Creation (`POST /api/orders/create`)
-
-1. Rate limit (10/min/IP)
-2. Auth → bind `email` as `userId`
-3. Idempotency via `clientOrderId` (sparse unique index)
-4. Validate products array + address + payment method
-5. Pre-flight stock check (outfit-aware)
-6. Gift message sanitisation (strip HTML, max 300 chars)
-7. Generate collision-resistant `TB-XXXXXX` order number
-8. Insert order with `status: "pending"`
-9. Atomic stock decrement with `$gte` guard
-10. Compensation rollback on race → `409 Conflict`
-11. Non-blocking FCM: "Order Received ⚡"
-
-### 10.3 Outfit Product Stock Model
-
-```json
-{
-  "topwear":    { "sizeStock": { "S": 5, "M": 3 }, "stock": 8 },
-  "bottomwear": { "sizeStock": { "28": 4, "30": 6 }, "stock": 10 },
-  "stock": 8
-}
-```
-
-`root.stock = min(topwear.stock, bottomwear.stock)`.
+- **Stock Integrity:** Atomic stock decrement using `$gte` guards. Outfit products atomically decrement topwear and bottomwear stock simultaneously.
 
 ---
 
-## 11. Returns System
+## 12. Gift Card & Gifting System
 
-### 11.1 Policy
-
-- Only `delivered` orders
-- One return per order
-- Reasons: `defective`, `wrong_item`, `size_issue`, `not_as_described`, `other`
-- Description: 10–500 chars (HTML stripped)
-- **UPI ID required** for refund payout
-
-### 11.2 Return Flow
-
-```
-POST /api/returns → order: return_requested, return: pending
-PATCH approve     → stock restored, order: return_approved, return: approved
-PATCH reject      → order: return_rejected, return: rejected
-PATCH issue_refund → order: refund_issued, return: refund_issued
-```
-
-Default shipping deduction: ₹50. Admin can override `shippingCharges` and `refundAmount` on approval.
+Customers can turn any order into a gift during checkout:
+- **Gift Card Selection:** Pick from 5 custom gift cards (`public/gift-cards/`).
+- **Delivery Date:** Select preferred gift delivery date.
+- **Schema Fields:** Orders store `giftCardId` (1-5) and `giftDeliveryDate`.
+- **Admin View:** Dedicated gift indicators and card thumbnails in Admin order management.
 
 ---
 
-## 12. Cart & Wishlist
+## 13. Returns System
 
-- Anonymous: `localStorage` only
-- Authenticated: MongoDB keyed by `userId = email`
-- On login: merge local + server (dedupe by `productId + size`)
-- Write strategy: full array replace on every POST
-
----
-
-## 13. Review System
-
-- Eligibility: delivered order containing the `productId`
-- One active review per `(userId, productId)` — duplicate POST returns `409`
-- Soft delete: `isDeleted: true`
+- Gated to `delivered` orders.
+- One return per order. Requires valid UPI ID (`localpart@provider`) for COD refund processing.
+- Admin approval automatically calculates refund amounts and restores item stock.
 
 ---
 
-## 14. Admin Panel & Analytics
+## 14. Review System
 
-Route `/admin` (lazy). Tabs: **Analytics · Orders · Products · Categories · Brands · Reviews · Slider · Notifications · Returns**.
-
-Silent polling every 15 seconds refreshes data; slider tab skips silent fetches to preserve unsaved edits.
-
-### Analytics Response Keys
-
-| Key | Description |
-|---|---|
-| `overview` | `totalRevenue`, `netRevenue`, `totalOrders`, `averageOrderValue`, `totalUsers`, `totalProfit`, `netProfit` |
-| `revenueSeries` | Per-day `{ day, revenue }` |
-| `ordersSeries` | Per-day `{ day, count }` |
-| `topProducts` | Top 5 by units sold |
-| `stockAlerts` | `outOfStock` + `lowStock` (stock ≤ 5) |
-| `recentOrders` | Latest 5 orders |
-
-Revenue excludes cancelled/refunded/return-in-progress statuses. Profit counts only `delivered` and `completed` orders.
+- Delivery-Gated: Users can only review products from `delivered` orders.
+- One active review per product per user. Soft-deleted via `isDeleted: true`.
 
 ---
 
-## 15. Push Notifications (FCM)
+## 15. Admin Panel & Analytics
 
-### Device Registration
-
-1. Persistent `deviceId` in `localStorage` (`thunderbold_device_id`)
-2. On permission grant → FCM token via main Workbox SW (`/sw.js`)
-3. `POST /api/users/fcm-token` with `{ token, deviceId }`
-4. Backend deduplicates by `deviceId` and `token`
-
-### Delivery Triggers
-
-- Order creation → "Order Received ⚡"
-- Admin status PATCH → mapped notifications (`confirmed`, `packed`, `shipped`, `delivered`, `cancelled`)
-- Admin broadcast → `POST /api/notifications/broadcast`
-
-### Foreground vs Background
-
-- **Foreground:** Sonner toast via `onMessage()` in `NotificationsContext`
-- **Background:** `firebase-messaging-sw-part.js` injected into Workbox SW; skips duplicate `showNotification` when payload includes `notification` key
+Located at `/admin` (admin role required).
+- Real-time analytics charts (Recharts) covering Revenue, Profit, Top Selling Items, Low Stock Alerts.
+- Order Management, Return Processing, Product Catalogue Editor, Category & Brand Manager, FCM Broadcast Tool.
 
 ---
 
-## 16. Performance Architecture
+## 16. Push Notifications (Native & Web FCM)
 
-| Optimization | Location | Details |
-|---|---|---|
-| Module-level API cache | `src/lib/apiCache.ts` | 60s TTL + in-flight dedup; used by ThunderboldSlider, CategoriesSection, LiveSaleSection |
-| Lazy Firebase Auth | `src/lib/firebase.ts` | `getFirebaseAuth()` deferred |
-| Manual chunks | `vite.config.ts` | `vendor` (react, react-dom, react-router-dom), `firebase`, `motion` |
-| Orders prefetch | `src/lib/ordersCache.ts` | `requestIdleCallback` prefetch after login |
-| CDN cache headers | `server.js` + handlers | `stale-while-revalidate` on public catalogue GETs |
-| Version polling | `src/main.tsx` | `/version.json` every 60s + on tab focus |
-| Cloudinary transforms | `src/lib/cloudinary.ts` | CDN-optimised image URLs |
-| Workbox runtime cache | `vite.config.ts` | Cloudinary images CacheFirst 30 days |
+Thunderbold uses a dual Web & Native FCM push architecture:
 
-Compositor-only dot animations (`transform: scaleX()` + `opacity`) in ThunderboldSlider, HeroBanner, PromoSlider.
+1. **Native FCM:** Handled by Capacitor `PushNotifications` plugin + `FirebaseMessagingService` background service.
+2. **Web FCM:** Handled by `firebaseMessaging.ts` and Workbox service worker.
+3. **Payload Specs:** `priority: 'high'`, `ttl: 86400000` (24h offline delivery), channel `thunderbold_orders`.
+4. **Notification Icon:** White monochrome vector lightning bolt (`@drawable/ic_stat_notification.xml`) on status bar.
+5. **Vibration:** Haptic vibration on foreground receive; Android channel vibration pattern `[0, 250, 150, 250]` for background/killed state.
 
 ---
 
-## 17. Security Model
+## 17. Performance Architecture & Caching
 
-### Headers (Express middleware)
-
-```
-X-Content-Type-Options: nosniff
-X-Frame-Options: SAMEORIGIN
-Referrer-Policy: strict-origin-when-cross-origin
-Content-Security-Policy: default-src 'self'; script-src 'self' ...
-```
-
-Active: `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
-
-### Rate Limiting
-
-| Endpoint | Limit | Notes |
-|---|---|---|
-| `POST /api/orders/create` | 10/min/IP | |
-| `POST /api/reviews` | 10/min/IP | |
-| All `/api/cart` methods | 10/min/IP | Includes GET |
-| All `/api/wishlist` methods | 10/min/IP | Includes GET |
-
-In-memory only — resets on cold start; no cross-instance coordination.
-
-### Input Sanitisation
-
-Gift messages, return descriptions, review comments, and admin notes are trimmed/stripped. Phone and pincode digits normalised. `purchasePrice` never returned to non-admin callers.
+- **Font Self-Hosting:** Fonts (`Bebas Neue`, `Barlow Condensed`, `Inter`, `Barlow`) hosted locally in `public/fonts/` with `@font-face` rules in `src/index.css`. Eliminates CORS and render blocking.
+- **TanStack Query Caching:** Stale-while-revalidate strategy for orders and profile.
+- **Cloudinary Optimization:** `f_auto`, `q_auto`, responsive widths (200, 500, 1000, 1200), `aspect-ratio` containers to prevent CLS.
+- **Workbox SW Caching:** Asset precaching with Workbox `generateSW`.
 
 ---
 
-## 18. PWA Architecture
+## 18. Security Model & Audit Fixes
 
-### Strategy: `generateSW`
-
-Workbox generates the service worker from `vite.config.ts`. FCM handler injected via `importScripts: ['/firebase-messaging-sw-part.js']`.
-
-### Registration
-
-- `registerType: 'autoUpdate'` — new SW activates immediately
-- `skipWaiting: true`, `clientsClaim: true`
-- `main.tsx` calls `updateSW(true)` on `onNeedRefresh` (auto-reload)
-- `PWAUpdatePrompt` listens for custom events as a fallback UI
+- **XSS Prevention:** HTML escaping (`esc()`) on user input in printable invoices (`printInvoice.ts`).
+- **Server Price Integrity:** Order creation validates product prices against database values; client-submitted totals cannot be manipulated.
+- **Token Verification:** Cryptographic token verification via `verifyFirebaseToken()`.
+- **Admin Isolation:** `ADMIN_EMAILS` removed from frontend bundle; verified via `/api/users/me/admin-status`.
+- **CORS & CSP:** Strict allowed origin checks via `api/_lib/cors.js` and Content Security Policy headers in `vercel.json`.
+- **PII Storage:** Address form data stored in `sessionStorage` instead of `localStorage`.
 
 ---
 
-## 19. Service Worker & Caching
+## 19. PWA Architecture & Self-Hosting
 
-| Pattern | Strategy | Cache Name | TTL / Limit |
-|---|---|---|---|
-| `/api/*` | NetworkOnly | — | Never cached |
-| JS/CSS/HTML/fonts | Precache | Workbox managed | Content-hashed |
-| Google Fonts CSS | StaleWhileRevalidate | `tb-google-fonts-css` | 7 days / 8 |
-| Google Fonts files | CacheFirst | `tb-google-fonts-files` | 365 days / 30 |
-| Cloudinary images | CacheFirst | `tb-cloudinary-images` | 30 days / 120 |
-| Local static images | CacheFirst | `tb-static-images` | 30 days / 60 |
-
-`navigateFallback: '/index.html'` with denylist `/^\/api\//`.
+- Installable manifest (`manifest.webmanifest`) with shortcuts, screenshots, and theme `#080808`.
+- Auto-updating service worker (`sw.js`) with version polling via `public/version.json`.
 
 ---
 
-## 20. Web App Manifest
+## 20. App Update Lifecycle
 
-| Field | Value |
-|---|---|
-| `id` | `/` |
-| `name` | `Thunderbold` |
-| `display` | `standalone` |
-| `display_override` | `window-controls-overlay`, `standalone`, `minimal-ui` |
-| `theme_color` / `background_color` | `#080808` |
-| `lang` | `en-IN` |
-| `shortcuts` | Cart, Wishlist, Orders, Deals |
-| `share_target` | URL sharing via OS share sheet |
-| `launch_handler` | `navigate-existing` |
-| `icons` | 9 sizes + 1 maskable (512×512) |
+The `AppUpdatePrompt` component detects new app builds:
+- Capacitor Native: Retrieves build version via `@capacitor/app` (`App.getInfo()`).
+- TWA / Web: Parses `app_version` query parameters.
+- Compares against `public/app-version.json` and prompts user to update when outdated.
 
 ---
 
-## 21. App Capabilities
+## 21. Database Schema & Indexing
 
-| Shortcut | URL |
-|---|---|
-| My Cart | `/cart` |
-| My Wishlist | `/wishlist` |
-| My Orders | `/orders` |
-| Deals | `/deals/under-999` |
+MongoDB Atlas database `thunderbold` has 10 active collections and **20 bootstrapped indexes** (`api/_lib/mongodb.js`):
 
-Share target opens at `/` with shared URL params. Launch handler reuses existing window.
-
----
-
-## 22. Update Lifecycle
-
-```
-Build → version.json written → SW precache updated
-User visit → SW checks for update (hourly + on tab focus)
-New version → skipWaiting + clientsClaim → auto-reload via main.tsx
-PWAUpdatePrompt → fallback toast if custom events fire
-```
-
----
-
-## 23. Icons & Splash Screen
-
-| File | Size | Purpose |
-|---|---|---|
-| `icon-72x72.png` | 72×72 | Android legacy |
-| `icon-96x96.png` | 96×96 | Shortcut icons |
-| `icon-128x128.png` | 128×128 | Chrome Web Store |
-| `icon-144x144.png` | 144×144 | Windows tile |
-| `icon-152x152.png` | 152×152 | Apple Touch (iPad) |
-| `icon-192x192.png` | 192×192 | Android home screen |
-| `icon-384x384.png` | 384×384 | High-DPI Android |
-| `icon-512x512.png` | 512×512 | Play Store / splash |
-| `icon-512x512-maskable.png` | 512×512 | Android adaptive icon |
-
-`splashScreen.tsx` — once per session via `sessionStorage`, ~2.4s, background `#080808` matching manifest.
+### Complete Index List
+1. `orders`: `{ userId: 1 }`
+2. `orders`: `{ createdAt: -1 }`
+3. `orders`: `{ clientOrderId: 1 }` (sparse, unique)
+4. `orders`: `{ orderNumber: 1 }` (background: true, sparse: true)
+5. `orders`: `{ status: 1 }` (background: true)
+6. `orders`: `{ userId: 1, createdAt: -1 }` (background: true)
+7. `products`: `{ categoryId: 1 }`
+8. `products`: `{ section: 1, createdAt: -1 }` (background: true)
+9. `products`: `{ stock: 1 }` (background: true)
+10. `cart`: `{ userId: 1 }` (unique)
+11. `wishlist`: `{ userId: 1 }` (unique)
+12. `reviews`: `{ productId: 1, isDeleted: 1, createdAt: -1 }`
+13. `reviews`: `{ userId: 1, isDeleted: 1 }`
+14. `reviews`: `{ userId: 1, productId: 1 }`
+15. `users`: `{ uid: 1 }` (background: true)
+16. `users`: `{ email: 1 }` (background: true)
+17. `returns`: `{ orderId: 1 }` (background: true)
+18. `returns`: `{ userId: 1 }` (background: true)
+19. `returns`: `{ status: 1, createdAt: -1 }` (background: true)
+20. `brands`: `{ name: 1 }` (background: true)
 
 ---
 
-## 24. Deployment — Vercel
+## 22. Pricing System
 
-Vercel automatically detects every `.js` file directly inside `api/` (and `api/*/index.js`) as a Serverless Function. No additional configuration is required beyond `vercel.json`.
-
-| Setting | Value |
-|---|---|
-| Build Command | `npm run build` |
-| Output Directory | `dist/` |
-| Node.js Runtime | 18.x (Vercel default) |
-| Serverless Functions | `api/` directory — 12 files |
-
-### Environment Variables (Vercel dashboard → Settings → Environment Variables)
-
-| Variable | Required | Notes |
-|---|---|---|
-| `MONGO_URI` | ✅ | MongoDB Atlas connection string |
-| `FIREBASE_SERVICE_ACCOUNT` | ✅ | Stringified service account JSON — server-only, never prefix with `VITE_` |
-| `VITE_FIREBASE_VAPID_KEY` | ✅ | FCM Web Push VAPID public key — enables push token registration |
-
-### Rewrites (`vercel.json`)
-
-Sub-route patterns consolidate multiple logical endpoints into a single function file to stay within the 12-function limit.
-
-| Incoming path | Resolved function | Notes |
-|---|---|---|
-| `/api/admin/analytics` | `api/admin.js` | Analytics dashboard |
-| `/api/admin/analytics/:path*` | `api/admin.js?subpath=:path*` | Parameterised analytics |
-| `/api/slider` | `api/admin.js?subpath=slider` | Slider/hero config |
-| `/api/orders/create` | `api/orders/index.js?subpath=create` | |
-| `/api/orders/cancel` | `api/orders/index.js?subpath=cancel` | |
-| `/api/orders/manage` | `api/orders/index.js?subpath=manage` | |
-| `/api/users/fcm-token` | `api/users/index.js?subpath=fcm-token` | |
-| `/api/notifications/broadcast` | `api/notifications/index.js?subpath=broadcast` | |
-| `/api/notifications/test-send` | `api/notifications/index.js?subpath=test-send` | |
-| `/api/returns` | `api/returns/index.js` | Explicit passthrough |
-| `/api/:any*` | Matched function file | Catch-all for products, cart, etc. |
-| `/:any*` | `dist/index.html` | SPA client-side routing fallback |
-
-### Cache Headers (`vercel.json`)
-
-| Path | Cache-Control |
-|---|---|
-| `/index.html`, `/version.json`, `/manifest.webmanifest` | `no-cache, no-store, must-revalidate` |
-| `/sw.js`, `/workbox-:hash.js` | `no-cache, no-store, must-revalidate` |
-| `/icons/*` | `public, max-age=31536000, immutable` (1 year) |
-| `/screenshots/*` | `public, max-age=86400` (1 day) |
-| `/.well-known/assetlinks.json` | `public, max-age=3600` (1 hour) |
-
-> The service worker and `version.json` are intentionally never cached so new builds are detected immediately on the next page visit.
+- `price`: Selling price
+- `mrp`: Original crossed-out price
+- `purchasePrice`: Admin-only internal cost for profit calculations
 
 ---
 
-## 25. TWA / Play Store Readiness
+## 23. Troubleshooting & FAQ
 
-Manifest includes `related_applications` with Play Store IDs `shop.thunderbold.www.twa` and `shop.thunderbold.twa` plus SHA-256 fingerprints.
+### Push Notifications Not Arriving?
+- Ensure `google-services.json` is present in `android/app/`.
+- Verify `VITE_FIREBASE_VAPID_KEY` is set for Web FCM.
+- Test native push via `/api/notifications/test-send`.
 
-`public/.well-known/assetlinks.json` serves Digital Asset Links. Generate/update via PWABuilder or Bubblewrap against `https://thunderbold.shop/manifest.webmanifest`.
-
----
-
-## 26. Database Schema Summary
-
-**MongoDB Atlas** — database: `thunderbold` — **10 collections**
-
-| # | Collection | Purpose | Bootstrapped indexes |
-|---|---|---|---|
-| 1 | `users` | Profiles, embedded `addresses[]`, `fcmTokens[]` | none |
-| 2 | `products` | Catalogue (standard + outfit variants); `purchasePrice` admin-only | `{categoryId:1}` |
-| 3 | `orders` | Embedded product + address snapshots | `{userId:1}`, `{createdAt:-1}`, `{clientOrderId:1}` sparse+unique |
-| 4 | `returns` | One per order; includes `upiId` for COD refund | none |
-| 5 | `cart` | One doc per user; full `items[]` replace on write | `{userId:1}` unique |
-| 6 | `wishlist` | Same structure as cart, no `size`/`quantity` | `{userId:1}` unique |
-| 7 | `reviews` | Soft-deleted (`isDeleted`); eligibility gated on delivered order | `{productId,isDeleted,createdAt}`, `{userId,isDeleted}`, `{userId,productId}` |
-| 8 | `categories` | Lookup table; products reference by string `categoryId` | none |
-| 9 | `brands` | Lookup table; field is `logoUrl` not `image` | none |
-| 10 | `config` | Two singleton docs: `_id:"slider"` (4 slides) and `_id:"hero-banner"` (1–3 images) | none |
-
-**Index bootstrap summary** (`api/_lib/mongodb.js` `ensureIndexes()`): 9 indexes across 5 collections. The remaining 5 collections (`users`, `returns`, `categories`, `brands`, `config`) rely on the default `_id` index only — see `DATABASE.md §4` for recommended additions.
-
-> **Legacy:** An 11th collection `addresses` is used by `api/address/index.js` (unauthenticated, not counted in the 10). The main app stores addresses embedded in `users.addresses[]` instead.
-
-See `DATABASE.md` for full field schemas, query patterns, and migration notes.
-
----
-
-## 27. Pricing System
-
-| Field | Visibility | Purpose |
-|---|---|---|
-| `price` | Public | Selling price (INR) |
-| `mrp` | Public | Crossed-out original price |
-| `purchasePrice` | Admin only | Internal cost for profit calculations |
-
-`computePrice(price, mrp)` in `src/lib/pricing.ts` derives discount percentage. API normalises legacy products: `mrp: doc.mrp ?? doc.purchasePrice ?? null`.
-
----
-
-## 28. Known Limitations
-
-| Limitation | Impact |
-|---|---|
-| In-memory rate limiter | Resets on serverless cold starts; ineffective across multiple instances |
-| Cart/wishlist rate limit on GET | High-traffic users may hit 429 on cart/wishlist reads |
-| No single-product API | Product detail page downloads entire catalogue |
-| Users API jwt.decode | Profile GET/PATCH/DELETE do not cryptographically verify tokens |
-| Legacy `/api/address` | Unauthenticated; uses separate `addresses` collection unused by main checkout flow |
-| Hardcoded Firebase client config | Requires code change to swap Firebase projects (only VAPID key is env-driven) |
-| No payment gateway | COD only — no Razorpay/PhonePe integration |
-| No email receipts | Order confirmations are push-only |
-| No Redis / distributed cache | Rate limiting and apiCache are process-local |
-| `helmet` unused | Security headers manually set; no CSP |
-
----
-
-## 29. Edge Cases Handled
-
-| Case | Handling |
-|---|---|
-| Duplicate order on retry | `clientOrderId` sparse unique index |
-| Race on stock | `$gte` guard + compensation rollback → 409 |
-| Outfit stock | Separate topwear/bottomwear decrement/restore |
-| Return idempotency | One return per `orderId` → 409 |
-| Stale FCM tokens | Pruned on failed send |
-| Duplicate FCM per device | `deviceId` deduplication in users collection |
-| Mid-deploy stale chunks | Content-hashed filenames + `cleanupOutdatedCaches` |
-| Admin slider unsaved edits | Silent poll skips slider tab |
-| Instagram in-app browser | `instagram-browser` CSS class for fixed-position fixes |
-| PWA SW conflicts | Unregisters non-`/sw.js` service workers on startup |
-
----
-
-## 30. Troubleshooting
-
-### Service Worker Not Detected
-
-Test production URL (not localhost). SW only exists after `npm run build`.
-
-### Install Prompt Not Appearing
-
-Requires HTTPS, engagement heuristics, valid manifest + 192/512 icons.
-
-### Blank Screen After Deploy
-
-Unregister stale SW → hard refresh. `autoUpdate` + version polling mitigates this.
-
-### FCM Not Working
-
-Verify `FIREBASE_SERVICE_ACCOUNT` (server) and `VITE_FIREBASE_VAPID_KEY` (client). Test via `POST /api/notifications/test-send`.
-
-### MongoDB Errors
-
-Confirm `MONGO_URI` is set and Atlas IP allowlist includes your deployment IPs.
+### Native Build Failures?
+- Run `npm run cap:sync` to ensure dist/ assets and native plugin configurations are in sync.
 
 ---
 
 ## Copyright
 
-Copyright © 2026 ThunderBold Private Limited. All rights reserved.
+Copyright © 2026 Thunderbold Private Limited. All rights reserved.
 
-This repository and its contents are proprietary. See [LICENSE](LICENSE) for terms.
-
----
-
-*Thunderbold — Premium Indian Fashion. Built for the Bold.*
-
-> Last updated: July 29, 2026
+> Last updated: August 20, 2026
