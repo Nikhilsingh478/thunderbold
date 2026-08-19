@@ -97,7 +97,7 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
             ttl: 86400 * 1000, // 24 hours in ms
             notification: {
               channelId: 'thunderbold_orders',
-              icon: 'ic_launcher_foreground',
+              icon: 'ic_stat_notification',
               color: '#B8820F',
               sound: 'default',
               defaultVibrateTimings: false,
@@ -243,7 +243,7 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
           ttl: 86400 * 1000, // 24 hours in ms
           notification: {
             channelId: 'thunderbold_orders',
-            icon: 'ic_launcher_foreground',
+            icon: 'ic_stat_notification',
             color: '#B8820F',
             sound: 'default',
             defaultVibrateTimings: false,
