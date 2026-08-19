@@ -84,6 +84,9 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
             ...(imageUrl ? { imageUrl } : {})
           },
           data: {
+            title: String(title),
+            body: String(body),
+            timestamp: Date.now().toString(),
             ...Object.fromEntries(
               Object.entries(data).map(([k, v]) => [k, String(v)])
             ),
@@ -91,14 +94,15 @@ export async function sendToUser(db, userId, { title, body, data = {} }, origin 
           },
           android: {
             priority: 'high',
+            ttl: 86400 * 1000, // 24 hours in ms
             notification: {
               channelId: 'thunderbold_orders',
+              icon: 'ic_launcher_foreground',
+              color: '#B8820F',
+              sound: 'default',
               defaultVibrateTimings: false,
               vibrateTimingsMillis: [0, 250, 150, 250],
               notificationPriority: 'PRIORITY_HIGH',
-              sound: 'default',
-              color: '#B8820F',
-              icon: 'ic_stat_notification',
               visibility: 'PUBLIC',
               defaultSound: true,
               defaultLightSettings: true,
@@ -226,6 +230,9 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
           ...(imageUrl ? { imageUrl } : {})
         },
         data: {
+          title: String(title),
+          body: String(body),
+          timestamp: Date.now().toString(),
           ...Object.fromEntries(
             Object.entries(data).map(([k, v]) => [k, String(v)])
           ),
@@ -233,14 +240,15 @@ export async function sendMulticast(messaging, tokens, { title, body, data = {} 
         },
         android: {
           priority: 'high',
+          ttl: 86400 * 1000, // 24 hours in ms
           notification: {
             channelId: 'thunderbold_orders',
+            icon: 'ic_launcher_foreground',
+            color: '#B8820F',
+            sound: 'default',
             defaultVibrateTimings: false,
             vibrateTimingsMillis: [0, 250, 150, 250],
             notificationPriority: 'PRIORITY_HIGH',
-            sound: 'default',
-            color: '#B8820F',
-            icon: 'ic_stat_notification',
             visibility: 'PUBLIC',
             defaultSound: true,
             defaultLightSettings: true,

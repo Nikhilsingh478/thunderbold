@@ -44,6 +44,12 @@ export async function initNativePush(
     'registration',
     (token: Token) => {
       console.log('[Push] Step 4: TOKEN RECEIVED:', token.value);
+      const existingToken = localStorage.getItem('thunderbold_native_fcm_token');
+      if (existingToken !== token.value) {
+        console.log('[Push] Token refreshed');
+        localStorage.setItem('thunderbold_native_fcm_token', token.value);
+        localStorage.removeItem('thunderbold_token_registered');
+      }
       if (registeredTokenCallback) {
         registeredTokenCallback(token.value);
       }
@@ -69,11 +75,10 @@ export async function initNativePush(
         await Haptics.impact({ 
           style: ImpactStyle.Medium 
         });
-        setTimeout(async () => {
-          await Haptics.impact({ 
-            style: ImpactStyle.Light 
-          });
-        }, 200);
+        await new Promise(r => setTimeout(r, 200));
+        await Haptics.impact({ 
+          style: ImpactStyle.Light 
+        });
       } catch (e) {
         console.warn('[Push] Haptics failed:', e);
       }

@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
         android:allowBackup="true"
@@ -40,7 +41,14 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- FCM MessagingService is provided by @capacitor/push-notifications (manifest merge) -->
+        <!-- FCM FirebaseMessagingService declaration for background/killed delivery -->
+        <service
+            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
 
         <!-- FCM Notification Channel & Default Metadata -->
         <meta-data
@@ -49,7 +57,7 @@
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_stat_notification"/>
+            android:resource="@mipmap/ic_launcher_foreground"/>
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
@@ -57,3 +65,4 @@
 
     </application>
 </manifest>
+
