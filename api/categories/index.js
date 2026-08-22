@@ -36,8 +36,11 @@ export default async function handler(req, res) {
 
     switch (req.method) {
       case 'GET': {
-        // Categories are public and change infrequently — safe to cache
-        res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
+        // Categories are mutable by admins — never cache at the CDN edge.
+        // Serving a stale CDN snapshot after a name-edit was the primary cause
+        // of the "edit reverts on refresh" bug. The client-side apiCache.ts
+        // (60 s TTL) is the only caching layer we intentionally keep.
+        res.setHeader('Cache-Control', 'no-store');
         const categories = await categoriesCollection.find({}).sort({ createdAt: -1 }).toArray();
         return res.status(200).json({ categories, count: categories.length, source: 'database' });
       }

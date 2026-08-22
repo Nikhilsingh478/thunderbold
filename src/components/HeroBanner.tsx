@@ -14,16 +14,18 @@ const INTERVAL = 3000;
 const SWIPE_THRESHOLD = 40;
 
 let cachedSlides: Slide[] | null = null;
+let cachedDesktopSlides: Slide[] | null = null;
 
 export default function HeroBanner() {
   const [slides, setSlides] = useState<Slide[]>(cachedSlides || []);
+  const [desktopSlides, setDesktopSlides] = useState<Slide[]>(cachedDesktopSlides || []);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(!cachedSlides);
   const touchStartX = useRef<number | null>(null);
 
-  // Fetch admin-configured banner images only — no fallback defaults
+  // Fetch mobile/app banner images (unchanged behavior)
   useEffect(() => {
     let cancelled = false;
     fetch(apiUrl('/api/slider?type=hero'))
@@ -45,6 +47,27 @@ export default function HeroBanner() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch desktop-specific banner images (separate, no effect on mobile)
+  useEffect(() => {
+    let cancelled = false;
+    fetch(apiUrl('/api/slider?type=desktop-banner'))
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (cancelled) return;
+        if (Array.isArray(data?.images) && data.images.length > 0) {
+          const mapped = data.images.map((src: string, i: number) => ({
+            src: optimizeCloudinaryUrl(src, IMG_SIZES.hero),
+            alt: `Desktop Banner ${i + 1}`,
+            href: null,
+          }));
+          setDesktopSlides(mapped);
+          cachedDesktopSlides = mapped;
+        }
+      })
+      .catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
@@ -90,10 +113,14 @@ export default function HeroBanner() {
   };
 
   // Show a loading skeleton only on first mount while fetching configured slides.
-  // Matches the exact shape and size of the hero slider to prevent layout shifts.
   if (loading && slides.length === 0) {
     return (
-      <div className="w-full bg-white/[0.02] animate-pulse aspect-[4/5] md:aspect-auto md:h-[260px]" />
+      <>
+        {/* Mobile skeleton */}
+        <div className="w-full bg-white/[0.02] animate-pulse aspect-[4/5] md:hidden" />
+        {/* Desktop skeleton */}
+        <div className="hidden md:block w-full bg-white/[0.02] animate-pulse aspect-video" />
+      </>
     );
   }
 
@@ -106,7 +133,12 @@ export default function HeroBanner() {
     exit:   (dir: number) => ({ opacity: 0, x: dir * -40 }),
   };
 
+  // Desktop uses its own slides (if configured) at 16:9; mobile uses original slides
+  const hasDesktopSlides = desktopSlides.length > 0;
+  const activeDesktopSlides = hasDesktopSlides ? desktopSlides : slides;
+  const desktopCurrent = current % activeDesktopSlides.length;
   const multiSlide = slides.length > 1;
+  const desktopMultiSlide = activeDesktopSlides.length > 1;
 
   return (
     <div
@@ -116,8 +148,8 @@ export default function HeroBanner() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Slides */}
-      <div className="relative w-full aspect-[4/5] md:aspect-auto md:h-auto md:max-h-[260px] overflow-hidden">
+      {/* ── MOBILE banner (original aspect ratio, original images) ── */}
+      <div className="md:hidden relative w-full aspect-[4/5] overflow-hidden">
         <AnimatePresence initial={false} custom={direction} mode="sync">
           <motion.div
             key={current}
@@ -141,74 +173,150 @@ export default function HeroBanner() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Height placeholder — keeps layout stable while slides transition */}
+        {/* Height placeholder for mobile */}
         <img
           src={slides[0]?.src}
           alt=""
           aria-hidden
-          className="w-full block object-cover object-center aspect-[4/5] md:aspect-auto md:h-auto md:max-h-[260px] invisible"
+          className="w-full block object-cover object-center aspect-[4/5] invisible"
           loading="eager"
           fetchPriority="high"
         />
+
+        {/* Side gradients */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, rgba(7,7,7,0.40) 0%, transparent 28%, transparent 72%, rgba(7,7,7,0.40) 100%)' }}
+        />
+
+        {/* Arrows (mobile) */}
+        {multiSlide && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); prev(); }}
+              aria-label="Previous slide"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+            >
+              <ChevronLeft className="w-4 h-4 text-white/80" strokeWidth={2} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); next(); }}
+              aria-label="Next slide"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+            >
+              <ChevronRight className="w-4 h-4 text-white/80" strokeWidth={2} />
+            </button>
+          </>
+        )}
+
+        {/* Dots (mobile) */}
+        {multiSlide && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i, i > current ? 1 : -1)}
+                aria-label={`Go to slide ${i + 1}`}
+                className="focus:outline-none"
+                style={{
+                  width: 20, height: 3, borderRadius: 999, border: 'none', padding: 0,
+                  cursor: 'pointer', background: 'white',
+                  opacity: i === current ? 1 : 0.35,
+                  transform: `scaleX(${i === current ? 1 : 0.15})`,
+                  transformOrigin: 'center',
+                  transition: 'transform 300ms ease, opacity 300ms ease',
+                  willChange: 'transform, opacity',
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Side gradients */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'linear-gradient(90deg, rgba(7,7,7,0.40) 0%, transparent 28%, transparent 72%, rgba(7,7,7,0.40) 100%)',
-        }}
-      />
-
-      {/* Prev / Next arrows — only when multiple slides */}
-      {multiSlide && (
-        <>
-          <button
-            onClick={(e) => { e.stopPropagation(); prev(); }}
-            aria-label="Previous slide"
-            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+      {/* ── DESKTOP banner (16:9, desktop-specific images if configured) ── */}
+      <div className="hidden md:block relative w-full aspect-video overflow-hidden">
+        <AnimatePresence initial={false} custom={direction} mode="sync">
+          <motion.div
+            key={desktopCurrent}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.42, ease: [0.32, 0, 0.67, 0] }}
+            className={`absolute inset-0 w-full h-full ${activeDesktopSlides[desktopCurrent]?.href ? 'cursor-pointer' : ''}`}
+            onClick={() => handleClick(activeDesktopSlides[desktopCurrent]?.href ?? null)}
           >
-            <ChevronLeft className="w-4 h-4 text-white/80" strokeWidth={2} />
-          </button>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); next(); }}
-            aria-label="Next slide"
-            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 md:w-9 md:h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
-          >
-            <ChevronRight className="w-4 h-4 text-white/80" strokeWidth={2} />
-          </button>
-        </>
-      )}
-
-      {/* Dot indicators — only when multiple slides */}
-      {multiSlide && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => go(i, i > current ? 1 : -1)}
-              aria-label={`Go to slide ${i + 1}`}
-              className="focus:outline-none"
-              style={{
-                width: 20,
-                height: 3,
-                borderRadius: 999,
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                background: 'white',
-                opacity: i === current ? 1 : 0.35,
-                transform: `scaleX(${i === current ? 1 : 0.15})`,
-                transformOrigin: 'center',
-                transition: 'transform 300ms ease, opacity 300ms ease',
-                willChange: 'transform, opacity',
-              }}
+            <img
+              src={activeDesktopSlides[desktopCurrent]?.src}
+              alt={activeDesktopSlides[desktopCurrent]?.alt}
+              className="w-full h-full object-cover object-center"
+              loading={desktopCurrent === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              fetchPriority={desktopCurrent === 0 ? 'high' : 'low'}
             />
-          ))}
-        </div>
-      )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Height placeholder for desktop (16:9) */}
+        <img
+          src={activeDesktopSlides[0]?.src}
+          alt=""
+          aria-hidden
+          className="w-full block object-cover object-center aspect-video invisible"
+          loading="eager"
+          fetchPriority="high"
+        />
+
+        {/* Side gradients */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, rgba(7,7,7,0.40) 0%, transparent 28%, transparent 72%, rgba(7,7,7,0.40) 100%)' }}
+        />
+
+        {/* Arrows (desktop) */}
+        {desktopMultiSlide && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); prev(); }}
+              aria-label="Previous slide"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+            >
+              <ChevronLeft className="w-4 h-4 text-white/80" strokeWidth={2} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); next(); }}
+              aria-label="Next slide"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center opacity-0 group-hover/banner:opacity-100 hover:bg-black/70 hover:border-white/25 active:scale-95 transition-all duration-200 focus:outline-none"
+            >
+              <ChevronRight className="w-4 h-4 text-white/80" strokeWidth={2} />
+            </button>
+          </>
+        )}
+
+        {/* Dots (desktop) */}
+        {desktopMultiSlide && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+            {activeDesktopSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i, i > desktopCurrent ? 1 : -1)}
+                aria-label={`Go to slide ${i + 1}`}
+                className="focus:outline-none"
+                style={{
+                  width: 20, height: 3, borderRadius: 999, border: 'none', padding: 0,
+                  cursor: 'pointer', background: 'white',
+                  opacity: i === desktopCurrent ? 1 : 0.35,
+                  transform: `scaleX(${i === desktopCurrent ? 1 : 0.15})`,
+                  transformOrigin: 'center',
+                  transition: 'transform 300ms ease, opacity 300ms ease',
+                  willChange: 'transform, opacity',
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

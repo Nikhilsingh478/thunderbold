@@ -545,9 +545,6 @@ export default function ProductView() {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="w-full md:w-1/2 flex flex-col justify-center py-0 md:py-8"
             >
-              <div className="font-condensed font-semibold text-[0.68rem] tracking-[0.40em] uppercase text-brass mb-4">
-                Premium Collection
-              </div>
               <h1 className="font-display font-normal sm:font-medium text-2xl sm:text-4xl md:text-6xl lg:text-7xl tracking-[0.05em] sm:tracking-[0.08em] metal-text uppercase mb-3 sm:mb-4 leading-tight sm:leading-none">
                 {product?.name || 'Thunderbold Jeans'}
               </h1>

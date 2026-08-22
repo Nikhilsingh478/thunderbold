@@ -243,7 +243,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex w-full items-center justify-between">
+        <div className="hidden md:flex w-full items-center justify-between pt-2">
           <Link
             to="/"
             className="z-[110] relative decoration-none hover:opacity-90 flex items-center"

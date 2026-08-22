@@ -495,7 +495,41 @@ async function handleSlider(req, res, db) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // ── ThunderboltSlider (existing) ───────────────────────────────────────────
+  // ── Desktop Hero Banner (/api/slider?type=desktop-banner) ─────────────────
+  if (type === "desktop-banner") {
+    if (req.method === "GET") {
+      const doc = await configCol.findOne({ _id: "desktop-banner" });
+      return res.status(200).json({ images: doc?.images ?? [] });
+    }
+
+    if (req.method === "PUT") {
+      const auth = await checkAdminAuth(req, db);
+      if (!auth.authorized) return res.status(auth.status).json({ error: auth.error });
+
+      const body = req.body || {};
+      const raw = Array.isArray(body.images) ? body.images : [];
+      const images = raw
+        .map((url) => (typeof url === "string" ? url.trim() : ""))
+        .filter((url) => url.length > 0)
+        .slice(0, 3);
+
+      if (images.length === 0) {
+        return res.status(400).json({ error: "At least 1 image URL is required" });
+      }
+
+      await configCol.replaceOne(
+        { _id: "desktop-banner" },
+        { _id: "desktop-banner", images, updatedAt: new Date() },
+        { upsert: true }
+      );
+
+      return res.status(200).json({ message: "Desktop banner saved", images });
+    }
+
+    res.setHeader("Allow", ["GET", "PUT"]);
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
 
   if (req.method === "GET") {
     const doc = await configCol.findOne({ _id: "slider" });

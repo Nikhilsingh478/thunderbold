@@ -838,6 +838,9 @@ export default function Admin() {
   const [heroBanners, setHeroBanners] = useState<string[]>(['', '', '']);
   const [heroBannerSaving, setHeroBannerSaving] = useState(false);
   const [heroBannerSaved, setHeroBannerSaved] = useState(false);
+  const [desktopBanners, setDesktopBanners] = useState<string[]>(['', '', '']);
+  const [desktopBannerSaving, setDesktopBannerSaving] = useState(false);
+  const [desktopBannerSaved, setDesktopBannerSaved] = useState(false);
 
   // Returns tab state
   interface ReturnRequest {
@@ -1027,11 +1030,17 @@ export default function Admin() {
   const fetchSliderConfig = async (silent = false) => {
     if (!user) return;
     try {
-      const [sliderRes, productsRes, heroBannerRes] = await Promise.all([
+      const [sliderRes, productsRes, heroBannerRes, desktopBannerRes] = await Promise.all([
         fetch(apiUrl('/api/slider')),
         fetch(apiUrl('/api/products?section=outfits')),
         fetch(apiUrl('/api/slider?type=hero')),
+        fetch(apiUrl('/api/slider?type=desktop-banner')),
       ]);
+      if (desktopBannerRes.ok) {
+        const d = await desktopBannerRes.json();
+        const filled = [...(d.images ?? []), '', '', ''].slice(0, 3) as string[];
+        setDesktopBanners(prev => JSON.stringify(prev) !== JSON.stringify(filled) ? filled : prev);
+      }
       if (sliderRes.ok) {
         const d = await sliderRes.json();
         if (Array.isArray(d.slides) && d.slides.length === 4) {
@@ -1101,6 +1110,25 @@ export default function Admin() {
       }
     } catch { console.error('Failed to save hero banner config'); }
     finally { setHeroBannerSaving(false); }
+  };
+
+  const saveDesktopBannerConfig = async () => {
+    if (!user) return;
+    setDesktopBannerSaving(true);
+    try {
+      const token = await user.getIdToken();
+      const images = desktopBanners.filter(url => url.trim() !== '');
+      const r = await fetch(apiUrl('/api/slider?type=desktop-banner'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ images }),
+      });
+      if (r.ok) {
+        setDesktopBannerSaved(true);
+        setTimeout(() => setDesktopBannerSaved(false), 2500);
+      }
+    } catch { console.error('Failed to save desktop banner config'); }
+    finally { setDesktopBannerSaving(false); }
   };
 
   const addBrand = async (data: BrandFormData): Promise<boolean> => {
@@ -1442,12 +1470,19 @@ export default function Admin() {
         body: JSON.stringify(formData),
       });
       if (r.ok) {
+        // Optimistic update — instant UI feedback before the refetch.
         setCategories(prev => prev.map(c =>
           c._id === editingCategory._id
             ? { ...c, name: formData.name, image: formData.image, section: formData.section }
             : c
         ));
         setEditingCategory(null);
+        // Bust the 60 s module-level cache so any cachedFetch caller
+        // (e.g. CategoriesSection) gets the new name on next render.
+        invalidateCache();
+        // Silent refetch from DB — makes local state == DB state.
+        // After this resolves an immediate hard refresh shows the same value.
+        await fetchCategories(true);
         return true;
       }
       return false;
@@ -2293,6 +2328,69 @@ export default function Admin() {
                               No URL saved — homepage will use the default banner image.
                             </p>
                           )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ── Desktop Banner Section ── */}
+                  <div className="mt-10 pt-8 border-t border-white/10">
+                    <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+                      <div>
+                        <h3 className="font-display text-lg tracking-[0.06em] text-brass uppercase">Desktop Banner <span className="text-sv-mid text-sm normal-case tracking-normal">(16:9 — web only)</span></h3>
+                        <p className="font-condensed text-xs text-sv-mid mt-1 max-w-sm leading-relaxed">
+                          3 widescreen images shown on desktop web only at 16:9 aspect ratio.
+                          Mobile web &amp; the Android app are unaffected. Leave all empty to fall back to the mobile banner images.
+                        </p>
+                      </div>
+                      <button
+                        onClick={saveDesktopBannerConfig}
+                        disabled={desktopBannerSaving}
+                        className={`shrink-0 flex items-center gap-1.5 px-4 py-2 font-condensed font-bold text-xs tracking-[0.15em] uppercase rounded-lg transition-all duration-200 ${
+                          desktopBannerSaved
+                            ? 'bg-green-500/20 border border-green-500/30 text-green-400'
+                            : 'bg-denim-light text-tb-white hover:bg-denim-mid'
+                        } disabled:opacity-50`}
+                      >
+                        {desktopBannerSaving ? 'Saving…' : desktopBannerSaved ? 'Saved!' : 'Save Desktop'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {desktopBanners.map((url, i) => (
+                        <div key={i} className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-condensed font-bold text-xs tracking-[0.2em] uppercase text-tb-white">
+                              Desktop {i + 1}
+                            </span>
+                            <span className={`font-condensed text-[10px] uppercase tracking-wider ${url.trim() ? 'text-green-400' : 'text-sv-dim'}`}>
+                              {url.trim() ? 'Active' : 'Empty'}
+                            </span>
+                          </div>
+
+                          {url.trim() && (
+                            <img
+                              src={url.trim()}
+                              alt={`Desktop Banner ${i + 1} preview`}
+                              className="w-full h-16 object-cover rounded border border-white/10"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          )}
+
+                          <div>
+                            <label className="block font-condensed text-[10px] text-sv-mid uppercase tracking-wider mb-1.5">
+                              Image URL <span className="normal-case text-sv-dim">(16:9 recommended)</span>
+                            </label>
+                            <input
+                              type="url"
+                              value={url}
+                              onChange={(e) =>
+                                setDesktopBanners(prev => prev.map((v, j) => j === i ? e.target.value : v))
+                              }
+                              placeholder="https://res.cloudinary.com/…"
+                              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-tb-white text-xs placeholder:text-sv-dim/40 focus:outline-none focus:border-white/30 transition-colors"
+                            />
+                          </div>
                         </div>
                       ))}
                     </div>
