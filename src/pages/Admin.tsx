@@ -2337,9 +2337,9 @@ export default function Admin() {
                   <div className="mt-10 pt-8 border-t border-white/10">
                     <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
                       <div>
-                        <h3 className="font-display text-lg tracking-[0.06em] text-brass uppercase">Desktop Banner <span className="text-sv-mid text-sm normal-case tracking-normal">(16:9 — web only)</span></h3>
+                        <h3 className="font-display text-lg tracking-[0.06em] text-brass uppercase">Desktop Banner <span className="text-sv-mid text-sm normal-case tracking-normal">(4.17:1 — 1920×460px — web only)</span></h3>
                         <p className="font-condensed text-xs text-sv-mid mt-1 max-w-sm leading-relaxed">
-                          3 widescreen images shown on desktop web only at 16:9 aspect ratio.
+                          3 widescreen images shown on desktop web only at 1920×460px (4.17:1 ratio).
                           Mobile web &amp; the Android app are unaffected. Leave all empty to fall back to the mobile banner images.
                         </p>
                       </div>
@@ -2379,7 +2379,7 @@ export default function Admin() {
 
                           <div>
                             <label className="block font-condensed text-[10px] text-sv-mid uppercase tracking-wider mb-1.5">
-                              Image URL <span className="normal-case text-sv-dim">(16:9 recommended)</span>
+                              Image URL <span className="normal-case text-sv-dim">(1920×460px recommended)</span>
                             </label>
                             <input
                               type="url"

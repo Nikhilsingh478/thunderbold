@@ -1294,9 +1294,6 @@ function ProductViewSkeleton({ onBack }: { onBack: () => void }) {
 
             {/* Right: Product Details Skeleton */}
             <div className="w-full md:w-1/2 flex flex-col py-0 md:py-8">
-              {/* "Premium Collection" eyebrow */}
-              <div className={`${block} h-3 w-40 mb-5`} />
-
               {/* Title — 2 lines, mobile-compact then desktop-large */}
               <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-5">
                 <div className={`${block} h-7 sm:h-10 md:h-14 lg:h-16 w-4/5`} />

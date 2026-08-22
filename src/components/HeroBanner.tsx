@@ -119,7 +119,7 @@ export default function HeroBanner() {
         {/* Mobile skeleton */}
         <div className="w-full bg-white/[0.02] animate-pulse aspect-[4/5] md:hidden" />
         {/* Desktop skeleton */}
-        <div className="hidden md:block w-full bg-white/[0.02] animate-pulse aspect-video" />
+        <div className="hidden md:block w-full bg-white/[0.02] animate-pulse aspect-[1920/460]" />
       </>
     );
   }
@@ -133,7 +133,7 @@ export default function HeroBanner() {
     exit:   (dir: number) => ({ opacity: 0, x: dir * -40 }),
   };
 
-  // Desktop uses its own slides (if configured) at 16:9; mobile uses original slides
+  // Desktop uses its own slides (if configured) at 4.17:1 (1920x460); mobile uses original slides
   const hasDesktopSlides = desktopSlides.length > 0;
   const activeDesktopSlides = hasDesktopSlides ? desktopSlides : slides;
   const desktopCurrent = current % activeDesktopSlides.length;
@@ -233,8 +233,8 @@ export default function HeroBanner() {
         )}
       </div>
 
-      {/* ── DESKTOP banner (16:9, desktop-specific images if configured) ── */}
-      <div className="hidden md:block relative w-full aspect-video overflow-hidden">
+      {/* ── DESKTOP banner (4.17:1 ratio / 1920x460, desktop-specific images if configured) ── */}
+      <div className="hidden md:block relative w-full aspect-[1920/460] overflow-hidden">
         <AnimatePresence initial={false} custom={direction} mode="sync">
           <motion.div
             key={desktopCurrent}
@@ -258,12 +258,12 @@ export default function HeroBanner() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Height placeholder for desktop (16:9) */}
+        {/* Height placeholder for desktop (1920/460) */}
         <img
           src={activeDesktopSlides[0]?.src}
           alt=""
           aria-hidden
-          className="w-full block object-cover object-center aspect-video invisible"
+          className="w-full block object-cover object-center aspect-[1920/460] invisible"
           loading="eager"
           fetchPriority="high"
         />

@@ -195,8 +195,8 @@ const Navbar = () => {
             : 'env(safe-area-inset-top)',
           willChange: 'transform, opacity',
         }}
-        className={`fixed left-0 w-full px-6 md:px-[52px] md:py-6 flex items-center justify-between transition-all duration-300 z-[100] ${
-          scrolled ? 'py-4 bg-[#070707] border-b border-white/5 shadow-lg' : 'pt-4 pb-5 bg-transparent'
+        className={`fixed left-0 w-full px-6 md:px-[52px] flex items-center justify-between transition-all duration-300 z-[100] ${
+          scrolled ? 'py-3.5 bg-[#070707] border-b border-white/5 shadow-lg' : 'py-5 bg-transparent'
         }`}
       >
         {/* Mobile Layout */}
@@ -243,7 +243,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex w-full items-center justify-between pt-2">
+        <div className="hidden md:flex w-full items-center justify-between">
           <Link
             to="/"
             className="z-[110] relative decoration-none hover:opacity-90 flex items-center"
